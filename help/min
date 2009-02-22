@@ -1,0 +1,7 @@
+R4RS 6.5.5 (max x1 x2 ...) ==> integer
+           (min x1 x2 ...) ==> integer
+
+These procedures return the maximum or minimum of their arguments.
+
+(max 3 4)  ==>  4
+(min 3 4)  ==>  3

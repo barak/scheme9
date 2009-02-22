@@ -1,0 +1,25 @@
+S9fES (expand-macro list) ==> list
+
+If LIST represents an expression that applies a macro, return the
+expanded form of the macro application, else return LIST unaltered.
+
+(define-macro (while p . body)
+  `(let loop ()
+      (if ,p
+	  (begin ,@body (loop)))))
+
+(expand-macro '(while (< x 10)
+                      (display "hello!")
+                      (newline)
+                      (set! x (+ x 1))))
+  ==>  (((lambda (loop)
+           ((lambda (g57)
+              (set! loop g57)
+              loop)
+            (lambda ()
+              (if (< x 10)
+                  (begin (display "hi")
+                         (newline)
+                         (set! x (+ 1 x))
+                         (loop))))))
+        #f))

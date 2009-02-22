@@ -1,0 +1,8 @@
+R4RS 6.1 (boolean? obj) ==> boolean
+
+BOOLEAN? returns #t if OBJ is either #t or #f and returns #f
+otherwise.
+
+(boolean? #f)   ==>  #t
+(boolean? 0)    ==>  #f
+(boolean? '())  ==>  #f

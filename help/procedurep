@@ -1,0 +1,8 @@
+R4RS 6.9 (procedure? obj) ==> boolean
+
+Returns #t if OBJ is a procedure, otherwise returns #f.
+
+(procedure? car)                    ==>  #t
+(procedure? 'car)                   ==>  #f
+(procedure? (lambda (x) (* x x)))   ==>  #t
+(procedure? '(lambda (x) (* x x)))  ==>  #f

@@ -1,0 +1,290 @@
+.\" S9E(1) Manual Page
+.\" Nils M Holm, 2007, 2008
+.ll 70
+.lt 70
+.ds N "pi
+.de HD		\" Header
+'sp 1v
+.tl 'S9E(1)'Scheme 9 from Empty Space'S9E(1)'
+'sp 2v
+..
+.de FO		\" Footer
+'sp 3v
+.tl 'S9E Interpreter'Page %'S9E(1)'
+'bp
+..
+.de B
+\fB\\$1\fP
+..
+.de BR
+\fB\\$1\fP\\$2
+..
+.de IR
+\fI\\$1\fP\\$2
+..
+.de RB
+\\$1\fB\\$2\\fP
+..
+.de I
+\fI\\$1\fP
+..
+.de SH		\" subheader macro
+.ne 5
+.sp
+.in 0i
+.nf
+\fB\\$1\fP
+.fi
+.in 1i
+..
+.de ST		\" start a table
+.in 1i
+.nf
+..
+.de ET		\" end a table
+.fi
+.in 0
+..
+.wh 0 HD	\" traps for header
+.wh -5 FO	\" and footer
+.nh		\" disable hyphenation
+.sp
+.SH NAME
+.B "s9e
+- Extended Scheme Interpreter
+.SH USAGE
+.B "s9e [-h?] [-giqv] [-d image] [-f program] [-m size[m]]
+.B "    [-- argument ...]
+.SH "DESCRIPTION
+.B "Scheme 9 from Empty Space
+is an interpreter for a broad subset of
+R4RS Scheme. The
+.B s9e
+command starts the extended interpreter. The extended interpreter
+defines some functions that are not defined in the Scheme Reports,
+but may prove useful in ``real-world'' programming.
+.SH "EXTENDED FUNCTIONS"
+Functions returning an unspecific value typically abort evaluation
+when an error occurs.
+.sp
+.ne 3
+.B "(unix:chdir string) ==> unspecific
+.in +4
+Change the current working directory to
+.IR string .
+.in -4
+.br
+.ne 3
+.B "(unix:chmod string integer) ==> unspecific
+.in +4
+Change the access bits of the file
+.I string
+to the mode
+.IR integer .
+.in -4
+.br
+.ne 3
+.B "(unix:chown string integer1 integer2) ==> unspecific
+.in +4
+Change the ownership for the file
+.I string
+to user ID
+.I integer1
+and the group ID
+.IR integer2 .
+.in -4
+.br
+.ne 3
+.B "(unix:command-line) ==> list of string
+.in +4
+Return the command line arguments passed to
+.B s9e
+.I after
+the "--" argument.
+.in -4
+.br
+.ne 3
+.B "(unix:exit integer) ==> undefined
+.in +4
+Terminate the
+.B s9e
+process and return
+.I integer
+as an exit code to the calling process.
+.in -4
+.br
+.ne 3
+.B "(unix:flush output-port) ==> unspecific
+.in +4
+Flush the given output port.
+.in -4
+.br
+.ne 3
+.B "(unix:getcwd) ==> string
+.in +4
+Return the current working directory.
+.in -4
+.br
+.ne 3
+.B "(unix:getenv string) ==> string
+.in +4
+Return the value of the environment variable
+.IR string .
+If the variable is undefined, return
+.BR #f .
+.in -4
+.br
+.ne 3
+.B "(unix:getgid) ==> integer
+.in +4
+Return the group ID of the
+.B s9e
+process.
+.in -4
+.br
+.ne 3
+.B "(unix:getpwnam string) ==> alist
+.in +4
+Return the password record for the user name
+.IR string .
+The returned association list has the following members:
+.nf
+.ft C
+((user  . string)   ; user name
+ (uid   . integer)  ; user ID
+ (gid   . integer)  ; group ID
+ (gecos . string)   ; real name
+ (home  . string)   ; home directory
+ (shell . string))  ; default shell
+.ft P
+.fi
+.in -4
+.br
+.ne 3
+.B "(unix:getpwuid integer) ==> alist
+.in +4
+Return the password record for the user ID
+.IR integer .
+See
+.B unix:getpwnam
+for the structure of the return value.
+.in -4
+.br
+.ne 3
+.B "(unix:getuid) ==> integer
+.in +4
+Return the user ID of the
+.B s9e
+process.
+.in -4
+.br
+.ne 3
+.B "(unix:link string1 string2) ==> unspecific
+.in +4
+Create a (hard) link
+.I string2
+that refers to the same file as
+.IR string1 .
+.in -4
+.br
+.ne 3
+.B "(unix:lock string) ==> boolean
+.in +4
+Create a lock file named ``\fIstring\fP.lock''.
+If the file already exists when the function is called, return
+.BR #f ,
+else return
+.BR #t .
+.B Unix:lock
+uses
+.I mkdir()
+to create the lock file, which is atomic on virtually all systems.
+.in -4
+.br
+.ne 3
+.B "(unix:mkdir string integer) ==> unspecific
+.in +4
+Create directory
+.I string
+with mode
+.IR integer .
+.in -4
+.br
+.ne 3
+.B "(unix:rmdir string) ==> unspecific
+.in +4
+Remove directory
+.IR string .
+.in -4
+.br
+.ne 3
+.B "(unix:spawn string) ==> (input-port output-port)
+.in +4
+Spawn an inferior process running the command
+.IR string .
+Return a list of two file descriptors where the first one
+can be used to read the output of the command and the second
+one to send input to the command. The command will be
+executed using
+.br
+\fCexecl("/bin/sh", "/bin/sh", "-c", \fP\fIstring\fP\fC, NULL);\fP
+.in -4
+.br
+.ne 3
+.B "(unix:stat string) ==> alist
+.in +4
+Return the file status of the file
+.IR string .
+The returned association list has the following members:
+.br
+((name  . string)    ; file name
+ (size  . integer)   ; size in bytes
+ (uid   . integer)   ; UID of owner
+ (gid   . integer)   ; GID of owner
+ (mode  . integer)   ; access bits
+ (ctime . integer)   ; creation time
+ (atime . integer)   ; access time
+ (mtime . integer)   ; modification time
+ (dev   . integer)   ; device ID of containing device
+ (ino   . integer)   ; inode number
+ (nlink . integer))  ; number of (hard) links
+.in -4
+.br
+.ne 3
+.B "(unix:symlink string1 string2) ==> unspecific
+.in +4
+Create a symbolic link
+.I string2
+that points to the path
+.IR string1 .
+.in -4
+.br
+.ne 3
+.B "(unix:system string) ==> boolean
+.in +4
+Run the command
+.I string
+and return its exit status (\fB#t\fP for success and
+.B #f
+for failure).
+.in -4
+.br
+.ne 3
+.B "(unix:unlock string) ==> unspecific
+.in +4
+Remove the file ``\fIstring\fP.lock''. If the files does not
+exist, do nothing.
+.in -4
+.br
+.ne 3
+.B "(unix:utimes string) ==> unspecific
+.in +4
+Set the access and modification time of the file
+.I string
+to the current time.
+.in -4
+.br
+.SH "SEE ALSO
+s9(1)
+.SH AUTHOR
+Nils M Holm <nmh@t3x.org>

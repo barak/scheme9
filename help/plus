@@ -1,0 +1,10 @@
+R4RS 6.5.5 (+ n1 ...) ==> integer
+           (* n1 ...) ==> integer
+
+These procedures return the sum or product of their arguments.
+
+(+ 3 4)  ==>  7
+(+ 3)    ==>  3
+(+)      ==>  0
+(* 4)    ==>  4
+(*)      ==>  1

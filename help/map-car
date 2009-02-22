@@ -1,0 +1,6 @@
+S9fES (map-car proc list) ==> list
+
+Map applies PROC element-wise to the elements of the given LIST and
+returns a list of the results. It is a single-list version of the
+more versatile MAP procedure. It is used internally by Scheme 9
+from Empty Space.

@@ -1,0 +1,3 @@
+R4RS 6.7 (string? obj) ==> boolean
+
+Returns #t if OBJ is a string, otherwise returns #f.

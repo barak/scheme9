@@ -1,0 +1,46 @@
+PRE.scheme { background: #f0f0d0;  
+             border: 1px solid #0000a0;
+             padding: 0.5em; }
+PRE.scheme SPAN.o { color: #606060; } /* comment */
+PRE.scheme SPAN.p { color: #008080; } /* parenthesis */
+PRE.scheme SPAN.s { color: #0000a0; } /* symbol */
+PRE.scheme SPAN.c { color: #000000; } /* constant */
+PRE.scheme SPAN.r { color: #a00000; } /* r5rs procedure */
+PRE.scheme SPAN.y { color: #a00000; } /* r5rs syntax */
+
+PRE.scheme-hl { background: #f0f0d0;  
+                border: 1px solid #0000a0;
+                line-height: 100%;
+                padding: 0.5em; }
+PRE.scheme-hl SPAN.o { color: #606060; } /* comment */
+PRE.scheme-hl SPAN.p { color: #008080; } /* parenthesis */
+PRE.scheme-hl SPAN.s { color: #0000a0; } /* symbol */
+PRE.scheme-hl SPAN.c { color: #000000; } /* constant */
+PRE.scheme-hl SPAN.r { color: #a00000; } /* r5rs procedure */
+PRE.scheme-hl SPAN.y { color: #a00000; } /* r5rs syntax */
+
+PRE.scheme-hl SPAN.n:hover { background: #ffffb8; }
+PRE.scheme-hl SPAN.n SPAN.n:hover { background: #ffdcba; }
+PRE.scheme-hl SPAN.n SPAN.n SPAN.n:hover { background: #eacbff; }
+PRE.scheme-hl SPAN.n SPAN.n SPAN.n SPAN.n:hover { background: #c5ffe5; }
+PRE.scheme-hl SPAN.n SPAN.n SPAN.n SPAN.n SPAN.n:hover { background: #ffffb8; }
+PRE.scheme-hl SPAN.n SPAN.n SPAN.n SPAN.n SPAN.n SPAN.n:hover { background: #ffdcba; }
+PRE.scheme-hl SPAN.n SPAN.n SPAN.n SPAN.n SPAN.n SPAN.n SPAN.n:hover { background: #eacbff; }
+PRE.scheme-hl SPAN.n SPAN.n SPAN.n SPAN.n SPAN.n SPAN.n SPAN.n SPAN.n:hover
+        { background: #c5ffe5; }
+PRE.scheme-hl SPAN.n SPAN.n SPAN.n SPAN.n SPAN.n SPAN.n SPAN.n SPAN.n SPAN.n:hover
+        { background: #ffffb8; }
+PRE.scheme-hl SPAN.n SPAN.n SPAN.n SPAN.n SPAN.n SPAN.n SPAN.n SPAN.n SPAN.n SPAN.n:hover
+        { background: #ffdcba; }
+PRE.scheme-hl SPAN.n SPAN.n SPAN.n SPAN.n SPAN.n SPAN.n SPAN.n SPAN.n SPAN.n SPAN.n SPAN.n:hover
+        { background: #eacbff; }
+PRE.scheme-hl SPAN.n SPAN.n SPAN.n SPAN.n SPAN.n SPAN.n SPAN.n SPAN.n SPAN.n SPAN.n SPAN.n SPAN.n:hover
+        { background: #c5ffe5; }
+PRE.scheme-hl SPAN.n SPAN.n SPAN.n SPAN.n SPAN.n SPAN.n SPAN.n SPAN.n SPAN.n SPAN.n SPAN.n SPAN.n SPAN.n:hover
+        { background: #ffffb8; }
+PRE.scheme-hl SPAN.n SPAN.n SPAN.n SPAN.n SPAN.n SPAN.n SPAN.n SPAN.n SPAN.n SPAN.n SPAN.n SPAN.n SPAN.n SPAN.n:hover
+        { background: #ffdcba; }
+PRE.scheme-hl SPAN.n SPAN.n SPAN.n SPAN.n SPAN.n SPAN.n SPAN.n SPAN.n SPAN.n SPAN.n SPAN.n SPAN.n SPAN.n SPAN.n SPAN.n:hover
+        { background: #eacbff; }
+PRE.scheme-hl SPAN.n SPAN.n SPAN.n SPAN.n SPAN.n SPAN.n SPAN.n SPAN.n SPAN.n SPAN.n SPAN.n SPAN.n SPAN.n SPAN.n SPAN.n SPAN.n:hover
+        { background: #c5ffe5; }

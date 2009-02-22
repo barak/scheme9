@@ -1,0 +1,6 @@
+R4RS 6.3 (list-ref list k) ==> obj
+
+Returns the kth element of list. (This is the same as the car of
+(list-tail list k).)
+
+(list-ref '(a b c d) 2)        ==>  c

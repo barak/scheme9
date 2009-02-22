@@ -1,0 +1,10 @@
+R4RS 6.5.6 (string->number string) ==> integer
+           (string->number string radix) ==> integer
+
+Returns a number expressed by the given string. RADIX must be an
+integer, either 2, 8, 10, or 16. If RADIX is not supplied, then the
+default radix is 10. If string is not a syntactically valid notation
+for a number, then STRING->NUMBER returns #f.
+
+(string->number "100")                 ==>  100
+(string->number "100" 16)              ==>  256
