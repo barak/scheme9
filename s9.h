@@ -33,6 +33,21 @@
  #ifndef unix
   #define unix
  #endif
+#endif
+
+#ifdef __linux
+ #ifndef unix
+  #define unix
+ #endif
+ #ifndef _BSD_SOURCE
+  #define _BSD_SOURCE
+ #endif
+ #ifndef _POSIX_SOURCE
+  #define _POSIX_SOURCE
+ #endif
+#endif
+
+#ifdef unix
  #include <stdlib.h>
  #include <stddef.h>
  #include <stdio.h>

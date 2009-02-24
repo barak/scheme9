@@ -1,0 +1,20 @@
+#!/usr/bin/make -f
+clean:
+	dh $@
+
+build:
+	dh $@ --before auto_build
+	dh_auto_build -- prefix=/usr
+	dh $@ --remaining
+
+install:
+	dh $@ --before auto_install
+	dh_auto_install -- prefix=/usr
+	dh $@ --remaining
+
+binary-arch binary-indep binary:
+	dh $@ --before auto_build
+	dh_auto_build -- prefix=/usr
+	dh $@ --before auto_install
+	dh_auto_install -- prefix=/usr
+	dh $@ --remaining

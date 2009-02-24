@@ -1,0 +1,6 @@
+scheme9 (2009.02.09-1) unstable; urgency=low
+
+  * Initial release (Closes: #516898)
+
+ -- Barak A. Pearlmutter <bap@debian.org>  Mon, 23 Feb 2009 09:28:11 +0000
+

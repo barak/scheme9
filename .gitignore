@@ -1,0 +1,12 @@
+*.o
+/debian/*.debhelper
+/debian/*.log
+/debian/*.substvars
+/debian/files
+/debian/scheme9
+/s9
+/s9.1
+/s9.image
+/s9e
+/s9e.image
+/s9e.scm

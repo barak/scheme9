@@ -1,5 +1,6 @@
 .\" S9(1) Manual Page
 .\" By Nils M Holm, 2007, 2008, 2009
+.TH s9 1 2009-02-24 Debian Scheme 9 From Empty Space
 .ll 70
 .lt 70
 .ds N "pi
@@ -430,7 +431,7 @@ If present, this file is
 when the interpreter starts up.
 .in -4
 .ne 2
-.B @LIBDIR@/s9.scm
+.B @DATADIR@/s9.scm
 .in +4
 The library part of the interpreter (source code).
 .in -4
@@ -454,7 +455,7 @@ will be search by the
 procedure.
 .br
 Default:
-.B .:~/.s9fes:@LIBDIR@
+.B \&.:~/.s9fes:@DATADIR@:@LIBDIR@
 .in -4
 .SH "SIGNALS
 These work only if POSIX signal handling was enabled at compile time.

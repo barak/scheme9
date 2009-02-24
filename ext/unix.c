@@ -1,14 +1,15 @@
+#define EXTERN
+#include "s9.h"
+#undef EXTERN
+
 #include <stdlib.h>
 #include <stdio.h>
 #include <sys/types.h>
+#include <sys/time.h>
 #include <sys/stat.h>
 #include <pwd.h>
 #include <unistd.h>
 #include <errno.h>
-
-#define EXTERN
-#include "s9.h"
-#undef EXTERN
 
 /*
  *	Allow us at least to write

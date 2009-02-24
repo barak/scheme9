@@ -1,0 +1,4 @@
+?package(scheme9):needs="text" section="Applications/Programming"\
+  title="scheme9" command="/usr/bin/s9"
+?package(scheme9):needs="text" section="Applications/Programming"\
+  title="scheme9 extended" command="/usr/bin/s9e"
