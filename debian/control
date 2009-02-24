@@ -5,6 +5,8 @@ Maintainer: "Barak A. Pearlmutter" <bap@debian.org>
 Build-Depends: debhelper (>= 7)
 Standards-Version: 3.8.0
 Homepage: http://t3x.org/s9fes/
+Vcs-Git: git://git.debian.org/git/collab-maint/scheme9.git
+Vcs-Browser: http://git.debian.org/?p=collab-maint/scheme9.git
 
 Package: scheme9
 Architecture: any
