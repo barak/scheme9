@@ -33,6 +33,21 @@
  #ifndef unix
   #define unix
  #endif
+#endif
+ 
+#ifdef __linux
+ #ifndef unix
+  #define unix
+ #endif
+ #ifndef _BSD_SOURCE
+  #define _BSD_SOURCE
+ #endif
+ #ifndef _POSIX_SOURCE
+  #define _POSIX_SOURCE
+ #endif
+#endif
+ 
+#ifdef unix
  #include <stdlib.h>
  #include <stddef.h>
  #include <stdio.h>
@@ -78,7 +93,6 @@
 
 /* A "cell" must be large enough to hold a pointer */
 #define cell	ptrdiff_t
-#define uint	unsigned int
 
 /* Pick one ... */
 /* #define BITS_PER_WORD_64 */
@@ -219,6 +233,7 @@ EXTERN FILE	*Ports[MAX_PORTS];
 EXTERN char	Port_flags[MAX_PORTS];
 EXTERN int	Input_port,
 		Output_port;
+EXTERN cell	Trace_list;
 EXTERN int	Level;
 EXTERN int	Load_level;
 EXTERN int	Displaying;

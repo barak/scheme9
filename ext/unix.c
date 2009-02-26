@@ -1,20 +1,21 @@
+#define EXTERN
+#include "s9.h"
+#undef EXTERN
+
 #include <stdlib.h>
 #include <stdio.h>
 #include <sys/types.h>
+#include <sys/time.h>
 #include <sys/stat.h>
 #include <pwd.h>
 #include <unistd.h>
 #include <errno.h>
 
-#define EXTERN
-#include "s9.h"
-#undef EXTERN
-
 /*
  *	Allow us at least to write
  *		assign(assign(Car[x] = alloc(foo, bar)));
- *	in presence of that fact that C's idiotic
- *	order of evaluation f***s up
+ *	in presence of that fact that C's
+ *	order of evaluation messes up
  *		Car[x] = alloc(foo, bar);
  */
 cell	New_node;

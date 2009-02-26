@@ -35,30 +35,30 @@ OPTIONS
           --
               Arguments following -- are not interpreted by S9fES.
 
+ONLINE HELP
+          When the interpreter is running, type the following commands
+          to load and invoke the online help system:
+
+          (load-from-library "help.scm")
+          (help)
+
 TECHNICAL DETAILS
-          S9fES  is  a tree-walking interpreter using deep binding and
-          hashed environments. It employs a  constant-space  mark  and
-          sweep  garbage collector with in-situ string and vector pool
+          S9fES is a tree-walking interpreter using deep  binding  and
+          hashed  environments.  It  employs a constant-space mark and
+          sweep garbage collector with in-situ string and vector  pool
           compaction. Memory pools grow on demand.
           The interpreter uses bignum integer arithmetics exclusively.
-          It  provides  both  low-level  macros (see MACROS below) and
+          It provides both low-level macros  (see  MACROS  below)  and
           define-syntax/syntax-rules.
 
 ADDITIONS
           These S9fES procedures are not in R4RS:
 
           (delete-file string) ==> unspecific
-              Delete the file specifed in the argument.  If  the  file
+              Delete  the  file  specifed in the argument. If the file
               does not exist or cannot be deleted, report an error.
-          (expand-quasiquote form) ==> expanded-form
-              If  form  is a quasiquoted expression, re-write it to an
-              equivalent expression that does not use  quasiquotation.
-          (expand-macro form) ==> expanded-form
-              If  form applies a macro, return the expanded form, else
-              return the form.
-          (file-exists? string) ==> boolean
-              Return #t if the file specifed in  the  argument  exists
-              and otherwise #f.
+
+
 
 
 
@@ -68,22 +68,31 @@ S9 Interpreter                  Page 1                           S9(1)
 S9(1)                  Scheme 9 from Empty Space                 S9(1)
 
 
+          (expand-quasiquote form) ==> expanded-form
+              If form is a quasiquoted expression, re-write it  to  an
+              equivalent  expression that does not use quasiquotation.
+          (expand-macro form) ==> expanded-form
+              If form applies a macro, return the expanded form,  else
+              return the form.
+          (file-exists? string) ==> boolean
+              Return  #t  if  the file specifed in the argument exists
+              and otherwise #f.
           (fold-left proc base list ...) ==> form
-              Combine  the  elements of the lists using proc.  Combine
-              elements  left-associatively.   Base  is  the   leftmost
+              Combine the elements of the lists using  proc.   Combine
+              elements   left-associatively.   Base  is  the  leftmost
               element.
           (fold-right proc base list ...) ==> form
-              Combine  the  elements of the lists using proc.  Combine
-              elements right-associatively.   Base  is  the  rightmost
+              Combine the elements of the lists using  proc.   Combine
+              elements  right-associatively.   Base  is  the rightmost
               element.
           (gensym) ==> symbol
               Return a fresh symbol.
           (load-from-library string) ==> unspecific
-              Attempt  to  load the file string from each directory of
+              Attempt to load the file string from each  directory  of
               S9FES_LIBRARY_PATH.
           (locate-file string) ==> string | #f
               Search  for  the  file  string  in  each   directory  of
-              S9FES_LIBRARY_PATH  in  sequence.   When the file can be
+              S9FES_LIBRARY_PATH in sequence.  When the  file  can  be
               located, return its full path, else return #f.
           (map-car proc list) ==> mapped-list
               This is equal to map with a single list.
@@ -95,6 +104,14 @@ S9(1)                  Scheme 9 from Empty Space                 S9(1)
               Destructively set the current output port.
           (symbols) ==> list
               Return a list of all defined symbols.
+          (trace symbol ...) ==> list | #t
+          (trace #t) ==> list | #t
+              Trace  the  procedure  or  syntax  bound  to  the  given
+              symbols.  When  #t  is  passed  to  trace,   trace   all
+              procedures  and syntax (expect lots of output!). When no
+              arguments are passed  to  it,  disable  tracing.   Trace
+              returns  the  symbols  that were being traced before its
+              invocation.
           (wrong string form) ==> bottom
               Print an error message of the form error:  string:  form
               and  terminate program execuation.  Form may be omitted.
@@ -108,6 +125,15 @@ VARIABLES
 
           ** (form)
               The  normal  form  of  the  expression   most   recently
+
+
+
+S9 Interpreter                  Page 2                           S9(1)
+
+
+S9(1)                  Scheme 9 from Empty Space                 S9(1)
+
+
               evaluated at the top level.
           *extensions* (list of symbols)
               Compiled-in extensions.
@@ -123,16 +149,6 @@ MACROS
           with the value returned  by  the  procedure.   This  happens
           before  the  expression  containing the macro application is
           evaluated, so a macro rewrites its own application:
-
-
-
-
-
-S9 Interpreter                  Page 2                           S9(1)
-
-
-S9(1)                  Scheme 9 from Empty Space                 S9(1)
-
 
           (define-macro (when p . c)
             `(if ,p (begin ,@c)))
@@ -175,6 +191,15 @@ ALLOCATION STRATEGY
           Note that computations may abort before the limit is reached
           due  to  the  way  the  pool  grows. Use the -g command line
           option to experiment with pool sizes.
+
+
+
+S9 Interpreter                  Page 3                           S9(1)
+
+
+S9(1)                  Scheme 9 from Empty Space                 S9(1)
+
+
           Specifying a memory limit of zero disables the memory  limit
           and  the  interpreter will allocate as much memory as it can
           get. This option should be used with care.
@@ -191,15 +216,6 @@ LIMITATIONS
           atan,  ceiling,  complex?, cos, denominator, exact->inexact,
           exact?, exp,  floor,  imag-part,  inexact->exact,  inexact?,
           log,  magnitude,  make-polar,  make-rectangular,  numerator,
-
-
-
-S9 Interpreter                  Page 3                           S9(1)
-
-
-S9(1)                  Scheme 9 from Empty Space                 S9(1)
-
-
           rational, rationalize, real-part, real?, round,  sin,  sqrt,
           tan, truncate.
 
@@ -240,6 +256,17 @@ SIGNALS
           SIGQUIT
               Terminate the interpreter process (emergency exit).
 
+
+
+
+
+S9 Interpreter                  Page 4                           S9(1)
+
+
+S9(1)                  Scheme 9 from Empty Space                 S9(1)
+
+
+
 REFERENCES
           http://www-swiss.ai.mit.edu/~jaffer/r4rs_toc.html
               The Revised^4 Report on the Algorithmic Language Scheme.
@@ -260,5 +287,44 @@ AUTHOR
 
 
 
-S9 Interpreter                  Page 4                           S9(1)
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+S9 Interpreter                  Page 5                           S9(1)
 
