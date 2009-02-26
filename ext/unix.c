@@ -14,8 +14,8 @@
 /*
  *	Allow us at least to write
  *		assign(assign(Car[x] = alloc(foo, bar)));
- *	in presence of that fact that C's idiotic
- *	order of evaluation f***s up
+ *	in presence of that fact that C's
+ *	order of evaluation messes up
  *		Car[x] = alloc(foo, bar);
  */
 cell	New_node;

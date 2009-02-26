@@ -8,7 +8,7 @@
  * Use -DBITS_PER_WORD_64 on 64-bit systems.
  */
 
-#define VERSION "2009-02-09"
+#define VERSION "2009-02-25"
 
 #define EXTERN
 #include "s9.h"
@@ -24,7 +24,7 @@ PRIM	*Apply_magic;
 
 cell	*GC_root[] = { &Program, &Symbols, &Environment, &Tmp,
 			&Tmp_car, &Tmp_cdr, &Stack, &Stack_bottom,
-			&State_stack, &Acc, NULL };
+			&State_stack, &Acc, &Trace_list, NULL };
 
 /*----- Output -----*/
 
@@ -532,7 +532,7 @@ int strcmp_ci(char *s1, char *s2) {
 
 /* Read a character literal. */
 cell character(void) {
-	char	buf[10];
+	char	buf[10], msg[50];
 	int	i, c;
 
 	for (i=0; i<9; i++) {
@@ -547,7 +547,8 @@ cell character(void) {
 	else if (!strcmp_ci(buf, "space")) c = ' ';
 	else if (!strcmp_ci(buf, "newline")) c = '\n';
 	else {
-		error("bad # syntax", NOEXPR);
+		sprintf(msg, "bad # syntax: %s", buf);
+		error(msg, NOEXPR);
 		c = 0;
 	}
 	return make_char(c);
@@ -1063,10 +1064,10 @@ int list_of_symbols_p(cell n) {
 }
 
 void rehash(cell e) {
-	uint	i;
-	cell	p, *v, new;
-	uint	h, k = length(e);
-	char	*s;
+	unsigned int	i;
+	cell		p, *v, new;
+	unsigned int	h, k = length(e);
+	char		*s;
 
 	if (Program == NIL || k < HASH_THRESHOLD) return;
 	new = allocv(S_vector, k * sizeof(cell));
@@ -1113,9 +1114,9 @@ cell make_env(cell rib, cell env) {
 }
 
 cell try_hash(cell v, cell e) {
-	cell	*hv, p;
-	uint	h, k;
-	char	*s;
+	cell		*hv, p;
+	unsigned int	h, k;
+	char		*s;
 
 	if (e == NIL || Car[e] == NIL) return NIL;
 	hv = vector(Car[e]);
@@ -2683,6 +2684,30 @@ cell pp_times(cell x) {
 	return a;
 }
 
+cell pp_trace(cell x) {
+	cell	n = Trace_list;
+
+	if (Cdr[x] == NIL) {
+		n = Trace_list;
+		Trace_list = NIL;
+	}
+	if (cddr(x) == NIL && cadr(x) == TRUE) {
+		Trace_list = TRUE;
+	}
+	else {
+		if (Trace_list == TRUE) Trace_list = NIL;
+		x = Cdr[x];
+		while (x != NIL) {
+			if (!symbol_p(Car[x]))
+				return error("trace: expected symbol, got",
+					Car[x]);
+			Trace_list = alloc(Car[x], Trace_list);
+			x = Cdr[x];
+		}
+	}
+	return n;
+}
+
 cell pp_unquote(cell x) {
 	return error("unquote: not in quasiquote context", NOEXPR);
 }
@@ -2865,6 +2890,7 @@ PRIM Primitives[] = {
  { "symbol->string",      pp_symbol_to_string,    1,  1, { SYM,___,___ } },
  { "symbols",             pp_symbols,             0,  0, { ___,___,___ } },
  { "*",                   pp_times,               0, -1, { ___,___,___ } },
+ { "trace",               pp_trace,               0, -1, { ___,___,___ } },
  { "unquote",             pp_unquote,             1,  1, { ___,___,___ } },
  { "unquote-splicing",    pp_unquote_splicing,    1,  1, { ___,___,___ } },
  { "vector-fill!",        pp_vector_fill_b,       2,  2, { VEC,___,___ } },
@@ -3201,6 +3227,22 @@ void make_dynamic(cell x) {
 		cdddr(x) = NIL; /* clear lexical env. */
 }
 
+int memqp(cell x, cell a) {
+	while (a != NIL) {
+		if (Car[a] == x) return 1;
+		a = Cdr[a];
+	}
+	return 0;
+}
+
+void trace(cell name, cell expr) {
+	if (Trace_list == TRUE || memqp(name, Trace_list)) {
+		pr("+ ");
+		print_form(alloc(name, Cdr[expr]));
+		nl();
+	}
+}
+
 cell _eval(cell x, int cbn) {
 	cell	m2,	/* Root of result list */
 		a,	/* Used to append to result */
@@ -3294,6 +3336,7 @@ cell _eval(cell x, int cbn) {
 				name = Car[rib_source(rib)];
 				/* Save result (new source expression) */
 				Car[Stack] = Acc;
+				if (Trace_list != NIL) trace(name, Acc);
 				if (primitive_p(Car[Acc])) {
 					if ((PRIM *) cadar(Acc) == Apply_magic)
 						c = cbn = 1;
@@ -3799,6 +3842,7 @@ void init(void) {
 	Acc = NIL;
 	Input_port = 0;
 	Output_port = 1;
+	Trace_list = NIL;
 	Level = 0;
 	Error_flag = 0;
 	Load_level = 0;

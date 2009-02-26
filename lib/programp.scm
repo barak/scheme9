@@ -5,7 +5,7 @@
 ; (program? form) ==> boolean
 ;
 ; Check whether FORM is a syntactically correct Scheme program.
-; This program does not catch all erraneous cases. Caveat utilitor.
+; This program does not catch all erroneous cases. Caveat utilitor.
 ;
 ; Arguments: x - form to check
 ;
@@ -125,7 +125,7 @@
          (list-of-programs? (cdr x))))
 
   (define (valid-lambda? x)
-    (and (of-length? 2 2 (cdr x))
+    (and (of-length? 2 INF (cdr x))
          (argument-list? (cadr x))
          (for-all program? (cddr x))))
 
@@ -168,7 +168,7 @@
                ((case)          (valid-case? x))
                ((cond)          (valid-cond? x))
                ((define)        (valid-define? x))
-               ((define-macro)  (valid-define-macro? x))  ; S9fES Extension
+               ((define-macro)  (valid-define-macro? x))  ; S9fES extension
                ((define-syntax) (valid-define-syntax? x))
                ((delay)         (valid-delay? x))
                ((do)            (valid-do? x))

@@ -16,19 +16,26 @@ datadir=$(prefix)/share
 libdir=$(exec_prefix)/lib
 mandir=$(prefix)/man
 
+BINDIR=$(bindir)
+LIBDIR=$(libdir)/s9fes
+DATADIR=$(datadir)/s9fes
+MANDIR=$(mandir)/man1
+
 # BITS_PER_WORD_64	use 64-bit bignum arithmetics
 # NO_SIGNALS		disable POSIX signal handlers
 # IMAGEFILE		default image file name
 # LIBRARY		default library source file
 # DEFAULT_LIBRARY_PATH	default search path for LOCATE-FILE
 
-DEFS=-DDEFAULT_LIBRARY_PATH="\".:~/s9fes:$(libdir)/s9fes:$(datadir)/s9fes\""
+DEFS=-DDEFAULT_LIBRARY_PATH="\".:~/s9fes:$(LIBDIR):$(DATADIR)\""
 
 EXTINI=	unix_init()
 EXTOBJ=	unix.o
 EXTDEF=	-DIMAGEFILE="\"s9e.image\"" -DLIBRARY="\"s9e.scm\""
 
-all:	s9 s9.image s9e s9e.image
+all:	s9 s9.image s9.1 all-s9e
+
+all-s9e:	s9e s9e.image s9e.1
 
 s9:	s9.c s9.h
 	$(CC) $(CFLAGS) $(DEFS) -o $@ s9.c
@@ -52,6 +59,20 @@ unix.o:	ext/unix.c
 s9e.image:	s9e s9e.scm
 	rm -f $@ && ./s9e -i -d $@
 
+s9.1: s9.1.in
+	sed -e "s,@LIBDIR@,$(LIBDIR)," < $? \
+	 | sed -e "s,@DATADIR@,$(DATADIR)," > $@
+
+s9e.1: s9e.1.in
+	sed -e "s,@LIBDIR@,$(LIBDIR)," < $? \
+	 | sed -e "s,@DATADIR@,$(DATADIR)," > $@
+
+s9.1.gz:	s9.1
+	gzip -9 <$? >$@
+
+s9e.1.gz:	s9e.1
+	gzip -9 <$? >$@
+
 test:	s9 s9.image
 	./s9 -if test.scm
 
@@ -64,33 +85,29 @@ libtest:	s9 s9.image
 install: install-s9 install-s9e
 
 install-s9:	s9 s9.scm s9.image s9.1
-	install -d -m 0755 $(DESTDIR)$(bindir)
-	install -d -m 0755 $(DESTDIR)$(libdir)/s9fes
-	install -d -m 0755 $(DESTDIR)$(datadir)/s9fes
-	install -d -m 0755 $(DESTDIR)$(datadir)/s9fes/help
-	install $C -m 0755 s9 $(DESTDIR)$(bindir)/
-	install $C -m 0644 s9.scm $(DESTDIR)$(datadir)/s9fes/
-	install $C -m 0644 s9.image $(DESTDIR)$(libdir)/s9fes/
-	install $C -m 0644 lib/* $(DESTDIR)$(datadir)/s9fes/
-	install $C -m 0644 help/* $(DESTDIR)$(datadir)/s9fes/help/
+	install -d -m 0755 $(DESTDIR)$(BINDIR)
+	install -d -m 0755 $(DESTDIR)$(LIBDIR)
+	install -d -m 0755 $(DESTDIR)$(DATADIR)
+	install -d -m 0755 $(DESTDIR)$(DATADIR)/help
+	install $C -m 0755 s9 $(DESTDIR)$(BINDIR)/
+	install $C -m 0644 s9.scm $(DESTDIR)$(DATADIR)/
+	install $C -m 0644 s9.image $(DESTDIR)$(LIBDIR)/
+	install $C -m 0644 lib/* $(DESTDIR)$(DATADIR)/
+	install $C -m 0644 help/* $(DESTDIR)$(DATADIR)/help/
 
 install-s9e:	install-s9 s9e s9e.scm s9e.image
-	install -d -m 0755 $(DESTDIR)$(bindir)
-	install -d -m 0755 $(DESTDIR)$(libdir)/s9fes
-	install -d -m 0755 $(DESTDIR)$(datadir)/s9fes
-	install -d -m 0755 $(DESTDIR)$(datadir)/s9fes/help
-	install $C -m 0755 s9e $(DESTDIR)$(bindir)/
-	install $C -m 0644 s9e.scm $(DESTDIR)$(datadir)/s9fes/
-	install $C -m 0644 s9e.image $(DESTDIR)$(libdir)/s9fes/
-	install $C -m 0644 ext/*.scm $(DESTDIR)$(datadir)/s9fes/
-
-s9.1: s9.1.in
-	sed -e "s,@LIBDIR@,$(libdir)/s9fes," < $? \
-	 | sed -e "s,@DATADIR@,$(datadir)/s9fes," > $@
+	install -d -m 0755 $(DESTDIR)$(BINDIR)
+	install -d -m 0755 $(DESTDIR)$(LIBDIR)
+	install -d -m 0755 $(DESTDIR)$(DATADIR)
+	install -d -m 0755 $(DESTDIR)$(DATADIR)/help
+	install $C -m 0755 s9e $(DESTDIR)$(BINDIR)/
+	install $C -m 0644 s9e.scm $(DESTDIR)$(DATADIR)/
+	install $C -m 0644 s9e.image $(DESTDIR)$(LIBDIR)/
+	install $C -m 0644 ext/*.scm $(DESTDIR)$(DATADIR)/
 
 clean:
-	rm -f s9 s9e s9e.scm s9.image s9e.image s9.1.gz ext/ext-*.h ext/ext.h \
-		s9.1 \
-		__testfile__ *.o *.core core s9.7.tgz s9fes.tgz __tmp[12]__
+	rm -f s9 s9e s9e.scm s9.image s9e.image \
+		s9.1 s9e.1 s9.1.gz s9e.1.gz \
+		*.o *.core core s9.7.tgz s9fes.tgz __tmp[12]__ __testfile__
 
 # --- end of distribution Makefile ---

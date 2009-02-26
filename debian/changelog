@@ -1,3 +1,9 @@
+scheme9 (2009.02.25-1) unstable; urgency=low
+
+  * New upstream version
+
+ -- Barak A. Pearlmutter <bap@debian.org>  Thu, 26 Feb 2009 22:18:07 +0000
+
 scheme9 (2009.02.09-1) unstable; urgency=low
 
   * Initial release (Closes: #516898)

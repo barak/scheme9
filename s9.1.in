@@ -106,6 +106,13 @@ Arguments following
 .B --
 are not interpreted by S9fES.
 .in -4
+.SH "ONLINE HELP
+When the interpreter is running, type the following commands to
+load and invoke the online help system:
+.sp
+\fB(load-from-library "help.scm")\fP
+.br
+\fB(help)\fP
 .SH "TECHNICAL DETAILS
 S9fES is a tree-walking interpreter using deep binding and hashed
 environments. It employs a constant-space mark and sweep garbage
@@ -231,6 +238,22 @@ Destructively set the current output port.
 .B "(symbols) ==> list
 .in +4
 Return a list of all defined symbols.
+.in -4
+.br
+.ne 3
+.B "(trace symbol ...) ==> list | #t
+.br
+.B "(trace #t) ==> list | #t
+.in +4
+Trace the procedure or syntax bound to the given \fBsymbol\fPs. When
+\fB#t\fP is passed to
+.BR trace ,
+trace
+.I all
+procedures and syntax (\fIexpect lots of output!\fP). When no arguments are
+passed to it, disable tracing.
+.B Trace
+returns the symbols that were being traced before its invocation.
 .in -4
 .br
 .ne 3
