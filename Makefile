@@ -44,26 +44,23 @@ s9.image:	s9 s9.scm
 	rm -f $@ && ./s9 -i -d $@
 
 s9e:	s9e.o $(EXTOBJ)
-	$(CC) $(CFLAGS) -o $@ s9e.o $(EXTOBJ)
+	$(CC) $(CFLAGS) -o $@ $^
 
 s9e.scm:	s9.scm
 	ln -s s9.scm $@
 
+s9e.o:	s9.h
 s9e.o:	s9.c
 	$(CC) $(CFLAGS) $(DEFS) -I . -DEXTENSIONS="$(EXTINI)" $(EXTDEF) \
-		-o $@ -c s9.c
+		-c $?
 
 unix.o:	ext/unix.c
-	$(CC) $(CFLAGS) -I . -o unix.o -c ext/unix.c
+	$(CC) $(CFLAGS) -I . -c $?
 
 s9e.image:	s9e s9e.scm
 	rm -f $@ && ./s9e -i -d $@
 
-s9.1: s9.1.in
-	sed -e "s,@LIBDIR@,$(LIBDIR)," < $? \
-	 | sed -e "s,@DATADIR@,$(DATADIR)," > $@
-
-s9e.1: s9e.1.in
+%.1: %.1.in
 	sed -e "s,@LIBDIR@,$(LIBDIR)," < $? \
 	 | sed -e "s,@DATADIR@,$(DATADIR)," > $@
 
