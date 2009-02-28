@@ -52,23 +52,20 @@ s9e.scm:	s9.scm
 s9e.o:	s9.h
 s9e.o:	s9.c
 	$(CC) $(CFLAGS) $(DEFS) -I . -DEXTENSIONS="$(EXTINI)" $(EXTDEF) \
-		-c $?
+		-o $@ -c $<
 
 unix.o:	ext/unix.c
-	$(CC) $(CFLAGS) -I . -c $?
+	$(CC) $(CFLAGS) -I . -c $<
 
 s9e.image:	s9e s9e.scm
 	rm -f $@ && ./s9e -i -d $@
 
 %.1: %.1.in
-	sed -e "s,@LIBDIR@,$(LIBDIR)," < $? \
+	sed -e "s,@LIBDIR@,$(LIBDIR)," < $< \
 	 | sed -e "s,@DATADIR@,$(DATADIR)," > $@
 
-s9.1.gz:	s9.1
-	gzip -9 <$? >$@
-
-s9e.1.gz:	s9e.1
-	gzip -9 <$? >$@
+%.gz: %
+	gzip -9 <$< >$@
 
 test:	s9 s9.image
 	./s9 -if test.scm
