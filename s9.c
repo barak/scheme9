@@ -787,7 +787,7 @@ cell xread(void) {
 char *ntoa(char *b, cell x, int w) {
 	char	buf[40];
 	int	i = 0, neg = 0;
-	char	*p = &buf[39];
+	char	*p = &buf[sizeof(buf)-1];
 
 	if (x < 0) {
 		x = -x;
@@ -796,18 +796,18 @@ char *ntoa(char *b, cell x, int w) {
 	*p = 0;
 	while (x || i == 0) {
 		i += 1;
-		if (i >= 39) fatal("ntoa: number too big");
+		if (i >= sizeof(buf)-1) fatal("ntoa: number too big");
 		p -= 1;
 		*p = x % 10 + '0';
 		x = x / 10;
 	}
-	while (i < (w-neg) && i < 39) {
+	while (i < (w-neg) && i < sizeof(buf)-1) {
 		i += 1;
 		p -= 1;
 		*p = '0';
 	}
 	if (neg) {
-		if (i >= 39) fatal("ntoa: number too big");
+		if (i >= sizeof(buf)-1) fatal("ntoa: number too big");
 		p -= 1;
 		*p = '-';
 	}
@@ -3695,7 +3695,7 @@ int load_image(char *p) {
 	name = make_string(p, (int) strlen(p));
 	f = fopen(p, "rb");
 	if (f == NULL) return -1;
-	fread(buf, 32, 1, f);
+	fread(buf, sizeof(buf)-1, 1, f);
 	if (memcmp(buf, "S9", 2)) {
 		error("bad image file (magic match failed)", name);
 		bad = 1;
@@ -3762,12 +3762,12 @@ void load_library(void) {
 	p = strtok(path, ":");
 	while (p != NULL) {
 		if (p[0] == '~') {
-			if (strlen(p) + strlen(home) >= 239)
+			if (strlen(p) + strlen(home) >= sizeof(libdir)-1)
 				fatal("load_library path too long");
 			sprintf(libdir, "%s%s", home, &p[1]);
 		}
 		else {
-			if (strlen(p) >= 239)
+			if (strlen(p) >= sizeof(libdir)-1)
 				fatal("load_library: path too long");
 			sprintf(libdir, "%s", p);
 		}
@@ -3795,7 +3795,7 @@ void load_rc(void) {
 
 	home = getenv("HOME");
 	if (home == NULL) return;
-	if (strlen(home) + 12 >= 256) fatal("path too long in HOME");
+	if (strlen(home) + 12 >= sizeof(rcpath)) fatal("path too long in HOME");
 	sprintf(rcpath, "%s/.s9fes/rc", home);
 	load(rcpath);
 }
