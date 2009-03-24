@@ -3,6 +3,11 @@
  * By Nils M Holm <nmh@t3x.org>, 2007,2008,2009
  */
 
+#ifdef __PCC__
+ #define _POSIX_SOURCE
+ #define _POSIX_C_SOURCE 200112
+#endif
+
 /*
  * Tell later MSC compilers to let us use the standard CLIB API.
  * Blake McBride <blake@mcbride.name>
@@ -34,7 +39,7 @@
   #define unix
  #endif
 #endif
- 
+
 #ifdef __linux
  #ifndef unix
   #define unix
@@ -46,7 +51,7 @@
   #define _POSIX_SOURCE
  #endif
 #endif
- 
+
 #ifdef unix
  #include <stdlib.h>
  #include <stddef.h>
@@ -58,13 +63,15 @@
  #else
   #include <signal.h>
   #ifndef SIGQUIT
+   /* MinGW does not define SIGQUIT */
    #define SIGQUIT SIGINT
   #endif
  #endif
 #endif
 
 #ifndef DEFAULT_LIBRARY_PATH
- #define DEFAULT_LIBRARY_PATH	".:~/.s9fes:/usr/local/share/s9fes"
+ #define DEFAULT_LIBRARY_PATH \
+	".:~/.s9fes:/usr/local/share/s9fes:/usr/local/share/s9fes/contrib"
 #endif
 
 #ifndef IMAGEFILE
@@ -77,10 +84,10 @@
 #define TOKEN_LENGTH		1024
 #define MAX_PORTS		32
 #define INITIAL_SEGMENT_SIZE	32768
-#define HASH_THRESHOLD		16
+#define HASH_THRESHOLD		5
 #define MAX_CALL_TRACE		10
 
-/* Default memory limit in K-Nodes, 0 = none
+/* Default memory limit in K-nodes, 0 = none
  *
  * This peculiar default value is based on the way
  * in which segment sizes grow. Each time a new
@@ -134,6 +141,7 @@
 #define PORT_TAG	0x10	/* Atom is an I/O port (with ATOM_TAG) */
 #define USED_TAG	0x20	/* Port: used flag */
 #define LOCK_TAG	0x40	/* Port: locked (do not close) */
+#define CONST_TAG	0x80	/* Node is immutable */
 
 enum EVAL_STATES {
 	EV_ATOM,	/* Processing atom */
@@ -145,7 +153,7 @@ enum EVAL_STATES {
 	EV_MACRO,	/* Processing value of DEFINE-MACRO */
 	EV_BEGIN,	/* Processing BEGIN */
 	EV_AND,		/* Processing arguments of AND */
-	EV_OR,	 	/* Processing arguments of OR */
+	EV_OR,		/* Processing arguments of OR */
 	EV_COND		/* Processing clauses of COND */
 };
 
@@ -267,11 +275,21 @@ EXTERN cell	S_and, S_begin, S_cond, S_define, S_define_macro, S_if,
  */
 #define string(n)	((char *) &Vectors[Cdr[n]])
 #define string_len(n)	(Vectors[Cdr[n] - 1])
-#define vector_size(k)	(((k) + sizeof(cell)-1) / sizeof(cell) + 2)
 #define vector(n)	(&Vectors[Cdr[n]])
-#define vector_len(n)	(vector_size(string_len(n)) - 2)
+#define vector_link(n)	(Vectors[Cdr[n] - 3])
+#define vector_index(n)	(Vectors[Cdr[n] - 2])
+#define vector_size(k)	(((k) + sizeof(cell)-1) / sizeof(cell) + 3)
+#define vector_len(n)	(vector_size(string_len(n)) - 3)
 #define port_no(n)	(cadr(n))
 #define char_value(n)	(cadr(n))
+
+/*
+ * Internal vector representation
+ */
+#define RAW_VECTOR_LINK		0
+#define RAW_VECTOR_INDEX	1
+#define RAW_VECTOR_SIZE		2
+#define RAW_VECTOR_DATA		3
 
 /*
  * Nested lists
@@ -305,6 +323,8 @@ EXTERN cell	S_and, S_begin, S_cond, S_define, S_define_macro, S_if,
 #define unspecific_p(n)	((n) == UNSPECIFIC)
 
 #define boolean_p(n)	((n) == TRUE || (n) == FALSE)
+
+#define constant_p(n)	(!special_value_p(n) && (Tag[n] & CONST_TAG))
 
 #define integer_p(n) \
 	(!special_value_p(n) && (Tag[n] & ATOM_TAG) && Car[n] == S_integer)
@@ -383,7 +403,8 @@ EXTERN cell	S_and, S_begin, S_cond, S_define, S_define_macro, S_if,
  * Prototypes
  */
 cell error(char *msg, cell expr);
-cell make_integer(int i);
+void fatal(char *msg);
+cell make_integer(long i);
 int integer_value(char *src, cell x);
 cell alloc3(cell pcar, cell pcdr, int ptag);
 cell make_string(char *s, int k);

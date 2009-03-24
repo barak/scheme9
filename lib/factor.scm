@@ -35,7 +35,7 @@
              ((factorize3
                 (lambda (n d r)
                   (let ((rest/exp (quotient+exponent n d)))
-                    (let ((q (car rest/exp)) 
+                    (let ((q (car rest/exp))
                           (e (cdr rest/exp)))
                       (cond ((< q 2) (add-expt d e r))
                             ((> d lim) (add-expt n 1 r))
@@ -43,7 +43,7 @@
                                     q
                                     (if (= d 2)
                                         3
-                                        (t  (+ 2 d)))
+                                        (+ 2 d))
                                     (add-expt d e r)))))))))
                 (factorize3 n d r))))))
     (cond ((< n 1) (wrong "factor: operand not positive" n))

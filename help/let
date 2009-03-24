@@ -45,7 +45,7 @@ named by <variable>.
         ((< (car numbers) 0)
           (loop (cdr numbers)
                 nonneg
-                (cons (car numbers) neg)))))   
+                (cons (car numbers) neg)))))
           ==>  ((6 1 3) (-5 -2))
 
 S9fES does support named LET.

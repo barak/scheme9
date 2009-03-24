@@ -2,14 +2,18 @@
 #include "s9.h"
 #undef EXTERN
 
+#include <unistd.h>
+#include <errno.h>
 #include <stdlib.h>
 #include <stdio.h>
 #include <sys/types.h>
 #include <sys/time.h>
 #include <sys/stat.h>
+#include <sys/param.h>
 #include <pwd.h>
-#include <unistd.h>
-#include <errno.h>
+#include <grp.h>
+#include <dirent.h>
+#include <time.h>
 
 /*
  *	Allow us at least to write
@@ -21,18 +25,25 @@
 cell	New_node;
 #define assign(n,v)	{ New_node = v; n = New_node; }
 
+cell	Last_errno = 0;
+
+cell unix_error(char *who, int what, cell args) {
+	Last_errno = what;
+	return FALSE;
+}
+
 cell pp_unix_chdir(cell x) {
 	if (chdir(string(cadr(x))) < 0)
-		return error("chdir returned", make_integer(errno));
-	return UNSPECIFIC;
+		return unix_error("chdir", errno, x);
+	return TRUE;
 }
 
 cell pp_unix_chmod(cell x) {
 	int	r;
 
 	r = chmod(string(cadr(x)), integer_value("unix:chmod", caddr(x)));
-	if (r < 0) return error("chown returned", make_integer(errno));
-	return UNSPECIFIC;
+	if (r < 0) return unix_error("chown", errno, x);
+	return TRUE;
 }
 
 cell pp_unix_chown(cell x) {
@@ -41,8 +52,8 @@ cell pp_unix_chown(cell x) {
 	r = chown(string(cadr(x)),
 		integer_value("unix:chown", caddr(x)),
 		integer_value("unix:chown", cadddr(x)));
-	if (r < 0) return error("chown returned", make_integer(errno));
-	return UNSPECIFIC;
+	if (r < 0) return unix_error("chown", errno, x);
+	return TRUE;
 }
 
 cell pp_unix_command_line(cell x) {
@@ -67,19 +78,25 @@ cell pp_unix_command_line(cell x) {
 	return n;
 }
 
+cell pp_unix_errno(cell x) {
+	return make_integer(Last_errno);
+}
+
 cell pp_unix_exit(cell x) {
 	int	r;
 
 	r = integer_value("unix:exit", cadr(x));
 	if (r > 255 || r < 0)
 		return error("unix:exit: value out of range", cadr(x));
-	if (!Error_flag) exit(r);
+	exit(r);
+	fatal("exit() failed");
 	return UNSPECIFIC;
 }
 
 cell pp_unix_flush(cell x) {
-	fflush(Ports[port_no(cadr(x))]);
-	return UNSPECIFIC;
+	if (fflush(Ports[port_no(cadr(x))]))
+		return FALSE;
+	return TRUE;
 }
 
 cell pp_unix_getcwd(cell x) {
@@ -104,12 +121,68 @@ cell pp_unix_getgid(cell x) {
 	return make_integer(getgid());
 }
 
+cell mkgrent(struct group *gr) {
+	cell	n, a;
+
+	n = alloc(NIL, NIL);
+	save(n);
+	assign(Car[n], alloc(add_symbol("name"), NIL));
+	cdar(n) = make_string(gr->gr_name, strlen(gr->gr_name));
+	a = alloc(NIL, NIL);
+	Cdr[n] = a;
+	assign(Car[a], alloc(add_symbol("gid"), NIL));
+	cdar(a) = make_integer(gr->gr_gid);
+	unsave(1);
+	return n;
+}
+
+cell pp_unix_getgrnam(cell x) {
+	struct group	*gr;
+
+	gr = getgrnam(string(cadr(x)));
+	if (gr == NULL) return FALSE;
+	return mkgrent(gr);
+}
+
+cell pp_unix_getgrgid(cell x) {
+	struct group	*gr;
+
+	gr = getgrgid(integer_value("unix:getgrgid", cadr(x)));
+	if (gr == NULL) return FALSE;
+	return mkgrent(gr);
+}
+
+cell pp_unix_getpwent(cell x) {
+	struct passwd	*pw;
+	cell		n, a, pa;
+
+	setpwent();
+	n = alloc(NIL, NIL);
+	save(n);
+	a = n;
+	pa = n;
+	while (1) {
+		pw = getpwent();
+		if (pw == NULL) break;
+		pa = a;
+		assign(Car[a], make_string(pw->pw_name, strlen(pw->pw_name)));
+		if (pw != NULL) {
+			assign(Cdr[a], alloc(NIL, NIL));
+			a = Cdr[a];
+		}
+	}
+	Cdr[pa] = NIL;
+	endpwent();
+	unsave(1);
+	return n;
+}
+
 cell mkpwent(struct passwd *pw) {
 	cell	n, a;
 
 	n = alloc(NIL, NIL);
 	save(n);
-	assign(Car[n], alloc(add_symbol("user"), NIL));
+	assign(Car[n], alloc(add_symbol("name"), NIL));
 	cdar(n) = make_string(pw->pw_name, strlen(pw->pw_name));
 	a = alloc(NIL, NIL);
 	Cdr[n] = a;
@@ -157,8 +230,8 @@ cell pp_unix_getuid(cell x) {
 
 cell pp_unix_link(cell x) {
 	if (link(string(cadr(x)), string(caddr(x))) < 0)
-		return error("link returned", make_integer(errno));
-	return UNSPECIFIC;
+		return unix_error("link", errno, x);
+	return TRUE;
 }
 
 cell pp_unix_lock(cell x) {
@@ -173,14 +246,50 @@ cell pp_unix_lock(cell x) {
 
 cell pp_unix_mkdir(cell x) {
 	if (mkdir(string(cadr(x)), 0755) < 0)
-		return error("mkdir returned", make_integer(errno));
-	return UNSPECIFIC;
+		return unix_error("mkdir", errno, x);
+	return TRUE;
+}
+
+cell pp_unix_readdir(cell x) {
+	DIR		*dir;
+	struct dirent	*dp;
+	cell		n, a, pa;
+
+	dir = opendir(string(cadr(x)));
+	if (dir == NULL) return FALSE;
+	n = alloc(NIL, NIL);
+	save(n);
+	a = n;
+	pa = n;
+	while (1) {
+		dp = readdir(dir);
+		if (dp == NULL) break;
+		pa = a;
+		assign(Car[a], make_string(dp->d_name, strlen(dp->d_name)));
+		if (dp != NULL) {
+			assign(Cdr[a], alloc(NIL, NIL));
+			a = Cdr[a];
+		}
+	}
+	Cdr[pa] = NIL;
+	closedir(dir);
+	unsave(1);
+	return n;
+}
+
+cell pp_unix_readlink(cell x) {
+	char	buf[MAXPATHLEN+1];
+	int	k;
+
+	k = readlink(string(cadr(x)), buf, MAXPATHLEN);
+	if (k < 0) return unix_error("readlink", errno, x);
+	return make_string(buf, k);
 }
 
 cell pp_unix_rmdir(cell x) {
 	if (rmdir(string(cadr(x))) < 0)
-		return error("rmdir returned", make_integer(errno));
-	return UNSPECIFIC;
+		return unix_error("rmdir", errno, x);
+	return TRUE;
 }
 
 cell pp_unix_spawn(cell x) {
@@ -308,12 +417,25 @@ cell pp_unix_stat(cell x) {
 
 cell pp_unix_symlink(cell x) {
 	if (symlink(string(cadr(x)), string(caddr(x))) < 0)
-		return error("symlink returned", make_integer(errno));
-	return UNSPECIFIC;
+		return unix_error("symlink", errno, x);
+	return TRUE;
 }
 
 cell pp_unix_system(cell x) {
 	return system(string(cadr(x))) == 0? TRUE: FALSE;
+}
+
+cell pp_unix_time(cell x) {
+	time_t	t;
+
+	time(&t);
+	return make_integer(t);
+}
+
+cell pp_unix_unlink(cell x) {
+	if (unlink(string(cadr(x))) < 0)
+		return unix_error("unlink", errno, x);
+	return TRUE;
 }
 
 cell pp_unix_unlock(cell x) {
@@ -329,8 +451,8 @@ cell pp_unix_unlock(cell x) {
 
 cell pp_unix_utimes(cell x) {
 	if (utimes(string(cadr(x)), NULL) < 0)
-		return error("utimes returned", make_integer(errno));
-	return UNSPECIFIC;
+		return unix_error("utimes", errno, x);
+	return TRUE;
 }
 
 struct Primitive_procedure Unix_primitives[] = {
@@ -338,22 +460,30 @@ struct Primitive_procedure Unix_primitives[] = {
  { "unix:chmod",        pp_unix_chmod,        2,  2, { STR,INT,___ } },
  { "unix:chown",        pp_unix_chown,        3,  3, { STR,INT,INT } },
  { "unix:command-line", pp_unix_command_line, 0,  0, { ___,___,___ } },
+ { "unix:errno",        pp_unix_errno,        0,  0, { ___,___,___ } },
  { "unix:exit",         pp_unix_exit,         1,  1, { INT,___,___ } },
  { "unix:flush",        pp_unix_flush,        1,  1, { OUP,___,___ } },
  { "unix:getcwd",       pp_unix_getcwd,       0,  0, { ___,___,___ } },
  { "unix:getenv",       pp_unix_getenv,       1,  1, { STR,___,___ } },
  { "unix:getgid",       pp_unix_getgid,       0,  0, { ___,___,___ } },
+ { "unix:getgrnam",     pp_unix_getgrnam,     1,  1, { STR,___,___ } },
+ { "unix:getgrgid",     pp_unix_getgrgid,     1,  1, { INT,___,___ } },
+ { "unix:getpwent",     pp_unix_getpwent,     0,  0, { ___,___,___ } },
  { "unix:getpwnam",     pp_unix_getpwnam,     1,  1, { STR,___,___ } },
  { "unix:getpwuid",     pp_unix_getpwuid,     1,  1, { INT,___,___ } },
  { "unix:getuid",       pp_unix_getuid,       0,  0, { ___,___,___ } },
  { "unix:link",         pp_unix_link,         2,  2, { STR,STR,___ } },
  { "unix:lock",         pp_unix_lock,         1,  1, { STR,___,___ } },
  { "unix:mkdir",        pp_unix_mkdir,        1,  1, { STR,___,___ } },
+ { "unix:readdir",      pp_unix_readdir,      1,  1, { STR,___,___ } },
+ { "unix:readlink",     pp_unix_readlink,     1,  1, { STR,___,___ } },
  { "unix:rmdir",        pp_unix_rmdir,        1,  1, { STR,___,___ } },
  { "unix:spawn",        pp_unix_spawn,        1,  1, { STR,___,___ } },
  { "unix:stat",         pp_unix_stat,         1,  1, { STR,___,___ } },
  { "unix:symlink",      pp_unix_symlink,      2,  2, { STR,STR,___ } },
  { "unix:system",       pp_unix_system,       1,  1, { STR,___,___ } },
+ { "unix:time",         pp_unix_time,         0,  0, { ___,___,___ } },
+ { "unix:unlink",       pp_unix_unlink,       1,  1, { STR,___,___ } },
  { "unix:unlock",       pp_unix_unlock,       1,  1, { STR,___,___ } },
  { "unix:utimes",       pp_unix_utimes,       1,  1, { STR,___,___ } },
  { NULL }
@@ -362,4 +492,3 @@ struct Primitive_procedure Unix_primitives[] = {
 void unix_init(void) {
 	add_primitives("unix", Unix_primitives);
 }
-

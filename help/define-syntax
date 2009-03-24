@@ -9,16 +9,9 @@ the <keyword> to the specified transformer.
 (define-syntax let*
   (syntax-rules ()
     ((let* () body1 body2 ...)
-       (let () body1 body2 ...))
-    ((let* ((name val))
-           body1 body2 ...)
-       (let ((name val))
-         body1 body2 ...))
-    ((let* ((name1 val1) (name2 val2) . bindings)
-           body1 body2 ...)
-       (let ((name1 val1))
-	 (let* ((name2 val2) . bindings)
-	   body1 body2 ...)))))
-
-The S9fES implementation of DEFINE-SYNTAX/SYNTAX-RULES is rather
-quirky. Caveat utilitor.
+     (let () body1 body2 ...))
+    ((let* ((name1 val1) (name2 val2) ...)
+       body1 body2 ...)
+     (let ((name1 val1))
+       (let* ((name2 val2) ...)
+         body1 body2 ...)))))

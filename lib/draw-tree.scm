@@ -13,15 +13,15 @@
 ;
 ; (Example): (draw-tree '((a . b) (c d))) ==> unspecific
 ;
-; Output:    [o|o]---[o|o]--- ()     
-;             |       |      
-;             |      [o|o]---[o|o]--- ()     
-;             |       |       |      
-;             |       c       d      
-;             |      
-;            [o|o]--- b      
-;             |      
-;             a      
+; Output:    [o|o]---[o|o]--- ()
+;             |       |
+;             |      [o|o]---[o|o]--- ()
+;             |       |       |
+;             |       c       d
+;             |
+;            [o|o]--- b
+;             |
+;             a
 
 (define (draw-tree n)
 

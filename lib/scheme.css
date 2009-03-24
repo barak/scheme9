@@ -1,17 +1,19 @@
-PRE.scheme { background: #f0f0d0;  
-             border: 1px solid #0000a0;
+PRE.scheme { background: #fffff0;
+             border: 1px solid #000000;
              padding: 0.5em; }
-PRE.scheme SPAN.o { color: #606060; } /* comment */
-PRE.scheme SPAN.p { color: #008080; } /* parenthesis */
-PRE.scheme SPAN.s { color: #0000a0; } /* symbol */
-PRE.scheme SPAN.c { color: #000000; } /* constant */
-PRE.scheme SPAN.r { color: #a00000; } /* r5rs procedure */
-PRE.scheme SPAN.y { color: #a00000; } /* r5rs syntax */
 
-PRE.scheme-hl { background: #f0f0d0;  
+PRE.scheme SPAN.o { color: #505050; } /* comment */
+PRE.scheme SPAN.p { color: #808080; } /* parenthesis */
+PRE.scheme SPAN.s { color: #006060; } /* symbol */
+PRE.scheme SPAN.c { color: #000000; } /* constant */
+PRE.scheme SPAN.r { color: #804000; } /* r5rs procedure */
+PRE.scheme SPAN.y { color: #804000; } /* r5rs syntax */
+
+PRE.scheme-hl { background: #f0f0d0;
                 border: 1px solid #0000a0;
                 line-height: 100%;
                 padding: 0.5em; }
+
 PRE.scheme-hl SPAN.o { color: #606060; } /* comment */
 PRE.scheme-hl SPAN.p { color: #008080; } /* parenthesis */
 PRE.scheme-hl SPAN.s { color: #0000a0; } /* symbol */

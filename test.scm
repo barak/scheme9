@@ -2,9 +2,14 @@
 ; Test Suite
 ; By Nils M Holm, 2007, 2008, 2009
 
-; !!! This test will overwrite the file "__testfile__" !!!
-
 ;  This is a comment
+
+(define testfile "__testfile__")
+
+(if (file-exists? testfile)
+    (wrong (string-append "Please delete the file \""
+                          testfile
+                          "\" before running this test.")))
 
 (define Errors 0)
 
@@ -469,6 +474,8 @@
 (test (case 'x (else 1 2 3)) 3)
 (test (case 'x ((y) #f)) (void))
 
+(test (do () (#t 123)) 123)
+(test (do () (#t)) (void))
 (test (do ((i 1 (+ 1 i))) ((= i 10) i) i) 10)
 (test (do ((i 1 (+ 1 i)) (j 17)) ((= i 10) j) i) 17)
 (test (do ((i 1 (+ 1 i)) (j 2 (+ 2 j))) ((= i 10) j) i) 20)
@@ -477,14 +484,14 @@
 (test (do ((i 1 (+ 1 i)) (j 0)) ((= i 10) j) (set! j 1)) 1)
 (test (do ((i 1 (+ 1 i)) (j 0)) ((= i 10) j) 1 2 3 (set! j 1)) 1)
 
-(test (let ((a (list '(a) '(b) '(c))))
+(test (let ((a (list (list 'a) (list 'b) (list 'c))))
          (for-each (lambda (x) (set-car! x 'x)) a)
          a)
       '((x) (x) (x)))
-(test (let ((a (list '(a) '(b) '(c))))
-         (for-each (lambda (x y) (set-car! x y)) a '(a b c))
+(test (let ((a (list (list 'a) (list 'b) (list 'c))))
+         (for-each (lambda (x y) (set-car! x y)) a '(x y z))
          a)
-      '((a) (b) (c)))
+      '((x) (y) (z)))
 
 (define s (seq))
 (s)
@@ -628,7 +635,7 @@
 (test (list? '(1 2 3)) #t)
 (test (list? '(1 . 2)) #f)
 (test (list? '(1 2 . 3)) #f)
-(let ((cyclic '(1 2 3)))
+(let ((cyclic (list 1 2 3)))
   (set-cdr! (cddr cyclic) cyclic)
   (if (list? cyclic)
       (fail '(list? 'cyclic) #t)
@@ -1458,14 +1465,12 @@
 (test (vector-ref #(a b c) 1) 'b)
 (test (vector-ref #(a b c) 2) 'c)
 
-(define v '#(1 2 3))
+(define v (vector 1 2 3))
 (test (begin (vector-set! v 0 'a) v) '#(a 2 3))
 (test (begin (vector-set! v 2 'c) v) '#(a 2 c))
 (test (begin (vector-set! v 1 'b) v) '#(a b c))
 
 ; --- I/O ---
-
-(define testfile "__testfile__")
 
 (if (file-exists? testfile) (delete-file testfile))
 
@@ -1598,7 +1603,7 @@
        (cons #\space (with-range 32 126 integer->char)))
 
 ; does GC close unused files?
-; Set NFILES to a number that is greater than MAX_PORTS in s9.c
+; Set NFILES to a number that is greater than MAX_PORTS in s9.h
 (let ((NFILES 100))
   (test (letrec
           ((open
@@ -1612,7 +1617,7 @@
 
 (define-syntax keyword
   (syntax-rules ()
-    ((_) ())))
+    ((_) '())))
 (test (keyword) '())
 
 (define-syntax iff
@@ -1652,6 +1657,16 @@
 (test (rev-syntax ()) '())
 (test (rev-syntax (2 1 cons)) '(1 . 2))
 (test (rev-syntax ('bar 'foo #t if)) 'foo)
+
+(define-syntax ell
+  (syntax-rules ()
+    ((_ ((a b) ...) c ...)
+       (list '((b a) ...) c ...))))
+(test (ell ()) '(()))
+(test (ell () 0) '(() 0))
+(test (ell ((1 2)) 3) '(((2 1)) 3))
+(test (ell ((1 2) (3 4) (5 6)) 7) '(((2 1) (4 3) (6 5)) 7))
+(test (ell ((1 2)) 3 4 5) '(((2 1)) 3 4 5))
 
 (cond ((zero? Errors)
         (display "Everything fine!"))

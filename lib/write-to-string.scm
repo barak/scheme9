@@ -3,53 +3,82 @@
 ; See the LICENSE file of the S9fES package for terms of use
 ;
 ; (write-to-string expr) ==> string
+; (display-to-string expr) ==> string
 ;
 ; Write external representation to string.
-; WRITE-TO-STRING is like WRITE but writes its output
-; to a string instead of an output port.
+; WRITE-TO-STRING is like WRITE but writes its output to a string
+; instead of an output port. DISPLAY-TO-STRING is like DISPLAY but
+; writes its output to a string.
 ;
 ; Arguments: x - form to write
 ;
-; Example:   (write-to-string '(a 1 #\c #(v) #t "s" (a . d)))
-;            ==> "(a 1 #\\c #(v) #t \"s\" (a . d))"
+; Example:   (write-to-string '(a 1 #\c #(v) #t "str" "\"s\"" (a . d)))
+;            ==> "(a 1 #\\c #(v) #t \"str\" \"\\\"s\\\"\" (a . d))"
+;            (display-to-string '(a 1 #\c #(v) #t "str" "\"s\"" (a . d)))
+;            ==> "(a 1 c #(v) #t str \"s\" (a . d))"
 
-(define (write-to-string x)
+(define (make-string-writer readable)
+  (lambda (x)
 
-  (define (stringify-improper-list a first)
-    (cond
-      ((pair? a)
-        (cons (string-append (if first "" " ")
-                             (write-to-string (car a)))
-              (stringify-improper-list (cdr a) #f)))
-      ((null? a) '())
-      (else (list (string-append " . " (write-to-string a))))))
+    (define (stringify-improper-list a first)
+      (cond
+        ((pair? a)
+          (string-append (if first "" " ")
+                         (to-string (car a))
+                         (stringify-improper-list (cdr a) #f)))
+        ((null? a)
+          "")
+        (else (string-append " . " (to-string a)))))
 
-  (define (char->string c)
-    (let ((v (char->integer c)))
-      (cond ((= v 10) "#\\newline")
-            ((= v 32) "#\\space")
-            ((or (<= 0 v 31)
-                 (> v 126))
-              (string-append "#<unrepresentable character, code="
-                             (number->string v)
-                             ">"))
-            (else (string-append "#\\" (string c))))))
+    (define (char->string c)
+      (if readable
+          (let ((v (char->integer c)))
+            (cond ((= v 10) "#\\newline")
+                  ((= v 32) "#\\space")
+                  ((or (<= 0 v 31)
+                       (> v 126))
+                    (string-append "#<unrepresentable character, code="
+                                   (number->string v)
+                                   ">"))
+                  (else (string-append "#\\" (string c)))))
+          (string c)))
 
-  (cond ((eq? #t x) "#t")
-        ((eq? #f x) "#f")
-        ((symbol? x) (symbol->string x))
-        ((number? x) (number->string x))
-        ((char? x) (char->string x))
-        ((string? x) (string-append "\"" x "\""))
-        ((null? x) "()")
-        ((pair? x)
-          (string-append
-            "("
-            (apply string-append
-                   (stringify-improper-list x #t))
-            ")"))
-        ((vector? x)
-          (string-append "#" (write-to-string (vector->list x))))
-        ((procedure? x) "#<procedure>")
-        ((eof-object? x) "#<eof>")
-        (else "#<unspecific>")))
+    (define (quote-string s)
+      (list->string
+        (let q ((si (string->list s))
+                (so '()))
+          (cond ((null? si)
+                  (reverse so))
+                ((char=? #\\ (car si))
+                  (q (cdr si) (append '(#\\ #\\) so)))
+                ((char=? #\" (car si))
+                  (q (cdr si) (append '(#\" #\\) so)))
+                (else
+                  (q (cdr si) (cons (car si) so)))))))
+
+    (define (to-string x)
+      (cond ((eq? #t x) "#t")
+            ((eq? #f x) "#f")
+            ((symbol? x) (symbol->string x))
+            ((number? x) (number->string x))
+            ((char? x) (char->string x))
+            ((string? x) (if readable
+                             (string-append "\"" (quote-string x) "\"")
+                             x))
+            ((null? x) "()")
+            ((pair? x)
+              (string-append
+                "("
+                (stringify-improper-list x #t)
+                ")"))
+            ((vector? x)
+              (string-append "#" (to-string (vector->list x))))
+            ((procedure? x) "#<procedure>")
+            ((eof-object? x) "#<eof>")
+            (else "#<unspecific>")))
+
+    (to-string x)))
+
+(define write-to-string (make-string-writer #t))
+
+(define display-to-string (make-string-writer #f))

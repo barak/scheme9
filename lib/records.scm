@@ -19,7 +19,7 @@
 ; structures.
 ;
 ; Arguments: r   - record
-;            a,b - list 
+;            a,b - list
 ;            x   - any type
 ;
 ; Example:   (record-ref (record (list 'name "Foo") (list 'value 31415))
