@@ -20,6 +20,9 @@
 .de BR
 \fB\\$1\fP\\$2
 ..
+.de IR
+\fI\\$1\fP\\$2
+..
 .de RB
 \\$1\fB\\$2\\fP
 ..
@@ -51,8 +54,7 @@
 .B "s9
 - Scheme Interpreter
 .SH USAGE
-.B "s9 [-h?] [-giqv] [-d image] [-f program] [-m size[m]]
-.B "   [-- argument ...]
+.B "s9 [-h?] [-gnqv] [-m size[m]] [-f program] [-d image] [-i]
 .SH "DESCRIPTION
 .B "Scheme 9 from Empty Space
 is an interpreter for a broad subset of
@@ -67,29 +69,34 @@ Display a brief summary of options.
 .B "-d file
 .in +4
 Dump heap image to
-.B file
+.I file
 and exit.
 .in -4
 .B "-f program
 .in +4
 Run
-.B program
-and exit (implies -q).
+.I program
+and exit (may be repeated, implies -q).
 .in -4
 .B "-g
 .in +4
-Print GC summaries (-gg = more verbose).
+Print GC summaries (\fB-gg\fP = more verbose).
 .in -4
 .B "-i
 .in +4
-Ignore the
+Enter interactive mode (after
+.BR -f ).
+.in -4
+.B "-n
+.in +4
+Do not load
 .I $HOME/.s9fes/rc
 file, if any.
 .in -4
 .B "-m N[m]
 .in +4
 Set memory limit to
-.B N
+.I N
 kilo (or mega) nodes.
 .in -4
 .B "-q
@@ -129,7 +136,9 @@ These S9fES procedures are not in R4RS:
 .ne 3
 .B "(delete-file string) ==> unspecific
 .in +4
-Delete the file specifed in the argument. If the file does not exist
+Delete the file specifed in the
+.I string
+argument. If the file does not exist
 or cannot be deleted, report an error.
 .in -4
 .br
@@ -137,8 +146,8 @@ or cannot be deleted, report an error.
 .B "(expand-quasiquote form) ==> expanded-form
 .in +4
 If
-.B form
-is a quasiquoted expression, re-write it to an equivalent expression
+.I form
+is a quasiquoted expression, rewrite it as an equivalent expression
 that does not use quasiquotation.
 .in -4
 .br
@@ -146,27 +155,29 @@ that does not use quasiquotation.
 .B "(expand-macro form) ==> expanded-form
 .in +4
 If
-.B form
+.I form
 applies a macro, return the expanded form, else return the form.
 .in -4
 .br
 .ne 3
 .B "(file-exists? string) ==> boolean
 .in +4
-Return 
+Return
 .B "#t
-if the file specifed in the argument exists and otherwise \fB#f\fP.
+if the file specifed in the
+.I string
+argument exists and otherwise \fB#f\fP.
 .in -4
 .br
 .ne 4
 .B "(fold-left proc base list ...) ==> form
 .in +4
 Combine the elements of the
-.BR list s
+.IR list s
 using
-.BR proc .
+.IR proc .
 Combine elements left-associatively.
-.B Base
+.I Base
 is the leftmost element.
 .in -4
 .br
@@ -174,17 +185,21 @@ is the leftmost element.
 .B "(fold-right proc base list ...) ==> form
 .in +4
 Combine the elements of the
-.BR list s
+.IR list s
 using
-.BR proc .
+.IR proc .
 Combine elements right-associatively.
-.B Base
+.I Base
 is the rightmost element.
 .in -4
 .br
 .B "(gensym) ==> symbol
+.br
+.B "(gensym string) ==> symbol
 .in +4
-Return a fresh symbol.
+Return a fresh symbol. When a
+.I string
+argument is given, use it as prefix for the fresh symbol.
 .in -4
 .br
 .ne 2
@@ -193,17 +208,19 @@ Return a fresh symbol.
 Attempt to
 .B load
 the file
-.B string
+.I string
 from each directory of
-\fBS9FES_LIBRARY_PATH\fP.
+.IR S9FES_LIBRARY_PATH .
 .in -4
 .br
 .ne 2
 .B "(locate-file string) ==> string | #f
 .in +4
 Search for the file
-.B string
-in each  directory of \fBS9FES_LIBRARY_PATH\fP in sequence.
+.I string
+in each  directory of
+.B S9FES_LIBRARY_PATH
+in sequence.
 When the file can be located, return its full path, else
 return \fB#f\fP.
 .in -4
@@ -219,7 +236,9 @@ with a single list.
 .ne 2
 .B "(print form ...) ==> unspecific
 .in +4
-Write multiple forms separated by spaces.
+Write multiple
+.IR form s
+separated by spaces.
 .in -4
 .br
 .ne 2
@@ -245,8 +264,11 @@ Return a list of all defined symbols.
 .br
 .B "(trace #t) ==> list | #t
 .in +4
-Trace the procedure or syntax bound to the given \fBsymbol\fPs. When
-\fB#t\fP is passed to
+Trace the procedure or syntax bound to the given
+.IR symbols .
+When
+.B #t
+is passed to
 .BR trace ,
 trace
 .I all
@@ -260,9 +282,9 @@ returns the symbols that were being traced before its invocation.
 .B "(wrong string form) ==> bottom
 .in +4
 Print an error message of the form
-.B "error: string: form
-and terminate program execuation.
-.B Form
+.I "error: string: form
+and terminate program execution.
+.I Form
 may be omitted.
 .in -4
 .sp
@@ -289,7 +311,7 @@ Compiled-in extensions.
 .B "*library-path* (string)
 .in +4
 A verbatim copy of the
-.B S9FES_LIBRARY_PATH
+.I S9FES_LIBRARY_PATH
 environment variable (see below).
 .in -4
 .ne 2
@@ -329,11 +351,11 @@ form introduces a new macro:
 .B "(define-macro (name args ...) body) ==> unspecific
 .sp
 Both of these forms introduce the keyword
-.B name
+.I name
 and bind it to a procedure. The first form requires the
 second argument to be a procedure. Like in
 .B define
-forms the second variant implies a procedure definition. 
+forms the second variant implies a procedure definition.
 .sp
 Macros may contain applications of macros that were defined earlier.
 Macros may not recurse directly, but they may implement recursion
@@ -343,9 +365,9 @@ or by rewriting their own applications. The following macro,
 for example, does
 .I not
 work, because
-.B d
+.I d
 is undefined in the body of
-.BR d :
+.IR d :
 .sp
 .B "(define-macro (d x) (and (pair? x) (d (cdr x)))) ; wrong"
 .sp
@@ -428,23 +450,7 @@ Numeric syntax and procedures:
 .BR tan ,
 .BR truncate .
 .SH "BUGS
-Quasiquotation of improper lists does not work.
-.br
 Nested quasiquotation is currently unsupported.
-.br
-When using
-.BR define-syntax ,
-you may not redefine the symbols
-.B syntax-match
-and
-.BR syntax-expand .
-.br
-Ellipses must be preceded by variables in patterns of
-.BR syntax-rules .
-.br
-The
-.B define-syntax
-implementation is rather quirky.
 .SH "FILES
 .ne 2
 .B $HOME/.s9fes/rc
@@ -454,14 +460,19 @@ If present, this file is
 when the interpreter starts up.
 .in -4
 .ne 2
-.B @DATADIR@/s9.scm
+.B @DATADIR@
 .in +4
-The library part of the interpreter (source code).
+The S9fES procedure library (source code).
+.in -4
+.ne 2
+.B @DATADIR@/contrib
+.in +4
+Contributions to the procedure library (source code).
 .in -4
 .ne 2
 .B @LIBDIR@/s9.image
 .in +4
-The library part of the interpreter (heap image).
+The interpreter heap image.
 .in -4
 .ne 2
 .B *.scm
@@ -478,7 +489,7 @@ will be search by the
 procedure.
 .br
 Default:
-.B \&.:~/.s9fes:@DATADIR@:@LIBDIR@
+.I \&.:~/.s9fes:@LIBDIR@:@DATADIR@:@DATADIR@/contrib
 .in -4
 .SH "SIGNALS
 These work only if POSIX signal handling was enabled at compile time.
@@ -501,7 +512,7 @@ The Revised^4 Report on the Algorithmic Language Scheme.
 .in -4
 .sp
 .ne 3
-.B "http://www.lulu.com/content/1010408"
+.B "http://www.t3x.org/books/#s9fes
 .in +4
 Scheme 9 from Empty Space -- A Guide to Implementing Scheme in C.
 .in -4

@@ -8,8 +8,9 @@
 ; (pp-file string) ==> unspecific
 ;
 ; Pretty-print Scheme forms or files.
-; When the first argument is #T or there is only one argument, format
-; FORM as code. When the first argument is #F, format FORM as data.
+; When the first argument is #T, format FORM as code. When the first
+; argument is #F, format FORM as data. When there is only one argument,
+; pass it to PROGRAM? to figure out wehther it is code or data.
 ; NOTE: This program handles only a subset of R5RS Scheme correctly
 ; and removes all comments from its input program. Caveat utilitor.
 ;
@@ -211,7 +212,7 @@
                    (any? (lambda (x)
                            (exceeds-margin? x k-new))
                          (cdr x)))
-              (pp-vertical-args x n k #f)
+              (pp-vertical-args x n (+ 1 k) #t)
               (pp-vertical-args x n k #t)))
         (pp-datum x n k glue)))
 
@@ -410,7 +411,7 @@
     (display "let ")
     (cond ((symbol? (cadr x))
             (let ((m (pp-atom (cadr x) n k)))
-	      (display #\space)
+              (display #\space)
               (display LP)
               (pp-let-body (cdr x) k (+ 7 m k) (+ 7 m))))
           (else
@@ -506,8 +507,8 @@
 
   (cond ((null? a2)
           (if (program? a1)
-	      (pp-expr a1 0 0 #f)
-	      (pp-datum a1 0 0 #f)))
+              (pp-expr a1 0 0 #f)
+              (pp-datum a1 0 0 #f)))
         (a1
           (pp-expr (car a2) 0 0 #f))
         (else

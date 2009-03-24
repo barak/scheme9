@@ -7,7 +7,6 @@
 	WWW: http://www.t3x.org/s9fes/
 
 	S9fES is an interpreter for a broad subset of R4RS Scheme.
-	For details about omissions see the manual page.
 
 
 	QUICK START
@@ -37,8 +36,8 @@
 	but result in slightly worse bignum performance.
 
 	You can install S9fES (including the goodies) on a Unix system
-	by typing "make install" as root, but if you do so, please edit
-	the *DIR variables at the beginning of Makefile first.
+	by typing "make install" as root, but before doing so, please
+	edit at least the PREFIX variable at the beginning of Makefile.
 
 	Plan 9
 
@@ -66,6 +65,11 @@
 
 	- Copy the content of the "lib" directory to LIBDIR. This
 	  directory contains lots of useful Scheme functions.
+
+	- Create a subdirectory named "contrib" in LIBDIR and copy the
+	  content of the "contrib" directory to LIBDIR/contrib. These
+	  files contain additional Scheme functions contributed by other
+	  authors or imported from various sources.
 
 	- Create a subdirectory named "help" in LIBDIR and copy the
 	  content of the "help" directory to LIBDIR/help. These files
@@ -95,7 +99,7 @@
 	example, the following command will compile an image containing
 	the online help system and the pretty-printer:
 
-	s9 -i -f lib/help.scm -f lib/pretty-print.scm -d s9.image
+	s9 -n -f lib/help.scm -f lib/pretty-print.scm -d s9.image
 
 
 	GETTING STARTED
@@ -111,8 +115,8 @@
 	; loading from /usr/local/share/s9fes/draw-tree.scm
 	> (draw-tree '(a b c))
 	[o|o]---[o|o]---[o|/]
-	 |       |       |      
-	 a       b       c      
+	 |       |       |
+	 a       b       c
 	> _
 
 	Feel free to explore them.
@@ -132,7 +136,7 @@
 
 	There is an experimental extension containing some Unix system
 	procedures. See the S9E(1) man page for details. To (attempt to)
-	compile this extension, run "make s9e.image". To install the
+	compile this extension, run "make all-s9e". To install the
 	extended interpreter, type "make install-s9e" (as root).
 
 

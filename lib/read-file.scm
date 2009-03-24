@@ -1,0 +1,24 @@
+; Scheme 9 from Empty Space, Function Library
+; By Nils M Holm, 2009
+; See the LICENSE file of the S9fES package for terms of use
+;
+; (read-file . port) ==> list of string
+;
+; Read a text file from an input port, return a list of lines.
+;
+; Arguments: port - port to read, default = current input port
+;
+; (Example): (with-input-from-file "lib/read-file.scm" read-file)
+;              ==> lots of lines
+
+(load-from-library "read-line.scm")
+
+(define (read-file . port)
+  (letrec
+    ((collect-lines
+       (lambda (ln lines)
+         (cond ((eof-object? ln)
+                 (reverse lines))
+               (else (collect-lines (apply read-line port)
+                                    (cons ln lines)))))))
+    (collect-lines (apply read-line port) '())))

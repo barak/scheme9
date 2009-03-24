@@ -101,7 +101,7 @@
   (define (r5rs-syntax? s)
     (and (memq (string->symbol s)
                '(and begin case cond define define-syntax delay do
-	         if lambda let let* letrec quote quasiquote or set!
+                 if lambda let let* letrec quote quasiquote or set!
                  syntax-rules unquote unquote-splicing))
          #t))
 
@@ -219,6 +219,7 @@
             ((#\f) (cons p (print-const "#f")))
             ((#\t) (cons p (print-const "#t")))
             ((#\\) (cons p (print-char (read-char))))
+            ((#\() (cons p (print-const "#(")))
             (else  (wrong "unknown # syntax" c)))))
 
   (define (print-quoted c p q type)

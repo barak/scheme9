@@ -413,7 +413,8 @@
 (define (number->string n . radix)
   (letrec
     ((digits
-       (list->vector (string->list "0123456789abcdef")))
+       (list->vector
+         (string->list "0123456789abcdefghijklmnopqrstuvwxyz")))
      (conv
        (lambda (n rdx res)
          (if (zero? n)
@@ -426,7 +427,7 @@
      (get-radix
        (lambda ()
          (cond ((null? radix) 10)
-               ((< 1 (car radix) 17) (car radix))
+               ((<= 2 (car radix) 36) (car radix))
                (else (wrong "bad radix in number->string" radix))))))
     (let ((r (get-radix)))
       (cond ((zero? n)
@@ -441,12 +442,12 @@
 (define (string->number str . radix)
   (letrec
     ((digits
-       (string->list "0123456789abcdef"))
+       (string->list "0123456789abcdefghijklmnopqrstuvwxyz"))
      (value-of-digit
        (lambda (x)
          (letrec
            ((v (lambda (x d n)
-             (cond ((null? d) 17)
+             (cond ((null? d) 36)
                    ((char=? (car d) x) n)
                    (else (v x (cdr d) (+ n 1)))))))
            (v (char-downcase x) digits 0))))
@@ -477,9 +478,8 @@
      (get-radix
        (lambda ()
          (cond ((null? radix) 10)
-               ((< 1 (car radix) 17) (car radix))
-               (else (wrong "bad radix in string->number"
-                            radix))))))
+               ((<= 2 (car radix) 36) (car radix))
+               (else (wrong "bad radix in string->number" radix))))))
     (sconv (string->list str) (get-radix))))
 
 ;; Vector procedures
@@ -528,25 +528,41 @@
 
 (define (expand-quasiquote form)
   (letrec
-    ((does-splicing?
+    ((improper-or-splicing?
        (lambda (form)
-         (if (not (pair? form))
-             #f
-             (or (and (pair? (car form))
-                      (eq? 'unquote-splicing (caar form))
-                      (pair? (cdar form)))
-                 (does-splicing? (cdr form))))))
+         (cond ((null? form)
+                 #f)
+               ((not (pair? form))
+                 #t)
+               ((and (pair? (cdr form))
+                     (null? (cddr form))
+                     (eq? 'unquote (car form)))
+                 #t)
+               (else (or (and (pair? (car form))
+                              (eq? 'unquote-splicing (caar form))
+                              (pair? (cdar form)))
+                         (improper-or-splicing? (cdr form)))))))
+     (map-unquote
+       (lambda (x)
+         (cond ((null? x)
+                 '())
+               ((not (pair? x))
+                 (list (list 'quote x)))
+               ((and (pair? (cdr x))
+                     (null? (cddr x))
+                     (eq? 'unquote (car x)))
+                 (list (cadr x)))
+               ((and (pair? (car x))
+                     (eq? 'unquote-splicing (caar x))
+                     (pair? (cdar x)))
+                 (cons (cadar x)
+                       (map-unquote (cdr x))))
+               (else (cons (list 'list (expand-qq (car x)))
+                           (map-unquote (cdr x)))))))
      (qq-list
        (lambda (form)
-         (if (does-splicing? form)
-             (cons 'append
-                   (map (lambda (x)
-                          (if (and (pair? x)
-                                   (eq? 'unquote-splicing (car x))
-                                   (pair? (cdr x)))
-                              (cadr x)
-                              (list 'list (expand-qq x))))
-                        form))
+         (if (improper-or-splicing? form)
+             (cons 'append (map-unquote form))
              (cons 'list (map expand-qq form)))))
      (expand-qq
        (lambda (form)
@@ -557,7 +573,7 @@
                  (list 'quote form))
                ((and (eq? 'quasiquote (car form))
                      (pair? (cdr form)))
-                 (expand-qq (cadr form)))
+                  (wrong "nested quasiquote is not supported" form))
                ((and (eq? 'unquote (car form))
                      (pair? (cdr form)))
                  (cadr form))
@@ -667,7 +683,7 @@
 
 (define-macro (case key . clauses)
   (letrec
-    ((nest-if
+    ((gen-clauses
        (lambda (k c*)
          (cond ((null? c*) '())
                ((or (not (pair? c*))
@@ -680,10 +696,10 @@
                      `(((memv ,k ',(caar c*)) ,@(cdar c*)))))
                (else
                  `(((memv ,k ',(caar c*)) ,@(cdar c*))
-                  ,@(nest-if k (cdr c*))))))))
+                  ,@(gen-clauses k (cdr c*))))))))
     (let ((k (gensym)))
       `(let ((,k ,key))
-         (cond ,@(nest-if k clauses))))))
+         (cond ,@(gen-clauses k clauses))))))
 
 (define-macro (do var-clauses test . body)
   (letrec
@@ -753,10 +769,6 @@
 ;        (else (wrong "bad syntax for" 'iff))))
 ;    (cons 'iff g52)))
 
-(define (make-ell-name name)
-  (string->symbol
-    (string-append "#..." (symbol->string name))))
-
 ; Match FORM against PATTERN.
 ; KEYWORDS contains the keywords of SYNTAX-RULES.
 ; When the given form matches the pattern, bind
@@ -769,87 +781,57 @@
 ; binds to the CDR part of the currently matched
 ; part of FORM.
 ;
-(define syntax-match
-  (let ((make-ell-name make-ell-name))
-    (lambda (form pattern keywords env)
-      (cond
-        ((pair? pattern)
-          (cond
-            ((and (symbol? (car pattern))
-                  (pair? (cdr pattern))
-                  (eq? '... (cadr pattern)))
-              (cons (cons (make-ell-name (car pattern)) form) env))
-            ((pair? form)
-              (let ((e (syntax-match (car form) (car pattern) keywords env)))
-                (and e (syntax-match (cdr form) (cdr pattern) keywords e))))
-            (else #f)))
-        ((memq pattern keywords)
-          (if (eq? pattern form) env #f))
-        ((symbol? pattern)
-          (if (eq? '... pattern)
-              (wrong "variable expected before ...")
-              (cons (cons pattern form) env)))
-        (else
-          (if (equal? pattern form) env #f))))))
+(define (syntax-match form pattern keywords env)
+  (letrec
+    ((match
+       (lambda (form pattern keywords env)
+         (cond
+           ((pair? pattern)
+             (cond
+               ((and (pair? (cdr pattern))
+                     (eq? '... (cadr pattern)))
+                 (let ((e* (map (lambda (x)
+                                  (match x (car pattern) keywords '()))
+                                form)))
+                   (cons (cons '... e*) env)))
+               ((pair? form)
+                 (let ((e (match (car form) (car pattern) keywords env)))
+                   (and e (match (cdr form) (cdr pattern) keywords e))))
+               (else #f)))
+           ((memq pattern keywords)
+             (if (eq? pattern form) env #f))
+           ((symbol? pattern)
+             (cons (cons pattern form) env))
+           (else
+             (if (equal? pattern form) env #f))))))
+    (let ((e (match form pattern keywords env)))
+      (if e (reverse e) e))))
 
 ; Substitute variables of FORM by values of ENV.
-; PATTERN is used to locate the variable to be
-; substituted during ellipsis expansion. If
-; PATTERN equals #F, no ellipsis expansion is
-; performed.
 ;
-(define syntax-expand
-  (let ((make-ell-name make-ell-name))
-    (lambda (pattern form env)
-      (letrec
-        ((ellipsis?
-           (lambda (x)
-             (and (pair? x)
-                  (pair? (cdr x))
-                  (eq? (cadr x) '...))))
-         (subst-ellipsis
-           (lambda (var tmpl ell-values env)
-             (map (lambda (v)
-                    (syntax-expand #f tmpl (cons (cons var v) env)))
-                  ell-values)))
-         (expand-ellipsis
-           (lambda (form var ell-b env)
-             (append (subst-ellipsis
-                       var
-                       (car form)
-                       (cdr ell-b)
-                       env)
-                     (cddr form))))
-         (car-or-false (lambda (x) (if (pair? x) (car x) #f)))
-         (cdr-or-false (lambda (x) (if (pair? x) (cdr x) #f))))
-        (cond
-          ((not (pair? form))
-            (cond ((assq form env) => cdr)
-                  (else form)))
-          ((ellipsis? form)
-            (let* ((var (if pattern
-                            (car pattern)
-                            (car form)))
-                   (ell (if var (make-ell-name var) var))
-                   (ell-bindings (assq ell env)))
-              (if ell-bindings
-                  (if var
-                      (expand-ellipsis form
-                                       var
-                                       ell-bindings
-                                       env)
-                      (append (list (syntax-expand #f (car form) env))
-                              (cdr ell-bindings)
-                              (cddr form)))
-                  (wrong "unmatched ... in syntax-rules"))))
-          ((pair? form)
-            (cons (syntax-expand (car-or-false pattern)
-                                 (car form)
-                                 env)
-                  (syntax-expand (cdr-or-false pattern)
-                                 (cdr form)
-                                 env)))
-          (else (wrong "syntax-expand: this cannot happen")))))))
+(define (syntax-expand tmpl env)
+  (letrec
+    ((expand
+       (lambda (tmpl env)
+         (cond
+           ((not (pair? tmpl))
+             (cond ((assq tmpl env) => cdr)
+                   (else tmpl)))
+           ((and (pair? tmpl)
+                 (pair? (cdr tmpl))
+                 (eq? (cadr tmpl) '...))
+             (let ((eenv (assq '... env)))
+               (if (not eenv)
+                   (wrong
+                     "syntax-rules: template without matching ... in pattern"
+                     tmpl)
+                   (begin (set-car! eenv #f)
+                          (map (lambda (x)
+                                 (expand (car tmpl) x))
+                               (cdr eenv))))))
+           (else (cons (expand (car tmpl) env)
+                       (expand (cdr tmpl) env)))))))
+    (expand tmpl env)))
 
 ; Give a unique name to each variable that is bound in FORM.
 ; BOUND is a list of initially bound variables. This function
@@ -914,7 +896,7 @@
                                          (append (remove-bound e bound)
                                                  env)))))
                (else (map-improper (lambda (x) (conv x env))
-                                   form 
+                                   form
                                    '()))))))
     (conv form '())))
 
@@ -964,9 +946,7 @@
                                          ',keywords
                                          '())
                             => (lambda (env)
-                                 (syntax-expand ',(pattern rules-in)
-                                                ',a
-                                                env)))
+                                 (syntax-expand ',a env)))
                          rules-out)))))))
       (lambda (name rules)
         (cond
@@ -986,7 +966,9 @@
             (let ((app (gensym))
                   (default `((else (wrong "bad syntax for" ',name)))))
               `(define-macro ,(cons name app)
-                 (let ((,app (cons ',name ,app)))
+                 (let ((,app (cons ',name ,app))
+                       (syntax-match ,syntax-match)
+                       (syntax-expand ,syntax-expand))
                    (cond ,@(append (rewrite-rules app
                                                   (cadr rules)
                                                   (cddr rules)

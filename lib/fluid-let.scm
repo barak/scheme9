@@ -11,7 +11,7 @@
 ;
 ; (let ((a 0))                   (let ((a 0))
 ;   (let ((f (lambda () a)))       (let ((f (lambda () a)))
-;     (let ((a 1))                   (fluid-let ((a 1)) 
+;     (let ((a 1))                   (fluid-let ((a 1))
 ;       (f))))         ==> 0           (f))))         ==> 1
 ;
 ; Arguments: bind* - list of dynamic bindings

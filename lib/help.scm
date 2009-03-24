@@ -111,7 +111,6 @@
 (define apropos
   (let ((procname->filename procname->filename))
     (lambda sym
-      
       (let* ((name (cond ((null? sym)
                            "")
                          ((symbol? (car sym))

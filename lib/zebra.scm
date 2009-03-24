@@ -44,7 +44,7 @@
                   (list (_) (_) (_) (_) 'blue) h)
            (memo (list (_) 'kools (_) (_) 'yellow) h)
            (memo (list 'spaniard (_) (_) 'dog (_)) h)
-           (memo (list (_) (_) 'coffee (_) 'green) h) 
+           (memo (list (_) (_) 'coffee (_) 'green) h)
            (memo (list 'ukrainian (_) 'tea (_) (_)) h)
            (memo (list (_) 'luckystrikes 'orangejuice (_) (_)) h)
            (memo (list 'japanese 'parliaments (_) (_) (_)) h)

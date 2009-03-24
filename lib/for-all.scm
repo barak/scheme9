@@ -10,7 +10,7 @@
 ; returns truth, it is applied to a list consisting of the second
 ; member of each given list, etc. If P returns falsity for any set of
 ; members, FOR-ALL returns #F. If only one set of members is left to
-; check, FOR-ALL returns the value of P applied to this final set. 
+; check, FOR-ALL returns the value of P applied to this final set.
 ;
 ; Arguments: proc - predicate
 ;            a*   - lists
