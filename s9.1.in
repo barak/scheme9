@@ -465,7 +465,7 @@ when the interpreter starts up.
 The S9fES procedure library (source code).
 .in -4
 .ne 2
-.B @DATADIR@/contrib
+.B @LIBDIR@/contrib
 .in +4
 Contributions to the procedure library (source code).
 .in -4
@@ -489,7 +489,7 @@ will be search by the
 procedure.
 .br
 Default:
-.I \&.:~/.s9fes:@LIBDIR@:@DATADIR@:@DATADIR@/contrib
+.I \&.:~/.s9fes:@LIBDIR@:@DATADIR@:@LIBDIR@/contrib
 .in -4
 .SH "SIGNALS
 These work only if POSIX signal handling was enabled at compile time.
