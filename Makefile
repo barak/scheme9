@@ -104,8 +104,8 @@ install-s9e:	install-s9 s9e s9e.scm s9e.image
 	install $C -m 0644 ext/*.scm $(DESTDIR)$(DATADIR)/
 
 clean:
-	rm -f s9 s9e s9e.scm s9.image s9e.image s9.1.gz s9e.1.gz \
-		s9.1 s9e.1 s9.1.gz s9e.1.gz \
+	rm -f s9 s9e s9e.scm s9.image s9e.image s9.1.gz s9e.1.gz s9.1.txt \
+		s9e.1.txt s9.1 s9e.1 \
 		*.o *.core core s9.9.tgz s9fes.tgz __tmp[12]__ __testfile__
 
 # --- end of distribution Makefile ---

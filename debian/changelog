@@ -1,3 +1,11 @@
+scheme9 (2009.03.30-1) unstable; urgency=low
+
+  * New upstream version (includes upstream changelog)
+  * rev deb std
+  * section: lisp
+
+ -- Barak A. Pearlmutter <bap@debian.org>  Fri, 03 Apr 2009 10:13:48 +0100
+
 scheme9 (2009.03.22-1) unstable; urgency=low
 
   * New upstream version
@@ -15,4 +23,3 @@ scheme9 (2009.02.09-1) unstable; urgency=low
   * Initial release (Closes: #516898)
 
  -- Barak A. Pearlmutter <bap@debian.org>  Mon, 23 Feb 2009 09:28:11 +0000
-
