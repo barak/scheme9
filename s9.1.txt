@@ -271,12 +271,12 @@ REFERENCES
           http://www-swiss.ai.mit.edu/~jaffer/r4rs_toc.html
               The Revised^4 Report on the Algorithmic Language Scheme.
 
-          http://www.t3x.org/books/#s9fes
+          http://www.lulu.com/content/1010408
               Scheme 9 from Empty Space --  A  Guide  to  Implementing
               Scheme in C.
 
 AUTHOR
-          Nils M Holm <nmh@t3x.org>
+          Nils M Holm < nmh at t3x.org >
 
 
 

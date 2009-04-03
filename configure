@@ -1,36 +1,16 @@
 #!/bin/sh
 
-if [ "x$VISUAL" != "x" ]; then
-	ed="$VISUAL"
-elif [ "x$EDITOR" != "x" ]; then
-	ed="$EDITOR"
-else
-	ed=""
-	p=`echo $PATH | sed -e 's/:/ /g'`
-	for e in vi nvi vim emacs ex ed; do
-		for d in $p; do
-			if [ -x $d/$e ]; then
-				ed=$d/$e
-				break
-			fi
-		done
-		if [ $ed != "" ]; then break; fi
-	done
-fi
+f=""
+p=`echo $PATH | sed -e 's/:/ /g'`
+for d in $p; do
+	if [ -x $d/fortune ]; then
+		f=$d/fortune
+		break
+	fi
+done
+if [ $f != "" ]; then break; fi
 
-case `basename $ed` in
-	vi|nvi|vim) off="+5" ;;
-esac
-
-if [ "$ed" = "" ]; then
-	echo
-	echo "Could not find a standard editor in your path."
-	echo "Please edit 'Makefile' and then run 'make'."
-	echo
-	exit 1
-else
-	$ed $off Makefile
-	echo
-	echo "Alright, you may now run 'make'."
-	echo
-fi
+$f
+echo
+echo "Now edit the PREFIX variable of Makefile, then run 'make'"
+echo
