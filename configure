@@ -3,14 +3,14 @@
 f=""
 p=`echo $PATH | sed -e 's/:/ /g'`
 for d in $p; do
-	if [ -x $d/fortune ]; then
+	if [ -x "$d/fortune" ]; then
 		f=$d/fortune
 		break
 	fi
+	if [ "$f" != "" ]; then break; fi
 done
-if [ $f != "" ]; then break; fi
 
-$f
+if [ -x "$f" ]; then echo; $f; fi
 echo
 echo "Now edit the PREFIX variable of Makefile, then run 'make'"
 echo

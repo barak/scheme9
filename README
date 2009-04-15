@@ -8,6 +8,15 @@
 
 	S9fES is an interpreter for a broad subset of R4RS Scheme.
 
+	It is written in ANSI C (C89) and Scheme and it runs in many
+	popular environments, including *BSD, Linux, Plan 9, and the
+	unmentionable horror.
+
+	The S9fES code strives to be simple and comprehensible. It is
+	particularly interesting to people who want to (a) try Scheme
+	without having to jump through too many hoops (b) study the
+	implementation of Scheme (in a language other than Scheme). 
+
 
 	QUICK START
 
@@ -144,5 +153,5 @@
 
 	Bug reports, patches, suggestions, questions, etc are welcome.
 
-	Nils M Holm <nmh@t3x.org>
+	Nils M Holm < nmh at t3x.org >
 

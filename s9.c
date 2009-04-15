@@ -8,7 +8,7 @@
  * Use -DBITS_PER_WORD_64 on 64-bit systems.
  */
 
-#define VERSION "2009-03-30"
+#define VERSION "2009-04-10"
 
 #define EXTERN
 #include "s9.h"
@@ -25,6 +25,73 @@ PRIM	*Apply_magic;
 cell	*GC_root[] = { &Program, &Symbols, &Environment, &Tmp,
 			&Tmp_car, &Tmp_cdr, &Stack, &Stack_bottom,
 			&State_stack, &Acc, &Trace_list, NULL };
+
+/*----- Counter -----*/
+
+int	Run_stats;
+
+struct counter {
+	int	n, n1k, n1m, n1g;
+};
+
+struct counter  Reductions,
+		Allocations,
+		Collections;
+
+void reset_counter(struct counter *c) {
+	c->n = 0;
+	c->n1k = 0;
+	c->n1m = 0;
+	c->n1g = 0;
+}
+
+void count(struct counter *c) {
+	char	*msg = "statistics counter overflow";
+
+	c->n = c->n+1;
+	if (c->n >= 1000) {
+		c->n = c->n - 1000;
+		c->n1k = c->n1k + 1;
+		if (c->n1k >= 1000) {
+			c->n1k = 0;
+			c->n1m = c->n1m+1;
+			if (c->n1m >= 1000) {
+				c->n1m = 0;
+				c->n1g = c->n1g+1;
+				if (c->n1g >= 1000) {
+					error(msg, NOEXPR);
+				}
+			}
+		}
+	}
+}
+
+char *counter_to_string(struct counter *c) {
+	static char	buf[16];
+
+	memset(buf, ' ', sizeof(buf)-1);
+	buf[sizeof(buf)-1] = 0;
+	if (c->n1g) {
+		sprintf(buf, "%3d,", c->n1g);
+	}
+	if (c->n1m || c->n1g) {
+		if (c->n1g)
+			sprintf(&buf[4], "%03d,", c->n1m);
+		else
+			sprintf(&buf[4], "%3d,", c->n1m);
+	}
+	if (c->n1k || c->n1m || c->n1g) {
+		if (c->n1g || c->n1m)
+			sprintf(&buf[8], "%03d,", c->n1k);
+		else
+			sprintf(&buf[8], "%3d,", c->n1k);
+	}
+	if (c->n1g || c->n1m || c->n1k)
+		sprintf(&buf[12], "%03d", c->n);
+	else
+		sprintf(&buf[12], "%3d", c->n);
+	return buf;
+}
 
 /*----- Output -----*/
 
@@ -222,6 +289,7 @@ int gc(void) {
 	int	i, k;
 	char	buf[100];
 
+	if (Run_stats) count(&Collections);
 	for (i=0; i<MAX_PORTS; i++)
 		if (Port_flags[i] & LOCK_TAG)
 			Port_flags[i] |= USED_TAG;
@@ -259,6 +327,7 @@ cell alloc3(cell pcar, cell pcdr, int ptag) {
 	int	k;
 	char	buf[100];
 
+	if (Run_stats) count(&Allocations);
 	if (Free_list == NIL) {
 		if (ptag == 0) Tmp_car = pcar;
 		Tmp_cdr = pcdr;
@@ -704,6 +773,8 @@ cell read_vector(void) {
 	return n;
 }
 
+cell bignum_read(char *pre, int radix);
+
 cell read_form(int flags) {
 	int	c, c2;
 
@@ -747,12 +818,18 @@ cell read_form(int flags) {
 	}
 	else if (c == '#') {
 		c = read_c_ci();
-		if (c == 'f') return FALSE;
-		if (c == 't') return TRUE;
-		if (c == '\\') return character();
-		if (c == '(') return read_vector();
-		if (c == '<') return unreadable();
-		return error("bad # syntax", NOEXPR);
+		switch (c) {
+		case 'f':	return FALSE;
+		case 't':	return TRUE;
+		case '\\':	return character();
+		case '(':	return read_vector();
+		case 'b':	return bignum_read("#b", 2);
+		case 'd':	return bignum_read("#d", 10);
+		case 'o':	return bignum_read("#o", 8);
+		case 'x':	return bignum_read("#x", 16);
+		case '<':	return unreadable();
+		default:	return error("bad # syntax", NOEXPR);
+		}
 	}
 	else if (c == '"') {
 		return string_literal();
@@ -1941,6 +2018,51 @@ cell bignum_divide(cell x, cell a, cell b) {
 	return a;
 }
 
+cell bignum_read(char *pre, int radix) {
+	char	digits[] = "0123456789abcdef";
+	char	buf[50];
+	cell	base, num;
+	int	c, s, p, nd;
+
+	base = make_integer(radix);
+	save(base);
+	num = make_integer(0);
+	save(num);
+	c = read_c_ci();
+	s = 0;
+	if (c == '-') {
+		s = 1;
+		c = read_c_ci();
+	}
+	else if (c == '+') {
+		c = read_c_ci();
+	}
+	nd = 0;
+	while (1) {
+		if (separator(c)) break;
+		p = 0;
+		while (digits[p] && digits[p] != c) p++;
+		if (p >= radix) {
+			sprintf(buf, "bad digit in %s number: %c",
+				pre, c);
+			return error(buf, NOEXPR);
+		}
+		num = bignum_multiply(num, base);
+		Car[Stack] = num;
+		num = bignum_add(num, make_integer(p));
+		Car[Stack] = num;
+		nd++;
+		c = read_c_ci();
+	}
+	if (!nd) {
+		sprintf(buf, "digits expected after %s", pre);
+		return error(buf, NOEXPR);
+	}
+	unsave(2);
+	reject(c);
+	return s? bignum_negate(num): num;
+}
+
 /*----- Primitives -----*/
 
 cell pp_apply(cell x) {
@@ -2507,6 +2629,33 @@ cell pp_set_output_port_b(cell x) {
 	return UNSPECIFIC;
 }
 
+cell _eval(cell x, int cbn);
+
+cell pp_stats(cell x) {
+	cell	n;
+	int	o_run_stats;
+
+	reset_counter(&Reductions);
+	reset_counter(&Allocations);
+	reset_counter(&Collections);
+	o_run_stats = Run_stats;
+	Run_stats = 1;
+	n = _eval(cadr(x), 0);
+	Run_stats = o_run_stats;
+	if (!Error_flag) {
+		pr("; ");
+		pr(counter_to_string(&Reductions));
+		pr(" reductions"); nl();
+		pr("; ");
+		pr(counter_to_string(&Allocations));
+		pr(" nodes allocated"); nl();
+		pr("; ");
+		pr(counter_to_string(&Collections));
+		pr(" garbage collections"); nl();
+	}
+	return n;
+}
+
 cell pp_string_to_list(cell x) {
 	char	*s;
 	cell	n, a, new;
@@ -2579,6 +2728,8 @@ cell pp_string_fill_b(cell x) {
 		i, k = string_len(cadr(x))-1;
 	char	*s = string(cadr(x));
 
+	if (constant_p(cadr(x)))
+		return error("string-fill!: immutable object", cadr(x));
 	for (i=0; i<k; i++) s[i] = c;
 	return UNSPECIFIC;
 }
@@ -2783,6 +2934,8 @@ cell pp_vector_fill_b(cell x) {
 	int	i, k = vector_len(cadr(x));
 	cell	*v = vector(cadr(x));
 
+	if (constant_p(cadr(x)))
+		return error("vector-fill!: immutable object", cadr(x));
 	for (i=0; i<k; i++) v[i] = fill;
 	return UNSPECIFIC;
 }
@@ -2906,6 +3059,7 @@ PRIM Primitives[] = {
  { "set-cdr!",            pp_set_cdr_b,           2,  2, { PAI,___,___ } },
  { "set-input-port!",     pp_set_input_port_b,    1,  1, { INP,___,___ } },
  { "set-output-port!",    pp_set_output_port_b,   1,  1, { OUP,___,___ } },
+ { "stats",               pp_stats,               1,  1, { ___,___,___ } },
  { "string->list",        pp_string_to_list,      1,  1, { STR,___,___ } },
  { "string->symbol",      pp_string_to_symbol,    1,  1, { STR,___,___ } },
  { "string-append",       pp_string_append,       0, -1, { STR,___,___ } },
@@ -3082,8 +3236,6 @@ int uses_transformer_p(cell x) {
 int uses_quasiquote_p(cell x) {
 	return has_property_p(quasiquotation_p, x);
 }
-
-cell _eval(cell x, int cbn);
 
 cell expand_qq(cell x, cell app) {
 	cell	n, a, new;
@@ -3300,6 +3452,7 @@ cell _eval(cell x, int cbn) {
 	s = EV_ATOM;
 	c = 0;
 	while (!Error_flag) {
+		if (Run_stats) count(&Reductions);
 		if (x == NIL) {			/* () -> () */
 			/* should catch unquoted () */
 			Acc = x;
@@ -3889,6 +4042,7 @@ void init(void) {
 	Displaying = 0;
 	Quiet_mode = 0;
 	Command_line = NULL;
+	Run_stats = 0;
 	new_segment();
 	gc();
 	S_char = add_symbol("#<char>");

@@ -825,7 +825,7 @@
                    (wrong
                      "syntax-rules: template without matching ... in pattern"
                      tmpl)
-                   (begin (set-car! eenv #f)
+                   (begin (set-car! eenv '(#f))
                           (map (lambda (x)
                                  (expand (car tmpl) x))
                                (cdr eenv))))))
@@ -986,6 +986,8 @@
                   (p (cdr x*) #f))))))
     (p x* #t)
     (newline)))
+
+(define (void) (if #f #f))
 
 (define (locate-file file)
   (letrec

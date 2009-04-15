@@ -1,5 +1,17 @@
 Change Log
 
+2009-04-10
+	Added numeric base prefixes #B, #D, #O, and #X.
+2009-04-09
+	Fix: STRING-FILL! and VECTOR-FILL! should not be able to mutate
+	string and vector literals, either.
+2009-04-08
+	Added the STATS primitive, which evaluates an expression and
+	then prints some interesting data gathered during evaluation.
+	Added the VOID procedure, which evaluates to an unspecific value.
+2009-04-03
+       Fix: a #F literal following an ellipsis in DEFINE-SYNTAX/SYNTAX-RULES
+       would be substituted by mistake.
 2009-03-30
        A Debian package was created by Barak Pearlmutter. Thanks for the
        package and a few minor but useful patches!
