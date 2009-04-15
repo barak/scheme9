@@ -57,7 +57,8 @@ unix.o:	ext/unix.c
 	$(CC) $(CFLAGS) -I . -c $<
 
 s9e.image:	s9e s9e.scm ext/system.scm
-	rm -f $@ && env S9FES_LIBRARY_PATH=.:./lib ./s9e -n -f ext/system.scm -d $@
+	rm -f $@ && env S9FES_LIBRARY_PATH=.:./lib \
+			./s9e -n -f ext/system.scm -d $@
 
 %.1: %.1.in
 	sed -e "s,@LIBDIR@,$(LIBDIR)," < $< \

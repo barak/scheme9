@@ -254,6 +254,18 @@ Destructively set the current output port.
 .in -4
 .br
 .ne 2
+.B "(stats form) ==> normal form
+.in +4
+Evaluate the given
+.I form
+and return its normal form. In addition, print the number
+of reduction steps, nodes allocated, and garbage collections
+performed during evaluation. Note that
+.I form
+must be quoted.
+.in -4
+.br
+.ne 2
 .B "(symbols) ==> list
 .in +4
 Return a list of all defined symbols.
@@ -407,12 +419,6 @@ I/O:
 Transcripts:
 .BR transcript-off ,
 .BR transcript-on .
-.br
-Numeric base prefixes:
-.BR #b ,
-.BR #d ,
-.BR #o ,
-.BR #x .
 .br
 Numeric tower: rational, float, complex numbers.
 .br

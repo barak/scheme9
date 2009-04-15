@@ -44,6 +44,21 @@
 
 ; --- syntax ---
 
+; numeric bases
+
+(test #b10101010100101010101   698709)
+(test #b+10101010100101010101 +698709)
+(test #b-10101010100101010101 -698709)
+(test #d1234567890987654321   1234567890987654321)
+(test #d+1234567890987654321 +1234567890987654321)
+(test #d-1234567890987654321 -1234567890987654321)
+(test #o123456707654321   5744369817809)
+(test #o+123456707654321 +5744369817809)
+(test #o-123456707654321 -5744369817809)
+(test #x123456789abcdef0fedcba98765432   94522879700260683132212139638805554)
+(test #x+123456789abcdef0fedcba98765432 +94522879700260683132212139638805554)
+(test #x-123456789abcdef0fedcba98765432 -94522879700260683132212139638805554)
+
 ; and
 (test (and) #t)
 (test (and #f) #f)
@@ -1452,8 +1467,8 @@
 (test (vector 1 2 3) '#(1 2 3))
 (test (vector (vector 'x)) '#(#(x)))
 
-(test (let ((v '#())) (vector-fill! v 'x) v) '#())
-(test (let ((v '#(1 2 3))) (vector-fill! v 'z) v) '#(z z z))
+(test (let ((v (vector))) (vector-fill! v 'x) v) '#())
+(test (let ((v (vector 1 2 3))) (vector-fill! v 'z) v) '#(z z z))
 
 (test (vector-length #()) 0)
 (test (vector-length #(a)) 1)
@@ -1667,6 +1682,14 @@
 (test (ell ((1 2)) 3) '(((2 1)) 3))
 (test (ell ((1 2) (3 4) (5 6)) 7) '(((2 1) (4 3) (6 5)) 7))
 (test (ell ((1 2)) 3 4 5) '(((2 1)) 3 4 5))
+
+(define-syntax false
+  (syntax-rules ()
+    ((_ x y ...)
+       (if x (list y ...) (if #f #f)))))
+
+(test (false #t 1 2 3) '(1 2 3))
+(test (false #f 1 2 3) (void))
 
 (cond ((zero? Errors)
         (display "Everything fine!"))
