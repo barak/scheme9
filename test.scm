@@ -184,6 +184,8 @@
 
 (test ((lambda () 1 2 3)) 3)
 
+(test ((lambda (x) ((lambda () (set! x 1))) x) 0) 1)
+
 ; let
 (test (let () 1) 1)
 (test (let () 1 2 3) 3)
@@ -1690,6 +1692,24 @@
 
 (test (false #t 1 2 3) '(1 2 3))
 (test (false #f 1 2 3) (void))
+
+(define-syntax fluid-let
+  (syntax-rules ()
+    ((_ () expr . exprs)
+      (begin expr . exprs))
+    ((_ ((v1 a1) (v2 a2) ...) expr . exprs)
+      (let ((outer-v v1))
+        (set! v1 a1)
+        (fluid-let ((v2 a2) ...)
+          (let ((r (begin expr . exprs)))
+            (set! v1 outer-v)
+            r))))))
+
+(test (let ((x 0) (y 1) (z 2))
+        (fluid-let ((x #f) (y #f))
+          x y)
+        (list x y z))
+      '(0 1 2))
 
 (cond ((zero? Errors)
         (display "Everything fine!"))

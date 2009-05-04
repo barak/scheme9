@@ -107,7 +107,7 @@
          (program? (cadr x))))
 
   (define (valid-do? x)
-    (and (of-length? 3 3 (cdr x))
+    (and (of-length? 2 3 (cdr x))
          (list? (cadr x))
          (for-all (lambda (x)
                     (and (list? x)
@@ -116,7 +116,7 @@
                          (for-all program? (cdr x))))
                   (cadr x))
          (list? (caddr x))
-         (of-length? 2 2 (caddr x))
+         (of-length? 2 INF (caddr x))
          (for-all program? (caddr x))
          (for-all program? (cdddr x))))
 

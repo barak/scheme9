@@ -39,24 +39,24 @@
 ; Arguments: a, b - integer arguments
 ;            c    - optional integer arguments
 ;
-; Example:   (bitwise-clear 10 12)        ==>  0
-;            (bitwise-and 10 12)          ==>  8
-;            (bitwise-and-c2 10 12)       ==>  2
-;            (bitwise-1 10 12)            ==>  10
-;            (bitwise-and-c1 10 12)       ==>  4
-;            (bitwise-2 10 12)            ==>  12
-;            (bitwise-xor 10 12)          ==>  6
-;            (bitwise-or 10 12)           ==>  14
-;            (bitwise-or-not 10 12)       ==>  1
-;            (bitwise-xor-not 10 12)      ==>  9
-;            (bitwise-c2 10 12)           ==>  3
-;            (bitwise-or-c2 10 12)        ==>  11
-;            (bitwise-c1 10 12)           ==>  5
-;            (bitwise-or-c1 10 12)        ==>  13
-;            (bitwise-and-not 10 12)      ==>  7
-;            (bitwise-set 10 12)          ==>  15
-;            (bitwise-shift-left 1 10)    ==>  1024
-;            (bitwise-shift-right 10 1)   ==>  5
+; Example:   (bitwise-clear   #b1010 #b1100)  ==>  #b0000
+;            (bitwise-or-not  #b1010 #b1100)  ==>  #b0001
+;            (bitwise-and-c2  #b1010 #b1100)  ==>  #b0010
+;            (bitwise-c2      #b1010 #b1100)  ==>  #b0011
+;            (bitwise-and-c1  #b1010 #b1100)  ==>  #b0100
+;            (bitwise-c1      #b1010 #b1100)  ==>  #b0101
+;            (bitwise-xor     #b1010 #b1100)  ==>  #b0110
+;            (bitwise-and-not #b1010 #b1100)  ==>  #b0111
+;            (bitwise-and     #b1010 #b1100)  ==>  #b1000
+;            (bitwise-xor-not #b1010 #b1100)  ==>  #b1001
+;            (bitwise-1       #b1010 #b1100)  ==>  #b1010
+;            (bitwise-or-c2   #b1010 #b1100)  ==>  #b1011
+;            (bitwise-2       #b1010 #b1100)  ==>  #b1100
+;            (bitwise-or-c1   #b1010 #b1100)  ==>  #b1101
+;            (bitwise-or      #b1010 #b1100)  ==>  #b1110
+;            (bitwise-set     #b1010 #b1100)  ==>  #b1111
+;            (bitwise-shift-left 1 10)        ==>  1024
+;            (bitwise-shift-right 10 1)       ==>  5
 
 (define (make-variadic f)
   (lambda (a b . c)

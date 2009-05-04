@@ -428,7 +428,7 @@
        (lambda ()
          (cond ((null? radix) 10)
                ((<= 2 (car radix) 36) (car radix))
-               (else (wrong "bad radix in number->string" radix))))))
+               (else (wrong "number->string: bad radix" radix))))))
     (let ((r (get-radix)))
       (cond ((zero? n)
               "0")
@@ -479,7 +479,7 @@
        (lambda ()
          (cond ((null? radix) 10)
                ((<= 2 (car radix) 36) (car radix))
-               (else (wrong "bad radix in string->number" radix))))))
+               (else (wrong "string->number: bad radix" radix))))))
     (sconv (string->list str) (get-radix))))
 
 ;; Vector procedures
@@ -599,7 +599,7 @@
                     (not (symbol? (caar bind*)))
                     (not (pair? (cdar bind*)))
                     (not (null? (cddar bind*))))
-                 (wrong "let: bad syntax" bind*))
+                 (wrong "let: invalid syntax" bind*))
                (else (split (cdr bind*)
                             (cons (caar bind*) vars)
                             (cons (cadar bind*) args)))))))
@@ -632,7 +632,7 @@
                    (not (symbol? (caar b)))
                    (not (pair? (cdar b)))
                    (not (null? (cddar b))))
-                (wrong "letrec: bad syntax" b))
+                (wrong "letrec: invalid syntax" b))
               (else (check (cdr b))))))
      (make-temps
        (lambda (b)
@@ -670,7 +670,7 @@
                     (not (symbol? (caar b)))
                     (not (pair? (cdar b)))
                     (not (null? (cddar b))))
-                 (wrong "let*: bad syntax" b))
+                 (wrong "let*: invalid syntax" b))
                ((null? (cdr b))
                  `(let ((,(caar b) ,(cadar b)))
                     ,@(nest-let (cdr b))))
@@ -689,7 +689,7 @@
                ((or (not (pair? c*))
                     (not (pair? (car c*)))
                     (not (pair? (cdar c*))))
-                 (wrong "case: bad syntax" c*))
+                 (wrong "case: invalid syntax" c*))
                ((null? (cdr c*))
                  (if (eq? 'else (caar c*))
                      `((else ,@(cdar c*)))
@@ -711,7 +711,7 @@
                     (not (pair? (car clauses)))
                     (not (symbol? (caar clauses)))
                     (not (pair? (cdar clauses))))
-                 (wrong "do: bad syntax" clauses))
+                 (wrong "do: invalid syntax" clauses))
                (else
                  (split (cdr clauses)
                         (cons (caar clauses) vars)
@@ -721,7 +721,7 @@
                             (cons (caddar clauses) steps))))))))
     (if (or (not (pair? test))
             (not (list? (cdr test))))
-        (wrong "do: bad syntax" test)
+        (wrong "do: invalid syntax" test)
         (let ((loop (gensym))
               (var+init+step (split var-clauses '() '() '())))
           (let ((v (car   var+init+step))
@@ -766,7 +766,7 @@
 ;        ((syntax-match g52 '(_ p then c else a) '(then else) '())
 ;          => (lambda (env)
 ;               (syntax-expand '(_ p then c else a) '(if p c a) env)))
-;        (else (wrong "bad syntax for" 'iff))))
+;        (else (wrong "invalid syntax for" 'iff))))
 ;    (cons 'iff g52)))
 
 ; Match FORM against PATTERN.
@@ -807,32 +807,6 @@
     (let ((e (match form pattern keywords env)))
       (if e (reverse e) e))))
 
-; Substitute variables of FORM by values of ENV.
-;
-(define (syntax-expand tmpl env)
-  (letrec
-    ((expand
-       (lambda (tmpl env)
-         (cond
-           ((not (pair? tmpl))
-             (cond ((assq tmpl env) => cdr)
-                   (else tmpl)))
-           ((and (pair? tmpl)
-                 (pair? (cdr tmpl))
-                 (eq? (cadr tmpl) '...))
-             (let ((eenv (assq '... env)))
-               (if (not eenv)
-                   (wrong
-                     "syntax-rules: template without matching ... in pattern"
-                     tmpl)
-                   (begin (set-car! eenv '(#f))
-                          (map (lambda (x)
-                                 (expand (car tmpl) x))
-                               (cdr eenv))))))
-           (else (cons (expand (car tmpl) env)
-                       (expand (cdr tmpl) env)))))))
-    (expand tmpl env)))
-
 ; Give a unique name to each variable that is bound in FORM.
 ; BOUND is a list of initially bound variables. This function
 ; also renames variables of LET, LET*, and LETREC, e.g.:
@@ -869,6 +843,10 @@
                  (subst form env))
                ((not (pair? form))
                  form)
+               ((and (eq? 'quote (car form))
+                     (pair? (cdr form))
+                     (null? (cddr form)))
+                 form)
                ((and (eq? 'lambda (car form))
                      (pair? (cdr form))
                      (pair? (cddr form)))
@@ -884,7 +862,7 @@
                          (eq? (car form) 'let*))
                      (pair? (cdr form))
                      (pair? (cadr form))
-                     (pair? (cdadr form))
+                     (pair? (caadr form))
                      (pair? (cddr form)))
                  (let ((e (map-improper (lambda (x)
                                           (cons x (gensym "##")))
@@ -900,80 +878,105 @@
                                    '()))))))
     (conv form '())))
 
+; Substitute variables of FORM by values of ENV.
+;
+(define (syntax-expand bound tmpl env)
+  (let ((alpha-conv alpha-conv))
+    (letrec
+      ((expand
+         (lambda (tmpl env)
+           (cond
+             ((not (pair? tmpl))
+               (cond ((assq tmpl env) => cdr)
+                     (else tmpl)))
+             ((and (pair? tmpl)
+                   (pair? (cdr tmpl))
+                   (eq? (cadr tmpl) '...))
+               (let ((eenv (assq '... env)))
+                 (if (not eenv)
+                     (wrong
+                       "syntax-rules: template without matching ... in pattern"
+                       tmpl)
+                     (begin (set-car! eenv '(#f))
+                            (map (lambda (x)
+                                   (expand (car tmpl) x))
+                                 (cdr eenv))))))
+             (else (cons (expand (car tmpl) env)
+                         (expand (cdr tmpl) env)))))))
+      (alpha-conv (expand tmpl env) bound))))
+
 ; Check the syntax of DEFINE-SYNTAX and rewrite it
 ; to an application of DEFINE-MACRO.
 ;
 (define-macro define-syntax
-  (let ((alpha-conv alpha-conv))
-    (letrec
-      ((flatten
-         (lambda (x r)
-           (cond ((null? x) r)
-                 ((pair? x) (flatten (car x)
-                                     (flatten (cdr x) r)))
-                 (else (cons x r)))))
-       (list-of?
-         (lambda (p a)
-           (or (null? a)
-               (and (p (car a))
-                    (list-of? p (cdr a))))))
-       (keywords-ok?
-         (lambda (x)
-           (list-of? symbol? x)))
-       (rules-ok?
-         (lambda (x)
-           (list-of? (lambda (x)
-                       (and (pair? x)
-                            (pair? (car x))
-                            (pair? (cdr x))
-                            (null? (cddr x))))
-                     x)))
-       (pattern caar)
-       (template cadar)
-       (rewrite-rules
-         (lambda (app keywords rules-in rules-out)
-           (if (null? rules-in)
-               (reverse rules-out)
-               (rewrite-rules
-                 app
-                 keywords
-                 (cdr rules-in)
-                 (let ((a (alpha-conv (template rules-in)
-                                      (flatten (pattern rules-in)
-                                               '()))))
-                   (cons `((syntax-match ,app
-                                         ',(pattern rules-in)
-                                         ',keywords
-                                         '())
-                            => (lambda (env)
-                                 (syntax-expand ',a env)))
-                         rules-out)))))))
-      (lambda (name rules)
-        (cond
-          ((not (symbol? name))
-            (wrong "define-syntax: expected symbol, got" name))
-          ((or (not (pair? rules))
-               (not (eq? 'syntax-rules (car rules))))
-            (wrong "define-syntax: expected syntax-rules, got" rules))
-          ((or (not (pair? (cdr rules)))
-               (not (pair? (cddr rules))))
-            (wrong "syntax-rules: too few arguments" rules))
-          ((not (keywords-ok? (cadr rules)))
-            (wrong "syntax-rules: bad keyword list" (cadr rules)))
-          ((not (rules-ok? (cddr rules)))
-            (wrong "syntax-rules: bad clause in rules" (cddr rules)))
-          (else
-            (let ((app (gensym))
-                  (default `((else (wrong "bad syntax for" ',name)))))
-              `(define-macro ,(cons name app)
-                 (let ((,app (cons ',name ,app))
-                       (syntax-match ,syntax-match)
-                       (syntax-expand ,syntax-expand))
-                   (cond ,@(append (rewrite-rules app
-                                                  (cadr rules)
-                                                  (cddr rules)
-                                                  '())
-                                   default)))))))))))
+  (letrec
+    ((flatten
+       (lambda (x r)
+         (cond ((null? x) r)
+               ((pair? x) (flatten (car x)
+                                   (flatten (cdr x) r)))
+               (else (cons x r)))))
+     (list-of?
+       (lambda (p a)
+         (or (null? a)
+             (and (p (car a))
+                  (list-of? p (cdr a))))))
+     (keywords-ok?
+       (lambda (x)
+         (list-of? symbol? x)))
+     (rules-ok?
+       (lambda (x)
+         (list-of? (lambda (x)
+                     (and (pair? x)
+                          (pair? (car x))
+                          (pair? (cdr x))
+                          (null? (cddr x))))
+                   x)))
+     (pattern caar)
+     (template cadar)
+     (rewrite-rules
+       (lambda (app keywords rules-in rules-out)
+         (if (null? rules-in)
+             (reverse rules-out)
+             (rewrite-rules
+               app
+               keywords
+               (cdr rules-in)
+               (cons `((syntax-match ,app
+                                     ',(pattern rules-in)
+                                     ',keywords
+                                     '())
+                        => (lambda (env)
+                             (syntax-expand ',(flatten (pattern rules-in) '())
+                                            ',(template rules-in)
+                                            env)))
+                     rules-out))))))
+    (lambda (name rules)
+      (cond
+        ((not (symbol? name))
+          (wrong "define-syntax: expected symbol, got" name))
+        ((or (not (pair? rules))
+             (not (eq? 'syntax-rules (car rules))))
+          (wrong "define-syntax: expected syntax-rules, got" rules))
+        ((or (not (pair? (cdr rules)))
+             (not (pair? (cddr rules))))
+          (wrong "syntax-rules: too few arguments" rules))
+        ((not (keywords-ok? (cadr rules)))
+          (wrong "syntax-rules: malformed keyword list" (cadr rules)))
+        ((not (rules-ok? (cddr rules)))
+          (wrong "syntax-rules: invalid clause in rules" (cddr rules)))
+        (else
+          (let ((app (gensym))
+                (default `((else (wrong "invalid syntax for" ',name)))))
+            `(define-macro ,(cons name app)
+               (let ((,app (cons ',name ,app))
+                     (syntax-match ,syntax-match)
+                     (syntax-expand ,syntax-expand))
+                 (cond ,@(append (rewrite-rules app
+                                                (cadr rules)
+                                                (cddr rules)
+                                                '())
+                                 default))))))))))
 
 ;;----- Utilities -----
 

@@ -10,7 +10,22 @@ for d in $p; do
 	if [ "$f" != "" ]; then break; fi
 done
 
-if [ -x "$f" ]; then echo; $f; fi
+if [ -x "$f" ]; then
+	echo
+	$f
+else
+	echo
+	cat <<EOT
+Cowardice asks the question, "Is it safe?" Expediency asks the
+question, "It it politic?"   Vanity asks the question,  "Is it
+popular?"   But, conscience asks the question,  "Is it right?"
+And there comes a time  when one must take a position  that is
+neither safe nor politic,  not popular,  but one must take it,
+because one's conscienceness tells one that it is right.
+-- Martin Luther King, Jr.
+EOT
+fi
+
 echo
 echo "Now edit the PREFIX variable of Makefile, then run 'make'"
 echo

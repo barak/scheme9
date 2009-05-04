@@ -14,9 +14,9 @@
 ; TEXT does not contain PATTERN. STRING-CI-FIND does the same,
 ; but ignores case.
 ;
-; (string-find    "test" "This is a test string")  ==>  10
-; (string-find    "TEST" "This is a test string")  ==>  #f
-; (string-ci-find "TEST" "This is a test string")  ==>  10
+; Example:   (string-find "test" "This is a test string")     ==>  10
+;            (string-find "TEST" "This is a test string")     ==>  #f
+;            (string-find-ci "TEST" "This is a test string")  ==>  10
 
 (define (make-string-find ignore-case)
   (lambda (pattern text)

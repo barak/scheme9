@@ -17,10 +17,10 @@
 
 /*
  *	Allow us at least to write
- *		assign(assign(Car[x] = alloc(foo, bar)));
+ *		assign(assign(car(x) = alloc(foo, bar)));
  *	in presence of that fact that C's
  *	order of evaluation messes up
- *		Car[x] = alloc(foo, bar);
+ *		car(x) = alloc(foo, bar);
  */
 cell	New_node;
 #define assign(n,v)	{ New_node = v; n = New_node; }
@@ -67,11 +67,11 @@ cell pp_unix_command_line(cell x) {
 	save(n);
 	cl = Command_line;
 	while (*cl != NULL) {
-		assign(Car[a], make_string(*cl, strlen(*cl)));
+		assign(car(a), make_string(*cl, strlen(*cl)));
 		cl++;
 		if (*cl != NULL) {
-			assign(Cdr[a], alloc(NIL, NIL));
-			a = Cdr[a];
+			assign(cdr(a), alloc(NIL, NIL));
+			a = cdr(a);
 		}
 	}
 	unsave(1);
@@ -126,11 +126,11 @@ cell mkgrent(struct group *gr) {
 
 	n = alloc(NIL, NIL);
 	save(n);
-	assign(Car[n], alloc(add_symbol("name"), NIL));
+	assign(car(n), alloc(add_symbol("name"), NIL));
 	cdar(n) = make_string(gr->gr_name, strlen(gr->gr_name));
 	a = alloc(NIL, NIL);
-	Cdr[n] = a;
-	assign(Car[a], alloc(add_symbol("gid"), NIL));
+	cdr(n) = a;
+	assign(car(a), alloc(add_symbol("gid"), NIL));
 	cdar(a) = make_integer(gr->gr_gid);
 	unsave(1);
 	return n;
@@ -165,13 +165,13 @@ cell pp_unix_getpwent(cell x) {
 		pw = getpwent();
 		if (pw == NULL) break;
 		pa = a;
-		assign(Car[a], make_string(pw->pw_name, strlen(pw->pw_name)));
+		assign(car(a), make_string(pw->pw_name, strlen(pw->pw_name)));
 		if (pw != NULL) {
-			assign(Cdr[a], alloc(NIL, NIL));
-			a = Cdr[a];
+			assign(cdr(a), alloc(NIL, NIL));
+			a = cdr(a);
 		}
 	}
-	Cdr[pa] = NIL;
+	cdr(pa) = NIL;
 	endpwent();
 	unsave(1);
 	return n;
@@ -182,27 +182,27 @@ cell mkpwent(struct passwd *pw) {
 
 	n = alloc(NIL, NIL);
 	save(n);
-	assign(Car[n], alloc(add_symbol("name"), NIL));
+	assign(car(n), alloc(add_symbol("name"), NIL));
 	cdar(n) = make_string(pw->pw_name, strlen(pw->pw_name));
 	a = alloc(NIL, NIL);
-	Cdr[n] = a;
-	assign(Car[a], alloc(add_symbol("uid"), NIL));
+	cdr(n) = a;
+	assign(car(a), alloc(add_symbol("uid"), NIL));
 	cdar(a) = make_integer(pw->pw_uid);
-	assign(Cdr[a], alloc(NIL, NIL));
-	a = Cdr[a];
-	assign(Car[a], alloc(add_symbol("gid"), NIL));
+	assign(cdr(a), alloc(NIL, NIL));
+	a = cdr(a);
+	assign(car(a), alloc(add_symbol("gid"), NIL));
 	cdar(a) = make_integer(pw->pw_gid);
-	assign(Cdr[a], alloc(NIL, NIL));
-	a = Cdr[a];
-	assign(Car[a], alloc(add_symbol("gecos"), NIL));
+	assign(cdr(a), alloc(NIL, NIL));
+	a = cdr(a);
+	assign(car(a), alloc(add_symbol("gecos"), NIL));
 	cdar(a) = make_string(pw->pw_gecos, strlen(pw->pw_gecos));
-	assign(Cdr[a], alloc(NIL, NIL));
-	a = Cdr[a];
-	assign(Car[a], alloc(add_symbol("home"), NIL));
+	assign(cdr(a), alloc(NIL, NIL));
+	a = cdr(a);
+	assign(car(a), alloc(add_symbol("home"), NIL));
 	cdar(a) = make_string(pw->pw_dir, strlen(pw->pw_dir));
-	assign(Cdr[a], alloc(NIL, NIL));
-	a = Cdr[a];
-	assign(Car[a], alloc(add_symbol("shell"), NIL));
+	assign(cdr(a), alloc(NIL, NIL));
+	a = cdr(a);
+	assign(car(a), alloc(add_symbol("shell"), NIL));
 	cdar(a) = make_string(pw->pw_shell, strlen(pw->pw_shell));
 	unsave(1);
 	return n;
@@ -265,13 +265,13 @@ cell pp_unix_readdir(cell x) {
 		dp = readdir(dir);
 		if (dp == NULL) break;
 		pa = a;
-		assign(Car[a], make_string(dp->d_name, strlen(dp->d_name)));
+		assign(car(a), make_string(dp->d_name, strlen(dp->d_name)));
 		if (dp != NULL) {
-			assign(Cdr[a], alloc(NIL, NIL));
-			a = Cdr[a];
+			assign(cdr(a), alloc(NIL, NIL));
+			a = cdr(a);
 		}
 	}
-	Cdr[pa] = NIL;
+	cdr(pa) = NIL;
 	closedir(dir);
 	unsave(1);
 	return n;
@@ -354,9 +354,9 @@ cell pp_unix_spawn(cell x) {
 	Ports[out_port] = fdopen(to_child[1], "w");
 	n = alloc(NIL, NIL);
 	save(n);
-	assign(Car[n], make_port(in_port, S_input_port));
-	assign(Cdr[n], alloc(NIL, NIL));
-	cadr(n) = make_port(out_port, S_output_port);
+	assign(car(n), make_port(in_port, T_INPUT_PORT));
+	assign(cdr(n), alloc(NIL, NIL));
+	cadr(n) = make_port(out_port, T_OUTPUT_PORT);
 	unsave(1);
 	Port_flags[in_port] &= ~LOCK_TAG;
 	Port_flags[out_port] &= ~LOCK_TAG;
@@ -370,46 +370,46 @@ cell pp_unix_stat(cell x) {
 	if (stat(string(cadr(x)), &sb) < 0) return FALSE;
 	n = alloc(NIL, NIL);
 	save(n);
-	assign(Car[n], alloc(add_symbol("name"), cadr(x)));
+	assign(car(n), alloc(add_symbol("name"), cadr(x)));
 	a = alloc(NIL, NIL);
-	Cdr[n] = a;
-	assign(Car[a], alloc(add_symbol("size"), NIL));
+	cdr(n) = a;
+	assign(car(a), alloc(add_symbol("size"), NIL));
 	cdar(a) = make_integer(sb.st_size);
-	assign(Cdr[a], alloc(NIL, NIL));
-	a = Cdr[a];
-	assign(Car[a], alloc(add_symbol("uid"), NIL));
+	assign(cdr(a), alloc(NIL, NIL));
+	a = cdr(a);
+	assign(car(a), alloc(add_symbol("uid"), NIL));
 	cdar(a) = make_integer(sb.st_uid);
-	assign(Cdr[a], alloc(NIL, NIL));
-	a = Cdr[a];
-	assign(Car[a], alloc(add_symbol("gid"), NIL));
+	assign(cdr(a), alloc(NIL, NIL));
+	a = cdr(a);
+	assign(car(a), alloc(add_symbol("gid"), NIL));
 	cdar(a) = make_integer(sb.st_gid);
-	assign(Cdr[a], alloc(NIL, NIL));
-	a = Cdr[a];
-	assign(Car[a], alloc(add_symbol("mode"), NIL));
+	assign(cdr(a), alloc(NIL, NIL));
+	a = cdr(a);
+	assign(car(a), alloc(add_symbol("mode"), NIL));
 	cdar(a) = make_integer(sb.st_mode);
-	assign(Cdr[a], alloc(NIL, NIL));
-	a = Cdr[a];
-	assign(Car[a], alloc(add_symbol("ctime"), NIL));
+	assign(cdr(a), alloc(NIL, NIL));
+	a = cdr(a);
+	assign(car(a), alloc(add_symbol("ctime"), NIL));
 	cdar(a) = make_integer(sb.st_ctime);
-	assign(Cdr[a], alloc(NIL, NIL));
-	a = Cdr[a];
-	assign(Car[a], alloc(add_symbol("atime"), NIL));
+	assign(cdr(a), alloc(NIL, NIL));
+	a = cdr(a);
+	assign(car(a), alloc(add_symbol("atime"), NIL));
 	cdar(a) = make_integer(sb.st_atime);
-	assign(Cdr[a], alloc(NIL, NIL));
-	a = Cdr[a];
-	assign(Car[a], alloc(add_symbol("mtime"), NIL));
+	assign(cdr(a), alloc(NIL, NIL));
+	a = cdr(a);
+	assign(car(a), alloc(add_symbol("mtime"), NIL));
 	cdar(a) = make_integer(sb.st_mtime);
-	assign(Cdr[a], alloc(NIL, NIL));
-	a = Cdr[a];
-	assign(Car[a], alloc(add_symbol("dev"), NIL));
+	assign(cdr(a), alloc(NIL, NIL));
+	a = cdr(a);
+	assign(car(a), alloc(add_symbol("dev"), NIL));
 	cdar(a) = make_integer(sb.st_dev);
-	assign(Cdr[a], alloc(NIL, NIL));
-	a = Cdr[a];
-	assign(Car[a], alloc(add_symbol("ino"), NIL));
+	assign(cdr(a), alloc(NIL, NIL));
+	a = cdr(a);
+	assign(car(a), alloc(add_symbol("ino"), NIL));
 	cdar(a) = make_integer(sb.st_ino);
-	assign(Cdr[a], alloc(NIL, NIL));
-	a = Cdr[a];
-	assign(Car[a], alloc(add_symbol("nlink"), NIL));
+	assign(cdr(a), alloc(NIL, NIL));
+	a = cdr(a);
+	assign(car(a), alloc(add_symbol("nlink"), NIL));
 	cdar(a) = make_integer(sb.st_nlink);
 	unsave(1);
 	return n;

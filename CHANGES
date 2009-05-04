@@ -1,5 +1,61 @@
 Change Log
 
+2009-05-03
+	Added a pattern matcher with optional support for ML syntax
+	to the library. (lib/define-match.scm)
+	Updated the test suite.
+	Moved the online help system to contrib. (contrib/help.scm)
+	Moved DRAW-TREE to contrib. (contrib/draw-tree.scm)
+	Included the pretty-printer and the online help system in
+	the default heap image.
+2009-05-01
+	Fixed some 64-bit flaws.
+	Many thanks to Torsten Leibold for giving his
+	AlphaStation 200 4/233 to me!
+2009-04-29
+	Fix: alpha-conversion of recursive SYNTAX-RULES was broken,
+	leading to potentially non-hygienic expansion.
+	Added SYNTAX-RULES version of FLUID-LET. (lib/fluid-let-sr.scm)
+	Fix: line numbers were off after LOAD.
+	Moved interactive programs to CONTRIB, even if they have been
+	contributed by myself. (pretty-print.scm, print-code.scm)
+2009-04-28
+	Finished the new and vastly improved pretty-printer.
+	(lib/pretty-print.scm)
+2009-04-27
+	Fixed some bugs in PROGRAM? (DO with multi-expr test part was
+	not allowed; commands were not optional).
+	Started rewriting the pretty-printer.
+2009-04-26
+	Reporting file name in messages when using "-f program" option.
+	Made the pretty-printer print '`, and ,@ instead of QUOTE,
+	QUASIQUOTE, UNQUOTE, and UNQUOTE-SPLICING.
+	Still more clean-up.
+2009-04-25
+	Even more code clean-up.
+2009-04-23
+	Applied more cosmetics.
+2009-04-22
+	Improved hashing of lists. (lib/hash-table.scm)
+	Added memoization to PROLOG interpreter. (contrib/prolog.scm)
+2009-04-21
+	Applied various micro optimizations and cosmetics.
+	Added == (unify) and DIF goals to PROLOG example.
+2009-04-20
+	Made the interpreter print file and line number information
+	in error messages when LOADing a file.
+	Reverted to previous version of the PROLOG interpreter due
+	to unclear semantics.
+2009-04-19
+	Extended the PROLOG interpreter. (contrib/prolog.scm)
+2009-04-18
+	Added PROLOG interpreter to contrib section. (contrib/prolog*)
+2009-04-15
+	Fixed some error messages; made messages more uniform.
+	Fixed a bug in the reader: the (malformed) expression ('))
+	gave a strange result. It is an error now.
+2009-04-12
+	Documented the VOID procedure.
 2009-04-10
 	Added numeric base prefixes #B, #D, #O, and #X.
 2009-04-09

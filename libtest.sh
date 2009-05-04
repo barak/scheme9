@@ -1,6 +1,6 @@
 #!/bin/sh
 
-S9FES_LIBRARY_PATH=.:lib; export S9FES_LIBRARY_PATH
+S9FES_LIBRARY_PATH=.:lib:contrib; export S9FES_LIBRARY_PATH
 
 testfile=libtest.scm
 
@@ -40,14 +40,16 @@ cat >$testfile <<EOT
 
 EOT
 
-for f in lib/*.scm; do
-	echo "(load-from-library \"`basename $f`\")" >>$testfile
-	echo "(test" >>$testfile
-	sed -ne '/^; Example: /,/^$/p' <$f | \
-		sed -e '/^$/d' | \
-		sed -e 's/^;..........//' >>$testfile
-	echo ")" >>$testfile
-	echo "" >>$testfile
+for f in lib/*.scm contrib/*.scm; do
+	if grep '^; Example: ' $f >/dev/null 2>&1; then
+		echo "(load-from-library \"`basename $f`\")" >>$testfile
+		echo "(test" >>$testfile
+		sed -ne '/^; Example: /,/^$/p' <$f | \
+			sed -e '/^$/d' | \
+			sed -e 's/^;..........//' >>$testfile
+		echo ")" >>$testfile
+		echo "" >>$testfile
+	fi
 done
 
 cat >>$testfile <<EOT
@@ -60,4 +62,4 @@ trap '
 	exit 1
 ' 1 2 3 15
 
-env S9FES_LIBRARY_PATH=.:lib ./s9 -nf libtest.scm
+./s9 -nf libtest.scm

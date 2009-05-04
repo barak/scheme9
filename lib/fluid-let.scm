@@ -22,6 +22,9 @@
 ;                (fluid-let ((a 1))
 ;                  (f))))                ==>  1
 
+; In case your Scheme does not support DEFINE-MACRO,
+; try fluid-let-sr.scm, which uses SYNTAX-RULES.
+
 (define-macro (fluid-let bind* . body)
   (letrec
     ((split
