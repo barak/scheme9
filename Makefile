@@ -44,7 +44,8 @@ s9:	s9.c s9.h
 	$(CC) $(CFLAGS) $(DEFS) -o $@ s9.c
 
 s9.image:	s9 s9.scm
-	rm -f $@ && ./s9 -n $(EXTRA_STUFF) -d $@
+	rm -f $@ && env S9FES_LIBRARY_PATH=.:./lib \
+			./s9 -n $(EXTRA_STUFF) -d $@
 
 s9e:	s9e.o $(EXTOBJ)
 	$(CC) $(CFLAGS) -o $@ $^
