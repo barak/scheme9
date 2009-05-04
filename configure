@@ -1,8 +1,5 @@
 #!/bin/sh
 
-echo Unnecessary in Debian branch: Makefile already patched.
-exit
-
 f=""
 p=`echo $PATH | sed -e 's/:/ /g'`
 for d in $p; do
