@@ -108,7 +108,10 @@
 	example, the following command will compile an image containing
 	the online help system and the pretty-printer:
 
-	s9 -n -f lib/help.scm -f lib/pretty-print.scm -d s9.image
+	s9 -n -f contrib/help.scm -f contrib/pretty-print.scm -d s9.image
+
+	(Note that this is done by default; see the EXTRA_STUFF variable
+	 in the Makefile.)
 
 
 	GETTING STARTED
@@ -136,7 +139,7 @@
 	by S9fES:
 
 	> (load-from-library "help.scm")
-	; loading from /usr/local/share/s9fes/help.scm
+	; loading from /usr/local/share/s9fes/contrib/help.scm
 	> (help)
 	  ... HELP explains itself ...
 

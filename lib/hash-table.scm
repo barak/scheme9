@@ -21,6 +21,8 @@
 ;              (hash-table-ref  h "key"))
 ;                                          ==>  ("key" . value)
 
+(load-from-library "count.scm")
+
 (define (make-hash-table . size)
   (if (and (pair? size)
            (not (null? (cdr size))))
@@ -42,19 +44,12 @@
                  (loop (remainder
                          (+ (* 8 h) (char->integer (string-ref s i)))
                          k)
-                       (+ 1 i)))))))
-     (improper-length
-       (lambda (x)
-         (let loop ((x x)
-                    (k 0))
-           (if (pair? x)
-               (loop (cdr x) (+ 1 k))
-               k)))))
+                       (+ 1 i))))))))
     (cond ((symbol? x) (string->hash (symbol->string x) k))
           ((string? x) (string->hash x k))
           ((number? x) (remainder x k))
           ((char? x)   (remainder (char->integer x) k))
-          ((pair? x)   (remainder (improper-length x) k))
+          ((pair? x)   (remainder (count x) k))
           ((vector? x) (remainder (vector-length x) k))
           (else        (- k 1)))))
 

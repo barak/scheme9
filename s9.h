@@ -3,6 +3,12 @@
  * By Nils M Holm <nmh@t3x.org>, 2007,2008,2009
  */
 
+/*
+ * This file uses nested #ifdef instead of #if
+ * in order to support the Plan 9 C language,
+ * which intentionally omits #if.
+ */
+
 #ifdef __PCC__
  #define _POSIX_SOURCE
  #define _POSIX_C_SOURCE 200112
@@ -71,12 +77,16 @@
 
 #ifndef DEFAULT_LIBRARY_PATH
  #define DEFAULT_LIBRARY_PATH \
-	".:~/.s9fes:/usr/local/share/s9fes:/usr/local/share/s9fes/contrib"
+ 		".:" 				\
+		"~/.s9fes:" 			\
+		"/usr/local/share/s9fes:"	\
+		"/usr/local/share/s9fes/contrib"
 #endif
 
 #ifndef IMAGEFILE
  #define IMAGEFILE	"s9.image"
 #endif
+
 #ifndef LIBRARY
  #define LIBRARY	"s9.scm"
 #endif
@@ -93,8 +103,8 @@
  * in which segment sizes grow. Each time a new
  * memory segment is added, the segment size grows
  * by a factor of 3/2, so the allocation sequence
- * results in a pool size of 12689048 nodes when
- * growing the pool for the 12'th time.
+ * reaches this pool size when growing the pool for
+ * the 12th time.
  */
 #define DEFAULT_LIMIT_KN	12392
 
@@ -106,7 +116,7 @@
 /* #define BITS_PER_WORD_32 */
 /* #define BITS_PER_WORD_16 */
 
-/* ... else assume a reasonable default */
+/* ... or assume a reasonable default */
 #ifndef BITS_PER_WORD_16
  #ifndef BITS_PER_WORD_32
   #ifndef BITS_PER_WORD_64
@@ -134,8 +144,8 @@
 #endif
 
 /* GC tags */
-#define	ATOM_TAG	0x01	/* Atom, Car = type, CDR = next */
-#define	MARK_TAG	0x02	/* Mark */
+#define ATOM_TAG	0x01	/* Atom, Car = type, CDR = next */
+#define MARK_TAG	0x02	/* Mark */
 #define STATE_TAG	0x04	/* State */
 #define VECTOR_TAG	0x08	/* Vector, Car = type, CDR = content */
 #define PORT_TAG	0x10	/* Atom is an I/O port (with ATOM_TAG) */
@@ -157,20 +167,34 @@ enum EVAL_STATES {
 	EV_COND		/* Processing clauses of COND */
 };
 
-enum TYPES {
-	T_NONE,
-	T_BOOLEAN,
-	T_CHAR,
-	T_INPUT_PORT,
-	T_INTEGER,
-	T_OUTPUT_PORT,
-	T_PAIR,
-	T_PAIR_OR_NIL,
-	T_PROCEDURE,
-	T_STRING,
-	T_SYMBOL,
-	T_VECTOR
-};
+/*
+ * Special objects
+ */
+#define special_value_p(x)	((x) < 0)
+#define NIL			(-1)
+#define TRUE			(-2)
+#define FALSE			(-3)
+#define ENDOFFILE		(-4)
+#define UNDEFINED		(-5)
+#define UNSPECIFIC		(-6)
+#define DOT			(-7)
+#define RPAREN			(-8)
+#define NOEXPR			(-9)
+/* Types */
+#define T_NONE			(-10)
+#define T_BOOLEAN		(-11)
+#define T_CHAR			(-12)
+#define T_INPUT_PORT		(-13)
+#define T_INTEGER		(-14)
+#define T_OUTPUT_PORT		(-15)
+#define T_PAIR			(-16)
+#define T_PAIR_OR_NIL		(-17)
+#define T_PRIMITIVE		(-18)
+#define T_PROCEDURE		(-19)
+#define T_STRING		(-20)
+#define T_SYMBOL		(-21)
+#define T_SYNTAX		(-22)
+#define T_VECTOR		(-23)
 
 /*
  * Short cuts for primitive procedure definitions
@@ -187,19 +211,6 @@ enum TYPES {
 #define VEC T_VECTOR
 #define ___ T_NONE
 
-/*
- * Special objects
- */
-#define special_value_p(x)	((x) < 0)
-#define NIL			(-1)
-#define TRUE			(-2)
-#define FALSE			(-3)
-#define ENDOFFILE		(-4)
-#define UNDEFINED		(-5)
-#define UNSPECIFIC		(-6)
-#define	DOT			(-7)
-#define	RPAREN			(-8)
-#define NOEXPR			(-9)
 
 struct Primitive_procedure {
 	char	*name;
@@ -242,6 +253,8 @@ EXTERN char	Port_flags[MAX_PORTS];
 EXTERN int	Input_port,
 		Output_port;
 EXTERN cell	Trace_list;
+EXTERN cell	File_list;
+EXTERN int	Line_no;
 EXTERN int	Level;
 EXTERN int	Load_level;
 EXTERN int	Displaying;
@@ -253,19 +266,17 @@ EXTERN volatile int	Error_flag;
 /*
  * Short cuts for accessing predefined symbols
  */
-EXTERN cell	S_arrow, S_char, S_else, S_extensions, S_input_port,
-		S_integer, S_latest, S_library_path, S_loading,
-		S_output_port, S_primitive, S_procedure, S_quasiquote,
-		S_quote, S_string, S_symbol, S_syntax, S_unquote,
-		S_unquote_splicing, S_vector;
-EXTERN cell	S_and, S_begin, S_cond, S_define, S_define_macro, S_if,
-		S_lambda, S_or, S_set_b;
+EXTERN cell	S_arrow, S_else, S_extensions, S_latest,
+		S_library_path, S_loading, S_quasiquote,
+		S_quote, S_unquote, S_unquote_splicing;
+EXTERN cell	S_and, S_begin, S_call_ec, S_cond, S_define,
+		S_define_macro, S_if, S_lambda, S_or, S_set_b;
 
 /*
  * I/O
  */
 #define nl()		pr("\n")
-#define reject(c)	ungetc(c, Ports[Input_port])
+#define reject(c)	ungetc((c), Ports[Input_port])
 
 #define read_c()	getc(Ports[Input_port])
 #define read_c_ci()	tolower(read_c())
@@ -278,8 +289,8 @@ EXTERN cell	S_and, S_begin, S_cond, S_define, S_define_macro, S_if,
 #define vector(n)	(&Vectors[Cdr[n]])
 #define vector_link(n)	(Vectors[Cdr[n] - 3])
 #define vector_index(n)	(Vectors[Cdr[n] - 2])
-#define vector_size(k)	(((k) + sizeof(cell)-1) / sizeof(cell) + 3)
 #define vector_len(n)	(vector_size(string_len(n)) - 3)
+#define vector_size(k)	(((k) + sizeof(cell)-1) / sizeof(cell) + 3)
 #define port_no(n)	(cadr(n))
 #define char_value(n)	(cadr(n))
 
@@ -317,7 +328,6 @@ EXTERN cell	S_and, S_begin, S_cond, S_define, S_define_macro, S_if,
 /*
  * Type predicates
  */
-#define null_p(n)	((n) == NIL)
 #define eof_p(n)	((n) == ENDOFFILE)
 #define undefined_p(n)	((n) == UNDEFINED)
 #define unspecific_p(n)	((n) == UNSPECIFIC)
@@ -327,53 +337,43 @@ EXTERN cell	S_and, S_begin, S_cond, S_define, S_define_macro, S_if,
 #define constant_p(n)	(!special_value_p(n) && (Tag[n] & CONST_TAG))
 
 #define integer_p(n) \
-	(!special_value_p(n) && (Tag[n] & ATOM_TAG) && Car[n] == S_integer)
+	(!special_value_p(n) && (Tag[n] & ATOM_TAG) && Car[n] == T_INTEGER)
 #define primitive_p(n) \
-	(!special_value_p(n) && (Tag[n] & ATOM_TAG) && Car[n] == S_primitive)
+	(!special_value_p(n) && (Tag[n] & ATOM_TAG) && Car[n] == T_PRIMITIVE)
 #define procedure_p(n) \
-	(!special_value_p(n) && (Tag[n] & ATOM_TAG) && Car[n] == S_procedure)
-#define special_p(n)	((n) == S_and    || \
-			 (n) == S_begin  || \
-			 (n) == S_cond   || \
-			 (n) == S_define || \
-			 (n) == S_define_macro || \
+	(!special_value_p(n) && (Tag[n] & ATOM_TAG) && Car[n] == T_PROCEDURE)
+#define special_p(n)	((n) == S_quote  || \
 			 (n) == S_if     || \
-			 (n) == S_lambda || \
+			 (n) == S_cond   || \
+			 (n) == S_and    || \
 			 (n) == S_or     || \
-			 (n) == S_quote  || \
-			 (n) == S_set_b)
+			 (n) == S_lambda || \
+			 (n) == S_begin  || \
+			 (n) == S_set_b  || \
+			 (n) == S_define || \
+			 (n) == S_define_macro)
 #define char_p(n) \
-	(!special_value_p(n) && (Tag[n] & ATOM_TAG) && Car[n] == S_char)
+	(!special_value_p(n) && (Tag[n] & ATOM_TAG) && Car[n] == T_CHAR)
 #define syntax_p(n) \
-	(!special_value_p(n) && (Tag[n] & ATOM_TAG) && Car[n] == S_syntax)
+	(!special_value_p(n) && (Tag[n] & ATOM_TAG) && Car[n] == T_SYNTAX)
 #define input_port_p(n)	\
 	(!special_value_p(n) && (Tag[n] & ATOM_TAG) && (Tag[n] & PORT_TAG) \
-	 && Car[n] == S_input_port)
+	 && Car[n] == T_INPUT_PORT)
 #define output_port_p(n) \
 	(!special_value_p(n) && (Tag[n] & ATOM_TAG) && (Tag[n] & PORT_TAG) \
-	 && Car[n] == S_output_port)
+	 && Car[n] == T_OUTPUT_PORT)
 
 #define symbol_p(n) \
-	(!special_value_p(n) && (Tag[n] & VECTOR_TAG) && Car[n] == S_symbol)
+	(!special_value_p(n) && (Tag[n] & VECTOR_TAG) && Car[n] == T_SYMBOL)
 #define vector_p(n) \
-	(!special_value_p(n) && (Tag[n] & VECTOR_TAG) && Car[n] == S_vector)
+	(!special_value_p(n) && (Tag[n] & VECTOR_TAG) && Car[n] == T_VECTOR)
 #define string_p(n) \
-	(!special_value_p(n) && (Tag[n] & VECTOR_TAG) && Car[n] == S_string)
-
-#define auto_quoting_p(n) \
-	(boolean_p(n)    || \
-	 char_p(n)       || \
-	 eof_p(n)        || \
-	 integer_p(n)    || \
-	 string_p(n)     || \
-	 undefined_p(n)  || \
-	 unspecific_p(n) || \
-	 procedure_p(n)  || \
-	 primitive_p(n)  || \
-	 vector_p(n))
+	(!special_value_p(n) && (Tag[n] & VECTOR_TAG) && Car[n] == T_STRING)
 
 #define atom_p(n) \
 	(special_value_p(n) || (Tag[n] & ATOM_TAG) || (Tag[n] & VECTOR_TAG))
+
+#define auto_quoting_p(n) atom_p(n)
 
 #define pair_p(x) (!atom_p(x))
 
@@ -402,14 +402,14 @@ EXTERN cell	S_and, S_begin, S_cond, S_define, S_define_macro, S_if,
 /*
  * Prototypes
  */
-cell error(char *msg, cell expr);
-void fatal(char *msg);
-cell make_integer(long i);
-int integer_value(char *src, cell x);
-cell alloc3(cell pcar, cell pcdr, int ptag);
-cell make_string(char *s, int k);
-cell unsave(int k);
-cell add_symbol(char *s);
-int alloc_port(void);
-cell make_port(int portno, cell type);
-void add_primitives(char *name, PRIM *p);
+cell	error(char *msg, cell expr);
+void	fatal(char *msg);
+cell	make_integer(long i);
+int	integer_value(char *src, cell x);
+cell	alloc3(cell pcar, cell pcdr, int ptag);
+cell	make_string(char *s, int k);
+cell	unsave(int k);
+cell	add_symbol(char *s);
+int	alloc_port(void);
+cell	make_port(int portno, cell type);
+void	add_primitives(char *name, PRIM *p);

@@ -4,6 +4,10 @@
 # Change at least this line:
 #PREFIX= /u
 
+# Extras to be added to the hap image
+EXTRA_STUFF=	-f contrib/help.scm \
+		-f contrib/pretty-print.scm
+
 # Override default compiler and flags
 #CC=	gcc
 CFLAGS=	-g -Wall -ansi -pedantic -O
@@ -40,7 +44,7 @@ s9:	s9.c s9.h
 	$(CC) $(CFLAGS) $(DEFS) -o $@ s9.c
 
 s9.image:	s9 s9.scm
-	rm -f $@ && ./s9 -n -d $@
+	rm -f $@ && ./s9 -n $(EXTRA_STUFF) -d $@
 
 s9e:	s9e.o $(EXTOBJ)
 	$(CC) $(CFLAGS) -o $@ $^
@@ -58,7 +62,7 @@ unix.o:	ext/unix.c
 
 s9e.image:	s9e s9e.scm ext/system.scm
 	rm -f $@ && env S9FES_LIBRARY_PATH=.:./lib \
-			./s9e -n -f ext/system.scm -d $@
+			./s9e -n -f ext/system.scm $(EXTRA_STUFF) -d $@
 
 %.1: %.1.in
 	sed -e "s,@LIBDIR@,$(LIBDIR)," < $< \
@@ -68,7 +72,7 @@ s9e.image:	s9e s9e.scm ext/system.scm
 	gzip -9 <$< >$@
 
 lint:
-	gcc -g -Wall -ansi -pedantic -O s9.c
+	gcc -g -Wall -ansi -pedantic s9.c && rm a.out
 
 test:	s9 s9.image
 	./s9 -nf test.scm
@@ -105,8 +109,9 @@ install-s9e:	install-s9 s9e s9e.scm s9e.image
 	install $C -m 0644 ext/*.scm $(DESTDIR)$(DATADIR)/
 
 clean:
+	rm -f s9.1 s9e.1
 	rm -f s9 s9e s9e.scm s9.image s9e.image s9.1.gz s9e.1.gz s9.1.txt \
-		s9e.1.txt s9.1 s9e.1 \
-		*.o *.core core s9.9.tgz s9fes.tgz __tmp[12]__ __testfile__
+		*.o *.core core s9.9.tgz s9fes.tgz __tmp[12]__ __testfile__ \
+		rpp CHANGES.html LICENSE.html README.html s9.1.html
 
 # --- end of distribution Makefile ---
