@@ -114,12 +114,16 @@ Arguments following
 are not interpreted by S9fES.
 .in -4
 .SH "ONLINE HELP
-When the interpreter is running, type the following commands to
-load and invoke the online help system:
+When the interpreter is running and the default heap image is loaded,
+just type
+.sp
+\fB(help)\fP
+.sp
+to invoke the online help system. When using a custom heap image that
+does not contain the online help system, you will have to
+run the following command first:
 .sp
 \fB(load-from-library "help.scm")\fP
-.br
-\fB(help)\fP
 .SH "TECHNICAL DETAILS
 S9fES is a tree-walking interpreter using deep binding and hashed
 environments. It employs a constant-space mark and sweep garbage
@@ -223,14 +227,6 @@ in each  directory of
 in sequence.
 When the file can be located, return its full path, else
 return \fB#f\fP.
-.in -4
-.br
-.ne 2
-.B "(map-car proc list) ==> mapped-list
-.in +4
-This is equal to
-.B map
-with a single list.
 .in -4
 .br
 .ne 2

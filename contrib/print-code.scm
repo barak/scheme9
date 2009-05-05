@@ -17,6 +17,8 @@
 
 (define (print-code file . show-matches)
 
+  (define *load-from-library* 0)
+
   (define LP #\()
   (define RP #\))
 
@@ -36,6 +38,8 @@
   (define Color-constant   "c")
   (define Color-std-proc   "r")
   (define Color-std-syntax "y")
+  (define Color-ext-proc   "x")
+  (define Color-ext-syntax "z")
 
   (define Color #f)
   (define Bold #f)
@@ -101,8 +105,13 @@
   (define (r5rs-syntax? s)
     (and (memq (string->symbol s)
                '(and begin case cond define define-syntax delay do
-                 if lambda let let* letrec quote quasiquote or set!
-                 syntax-rules unquote unquote-splicing))
+                 else if lambda let let* letrec quote quasiquote or
+                 set! syntax-rules unquote unquote-splicing))
+         #t))
+
+  (define (s9fes-syntax? s)
+    (and (memq (string->symbol s)
+               '(define-macro))
          #t))
 
   (define (r5rs-procedure? s)
@@ -124,7 +133,7 @@
                  length list list->string list->vector list-ref
                  list-tail list? load make-string make-vector map
                  max member memq memv min modulo negative? newline
-                 null? number->string number? odd? open-input-file
+                 not null? number->string number? odd? open-input-file
                  open-output-file output-port? pair? peek-char port?
                  positive? procedure? quotient read read-char remainder
                  reverse set-car! set-cdr! sqrt string string->list
@@ -137,6 +146,14 @@
                  vector-fill! vector-length vector-ref vector-set!
                  vector? with-input-from-file with-output-to-file
                  write write-char zero?))
+         #t))
+
+  (define (s9fes-procedure? s)
+    (and (memq (string->symbol s)
+               '(delete-file expand-quasiquote expand-macro file-exists?
+                 fold-left fold-right gensym load-from-library locate-file
+                 print set-input-port! set-output-port! stats symbols
+                 trace void wrong))
          #t))
 
   (define (print-symbol-or-number c q)
@@ -159,6 +176,16 @@
                 (with-color q
                             Color-std-proc
                             (lambda () (html-display (cdr c/s)))))
+              ((s9fes-syntax? (cdr c/s))
+                (with-bold-color q
+                                 Color-ext-syntax
+                                 (lambda () (html-display (cdr c/s)))))
+              ((s9fes-procedure? (cdr c/s))
+                (if (string=? "load-from-library" (cdr c/s))
+                    (set! *load-from-library* 2))
+                (with-color q
+                            Color-ext-proc
+                            (lambda () (html-display (cdr c/s)))))
               (else
                 (with-color q
                             Color-symbol
@@ -174,9 +201,23 @@
                  (else (collect (read-char)
                                 (cons c s)
                                 (and (not esc) (char=? #\\ c))))))))
-      (with-color #f
-                  Color-constant
-                  (lambda () (html-display (collect c '() #t))))
+      (let* ((s  (collect c '() #t))
+             (s2 (substring s 1 (- (string-length s) 1))))
+        (if (= *load-from-library* 1)
+            (with-color #f
+                        Color-constant
+                        (lambda ()
+                          (html-display "\"")
+                          (display "<A href=\"")
+                          (display s2)
+                          (display ".html")
+                          (display "\">")
+                          (html-display s2)
+                          (display "</A>")
+                          (html-display "\"")))
+            (with-color #f
+                        Color-constant
+                        (lambda () (html-display s)))))
       (read-char)))
 
   (define (print-comment c)
@@ -284,16 +325,20 @@
           p/c
           (print-quoted-list (cdr p/c) (car p/c) p type))))
 
-  (define (print-form c p q)
+  (define (print-program c p q)
     (let ((c (skip-whitespace c)))
       (if (not (eof-object? c))
           (let ((p/c (print-object c p q)))
-            (print-form (cdr p/c) (car p/c) q)))))
+            (set! *load-from-library*
+                  (if (zero? *load-from-library*)
+                      0
+                      (- *load-from-library* 1)))
+            (print-program (cdr p/c) (car p/c) q)))))
 
   (with-input-from-file
     file
     (lambda ()
       (display (Prolog))
-      (print-form (read-char) 0 #f)
+      (print-program (read-char) 0 #f)
       (display (Epilog))
       (newline))))
