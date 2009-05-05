@@ -1,8 +1,9 @@
-scheme9 (2009.05.03-4rc) unstable; urgency=low
+scheme9 (2009.05.05-1) unstable; urgency=low
 
   * add debian/watch file for uscan, with version mangling
+  * New upstream version
 
- -- Barak A. Pearlmutter <bap@debian.org>  Tue, 05 May 2009 22:06:31 +0100
+ -- Barak A. Pearlmutter <bap@debian.org>  Tue, 05 May 2009 22:13:35 +0100
 
 scheme9 (2009.05.03-3) unstable; urgency=low
 
