@@ -95,32 +95,25 @@
     (map2 a b))))
 
 (define-macro (letrec bindings expr . exprs)
-  (let ((make-temps #f)
-        (append3 (lambda (a b c)
-                   (append a (append b c)))))
-    (let ((tmp-make-temps
-            (lambda (b)
-              (if (null? b)
-                  '()
-                  (cons (gensym)
-                        (make-temps (cdr b)))))))
-      (set! make-temps tmp-make-temps)
-      (let ((tmps (make-temps bindings))
-            (vars (map-car car bindings))
-            (args (map-car cadr bindings)))
-        (let ((undefineds (map-car (lambda (v) (list v #f))
-                                   vars))
-              (tmp-bindings (map list tmps args))
-              (updates (map (lambda (v t) (list 'set! v t))
-                            vars
-                            tmps)))
-          (list 'let
-                undefineds
-                (append3 '(let)
-                         (list tmp-bindings)
-                         (append3 updates
-                                  (list expr)
-                                  exprs))))))))
+  (let ((append3
+          (lambda (a b c)
+            (append a (append b c))))
+        (tmps (map-car (lambda (x) (gensym)) bindings))
+        (vars (map-car car bindings))
+        (args (map-car cadr bindings)))
+    (let ((undefineds   (map-car (lambda (v) (list v #f))
+                                 vars))
+          (tmp-bindings (map list tmps args))
+          (updates      (map (lambda (v t) (list 'set! v t))
+                             vars
+                             tmps)))
+      (list 'let
+            undefineds
+            (append3 '(let)
+                     (list tmp-bindings)
+                     (append3 updates
+                              (list expr)
+                              exprs))))))
 
 ;; Library procedures
 
@@ -633,29 +626,24 @@
                    (not (pair? (cdar b)))
                    (not (null? (cddar b))))
                 (wrong "letrec: invalid syntax" b))
-              (else (check (cdr b))))))
-     (make-temps
-       (lambda (b)
-         (if (eq? '() b)
-             '()
-             (cons (gensym)
-                   (make-temps (cdr b)))))))
+              (else (check (cdr b)))))))
     (check bindings)
-    (let ((tmps (make-temps bindings))
+    (let ((tmps (map (lambda (x) (gensym)) bindings))
           (vars (map car bindings))
           (args (map cadr bindings)))
-      (let ((undefineds (map (lambda (v) (list v #f))
-                             vars))
+      (let ((undefineds   (map (lambda (v) (list v #f))
+                               vars))
             (tmp-bindings (map (lambda (t a) (list t a))
                                tmps
                                args))
-            (updates (map (lambda (v t) (list 'set! v t))
-                          vars
-                          tmps)))
+            (updates      (map (lambda (v t) (list 'set! v t))
+                               vars
+                               tmps)))
         `(let ,undefineds
            (let ,tmp-bindings
              ,@updates
-             ,expr ,@exprs))))))
+             ,expr
+             ,@exprs))))))
 
 (define-macro letrec %clean-letrec)
 
@@ -777,9 +765,8 @@
 ; and return it.
 ; In case of a mismatch, return #F.
 ;
-; NOTE: The ellipsis is an ordinary variable that
-; binds to the CDR part of the currently matched
-; part of FORM.
+; NOTE: The ellipsis is an ordinary variable, but
+; it binds to an environment rather than a form.
 ;
 (define (syntax-match form pattern keywords env)
   (letrec

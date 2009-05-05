@@ -1,5 +1,19 @@
 Change Log
 
+2009-05-05
+	Administrative changes:
+	- Applied some fixes to the build process.
+	- Created browsable version of the library code.
+	- Added version tag (timestamp) to distribution file.
+	- Added deinstall target to Makefile.
+2009-05-04
+	Replaced '| by ': in ML-style syntax of DEFINE-MATCH,
+	because '| is not portable.
+	Removed MAP-CAR from documentation, because it is only
+	used internally.
+	Simplified definition of LETREC (cosmetics).
+	Made the code printer generate links to files included
+	via LOAD-FROM-LIBRARY. (contrib/print-code.scm)
 2009-05-03
 	Added a pattern matcher with optional support for ML syntax
 	to the library. (lib/define-match.scm)

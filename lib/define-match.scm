@@ -27,7 +27,10 @@
 ;
 ; (ml-match
 ;   len (())      = 0
-;     | ((_ . x)) = (+ 1 (len x)))
+;     : ((_ . x)) = (+ 1 (len x)))
+;
+; (It uses : instead of | to separate cases, because | is not
+;  a valid Scheme symbol.)
 ;
 ; Arguments: name    - function name
 ;            clause  - clause of the form (pattern body ...)
@@ -36,7 +39,7 @@
 ; Example:   (begin
 ;              (ml-match
 ;                appnd (() x)      = x
-;                    | ((h . t) x) = (cons h (appnd t x)))
+;                    : ((h . t) x) = (cons h (appnd t x)))
 ;              (appnd '(a b c) '(d e f)))
 ;                                          ==>  (a b c d e f)
 
@@ -168,14 +171,14 @@
          (let loop ((in in)
                     (out '()))
            (if (or (null? in)
-                   (eq? '| (car in)))
+                   (eq? ': (car in)))
                (list (reverse out) in)
                (loop (cdr in) (cons (car in) out)))))))
     (let loop ((in clauses)
                (out '()))
       (cond ((null? in)
               `(define ,name ,(apply match name (reverse out))))
-            ((eq? '| (car in))
+            ((eq? ': (car in))
               (loop (cdr in) out))
             ((and (pair? in)
                   (pair? (car in))

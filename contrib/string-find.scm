@@ -16,7 +16,7 @@
 ;
 ; Example:   (string-find "test" "This is a test string")     ==>  10
 ;            (string-find "TEST" "This is a test string")     ==>  #f
-;            (string-find-ci "TEST" "This is a test string")  ==>  10
+;            (string-ci-find "TEST" "This is a test string")  ==>  10
 
 (define (make-string-find ignore-case)
   (lambda (pattern text)
@@ -63,4 +63,4 @@
                                                 (+ i kp))))))))))))))
 
 (define string-find    (make-string-find #f))
-(define string-find-ci (make-string-find #t))
+(define string-ci-find (make-string-find #t))

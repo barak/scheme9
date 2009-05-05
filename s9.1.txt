@@ -37,11 +37,16 @@ OPTIONS
               Arguments following -- are not interpreted by S9fES.
 
 ONLINE HELP
-          When the interpreter is running, type the following commands
-          to load and invoke the online help system:
+          When  the  interpreter is running and the default heap image
+          is loaded, just type
+
+          (help)
+
+          to invoke the online help system. When using a  custom  heap
+          image that does not contain the online help system, you will
+          have to run the following command first:
 
           (load-from-library "help.scm")
-          (help)
 
 TECHNICAL DETAILS
           S9fES is a tree-walking interpreter using deep  binding  and
@@ -50,15 +55,10 @@ TECHNICAL DETAILS
           compaction. Memory pools grow on demand.
           The interpreter uses bignum integer arithmetics exclusively.
           It provides both low-level macros  (see  MACROS  below)  and
-          define-syntax/syntax-rules.
 
-ADDITIONS
-          These S9fES procedures are not in R4RS:
 
-          (delete-file string) ==> unspecific
-              Delete  the file specifed in the string argument. If the
-              file does not exist or  cannot  be  deleted,  report  an
-              error.
+
+
 
 
 
@@ -68,6 +68,15 @@ S9 Interpreter                  Page 1                           S9(1)
 S9(1)                  Scheme 9 from Empty Space                 S9(1)
 
 
+          define-syntax/syntax-rules.
+
+ADDITIONS
+          These S9fES procedures are not in R4RS:
+
+          (delete-file string) ==> unspecific
+              Delete  the file specifed in the string argument. If the
+              file does not exist or  cannot  be  deleted,  report  an
+              error.
           (expand-quasiquote form) ==> expanded-form
               If  form  is  a quasiquoted expression, rewrite it as an
               equivalent expression that does not use  quasiquotation.
@@ -96,8 +105,6 @@ S9(1)                  Scheme 9 from Empty Space                 S9(1)
               Search  for  the  file  string  in  each   directory  of
               S9FES_LIBRARY_PATH in sequence.  When the  file  can  be
               located, return its full path, else return #f.
-          (map-car proc list) ==> mapped-list
-              This is equal to map with a single list.
           (print form ...) ==> unspecific
               Write multiple forms separated by spaces.
           (set-input-port! input-port) ==> unspecific
@@ -118,13 +125,6 @@ S9(1)                  Scheme 9 from Empty Space                 S9(1)
               procedures and syntax (expect lots of output!). When  no
               arguments  are  passed  to  it,  disable tracing.  Trace
               returns the symbols that were being  traced  before  its
-              invocation.
-          (void) ==> unspecific
-              Return an unspecific value.
-          (wrong string form) ==> bottom
-              Print  an  error message of the form error: string: form
-              and terminate program execution.  Form may be omitted.
-
 
 
 
@@ -133,6 +133,13 @@ S9 Interpreter                  Page 2                           S9(1)
 
 S9(1)                  Scheme 9 from Empty Space                 S9(1)
 
+
+              invocation.
+          (void) ==> unspecific
+              Return an unspecific value.
+          (wrong string form) ==> bottom
+              Print  an  error message of the form error: string: form
+              and terminate program execution.  Form may be omitted.
 
           Redefinition of these procedures is safe except for  expand-
           quasiquote and wrong.
@@ -184,13 +191,6 @@ MACROS
           their own applications. The following  macro,  for  example,
           does not work, because d is undefined in the body of d:
 
-          (define-macro (d x) (and (pair? x) (d (cdr x)))) ; wrong
-
-          The following version does work, though:
-
-
-
-
 
 
 
@@ -199,6 +199,10 @@ S9 Interpreter                  Page 3                           S9(1)
 
 S9(1)                  Scheme 9 from Empty Space                 S9(1)
 
+
+          (define-macro (d x) (and (pair? x) (d (cdr x)))) ; wrong
+
+          The following version does work, though:
 
           (define-macro (d x) (and (pair? x) `(d ,(cdr x)))) ; OK
 
@@ -253,10 +257,6 @@ ENVIRONMENT
               launched. The same directories will  be  search  by  the
               locate-file procedure.
               Default: .:~/.s9fes:@LIBDIR@:@LIBDIR@/contrib
-
-
-
-
 
 
 

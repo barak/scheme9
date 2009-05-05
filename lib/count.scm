@@ -4,7 +4,7 @@
 ;
 ; (count pair) ==> integer
 ;
-; Count the atomic members of a pair.
+; Count atomic members of a pair.
 ;
 ; Arguments: x - list to count
 ;
