@@ -1,7 +1,11 @@
 Change Log
 
+2009-05-06
+	Administrative change:
+	- #ifdef __unix and #ifdef unix are obviously insufficient
+	  to check for a Unix system; added -Dunix to Makefile.
+	Thanks, Barak Pearlmutter!
 2009-05-05
-	Administrative changes:
 	- Applied some fixes to the build process.
 	- Created browsable version of the library code.
 	- Added version tag (timestamp) to distribution file.

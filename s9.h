@@ -29,17 +29,6 @@
  #endif
 #endif
 
-#ifdef plan9
- #include <u.h>
- #include <libc.h>
- #include <stdio.h>
- #include <ctype.h>
- #define NO_SIGNALS
- #define signal(sig, fn)
- #define exit(x) exits((x)? "error": NULL)
- #define ptrdiff_t int
-#endif
-
 #ifdef __unix
  #ifndef unix
   #define unix
@@ -56,6 +45,23 @@
  #ifndef _POSIX_SOURCE
   #define _POSIX_SOURCE
  #endif
+#endif
+
+#ifndef unix
+ #ifndef plan9
+  #error "Either 'unix' or 'plan9' must be #defined."
+ #endif
+#endif
+
+#ifdef plan9
+ #include <u.h>
+ #include <libc.h>
+ #include <stdio.h>
+ #include <ctype.h>
+ #define NO_SIGNALS
+ #define signal(sig, fn)
+ #define exit(x) exits((x)? "error": NULL)
+ #define ptrdiff_t int
 #endif
 
 #ifdef unix
@@ -210,7 +216,6 @@ enum EVAL_STATES {
 #define SYM T_SYMBOL
 #define VEC T_VECTOR
 #define ___ T_NONE
-
 
 struct Primitive_procedure {
 	char	*name;
