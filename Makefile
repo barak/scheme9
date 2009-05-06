@@ -61,7 +61,7 @@ s9e.o:	s9.c
 		-o $@ -c $<
 
 unix.o:	ext/unix.c
-	$(CC) $(CFLAGS) -I . -c $<
+	$(CC) $(CFLAGS) $(DEFS) -I . -c $<
 
 s9e.image:	s9e s9e.scm ext/system.scm
 	rm -f $@ && env S9FES_LIBRARY_PATH=.:lib \
