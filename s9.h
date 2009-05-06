@@ -39,6 +39,9 @@
  #ifndef unix
   #define unix
  #endif
+#endif
+
+#ifdef unix
  #ifndef _BSD_SOURCE
   #define _BSD_SOURCE
  #endif
