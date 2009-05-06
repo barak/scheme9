@@ -1,8 +1,9 @@
 scheme9 (2009.05.06-1) unstable; urgency=low
 
   * New upstream version
+  * tweaks for Debian powerpc
 
- -- Barak A. Pearlmutter <bap@debian.org>  Wed, 06 May 2009 15:31:35 +0100
+ -- Barak A. Pearlmutter <bap@debian.org>  Wed, 06 May 2009 15:41:50 +0100
 
 scheme9 (2009.05.05-1) unstable; urgency=low
 
