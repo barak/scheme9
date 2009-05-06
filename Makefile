@@ -4,7 +4,7 @@
 # Change at least this line:
 PREFIX= /u
 
-VERSION= 20090505
+VERSION= 20090506
 
 # Extras to be added to the heap image
 EXTRA_STUFF=	-f contrib/help.scm \
@@ -24,7 +24,8 @@ MANDIR=	$(PREFIX)/man/man1
 # LIBRARY		default library source file
 # DEFAULT_LIBRARY_PATH	default search path for LOCATE-FILE
 
-DEFS=	-DDEFAULT_LIBRARY_PATH="\".:~/s9fes:$(LIBDIR):$(LIBDIR)/contrib\""
+DEFS=	-Dunix \
+	-DDEFAULT_LIBRARY_PATH="\".:~/s9fes:$(LIBDIR):$(LIBDIR)/contrib\""
 
 EXTINI=	unix_init()
 EXTOBJ=	unix.o
@@ -72,12 +73,14 @@ test:	s9 s9.image
 libtest:	s9 s9.image
 	sh libtest.sh
 
-# old version of install(1) may need -C
-#C=-C
+# old version of install(1) may need -c
+#C=-c
 install:	s9 s9.scm s9.image s9.1.gz
+	install -d -m 0755 $(BINDIR)
 	install -d -m 0755 $(LIBDIR)
 	install -d -m 0755 $(LIBDIR)/contrib
 	install -d -m 0755 $(LIBDIR)/help
+	install -d -m 0755 $(MANDIR)
 	install $C -m 0755 s9 $(BINDIR)
 	strip $(BINDIR)/s9
 	install $C -m 0644 s9.scm $(LIBDIR)
