@@ -1,5 +1,9 @@
 Change Log
 
+2009-05-07
+	Fix: PRINT-CODE generated tag soup when two subsequent
+	tokens were to be printed in boldface.
+	Added another tweak for Unix portability to s9.h.
 2009-05-06
 	Administrative change:
 	- #ifdef __unix and #ifdef unix are obviously insufficient

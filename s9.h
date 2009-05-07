@@ -9,6 +9,10 @@
  * which intentionally omits #if.
  */
 
+/*
+ * Compiler-specific stuff
+ */
+
 #ifdef __PCC__
  #define _POSIX_SOURCE
  #define _POSIX_C_SOURCE 200112
@@ -26,6 +30,17 @@
  #endif
  #ifndef _POSIX_
   #define _POSIX_
+ #endif
+#endif
+
+/*
+ * Ugly prelude to find out whether
+ * we are compiling on a Unix system.
+ */
+
+#ifdef __NetBSD__
+ #ifndef unix
+  #define unix
  #endif
 #endif
 
