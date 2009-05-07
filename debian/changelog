@@ -1,3 +1,9 @@
+scheme9 (2009.05.06-2rc) unstable; urgency=low
+
+  * more comprehensive debian/watch
+
+ -- Barak A. Pearlmutter <bap@debian.org>  Thu, 07 May 2009 13:24:50 +0100
+
 scheme9 (2009.05.06-1) unstable; urgency=low
 
   * New upstream version
