@@ -61,8 +61,9 @@
           ((and (equal? co Color) (eq? bo Bold))
             (thunk))
           (else
-            (if (and Bold (not bo))
-                (display "</B>"))
+            (if Bold
+		(begin (display "</B>")
+		       (set! Bold #f)))
             (display "</SPAN>")
             (display "<SPAN class=")
             (display co)
