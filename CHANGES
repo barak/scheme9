@@ -1,5 +1,12 @@
 Change Log
 
+2009-05-09
+	Minor fix: protected argument in pp_load().
+	Made conceptual difference between string and symbol names
+	[string() vs. symbol_name(), string_len() vs. symbol_len()].
+	Removed clone_string() due to above separation.
+	Using O(1) string_len() instead of O(n) strlen() in pp_gensym().
+	Checking length first in STRING=? and STRING-CI=?.
 2009-05-07
 	Fix: PRINT-CODE generated tag soup when two subsequent
 	tokens were to be printed in boldface.
