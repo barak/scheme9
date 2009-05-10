@@ -8,7 +8,7 @@
  * Use -DBITS_PER_WORD_64 on 64-bit systems.
  */
 
-#define VERSION "2009-05-07"
+#define VERSION "2009-05-09"
 
 #define EXTERN
 #include "s9.h"
@@ -466,7 +466,7 @@ cell find_symbol(char *s) {
 
 	y = Symbols;
 	while (y != NIL) {
-		if (!strcmp(string(car(y)), s))
+		if (!strcmp(symbol_name(car(y)), s))
 			return car(y);
 		y = cdr(y);
 	}
@@ -477,7 +477,7 @@ cell make_symbol(char *s, int k) {
 	cell	n;
 
 	n = allocv(T_SYMBOL, k+1);
-	strcpy(string(n), s);
+	strcpy(symbol_name(n), s);
 	return n;
 }
 
@@ -486,9 +486,8 @@ cell add_symbol(char *s) {
 
 	y = find_symbol(s);
 	if (y != NIL) return y;
-	Symbols = alloc(NIL, Symbols);
 	new = make_symbol(s, (int) strlen(s));
-	car(Symbols) = new;
+	Symbols = alloc(new, Symbols);
 	return car(Symbols);
 }
 
@@ -645,21 +644,6 @@ cell make_string(char *s, int k) {
 
 	n = allocv(T_STRING, k+1);
 	strcpy(string(n), s);
-	return n;
-}
-
-/* Clone an existing string.
- * When copying a string to a string, the source string
- * may get relocated during vector pool compaction.
- * Hence this routine must be used instead of make_string().
- */
-cell clone_string(cell s, int k) {
-	cell	n;
-
-	save(s);
-	n = allocv(T_STRING, k+1);
-	strcpy(string(n), string(s));
-	unsave(1);
 	return n;
 }
 
@@ -1001,8 +985,8 @@ int print_symbol(cell n) {
 	char	*s;
 
 	if (!symbol_p(n)) return 0;
-	s = string(n);
-	k = string_len(n)-1;
+	s = symbol_name(n);
+	k = symbol_len(n)-1;
 	b[1] = 0;
 	while (k) {
 		b[0] = *s++;
@@ -1203,7 +1187,7 @@ void rehash(cell e) {
 	p = cdr(e);
 	v = vector(car(e));
 	while (p != NIL) {
-		s = string(caar(p));
+		s = symbol_name(caar(p));
 		h = 0;
 		hash(s, h);
 		new = alloc(car(p), v[h%k]);
@@ -1247,7 +1231,7 @@ cell try_hash(cell v, cell e) {
 	if (e == NIL || car(e) == NIL) return NIL;
 	hv = vector(car(e));
 	k = vector_len(car(e));
-	s = string(v);
+	s = symbol_name(v);
 	h = 0;
 	hash(s, h);
 	p = hv[h%k];
@@ -2312,9 +2296,17 @@ cell pp_file_exists_p(cell x) {
 cell pp_gensym(cell x) {
 	static long	g = 0;
 	char		s[200], *pre;
+	int		k;
 
-	pre = cdr(x) == NIL? "g": string(cadr(x));
-	if (strlen(pre) > 100)
+	if (cdr(x) == NIL) {
+		pre = "g";
+		k = 1;
+	}
+	else {
+		pre = string(cadr(x));
+		k = string_len(cadr(x));
+	}
+	if (k > 100)
 		return error("gensym: prefix too long", cadr(x));
 	do {
 		sprintf(s, "%s%ld", pre, g);
@@ -2473,7 +2465,12 @@ int load(char *file) {
 }
 
 cell pp_load(cell x) {
-	if (load(string(cadr(x))) < 0)
+	char	file[TOKEN_LENGTH+1];
+
+	if (string_len(cadr(x)) > TOKEN_LENGTH)
+		return error("load: path too long", cadr(x));
+	strcpy(file, string(cadr(x)));
+	if (load(file) < 0)
 		return error("load: cannot open file", cadr(x));
 	return UNSPECIFIC;
 }
@@ -2710,19 +2707,17 @@ cell pp_string_to_list(cell x) {
 
 cell pp_string_to_symbol(cell x) {
 	cell	y, n;
-	char	*s = string(cadr(x));
 
-	y = find_symbol(s);
+	y = find_symbol(string(cadr(x)));
 	if (y != NIL) return y;
-	/*
-	 * Cannot use make_symbol(), because
-	 * string(cadr(x)) may move during GC.
-	 */
-	Symbols = alloc(NIL, Symbols);
-	n = allocv(T_SYMBOL, strlen(s)+1);
-	car(Symbols) = n;
-	strcpy(string(n), string(cadr(x)));
-	return car(Symbols);
+        /*
+         * Cannot pass name to make_symbol(), because
+         * string(cadr(x)) may move during GC.
+         */
+        n = make_symbol("", string_len(cadr(x))-1);
+        strcpy(symbol_name(n), string(cadr(x)));
+        Symbols = alloc(n, Symbols);
+        return car(Symbols);
 }
 
 cell pp_string_append(cell x) {
@@ -2748,7 +2743,15 @@ cell pp_string_append(cell x) {
 }
 
 cell pp_string_copy(cell x) {
-	return clone_string(cadr(x), string_len(cadr(x))-1);
+	cell	n;
+
+	/*
+         * Cannot pass name to make_string(), because
+         * string(cadr(x)) may move during GC.
+	 */
+	n = make_string("", string_len(cadr(x))-1);
+	strcpy(string(n), string(cadr(x)));
+	return n;
 }
 
 cell pp_string_fill_b(cell x) {
@@ -2830,6 +2833,10 @@ cell string_predicate(char *name, int (*p)(char *s1, char *s2), cell x) {
 			sprintf(msg, "%s: expected string, got", name);
 			return error(msg, cadr(x));
 		}
+		if (	(p == string_eq || p == string_ci_eq) &&
+			string_len(car(x)) != string_len(cadr(x))
+		)
+			return FALSE;
 		if (!p(string(car(x)), string(cadr(x))))
 			return FALSE;
 		x = cdr(x);
@@ -2855,7 +2862,15 @@ cell pp_string_p(cell x) {
 }
 
 cell pp_symbol_to_string(cell x) {
-	return clone_string(cadr(x), (int) strlen(string(cadr(x))));
+	cell	n;
+
+	/*
+         * Cannot pass name to make_string(), because
+         * symbol_name(cadr(x)) may move during GC.
+	 */
+	n = make_string("", symbol_len(cadr(x))-1);
+	strcpy(string(n), symbol_name(cadr(x)));
+	return n;
 }
 
 cell pp_symbol_p(cell x) {
