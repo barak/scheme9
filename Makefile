@@ -33,7 +33,7 @@ MANDIR=$(mandir)/man1
 # DEFAULT_LIBRARY_PATH	default search path for LOCATE-FILE
 
 DEFS=	-Dunix \
-	-DDEFAULT_LIBRARY_PATH="\".:~/s9fes:$(LIBDIR):$(DATADIR):$(LIBDIR)/contrib\""
+	-DDEFAULT_LIBRARY_PATH="\"$(LIBDIR):$(DATADIR):$(LIBDIR)/contrib:~/s9fes:.\""
 
 EXTINI=	unix_init()
 EXTOBJ=	unix.o
