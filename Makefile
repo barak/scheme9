@@ -78,7 +78,7 @@ lint:
 	gcc -g -Wall -ansi -pedantic s9.c && rm a.out
 
 test:	s9 s9.image
-	./s9 -nf test.scm
+	env S9FES_LIBRARY_PATH=.:lib ./s9 -nf test.scm
 
 libtest:	s9 s9.image
 	sh libtest.sh
