@@ -1,3 +1,10 @@
+scheme9 (2009.05.10-1) unstable; urgency=low
+
+  * New Upstream Version
+  * reorder default library search path
+
+ -- Barak A. Pearlmutter <bap@debian.org>  Mon, 11 May 2009 08:51:11 +0100
+
 scheme9 (2009.05.09-1) unstable; urgency=low
 
   * New Upstream Version
