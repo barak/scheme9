@@ -62,8 +62,8 @@
             (thunk))
           (else
             (if Bold
-		(begin (display "</B>")
-		       (set! Bold #f)))
+                (begin (display "</B>")
+                       (set! Bold #f)))
             (display "</SPAN>")
             (display "<SPAN class=")
             (display co)
@@ -273,7 +273,11 @@
       (with-color #f
                   Color-constant
                   (lambda ()
-                    (print-quoted-form (read-char) p type))))
+                    (print-quoted-form (read-char)
+                                       p
+                                       (if (eq? q 'quasiquote)
+                                           'qusiquote
+                                           type)))))
 
   (define (print-unquoted p q)
     (with-bold-color
