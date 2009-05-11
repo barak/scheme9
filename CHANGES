@@ -1,5 +1,8 @@
 Change Log
 
+2009-05-11
+	Fix: PRINT-CODE handled QUOTE inside of QUASIQUOTE incorrectly.
+	(contrib/print-code.scm)
 2009-05-10
 	Minor fix: protected car(x) in syntax_object_p().
 	Cosmetics.
