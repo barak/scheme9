@@ -8,7 +8,7 @@
  * Use -DBITS_PER_WORD_64 on 64-bit systems.
  */
 
-#define VERSION "2009-05-09"
+#define VERSION "2009-05-10"
 
 #define EXTERN
 #include "s9.h"
@@ -340,8 +340,9 @@ cell alloc3(cell pcar, cell pcdr, int ptag) {
 		/*
 		 * Performance increases dramatically if we
 		 * do not wait for the pool to run dry.
+		 * In fact, don't even let it come close to that.
 		 */
-		if (k < Pool_size / 10) {
+		if (k < Pool_size / 2) {
 			if (	Memory_limit_kn &&
 				Pool_size + Segment_size > Memory_limit_kn
 			) {
@@ -2710,14 +2711,14 @@ cell pp_string_to_symbol(cell x) {
 
 	y = find_symbol(string(cadr(x)));
 	if (y != NIL) return y;
-        /*
-         * Cannot pass name to make_symbol(), because
-         * string(cadr(x)) may move during GC.
-         */
-        n = make_symbol("", string_len(cadr(x))-1);
-        strcpy(symbol_name(n), string(cadr(x)));
-        Symbols = alloc(n, Symbols);
-        return car(Symbols);
+	/*
+	 * Cannot pass name to make_symbol(), because
+	 * string(cadr(x)) may move during GC.
+	 */
+	n = make_symbol("", string_len(cadr(x))-1);
+	strcpy(symbol_name(n), string(cadr(x)));
+	Symbols = alloc(n, Symbols);
+	return car(Symbols);
 }
 
 cell pp_string_append(cell x) {
@@ -2746,8 +2747,8 @@ cell pp_string_copy(cell x) {
 	cell	n;
 
 	/*
-         * Cannot pass name to make_string(), because
-         * string(cadr(x)) may move during GC.
+	 * Cannot pass name to make_string(), because
+	 * string(cadr(x)) may move during GC.
 	 */
 	n = make_string("", string_len(cadr(x))-1);
 	strcpy(string(n), string(cadr(x)));
@@ -2865,8 +2866,8 @@ cell pp_symbol_to_string(cell x) {
 	cell	n;
 
 	/*
-         * Cannot pass name to make_string(), because
-         * symbol_name(cadr(x)) may move during GC.
+	 * Cannot pass name to make_string(), because
+	 * symbol_name(cadr(x)) may move during GC.
 	 */
 	n = make_string("", symbol_len(cadr(x))-1);
 	strcpy(string(n), symbol_name(cadr(x)));
@@ -3257,7 +3258,7 @@ int has_property_p(int (*p)(cell x), cell x) {
 int syntax_object_p(cell x) {
 	cell	y;
 
-	if (symbol_p(car(x))) {
+	if (pair_p(x) && symbol_p(car(x))) {
 		y = lookup(car(x), Environment);
 		if (y != NIL && syntax_p(cadr(y))) return 1;
 	}

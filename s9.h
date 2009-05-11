@@ -311,7 +311,6 @@ EXTERN cell	S_and, S_begin, S_call_ec, S_cond, S_define,
 #define string_len(n)	(Vectors[Cdr[n] - 1])
 #define symbol_name(n)	(string(n))
 #define symbol_len(n)	(string_len(n))
-#define string_len(n)	(Vectors[Cdr[n] - 1])
 #define vector(n)	(&Vectors[Cdr[n]])
 #define vector_link(n)	(Vectors[Cdr[n] - 3])
 #define vector_index(n)	(Vectors[Cdr[n] - 2])
