@@ -257,7 +257,8 @@
 (define fold-right
   (let ((car-of car-of)
         (cdr-of cdr-of
-        (any-null? any-null?)))
+        (any-null? any-null?)
+        (map-car map-car)))
     (lambda (f b . a*)
       (letrec
         ((foldr
@@ -269,7 +270,7 @@
                                          (list r))))))))
         (if (null? a*)
             (wrong "fold-right: too few arguments")
-            (foldr (map reverse a*) b))))))
+            (foldr (map-car reverse a*) b))))))
 
 (define append
   (let ((fold-left fold-left))

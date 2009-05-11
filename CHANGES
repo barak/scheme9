@@ -1,5 +1,13 @@
 Change Log
 
+2009-05-10
+	Minor fix: protected car(x) in syntax_object_p().
+	Cosmetics.
+	Changed allocation strategy. We will now use half of the
+	memory pool at most. OK, this gives us the same space
+	efficiency as a copying collector, but with the advantage
+	of having cons objects in fixed places on the heap. The
+	performance gain is about 35% (zebra puzzle).
 2009-05-09
 	Minor fix: protected argument in pp_load().
 	Made conceptual difference between string and symbol names
