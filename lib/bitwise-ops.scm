@@ -8,25 +8,25 @@
 ;
 ; The following operations are implemented:
 ;
-; VAL1             0   0   1   1 
+; VAL1             0   0   1   1
 ; VAL2             0   1   0   1  Operation
 ; ----------------------------------------------------------------
-; bitwise-clear    0   0   0   0  set to 0 
-; bitwise-and      0   0   0   1  and 
-; bitwise-and-c2   0   0   1   0  and VAL1 with complement of VAL2 
-; bitwise-1        0   0   1   1  VAL1 
-; bitwise-and-c1   0   1   0   0  and complement of VAL1 with VAL2 
-; bitwise-2        0   1   0   1  VAL2 
-; bitwise-xor      0   1   1   0  exclusive or 
-; bitwise-or       0   1   1   1  or 
-; bitwise-or-not   1   0   0   0  not-or 
+; bitwise-clear    0   0   0   0  set to 0
+; bitwise-and      0   0   0   1  and
+; bitwise-and-c2   0   0   1   0  and VAL1 with complement of VAL2
+; bitwise-1        0   0   1   1  VAL1
+; bitwise-and-c1   0   1   0   0  and complement of VAL1 with VAL2
+; bitwise-2        0   1   0   1  VAL2
+; bitwise-xor      0   1   1   0  exclusive or
+; bitwise-or       0   1   1   1  or
+; bitwise-or-not   1   0   0   0  not-or
 ; bitwise-xor-not  1   0   0   1  not-xor (equivalence)
-; bitwise-c2       1   0   1   0  complement of VAL2 
-; bitwise-or-c2    1   0   1   1  or VAL1 with complement of VAL2 
-; bitwise-c1       1   1   0   0  complement of VAL1 
-; bitwise-or-c1    1   1   0   1  or complement of VAL1 with VAL2 
-; bitwise-and-not  1   1   1   0  not-and 
-; bitwise-set      1   1   1   1  set to 1 
+; bitwise-c2       1   0   1   0  complement of VAL2
+; bitwise-or-c2    1   0   1   1  or VAL1 with complement of VAL2
+; bitwise-c1       1   1   0   0  complement of VAL1
+; bitwise-or-c1    1   1   0   1  or complement of VAL1 with VAL2
+; bitwise-and-not  1   1   1   0  not-and
+; bitwise-set      1   1   1   1  set to 1
 ;
 ; BITWISE-SHIFT-LEFT shifts its first argument to the left by
 ; N bits where N is the value of the second argument.

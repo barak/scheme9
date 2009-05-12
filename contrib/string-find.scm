@@ -27,7 +27,7 @@
            (let* ((shift-table (make-vector charset-len (+ 1 k)))
                   (max (- k 1)))
              (let loop ((i 0))
-               (vector-set! shift-table 
+               (vector-set! shift-table
                             (char->integer (string-ref pattern i))
                             (- k i))
                (if (< i max)

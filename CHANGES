@@ -1,8 +1,13 @@
 Change Log
 
+2009-05-12
+	Applied some cosmetics to s9.scm.
+	Administrative: fixed local environment in the build process.
 2009-05-11
 	Fix: PRINT-CODE handled QUOTE inside of QUASIQUOTE incorrectly.
 	(contrib/print-code.scm)
+	Fixed a bug that resulted in multiple evaluation of DELAYed
+	expressions.
 2009-05-10
 	Minor fix: protected car(x) in syntax_object_p().
 	Cosmetics.
