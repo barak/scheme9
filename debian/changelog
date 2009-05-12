@@ -1,8 +1,9 @@
 scheme9 (2009.05.12-1) unstable; urgency=low
 
   * New Upstream Version
+  * modularize cpp defs in Makefile allowing -Dunix on unix.c, for powerpc
 
- -- Barak A. Pearlmutter <bap@debian.org>  Tue, 12 May 2009 10:06:39 +0100
+ -- Barak A. Pearlmutter <bap@debian.org>  Tue, 12 May 2009 11:58:52 +0100
 
 scheme9 (2009.05.11-1) unstable; urgency=low
 
