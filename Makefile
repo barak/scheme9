@@ -35,8 +35,9 @@ MANDIR=$(mandir)/man1
 # LIBRARY		default library source file
 # DEFAULT_LIBRARY_PATH	default search path for LOCATE-FILE
 
-DEFS=	-Dunix \
-	-DDEFAULT_LIBRARY_PATH="\"$(LIBDIR):$(DATADIR):$(LIBDIR)/contrib:~/s9fes:.\""
+LINUXDEFS=-Dunix
+LPATHDEFS=-DDEFAULT_LIBRARY_PATH="\"$(LIBDIR):$(DATADIR):$(LIBDIR)/contrib:~/s9fes:.\""
+DEFS=$(LINUXDEFS) $(LPATHDEFS)
 
 EXTINI=	unix_init()
 EXTOBJ=	unix.o
@@ -64,7 +65,7 @@ s9e.o:	s9.c
 		-o $@ -c $<
 
 unix.o:	ext/unix.c
-	$(CC) $(CFLAGS) -I . -o unix.o -c $<
+	$(CC) $(CFLAGS) $(LINUXDEFS) -I . -o unix.o -c $<
 
 s9e.image:	s9e s9e.scm ext/system.scm
 	rm -f $@ && \
