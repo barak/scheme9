@@ -276,7 +276,7 @@
                     (print-quoted-form (read-char)
                                        p
                                        (if (eq? q 'quasiquote)
-                                           'qusiquote
+                                           'quasiquote
                                            type)))))
 
   (define (print-unquoted p q)

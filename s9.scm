@@ -138,10 +138,12 @@
         ((char? a)
           (and (char? b)
                (char=? a b)))
-        (else (eq? a b))))
+        (else
+          (eq? a b))))
 
 (define (equal? a b)
-  (cond ((eq? a b) #t)
+  (cond ((eq? a b)
+          #t)
         ((and (pair? a)
               (pair? b))
           (and (equal? (car a) (car b))
@@ -240,8 +242,8 @@
 
 (define fold-left
   (let ((car-of car-of)
-        (cdr-of cdr-of
-        (any-null? any-null?)))
+        (cdr-of cdr-of)
+        (any-null? any-null?))
     (lambda (f b . a*)
       (letrec
         ((fold
@@ -256,9 +258,9 @@
 
 (define fold-right
   (let ((car-of car-of)
-        (cdr-of cdr-of
+        (cdr-of cdr-of)
         (any-null? any-null?)
-        (map-car map-car)))
+        (map-car map-car))
     (lambda (f b . a*)
       (letrec
         ((foldr
@@ -309,8 +311,8 @@
 
 (define map
   (let ((car-of car-of)
-        (cdr-of cdr-of
-        (any-null? any-null?)))
+        (cdr-of cdr-of)
+        (any-null? any-null?))
     (lambda (f . a*)
       (letrec
         ((map2
@@ -359,8 +361,7 @@
                    ((zero? a) b)
                    ((< a b) (gcd2 a (remainder b a)))
                    (else (gcd2 b (remainder a b)))))))
-        (fold-left gcd2 0 (map (lambda (x) (abs x))
-                               a))))))
+        (fold-left gcd2 0 (map abs a))))))
 
 (define lcm
   (let ((fold-left fold-left))
@@ -371,8 +372,7 @@
              (let ((cd (gcd a b)))
                (* cd (* (quotient a cd)
                         (quotient b cd)))))))
-        (fold-left lcm2 1 (map (lambda (x) (abs x))
-                               a))))))
+        (fold-left lcm2 1 (map abs a))))))
 
 (define max
   (let ((fold-left fold-left))
@@ -415,8 +415,7 @@
              res
              (conv (quotient n rdx)
                    rdx
-                   (cons (vector-ref digits
-                                     (remainder n rdx))
+                   (cons (vector-ref digits (remainder n rdx))
                          res)))))
      (get-radix
        (lambda ()
@@ -429,7 +428,8 @@
             ((negative? n)
               (list->string
                 (cons #\- (conv (abs n) r '()))))
-            (else (list->string (conv n r '())))))))
+            (else
+              (list->string (conv n r '())))))))
 
 (define (string . x) (list->string x))
 
@@ -441,9 +441,9 @@
        (lambda (x)
          (letrec
            ((v (lambda (x d n)
-             (cond ((null? d) 36)
-                   ((char=? (car d) x) n)
-                   (else (v x (cdr d) (+ n 1)))))))
+                 (cond ((null? d) 36)
+                       ((char=? (car d) x) n)
+                       (else (v x (cdr d) (+ n 1)))))))
            (v (char-downcase x) digits 0))))
      (conv3
        (lambda (lst res rdx)
@@ -532,10 +532,11 @@
                      (null? (cddr form))
                      (eq? 'unquote (car form)))
                  #t)
-               (else (or (and (pair? (car form))
-                              (eq? 'unquote-splicing (caar form))
-                              (pair? (cdar form)))
-                         (improper-or-splicing? (cdr form)))))))
+               (else
+                 (or (and (pair? (car form))
+                          (eq? 'unquote-splicing (caar form))
+                          (pair? (cdar form)))
+                     (improper-or-splicing? (cdr form)))))))
      (map-unquote
        (lambda (x)
          (cond ((null? x)
@@ -551,8 +552,9 @@
                      (pair? (cdar x)))
                  (cons (cadar x)
                        (map-unquote (cdr x))))
-               (else (cons (list 'list (expand-qq (car x)))
-                           (map-unquote (cdr x)))))))
+               (else
+                 (cons (list 'list (expand-qq (car x)))
+                       (map-unquote (cdr x)))))))
      (qq-list
        (lambda (form)
          (if (improper-or-splicing? form)
@@ -571,104 +573,103 @@
                ((and (eq? 'unquote (car form))
                      (pair? (cdr form)))
                  (cadr form))
-               (else (qq-list form))))))
+               (else
+                 (qq-list form))))))
     (if (pair? (cdr form))
         (expand-qq (cadr form))
         form)))
 
 ;;----- Library -----
 
+; LET/LET*/LETREC helper
+(define (check-bindings b who)
+  (cond ((null? b)
+          #t)
+        ((or (not (pair? b))
+             (not (pair? (car b)))
+             (not (symbol? (caar b)))
+             (not (pair? (cdar b)))
+             (not (null? (cddar b))))
+          (wrong (string-append who ": invalid syntax") b))
+        (else
+          (check-bindings (cdr b) who))))
+
 ; Now that the QQ expander is here, define a
 ; clean version of LET (including named LET).
 ; Can't name it LET yet, because it uses LET.
 
-(define-macro (%ext-let a1 a2 . a3)
-  (letrec
-    ((split
-       (lambda (bind* vars args)
-         (cond ((null? bind*)
-                 (cons vars args))
-               ((or (not (pair? bind*))
-                    (not (pair? (car bind*)))
-                    (not (symbol? (caar bind*)))
-                    (not (pair? (cdar bind*)))
-                    (not (null? (cddar bind*))))
-                 (wrong "let: invalid syntax" bind*))
-               (else (split (cdr bind*)
-                            (cons (caar bind*) vars)
-                            (cons (cadar bind*) args)))))))
-      (if (symbol? a1)
-          (if (null? a3)
-              (wrong "named let: missing body"
-                     `(let ,a1 ,a2 ,@a3))
-              (let ((va (split a2 '() '())))
-                (let ((v (reverse (car va)))
-                      (a (reverse (cdr va))))
-                  `((letrec ((,a1 (lambda ,v ,@a3)))
-                      ,a1) ,@a))))
-          (let ((va (split a1 '() '())))
-            (let ((v (car va))
-                  (a (cdr va)))
-              `((lambda ,v ,a2 ,@a3) ,@a))))))
+(define-macro %ext-let
+  (let ((check-bindings check-bindings))
+    (lambda (a1 a2 . a3)
+      (letrec
+        ((split
+           (lambda (bind* vars args)
+             (if (null? bind*)
+                 (cons vars args)
+                 (split (cdr bind*)
+                        (cons (caar bind*) vars)
+                        (cons (cadar bind*) args))))))
+        (if (symbol? a1)
+            (if (null? a3)
+                (wrong "named let: missing body"
+                       `(let ,a1 ,a2 ,@a3))
+                (begin (check-bindings a2 "let")
+                       (let ((va (split a2 '() '())))
+                         (let ((v (reverse (car va)))
+                               (a (reverse (cdr va))))
+                           `((letrec ((,a1 (lambda ,v ,@a3)))
+                               ,a1) ,@a)))))
+            (begin (check-bindings a1 "let")
+                   (let ((va (split a1 '() '())))
+                     (let ((v (car va))
+                           (a (cdr va)))
+                       `((lambda ,v ,a2 ,@a3) ,@a)))))))))
 
 (define-macro let %ext-let)
 
 ; Also define a clean version of LETREC.
 
-(define-macro (%clean-letrec bindings expr . exprs)
-  (letrec
-    ((check
-      (lambda (b)
-        (cond ((null? b)
-                #t)
-              ((or (not (pair? b))
-                   (not (pair? (car b)))
-                   (not (symbol? (caar b)))
-                   (not (pair? (cdar b)))
-                   (not (null? (cddar b))))
-                (wrong "letrec: invalid syntax" b))
-              (else (check (cdr b)))))))
-    (check bindings)
-    (let ((tmps (map (lambda (x) (gensym)) bindings))
-          (vars (map car bindings))
-          (args (map cadr bindings)))
-      (let ((undefineds   (map (lambda (v) (list v #f))
-                               vars))
-            (tmp-bindings (map (lambda (t a) (list t a))
-                               tmps
-                               args))
-            (updates      (map (lambda (v t) (list 'set! v t))
-                               vars
-                               tmps)))
-        `(let ,undefineds
-           (let ,tmp-bindings
-             ,@updates
-             ,expr
-             ,@exprs))))))
+(define-macro %clean-letrec
+  (let ((check-bindings check-bindings))
+    (lambda (bindings expr . exprs)
+      (check-bindings bindings "letrec")
+      (let ((tmps (map (lambda (x) (gensym)) bindings))
+            (vars (map car bindings))
+            (args (map cadr bindings)))
+        (let ((undefineds   (map (lambda (v) (list v #f))
+                                 vars))
+              (tmp-bindings (map (lambda (t a) (list t a))
+                                 tmps
+                                 args))
+              (updates      (map (lambda (v t) (list 'set! v t))
+                                 vars
+                                 tmps)))
+          `(let ,undefineds
+             (let ,tmp-bindings
+               ,@updates
+               ,expr
+               ,@exprs)))))))
 
 (define-macro letrec %clean-letrec)
 
-(define-macro (let* bindings expr . exprs)
-  (letrec
-    ((nest-let
-       (lambda (b)
-         (cond ((null? b)
-                 (cons expr exprs))
-               ((or (not (pair? b))
-                    (not (pair? (car b)))
-                    (not (symbol? (caar b)))
-                    (not (pair? (cdar b)))
-                    (not (null? (cddar b))))
-                 (wrong "let*: invalid syntax" b))
-               ((null? (cdr b))
-                 `(let ((,(caar b) ,(cadar b)))
-                    ,@(nest-let (cdr b))))
-               (else
-                 `(let ((,(caar b) ,(cadar b)))
-                    ,(nest-let (cdr b))))))))
-    (if (null? bindings)
-        `(let () ,expr ,@exprs)
-        (nest-let bindings))))
+(define-macro let*
+  (let ((check-bindings check-bindings))
+    (lambda (bindings expr . exprs)
+      (letrec
+        ((nest-let
+           (lambda (b)
+             (cond ((null? b)
+                     (cons expr exprs))
+                   ((null? (cdr b))
+                     `(let ((,(caar b) ,(cadar b)))
+                        ,@(nest-let (cdr b))))
+                   (else
+                     `(let ((,(caar b) ,(cadar b)))
+                        ,(nest-let (cdr b))))))))
+        (check-bindings bindings "let*")
+        (if (null? bindings)
+            `(let () ,expr ,@exprs)
+            (nest-let bindings))))))
 
 (define-macro (case key . clauses)
   (letrec
@@ -685,7 +686,7 @@
                      `(((memv ,k ',(caar c*)) ,@(cdar c*)))))
                (else
                  `(((memv ,k ',(caar c*)) ,@(cdar c*))
-                  ,@(gen-clauses k (cdr c*))))))))
+                     ,@(gen-clauses k (cdr c*))))))))
     (let ((k (gensym)))
       `(let ((,k ,key))
          (cond ,@(gen-clauses k clauses))))))
@@ -728,12 +729,12 @@
   `(let ((value #f))
      (lambda ()
        (if value
-           (car value))
+           (car value)
            (let ((x ,expr))
              (if value
                  (car value)
                  (begin (set! value (cons x '()))
-                        (car value)))))))
+                        (car value))))))))
 
 (define (force x) (x))
 

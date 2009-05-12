@@ -1,7 +1,5 @@
 #!/bin/sh
 
-S9FES_LIBRARY_PATH=.:lib:contrib; export S9FES_LIBRARY_PATH
-
 testfile=libtest.scm
 
 trap '
