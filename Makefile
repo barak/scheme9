@@ -4,7 +4,7 @@
 # Change at least this line:
 #PREFIX= /u
 
-VERSION= 20090512
+VERSION= 20090513
 
 # Extras to be added to the heap image
 EXTRA_STUFF=	-f contrib/help.scm \
@@ -35,9 +35,11 @@ MANDIR=$(mandir)/man1
 # LIBRARY		default library source file
 # DEFAULT_LIBRARY_PATH	default search path for LOCATE-FILE
 
-LINUXDEFS=-Dunix
-LPATHDEFS=-DDEFAULT_LIBRARY_PATH="\"$(LIBDIR):$(DATADIR):$(LIBDIR)/contrib:~/s9fes:.\""
-DEFS=$(LINUXDEFS) $(LPATHDEFS)
+# Which OS are we using (unix or plan9)?
+OSDEF=	-Dunix
+
+DEFS=	$(OSDEF) \
+	-DDEFAULT_LIBRARY_PATH="\".:~/s9fes:$(LIBDIR):$(LIBDIR)/contrib\""
 
 EXTINI=	unix_init()
 EXTOBJ=	unix.o
@@ -48,35 +50,35 @@ all:	s9 s9.image s9.1 all-s9e
 all-s9e:	s9e s9e.image s9e.1
 
 s9:	s9.c s9.h
-	$(CC) $(CFLAGS) $(DEFS) -o $@ s9.c
+	$(CC) $(CFLAGS) $(DEFS) -o s9 s9.c
 
 s9.image:	s9 s9.scm
-	rm -f $@ && $(BUILD_ENV) ./s9 -n $(EXTRA_STUFF) -d $@
+	rm -f s9.image && $(BUILD_ENV) ./s9 -n $(EXTRA_STUFF) -d s9.image
 
 s9e:	s9e.o $(EXTOBJ)
-	$(CC) $(CFLAGS) -o $@ $^
+	$(CC) $(CFLAGS) -o s9e s9e.o $(EXTOBJ)
 
 s9e.scm:	s9.scm
-	ln -s s9.scm $@
+	ln -s s9.scm s9e.scm
 
 s9e.o:	s9.h
 s9e.o:	s9.c
 	$(CC) $(CFLAGS) $(DEFS) -I . -DEXTENSIONS="$(EXTINI)" $(EXTDEF) \
-		-o $@ -c $<
+		-o s9e.o -c s9.c
 
 unix.o:	ext/unix.c
-	$(CC) $(CFLAGS) $(LINUXDEFS) -I . -o unix.o -c $<
+	$(CC) $(CFLAGS) $(OSDEF) -I . -o unix.o -c ext/unix.c
 
 s9e.image:	s9e s9e.scm ext/system.scm
-	rm -f $@ && \
-	$(BUILD_ENV) ./s9e -n -f ext/system.scm $(EXTRA_STUFF) -d $@
+	rm -f s9e.image && \
+	$(BUILD_ENV) ./s9e -n -f ext/system.scm $(EXTRA_STUFF) -d s9e.image
 
 %.1: %.1.in
 	sed -e "s,@LIBDIR@,$(LIBDIR)," < $< \
 	 | sed -e "s,@DATADIR@,$(DATADIR)," > $@
 
 %.gz: %
-	gzip -9 <$< >$@
+	gzip -9 < $< > $@
 
 lint:
 	gcc -g -Wall -ansi -pedantic s9.c && rm a.out
