@@ -1,3 +1,9 @@
+scheme9 (2009.05.13-2) unstable; urgency=low
+
+  * Use portable automatic variables in Makefile where possible
+
+ -- Barak A. Pearlmutter <bap@debian.org>  Wed, 13 May 2009 12:36:32 +0100
+
 scheme9 (2009.05.13-1) unstable; urgency=low
 
   * New Upstream Version
