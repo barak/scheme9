@@ -1,5 +1,11 @@
 Change Log
 
+2009-05-13
+	Administrative:
+	- Removed all those special variables ($@, $<, ...)
+	  from Makefile, because some(?) of them are simply
+	  not portable.
+	- Added -Dunix to compilation of unix.c (sic!).
 2009-05-12
 	Applied some cosmetics to s9.scm.
 	Administrative: fixed local environment in the build process.
@@ -33,6 +39,7 @@ Change Log
 	  to check for a Unix system; added -Dunix to Makefile.
 	Thanks, Barak Pearlmutter!
 2009-05-05
+	Administrative changes:
 	- Applied some fixes to the build process.
 	- Created browsable version of the library code.
 	- Added version tag (timestamp) to distribution file.
