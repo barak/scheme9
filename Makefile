@@ -58,8 +58,8 @@ s9.image:	s9 s9.scm
 s9e:	s9e.o $(EXTOBJ)
 	$(CC) $(CFLAGS) -o $@ $< $(EXTOBJ)
 
-s9e.scm:	s9.scm
-	ln -s $< $@
+s9e.scm:
+	ln -sf s9.scm $@
 
 s9e.o:	s9.h
 s9e.o:	s9.c
