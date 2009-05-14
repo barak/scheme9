@@ -13,11 +13,6 @@
  * Compiler-specific stuff
  */
 
-#ifdef __PCC__
- #define _POSIX_SOURCE
- #define _POSIX_C_SOURCE 200112
-#endif
-
 /*
  * Tell later MSC compilers to let us use the standard CLIB API.
  * Blake McBride <blake@mcbride.name>
@@ -62,6 +57,7 @@
  #endif
  #ifndef _POSIX_SOURCE
   #define _POSIX_SOURCE
+  #define _POSIX_C_SOURCE 200112
  #endif
 #endif
 
@@ -282,6 +278,7 @@ EXTERN int	Level;
 EXTERN int	Load_level;
 EXTERN int	Displaying;
 EXTERN int	Quiet_mode;
+EXTERN PRIM	*Apply_magic;
 EXTERN char	**Command_line;
 
 EXTERN volatile int	Error_flag;
