@@ -50,13 +50,13 @@ all:	s9 s9.image s9.1 all-s9e
 all-s9e:	s9e s9e.image s9e.1
 
 s9:	s9.c s9.h
-	$(CC) $(CFLAGS) $(DEFS) -o $@ $<
+	$(CC) $(CFLAGS) $(DEFS) -o $@ $@.c
 
-s9.image:	s9 s9.scm
-	rm -f $@ && $(BUILD_ENV) ./$< -n $(EXTRA_STUFF) -d $@
+s9.image:	s9 s9.scm contrib/help.scm contrib/pretty-print.scm
+	rm -f $@ && $(BUILD_ENV) ./s9 -n $(EXTRA_STUFF) -d $@
 
 s9e:	s9e.o $(EXTOBJ)
-	$(CC) $(CFLAGS) -o $@ $< $(EXTOBJ)
+	$(CC) $(CFLAGS) -o $@ s9e.o $(EXTOBJ)
 
 s9e.scm:
 	ln -sf s9.scm $@
@@ -64,27 +64,27 @@ s9e.scm:
 s9e.o:	s9.h
 s9e.o:	s9.c
 	$(CC) $(CFLAGS) $(DEFS) -I . -DEXTENSIONS="$(EXTINI)" $(EXTDEF) \
-		-o $@ -c $<
+		-o $@ -c s9.c
 
 unix.o:	ext/unix.c
-	$(CC) $(CFLAGS) $(OSDEF) -I . -o $@ -c $<
+	$(CC) $(CFLAGS) $(OSDEF) -I . -o $@ -c ext/unix.c
 
 s9e.image:	s9e s9e.scm ext/system.scm
 	rm -f $@ && \
-	$(BUILD_ENV) ./$< -n -f ext/system.scm $(EXTRA_STUFF) -d $@
+	$(BUILD_ENV) ./s9e -n -f ext/system.scm $(EXTRA_STUFF) -d $@
 
 %.1: %.1.in
-	sed -e "s,@LIBDIR@,$(LIBDIR)," < $< \
+	sed -e "s,@LIBDIR@,$(LIBDIR)," < $@.in \
 	 | sed -e "s,@DATADIR@,$(DATADIR)," > $@
 
 %.gz: %
-	gzip -9 < $< > $@
+	gzip -9 < $* > $@
 
 lint:
 	gcc -g -Wall -ansi -pedantic s9.c && rm a.out
 
 test:	s9 s9.image
-	$(BUILD_ENV) ./$< -nf test.scm
+	$(BUILD_ENV) ./s9 -nf test.scm
 
 libtest:	s9 s9.image
 	$(BUILD_ENV) sh libtest.sh
