@@ -1,8 +1,9 @@
 scheme9 (2009.05.14-1) unstable; urgency=low
 
   * New Upstream Version
+  * Makefile portability and correctness tweaks
 
- -- Barak A. Pearlmutter <bap@debian.org>  Thu, 14 May 2009 10:11:10 +0100
+ -- Barak A. Pearlmutter <bap@debian.org>  Thu, 14 May 2009 10:20:23 +0100
 
 scheme9 (2009.05.13-2) unstable; urgency=low
 
