@@ -8,7 +8,7 @@
  * Use -DBITS_PER_WORD_64 on 64-bit systems.
  */
 
-#define VERSION "2009-05-13"
+#define VERSION "2009-05-14"
 
 #define EXTERN
 #include "s9.h"
@@ -19,8 +19,6 @@
 #endif
 
 int	Verbose_GC = 0;
-
-PRIM	*Apply_magic;
 
 cell	*GC_root[] = { &Program, &Symbols, &Environment, &Tmp,
 			&Tmp_car, &Tmp_cdr, &Stack, &Stack_bottom,
@@ -3817,12 +3815,21 @@ cell *Image_vars[] = {
 	&S_if, &S_lambda, &S_or, &S_quote, &S_set_b,
 NULL };
 
+struct magic {
+	char	id[2];
+	char	version[10];
+	char	cell_size[1];
+	char	_pad[3];
+	char	byte_order[8];
+	char	binary_id[8];
+};
+
 void dump_image(char *p) {
-	FILE	*f;
-	cell	**v;
-	int	n, i, k;
-	char	magic[33];
-	char	buf[100];
+	FILE		*f;
+	cell		n, **v;
+	int		i, k;
+	struct magic	m;
+	char		buf[100];
 
 	f = fopen(p, "wb");
 	if (f == NULL) {
@@ -3830,12 +3837,15 @@ void dump_image(char *p) {
 			make_string(p, (int) strlen(p)));
 		return;
 	}
-	strcpy(magic, "S9__yyyy-mm-dd__s_0123__________");
-	strncpy(&magic[4], VERSION, 10);
-	magic[16] = sizeof(cell)+'0';
+	memset(&m, '_', sizeof(m));
+	strncpy(m.id, "S9", sizeof(m.id));
+	strncpy(m.version, VERSION, sizeof(m.version));
+	m.cell_size[0] = sizeof(cell)+'0';
 	n = 0x30313233L;
-	memcpy(&magic[18], &n, 4);
-	fwrite(magic, 32, 1, f);
+	memcpy(m.byte_order, &n, sizeof(n));
+	n = (cell) &Primitives;
+	memcpy(m.binary_id, &n, sizeof(n));
+	fwrite(&m, sizeof(m), 1, f);
 	i = Pool_size;
 	fwrite(&i, sizeof(int), 1, f);
 	i = Vpool_size;
@@ -3868,38 +3878,53 @@ void dump_image(char *p) {
 }
 
 int load_image(char *p) {
-	FILE	*f;
-	cell	**v;
-	int	n, i;
-	char	buf[33];
-	int	bad = 0;
-	int	inodes, ivcells;
-	cell	name;
+	FILE		*f;
+	cell		n, **v;
+	int		i;
+	struct magic	m;
+	int		bad = 0;
+	int		inodes, ivcells;
+	cell		name;
 
 	name = make_string(p, (int) strlen(p));
 	f = fopen(p, "rb");
 	if (f == NULL) return -1;
-	fread(buf, sizeof(buf)-1, 1, f);
-	if (memcmp(buf, "S9", 2)) {
+	fread(&m, sizeof(m), 1, f);
+	if (memcmp(m.id, "S9", 2)) {
 		error("error in image file (magic match failed)", name);
 		bad = 1;
 	}
-	if (memcmp(&buf[4], VERSION, 10)) {
+	if (memcmp(m.version, VERSION, 10)) {
 		error("error in image file (wrong version)", name);
 		bad = 1;
 	}
-	memcpy(&n, &buf[18], sizeof(int));
-	if (n != 0x30313233) {
+	memcpy(&n, m.byte_order, sizeof(cell));
+	if (n != 0x30313233L) {
 		error("error in image file (wrong architecture)", name);
+		bad = 1;
+	}
+	memcpy(&n, m.binary_id, sizeof(cell));
+	if (n != (cell) &Primitives) {
+		error("error in image file (wrong interpreter)", name);
 		bad = 1;
 	}
 	memset(Tag, 0, Pool_size);
 	fread(&inodes, sizeof(int), 1, f);
+	fread(&ivcells, sizeof(int), 1, f);
+	while (inodes > Pool_size || ivcells > Vpool_size) {
+		if (	Memory_limit_kn &&
+			Pool_size + Segment_size > Memory_limit_kn
+		) {
+			error("image too big", NOEXPR);
+			bad = 1;
+			break;
+		}
+		new_segment();
+	}
 	if (inodes > Pool_size) {
 		error("error in image file (too many nodes)", NOEXPR);
 		bad = 1;
 	}
-	fread(&ivcells, sizeof(int), 1, f);
 	if (ivcells > Vpool_size) {
 		error("error in image file (too many vector cells)", NOEXPR);
 		bad = 1;
