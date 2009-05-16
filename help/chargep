@@ -1,8 +1,8 @@
-R4RS 6.6 (char=? char1 char2) ==> boolean
-         (char<? char1 char2) ==> boolean
-         (char>? char1 char2) ==> boolean
-         (char<=? char1 char2) ==> boolean
-         (char>=? char1 char2) ==> boolean
+R4RS 6.6  (char=? char1 char2)   ==>  boolean
+          (char<? char1 char2)   ==>  boolean
+          (char>? char1 char2)   ==>  boolean
+          (char<=? char1 char2)  ==>  boolean
+          (char>=? char1 char2)  ==>  boolean
 
 These procedures impose a total ordering on the set of characters.
 It is guaranteed that under this ordering:

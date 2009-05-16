@@ -1,13 +1,13 @@
-S9fES (fold-left proc obj list ...) ==> obj
+S9fES  (fold-left procedure object list ...)  ==>  object
 
-Fold a set of lists by combining the result so far with adjacent
-members of the given LISTs by PROC. PROC must by a k-ary procedure
-where k is the number of lists passed to FOLD-LEFT plus one. OBJ
-is the base element that is used in the place of the intermediate
-result in the first application of PROC. FOLD-LEFT folds lists
-by associating applications of PROC to the left.
+Fold a series of lists by combining the result so far with adjacent
+members of the given LISTs by PROCEDURE. PROCEDURE must by a K-ary
+procedure where K is the number of lists passed to FOLD-LEFT plus
+one. OBJECT is the base element that is used in the place of the
+intermediate result in the first application of PROCEDURE. FOLD-LEFT
+folds lists by grouping applications of PROCEDURE to the left.
 
-Each application of FOLD-LEFT can be rewritten as follows:
+Applications of FOLD-LEFT can be rewritten as follows:
 
 (fold-left p2 0 (a b))              ==  (p2 (p2 0 a) b)
 (fold-left p3 0 (a b) (c d))        ==  (p3 (p3 0 a c) b d)

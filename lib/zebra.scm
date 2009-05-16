@@ -2,18 +2,16 @@
 ; By Nils M Holm, 2009
 ; See the LICENSE file of the S9fES package for terms of use
 ;
-; signature: (zebra) ==> list
+; (zebra)  ==>  list
 ;
 ; Solve the zebra puzzle using AMK.
 ;
-; Arguments: none
-;
 ; (Example): (zebra)
-;            ==> (((norwegian kools _.0 fox yellow)
-;                  (ukrainian chesterfields tea horse blue)
-;                  (englishman oldgolds milk snails red)
-;                  (japanese parliaments coffee zebra green)
-;                  (spaniard luckystrikes orangejuice dog ivory)))
+;              ==>  (((norwegian kools _.0 fox yellow)
+;                     (ukrainian chesterfields tea horse blue)
+;                     (englishman oldgolds milk snails red)
+;                     (japanese parliaments coffee zebra green)
+;                     (spaniard luckystrikes orangejuice dog ivory)))
 
 (load-from-library "amk.scm")
 

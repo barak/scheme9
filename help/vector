@@ -1,4 +1,4 @@
-R4RS 6.8 (vector obj ...) ==> vector
+R4RS 6.8  (vector object ...)  ==>  vector
 
 Returns a newly allocated vector whose elements contain the given
 arguments. Analogous to LIST.

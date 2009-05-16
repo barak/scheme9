@@ -2,14 +2,12 @@
 ; By Nils M Holm, 2009
 ; See the LICENSE file of the S9fES package for terms of use
 ;
-; (integer-sqrt integer) ==> integer
+; (integer-sqrt integer)  ==>  integer
 ;
-; Compute the integer part of the square root
-; or a natural number.
+; Compute the largest integer value that is not greater than the
+; square root of INTEGER.
 ;
-; Arguments: square - integer
-;
-; Example:   (integer-sqrt 10) ==> 3
+; Example:   (integer-sqrt 10)  ==>  3
 
 (define (integer-sqrt square)
   (letrec

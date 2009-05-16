@@ -2,28 +2,39 @@
 ; By Nils M Holm, 1998-2009
 ; See the LICENSE file of the S9fES package for terms of use
 ;
-; A tiny PROLOG interpreter. Based on an even tinier
-; PROLOG interpreter written in MACLISP by Ken Kahn.
-;
-; (new-database!)               ==>  void
-; (fact! list)                  ==>  void
-; (predicate! list1 list2 ...)  ==>  void
+; (new-database!)               ==>  unspecific
+; (fact! list)                  ==>  unspecific
+; (predicate! list1 list2 ...)  ==>  unspecific
 ; (query list)                  ==>  list
 ;
-; Syntactic sugar for interactive use;
-; allows you to write (! (man socrates))
-;          instead of (fact! '(man socrates)).
+; This is a tiny PROLOG interpreter that is based on an even
+; tinier PROLOG interpreter written in MACLISP by Ken Kahn.
 ;
-; (! fact)         ==>  void
-; (:- head
-;     clause ...)  ==>  void
-; (? query)        ==>  list
+; NEW-DATABASE! sets up a fresh PROLOG database (thereby
+; deleting any existing one).
 ;
-; Special predicates:
+; FACT! adds a new fact to the database.
 ;
-; (== A B)  return a new environment if A can be unified with B, else NO
-; (dif A B) return NO if A can be unified with B, else YES (use only at
-;           the end of a clause!)
+; PREDICATE! adds a predicate with the head LIST1 and the
+; clauses LIST2 ... to the database.
+;
+; QUERY attempts to prove LIST1. It returns a list of results.
+; An empty list indicates that LIST1 could not be proven.
+;
+; See "prolog-test.scm" for an example program.
+;
+; The following macros add some syntactic sugar for interactive
+; use; they allows you to write, for instance, (! (man socrates))
+; instead of (fact! '(man socrates)).
+;
+; (! fact)              ==>  unspecific
+; (:- list1 list2 ...)  ==>  unspecific
+; (? query)             ==>  unspecific
+;
+; The following special predicates are implemented in the
+; interpreter: (== A B) return a new environment if A can be
+; unified with B, else NO. (Dif A B) return NO if A can be
+; unified with B, else YES (use only at the end of a clause!)
 ;
 ; Example:   (begin (! (man socrates))
 ;                   (:- (mortal ?x)

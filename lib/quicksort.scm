@@ -2,15 +2,12 @@
 ; By Nils M Holm, 2009
 ; See the LICENSE file of the S9fES package for terms of use
 ;
-; (quicksort proc^2 list) ==> list
+; (quicksort procecure^2 list)  ==>  list
 ;
-; Sort lists using the quicksort algorithm.
-; The predicate P describes the desired order.
+; Sort lists using the Quicksort algorithm. PROCEDURE^2 is a
+; binary procedure describing the desired order.
 ;
-; Arguments: p - predicate
-;            a - list
-;
-; Example:   (quicksort < '(5 3 7 9 1)) ==> (1 3 5 7 9)
+; Example:   (quicksort <= '(5 3 7 9 1))  ==>  (1 3 5 7 9)
 
 (load-from-library "partition.scm")
 

@@ -2,16 +2,16 @@
 ; By Nils M Holm, 2009
 ; See the LICENSE file of the S9fES package for terms of use
 ;
-; (define-match name clause ...)  ==>  procedure
-; (ml-match name program ...)     ==>  procedure
+; (define-match symbol clause ...)  ==>  procedure
+; (ml-match name program ...)       ==>  procedure
 ;
-; Write programs using pattern matching style. Each program is
-; a set of clauses containing a pattern in the car part and a
-; series of expressions in the cdr part. When the pattern
-; matches the arguments passed to the program, the corresponding
-; body is evaluated. Symbols used in the pattern are bound to
-; them matched values in the scope of the body. The symbol _
-; matches any form without binding to it.
+; These constructs allow to write programs using pattern matching
+; style. Each program is a set of clauses containing a pattern in
+; the car part and a series of expressions in the cdr part. When
+; the pattern matches the arguments passed to the program, the
+; corresponding body is evaluated. Symbols used in the pattern
+; are bound to the values matched by them in the scope of the body.
+; The symbol _ matches any object without binding to it.
 ;
 ; A procedure resembling LENGTH may be written in this way using
 ; DEFINE-MATCH:
@@ -31,10 +31,6 @@
 ;
 ; (It uses : instead of | to separate cases, because | is not
 ;  a valid Scheme symbol.)
-;
-; Arguments: name    - function name
-;            clause  - clause of the form (pattern body ...)
-;            program - ML-style program, see below
 ;
 ; Example:   (begin
 ;              (ml-match

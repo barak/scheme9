@@ -2,17 +2,17 @@
 ; By Nils M Holm, 2009
 ; See the LICENSE file of the S9fES package for terms of use
 ;
-; Based on "A Very Fast Substring Search Algorithm", Daniel M. Sunday,
-; CACM v33, #8, August 1990
-; and the SUBSTRING-SEARCH-MAKER procedure by Ken Dickey (Aug 1990).
+; (string-find string1 string2)     ==>  offset | #f
+; (string-ci-find string1 string2)  ==>  offset | #f
 ;
-; (string-find pattern text)     ==>  offset | #f
-; (string-ci-find pattern text)  ==>  offset | #f
-;
-; Attempt to find the string PATTERN in the string TEXT. Return
-; the offset of the first occurrence of PATTERN in TEXT or #F, if
-; TEXT does not contain PATTERN. STRING-CI-FIND does the same,
+; Attempt to find the pattern STRING1 in the text STRING2. Return
+; the offset of the first occurrence of STRING1 in STRING2 or #F,
+; if STRING2 does not contain STRING1. STRING-CI-FIND does the same,
 ; but ignores case.
+;
+; This program is based on "A Very Fast Substring Search Algorithm",
+; Daniel M. Sunday, CACM v33, #8, August 1990 and the
+; SUBSTRING-SEARCH-MAKER procedure by Ken Dickey (1990).
 ;
 ; Example:   (string-find "test" "This is a test string")     ==>  10
 ;            (string-find "TEST" "This is a test string")     ==>  #f

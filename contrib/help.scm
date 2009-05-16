@@ -2,17 +2,20 @@
 ; By Nils M Holm, 2009
 ; See the LICENSE file of the S9fES package for terms of use
 ;
-; (help) ==> unspecific
-; (help symbol) ==> unspecific
+; (help)                     ==>  unspecific
+; (help symbol | string)     ==>  unspecific
+; (apropos)                  ==>  list
+; (apropos symbol | string)  ==>  list
 ;
 ; Display the synopsis of the given procedure or keyword.
 ; When SYMBOL is described in R4RS, produce its R4RS entry,
 ; otherwise display a S9FES-specific summary. When no symbol
 ; is passed to help, it explains itself.
 ;
-; Arguments: sym - symbol to explain
+; APROPOS returns a list of all procedure names for which
+; help pages exist.
 ;
-; (Example): (help symbol?)  ==>  unspecific
+; (Example): (help 'symbol?)  ==>  unspecific
 ;
 ; Output:    R4RS 6.4 (symbol? obj)
 ;

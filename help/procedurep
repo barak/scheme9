@@ -1,6 +1,6 @@
-R4RS 6.9 (procedure? obj) ==> boolean
+R4RS 6.9  (procedure? object)  ==>  boolean
 
-Returns #t if OBJ is a procedure, otherwise returns #f.
+Returns #T if OBJECT is a procedure, otherwise returns #F.
 
 (procedure? car)                    ==>  #t
 (procedure? 'car)                   ==>  #f

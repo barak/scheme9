@@ -1,5 +1,7 @@
-R4RS 6.5.5 (+ n1 ...) ==> integer
-           (* n1 ...) ==> integer
+R4RS 6.5.5  (+ integer1 ...)  ==>  integer
+            (+)               ==>  integer
+            (* integer1 ...)  ==>  integer
+            (*)               ==>  integer
 
 These procedures return the sum or product of their arguments.
 

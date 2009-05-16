@@ -1,13 +1,13 @@
-S9fES (fold-right proc obj list ...) ==> obj
+S9fES  (fold-right procedure object list ...)  ==>  object
 
 Fold a set of lists by combining the result so far with adjacent
-members of the given LISTs by PROC. PROC must by a k-ary procedure
-where k is the number of lists passed to FOLD-RIGHT plus one. OBJ
-is the base element that is combined with the intermediate result
-in the last application of PROC. FOLD-RIGHT folds lists by associating
-applications of PROC to the right.
+members of the given LISTs by PROCEDURE. PROCEDURE must by a K-ary
+procedure where K is the number of lists passed to FOLD-RIGHT plus
+one. OBJECT is the base element that is combined with the intermediate
+result in the last application of PROCEDURE. FOLD-RIGHT folds lists
+by grouping applications of PROCEDURE to the right.
 
-Each application of FOLD-RIGHT can be rewritten as follows:
+Applications of FOLD-RIGHT can be rewritten as follows:
 
 (fold-right p2 0 (a b))              ==  (p2 a (p2 b 0))
 (fold-right p3 0 (a b) (c d))        ==  (p3 a c (p3 b d 0))

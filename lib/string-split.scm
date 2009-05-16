@@ -2,17 +2,14 @@
 ; By Nils M Holm, 2009
 ; See the LICENSE file of the S9fES package for terms of use
 ;
-; (string-split char string) ==> list
+; (string-split char string)  ==>  list
 ;
-; Split a string into substrings.
-; Return a list containing all cohesive sequences of
-; non-separating characters contained in the given string.
-;
-; Arguments: c - separating character
-;            s - string to split
+; Split a string into substrings. CHAR is interpreted as a separator.
+; Return a list containing all coherent sequences of non-separating
+; characters contained in the given string.
 ;
 ; Example:   (string-split #\space " to be  or  not to be ")
-;            ==> ("to" "be" "or" "not" "to" "be")
+;              ==>  ("to" "be" "or" "not" "to" "be")
 
 (define (string-split c s)
   (letrec

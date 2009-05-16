@@ -2,19 +2,16 @@
 ; By Nils M Holm, 2009
 ; See the LICENSE file of the S9fES package for terms of use
 ;
-; (string-contains string string) ==> string | #f
-; (string-ci-contains string string) ==> string | #f
+; (string-contains string1 string2)     ==>  string | #f
+; (string-ci-contains string1 string2)  ==>  string | #f
 ;
-; Find the first occurrence of a small string (U) in a large string (S).
-; Return the first substring of S beginning with U. When S does not
-; contain U, return #F. STRING-CI-CONTAINS performs the same function,
-; but ignores case.
+; Find the first occurrence of a small string STRING1 in a large
+; string STRING2. Return the first substring of STRING2 beginning
+; with STRING1. When STRING2 does not contain STRING1, return #F.
+; STRING-CI-CONTAINS performs the same function, but ignores case.
 ;
-; Arguments: s - string to search
-;            u - substring to locate
-;
-; Example:   (string-contains "gemeinsam" "ein") ==> "einsam"
-;            (string-contains "democracy" "people") ==> #f
+; Example:   (string-contains "gemeinsam" "ein")     ==>  "einsam"
+;            (string-contains "democracy" "people")  ==>  #f
 
 (define (make-string-contains p?)
   (lambda (s u)

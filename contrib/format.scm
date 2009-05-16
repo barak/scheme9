@@ -1,86 +1,31 @@
-; Common LISP like text output formatter for R4RS Scheme
-; See the LICENSE file of the S9fES package for terms of use
-;
-; Copyright (C) 1992, 1993 by Dirk Lutzebaeck (lutzeb@cs.tu-berlin.de)
-;
-; With some additional hacking by Nils M Holm <nmh@t3x.org> in 2009.
-;
+; Common LISP-style text output formatter for R4RS Scheme
+; Copyright (C) 1992, 1993 by Dirk Lutzebaeck.
+; With some additional hacking by Nils M Holm in 2009.
 ; Authors of the original version (< 1.4) were Ken Dickey and Aubrey Jaffer.
+; See the LICENSE file of the S9fES package for terms of use.
 ;
-; VERSION 2.3
+; (format #t string-f object ...)           ==>  string | #t | #f
+; (format #f string-f object ...)           ==>  string | #t | #f
+; (format string string-f object ...)       ==>  string | #t | #f
+; (format output-port string-f object ...)  ==>  string | #t | #f
 ;
-; EXPORTS:
+; FORMAT Returns #T, #F or a string. It has the side effect of printing
+; according to the formatting instruction in STRING. If the first
+; argument is #T, the output is to the current output port and #T is
+; returned. If the argument is #F, a formatted string is returned as
+; the result of the call. If the first argument is is a string, the
+; output is appended to that string by string-append (note: this
+; returns a fresh string). Otherwise the first argument must be an
+; output port and #T is returned.
 ;
-; (format destination format-string . arguments)               procedure
-;
-; Returns #t, #f or a string; has side effect of printing according
-; to <format-string>. If <destination> is #t, the output is to the
-; current output port and #t is returned. If <destination> is #f, a
-; formatted string is returned as the result of the call. If <destination>
-; is a string, the output is appended to that string by string-append
-; (note: this returns a newly allocated string). Otherwise <destination>
-; must be an output port and #t is returned. <Format-string> must be
-; a string. In case of a formatting error FORMAT and prints a message
-; on the current output port and aborts. Characters are output as if
-; the string were output by the DISPLAY function with the exception
-; of those prefixed by a tilde (~). For a detailed description of the
-; <format-string> syntax please consult a Common LISP FORMAT reference
-; manual. For a quick overview of implemented, not supported and
-; extended control properties of <format-string> see "format.txt".
-; For a test suite to verify this FORMAT implementation load
-; "format-test.scm".
-;
-; CHANGELOG:
-;
-; Version 2.3:                                                    [nmh]
-; * tested with s9fes and scheme48
-; * restructured code so that only FORMAT is exported and all other
-;   symbols are local; removed format: prefix from all symbols
-; * fixed indentation in some places
-; * made ~A emit prettier pairs [(a b . c) instead of (a . (b . c))]
-; * removed custom types
-; * removed ~! (flush output), cannot be done portably
-; * removed ~Y (pretty-print), because it was NYI anyway
-;
-; Version 2.2:                                                     [dl]
-; * corrected truncation for fixed fields by negative field parameters
-;   inserted a '<' or a '>' when field length was equal to object string
-;   length
-; * changed #[...] outputs to #<...> outputs to be conform to SCM's
-;   display and write functions
-; * changed #[non-printable-object] output to #<unspecified>
-; * ~:s and ~:a print #<...> messages in strings "#<...>" so that the
-;   output can always be processed by (read)
-; * changed implementation dependent part: to configure for various scheme
-;   systems define the variable format:scheme-system (see below)
-; * format:version is a variable returning the format version in a string
-; * format:custom-types allows to use scheme system dependent predicates
-;   to identify the type of a scheme object and its proper textual
-;   representation
-; * Tested with scm4a14, Elk 2.0
-;
-; Version 2.1:                                                     [dl]
-; * Tested with scm3c11, Elk 1.5, MIT C-Scheme 7.1, UMB Scheme 2.5,
-;   and Scheme->C 01nov91 (see "formatst.scm" for error reports)
-; * ~e,~f,~g,~$ fake floating point formatting by number->string;
-;   no directive parameters are implemented
-; * replaced ~g by ~y due to ~g CL floating point formatting directive
-; * ~{~} with modifiers implemented (nested iterations allowed)
-; * errors in format-string are showed by a "<--" in the format string
-; * `.' as a directive parameter separator is not supported anymore
-; * ~[ ~; ~] with modifiers implemented (nested conditionals allowed)
-; * ~? expects a list now (as CL does)
-;   ~@? works now as ~? in 2.0 did.
-; * ~*, ~n*, ~:*, ~n:*, ~@*, ~n@* implemented
-; * ~:p implemented
-; * don't strip the argument error messages anymore
-; * format returns now #t instead of () if destination is an output port
-;
-; Version 2.0:                                                     [dl]
-; * Tested with scm3c11, Elk 1.5, MIT C-Scheme 7.1, UMB Scheme 2.5 and
-;   Scheme->C 01nov91. (see "formatst.scm" for error reports)
-; * completely rewritten Version of SLIB format Version 1.4
-; * removed C-style padding support
+; Characters are output as if they were output by the DISPLAY function
+; with the exception of those prefixed by a tilde (~). In case of a
+; formatting error FORMAT prints a message on the current output port
+; and aborts.  For a detailed description of the STRING-F syntax
+; please consult a Common LISP FORMAT reference manual. For a quick
+; overview of implemented, not supported and extended control properties
+; of STRING-F see "format.txt". For a test suite to verify this FORMAT
+; implementation load "format-test.scm".
 
 (define (format . args)
 

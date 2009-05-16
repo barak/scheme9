@@ -1,5 +1,5 @@
-R4RS 6.10 (input-port? obj) ==> boolean
-          (output-port? obj) ==> boolean
+R4RS 6.10  (input-port? object)   ==>  boolean
+           (output-port? object)  ==>  boolean
 
-Returns #t if OBJ is an input port or output port respectively,
-otherwise returns #f.
+Returns #T if OBJECT is an input port or output port respectively,
+otherwise returns #F.

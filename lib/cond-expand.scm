@@ -2,20 +2,17 @@
 ; By Nils M Holm, 2009
 ; See the LICENSE file of the S9fES package for terms of use
 ;
-; (cond-expand (symbol . body) ==> form
+; (cond-expand (symbol expression ...))  ==>  object
 ;
-; A subset of SRFI-0 COND-EXPAND.
-; Each argument of COND-EXPAND is a clause consisting of a
-; leading "feature ID" (a symbol) and any number of trailing
-; expressions (the body). It evaluates to the body of the
-; first clause having a feature ID of SCHEME-9-FROM-EMPTY-SPACE,
-; S9FES, or ELSE. The body is then evaluated by S9fES. When no
-; suitable clause is found, an error is reported.
+; This is a subset of SRFI-0 COND-EXPAND. Each argument of COND-EXPAND
+; is a clause consisting of a leading "feature ID" (a symbol) and any
+; number of trailing expressions (a body). It evaluates to the body of
+; the first clause having a feature ID of SCHEME-9-FROM-EMPTY-SPACE,
+; S9FES, or ELSE. The body is then evaluated by S9fES. When none
+; of the above feature IDs is found, an error is reported.
 ;
-; Arguments: c* - clauses.
-;
-; Example:   (cond-expand (s9fes (cons 1 2))) ==> (1 . 2)
-;            (cond-expand (foo (cons 1 2)) (else (+ 1 2))) ==> 3
+; Example:   (cond-expand (s9fes (cons 1 2)))               ==>  (1 . 2)
+;            (cond-expand (foo (cons 1 2)) (else (+ 1 2)))  ==>  3
 
 (define-macro (cond-expand . c*)
   (letrec

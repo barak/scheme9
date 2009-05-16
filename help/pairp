@@ -1,6 +1,6 @@
-R4RS 6.3 (pair? obj) ==> boolean
+R4RS 6.3  (pair? object)  ==>  boolean
 
-PAIR? returns #t if OBJ is a pair, and otherwise returns #f.
+PAIR? returns #T if OBJECT is a pair, and otherwise returns #F.
 
 (pair? '(a . b))  ==>  #t
 (pair? '(a b c))  ==>  #t

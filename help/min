@@ -1,5 +1,5 @@
-R4RS 6.5.5 (max x1 x2 ...) ==> integer
-           (min x1 x2 ...) ==> integer
+R4RS 6.5.5  (max integer ...)  ==>  integer
+            (min integer ...)  ==>  integer
 
 These procedures return the maximum or minimum of their arguments.
 

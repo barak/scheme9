@@ -1,5 +1,5 @@
-R4RS 6.5.5 (expt n1 n2) ==> integer
+R4RS 6.5.5  (expt integer1 integer2)  ==>  integer
 
-Returns N1 raised to the power N2.
+Returns INTEGER1 raised to the power INTEGER2.
 
 0^0 is defined to be equal to 1.

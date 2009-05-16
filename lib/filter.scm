@@ -2,16 +2,13 @@
 ; By Nils M Holm, 2009
 ; See the LICENSE file of the S9fES package for terms of use
 ;
-; (filter proc^1 list) ==> list
+; (filter procecure^1 list)  ==>  list
 ;
-; Extract elements from a list.
-; The predicate P describes the property
-; of the elements to be extracted.
+; Extract elements from a list. PROCDEDURE describes the property
+; of the elements to be extracted. It must be a procedure of one
+; argument.
 ;
-; Arguments: p - predicate
-;            a - source list
-;
-; Example:   (filter number? '(a 1 b 2 c 3)) ==> (1 2 3)
+; Example:   (filter number? '(a 1 b 2 c 3))  ==>  (1 2 3)
 
 (define (filter p a)
   (letrec

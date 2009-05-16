@@ -2,29 +2,44 @@
 ; By Nils M Holm, 2009
 ; See the LICENSE file of the S9fES package for terms of use
 ;
-; Bitwise logic operations:
+; (bitwise-clear integer1 integer2 ...)        ==>  integer
+; (bitwise-and integer1 integer2 ...)          ==>  integer
+; (bitwise-and-c2  integer1 integer2 ...)      ==>  integer
+; (bitwise-1 integer1 integer2 ...)            ==>  integer
+; (bitwise-and-c1 integer1 integer2 ...)       ==>  integer
+; (bitwise-2 integer1 integer2 ...)            ==>  integer
+; (bitwise-xor integer1 integer2 ...)          ==>  integer
+; (bitwise-or integer1 integer2 ...)           ==>  integer
+; (bitwise-or-not integer1 integer2 ...)       ==>  integer
+; (bitwise-xor-not integer1 integer2 ...)      ==>  integer
+; (bitwise-c2 integer1 integer2 ...)           ==>  integer
+; (bitwise-or-c2 integer1 integer2 ...)        ==>  integer
+; (bitwise-c1 integer1 integer2 ...)           ==>  integer
+; (bitwise-or-c1 integer1 integer2 ...)        ==>  integer
+; (bitwise-and-not integer1 integer2 ...)      ==>  integer
+; (bitwise-set integer1 integer2 ...)          ==>  integer
+; (bitwise-shift-left integer1 integer2 ...)   ==>  integer
+; (bitwise-shift-right integer1 integer2 ...)  ==>  integer
 ;
-; (bitwise-... integer integer ...) ==> integer
+; Bitwise logic operations. These operations are defined as follows:
 ;
-; The following operations are implemented:
-;
-; VAL1             0   0   1   1
-; VAL2             0   1   0   1  Operation
+; INT1             0   0   1   1
+; INT2             0   1   0   1  Operation
 ; ----------------------------------------------------------------
 ; bitwise-clear    0   0   0   0  set to 0
 ; bitwise-and      0   0   0   1  and
-; bitwise-and-c2   0   0   1   0  and VAL1 with complement of VAL2
-; bitwise-1        0   0   1   1  VAL1
-; bitwise-and-c1   0   1   0   0  and complement of VAL1 with VAL2
-; bitwise-2        0   1   0   1  VAL2
+; bitwise-and-c2   0   0   1   0  and INT1 with complement of INT2
+; bitwise-1        0   0   1   1  INT1
+; bitwise-and-c1   0   1   0   0  and complement of INT1 with INT2
+; bitwise-2        0   1   0   1  INT2
 ; bitwise-xor      0   1   1   0  exclusive or
 ; bitwise-or       0   1   1   1  or
 ; bitwise-or-not   1   0   0   0  not-or
 ; bitwise-xor-not  1   0   0   1  not-xor (equivalence)
-; bitwise-c2       1   0   1   0  complement of VAL2
-; bitwise-or-c2    1   0   1   1  or VAL1 with complement of VAL2
-; bitwise-c1       1   1   0   0  complement of VAL1
-; bitwise-or-c1    1   1   0   1  or complement of VAL1 with VAL2
+; bitwise-c2       1   0   1   0  complement of INT2
+; bitwise-or-c2    1   0   1   1  or INT1 with complement of INT2
+; bitwise-c1       1   1   0   0  complement of INT1
+; bitwise-or-c1    1   1   0   1  or complement of INT1 with INT2
 ; bitwise-and-not  1   1   1   0  not-and
 ; bitwise-set      1   1   1   1  set to 1
 ;
@@ -35,9 +50,6 @@
 ; Multiple arguments associate to the left, i.e.: (BITWISE-op a b c)
 ; equals (BITWISE-op (BITWISE-op a b) c) for all of the above
 ; operations.
-;
-; Arguments: a, b - integer arguments
-;            c    - optional integer arguments
 ;
 ; Example:   (bitwise-clear   #b1010 #b1100)  ==>  #b0000
 ;            (bitwise-or-not  #b1010 #b1100)  ==>  #b0001

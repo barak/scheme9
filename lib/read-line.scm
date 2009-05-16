@@ -2,14 +2,14 @@
 ; By Nils M Holm, 2009
 ; See the LICENSE file of the S9fES package for terms of use
 ;
-; (read-line . port) ==> string
+; (read-line)             ==>  string
+; (read-line input-port)  ==>  string
 ;
-; Read a line from an input port.
-;
-; Arguments: port - port to read, default = current input port
+; Read a line from an input port. When no INPUT-PORT is specified,
+; read the current input port.
 ;
 ; Example:   (with-input-from-file "lib/read-line.scm" read-line)
-;              ==> "; Scheme 9 from Empty Space, Function Library"
+;              ==>  "; Scheme 9 from Empty Space, Function Library"
 
 (define (read-line . port)
   (letrec

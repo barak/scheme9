@@ -1,4 +1,4 @@
-R4RS Appendix (syntax-rules <literals> <syntax rule> ...) ==> transformer
+R4RS Appendix  (syntax-rules <literals> <syntax rule> ...)  ==>  transformer
 
 Syntax: <Literals> is a list of identifiers, and each <syntax rule>
 should be of the form

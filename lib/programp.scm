@@ -2,12 +2,10 @@
 ; By Nils M Holm, 2009
 ; See the LICENSE file of the S9fES package for terms of use
 ;
-; (program? form) ==> boolean
+; (program? object)  ==>  boolean
 ;
-; Check whether FORM is a syntactically correct Scheme program.
-; This program does not catch all erroneous cases. Caveat utilitor.
-;
-; Arguments: x - form to check
+; Return #T, if OBJECT is a syntactically correct Scheme program.
+; This program does not implement all of R4RS. Caveat utilitor.
 ;
 ; Example:   (program? '(let ((x 1)) (cons x x)))  ==>  #t
 

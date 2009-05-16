@@ -2,15 +2,12 @@
 ; By Nils M Holm, 2009
 ; See the LICENSE file of the S9fES package for terms of use
 ;
-; (mergesort proc^2 list) ==> list
+; (mergesort procedure^2 list)  ==>  list
 ;
-; Sort lists using the mergesort algorithm.
-; The predicate P describes the desired order.
+; Sort lists using the mergesort algorithm. PROCEDURE^2 is a
+; binary predicate that describes the desired order.
 ;
-; Arguments: p - predicate
-;            a - list
-;
-; Example:   (mergesort < '(5 3 7 9 1)) ==> (1 3 5 7 9)
+; Example:   (mergesort <= '(5 3 7 9 1))  ==>  (1 3 5 7 9)
 
 (define (mergesort p a)
   (letrec

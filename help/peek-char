@@ -1,5 +1,5 @@
-R4RS 6.10.2 (peek-char) ==> char | eof-object
-            (peek-char input-port) ==> char | eof-object
+R4RS 6.10.2  (peek-char)             ==>  char | eof-object
+             (peek-char input-port)  ==>  char | eof-object
 
 Returns the next character available from the input port, without
 updating the port to point to the following character. If no more

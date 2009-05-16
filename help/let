@@ -1,4 +1,4 @@
-R4RS 4.2.2 (let <bindings> <body>) ==> obj
+R4RS 4.2.2  (let <bindings> <body>)  ==>  object
 
 Syntax: <Bindings> should have the form
 
@@ -22,7 +22,7 @@ returned. Each binding of a <variable> has <body> as its region.
         (z (+ x y)))
     (* z x)))         ==>  35
 
-4.2.4 (let <variable> <bindings> <body>) ==> obj
+4.2.4 (let <variable> <bindings> <body>) ==> object
 
 Some implementations of Scheme permit a variant on the syntax of
 LET called "named let" which provides a more general looping construct

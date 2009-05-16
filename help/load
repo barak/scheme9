@@ -1,6 +1,6 @@
-R4RS 6.10.4 (load filename) ==> unspecific
+R4RS 6.10.4  (load string)  ==>  unspecific
 
-Filename should be a string naming an existing file containing
+STRING should be a file name naming an existing file containing
 Scheme source code. The LOAD procedure reads expressions and
 definitions from the file and evaluates them sequentially. It is
 unspecified whether the results of the expressions are printed.

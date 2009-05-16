@@ -1,10 +1,10 @@
-Usage: (help "procedure-name")
-       (help "keyword")
-       (help 'symbol)
-       (help)
-       (apropos "string") ==> list
-       (apropos 'string) ==> list
-       (apropos) ==> list
+S9fES  (help "procedure-name")  ==>  unspecific
+       (help "keyword")         ==>  unspecific
+       (help 'symbol)           ==>  unspecific
+       (help)                   ==>  unspecific
+       (apropos "string")       ==>  list
+       (apropos 'string)        ==>  list
+       (apropos)                ==>  list
 
 The HELP procedure displays the synopsis of the given procedure or
 keyword. When the given object is described in R4RS, its R4RS entry

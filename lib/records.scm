@@ -2,36 +2,64 @@
 ; By Nils M Holm, 2009
 ; See the LICENSE file of the S9fES package for terms of use
 ;
-; (record pair_1 ...) ==> record
-; (record? form) ==> boolean
-; (record-ref record tag) ==> form
-; (record-set! record tag form) ==> unspecific
-; (list->record list) ==> record
-; (record->list record) ==> list
-; (record-equal? record_1 record_2) ==> boolean
-; (record-copy record) ==> record
-; (record-type-matches? signature record) ==> boolean
-; (assert-record-type signature record) ==> record
+; (record pair ...)                   ==>  record
+; (record? object)                    ==>  boolean
+; (record-ref record symbol)          ==>  object
+; (record-set! record symbol object)  ==>  unspecific
+; (list->record alist)                ==>  record
+; (record->list record)               ==>  alist
+; (record-equal? record1 record2)     ==>  boolean
+; (record-copy record)                ==>  record
+; (record-signature record)           ==>  list
+; (record-type-matches? list record)  ==>  boolean
+; (assert-record-type list record)    ==>  record
 ;
-; Implement ML-style records.
-; This program provides procedures for creating, extracting,
-; converting, mutating, comparing, and type-checking record
-; structures.
+; The procedures implement ML-style records.
 ;
-; Arguments: r   - record
-;            a,b - list
-;            x   - any type
+; RECORD creates a new record from the given (TAG . OBJECT) PAIRs,
+; where TAG is a symbol naming the record field and OBJECT is the
+; value stord in that field. Each TAG must be unique.
+;
+; RECORD? returns #T, if the given OBJECT is a record.
+;
+; RECORD-REF extracts the value of the field tagged SYMBOL
+; from RECORD.
+;
+; RECORD-SET! sets the SYMBOL field of RECORD to OBJECT. If OBJECT
+; and the value of the SYMBOL have different types, an error is
+; reported.
+;
+; LIST->RECORD creates a RECORD from the association list ALIST.
+; (LIST->RECORD (LIST P ...)) is equal to (RECORD P ...).
+;
+; RECORD->LIST returns an association list containing the same
+; fields as the given RECORD. Tags of the fields become keys of
+; the alist.
+;
+; RECORD-EQUAL? returns true, if RECORD1 and RECORD2 contain
+; the same fields and corresponding fields contain equal values
+; in the sense of EQUAL.
+;
+; RECORD-COPY creates a fresh copy of RECORD.
+;
+; RECORD-SIGNATURE creates a "type signature" of RECORD.
+;
+; RECORD-TYPE-MATCHES? returns #T, if LIST is the type signature
+; or RECORD.
+;
+; ASSERT-RECORD-TYPE returns RECORD, if LIST is the type signature
+; of RECORD. Otherwise, it reports an error.
 ;
 ; Example:   (record-ref (record (list 'name "Foo") (list 'value 31415))
 ;                        'name)
 ;              ==> "Foo"
 ;            (equal? (record (list 'name "Foo") (list 'value 31415))
 ;                    (record (list 'value 31415) (list 'name "Foo")))
-;                ==> #t
+;              ==> #t
 
 (define record-tag (list '%record))
 
-; The Idea of using vectors to introduce a new disjoint type
+; The idea of using vectors to introduce a new disjoint type
 ; is taken from SRFI-9 by Richard Kelsey.
 
 (define real-vector? vector?)

@@ -1,4 +1,4 @@
-R4RS 6.3 (length list) ==> integer
+R4RS 6.3  (length list)  ==>  integer
 
 Returns the length of list.
 

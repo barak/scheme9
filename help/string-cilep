@@ -1,11 +1,11 @@
-R4RS 6.7 (string<? string1 string2) ==> boolean
-         (string>? string1 string2) ==> boolean
-         (string<=? string1 string2) ==> boolean
-         (string>=? string1 string2) ==> boolean
-         (string-ci<? string1 string2) ==> boolean
-         (string-ci>? string1 string2) ==> boolean
-         (string-ci<=? string1 string2) ==> boolean
-         (string-ci>=? string1 string2) ==> boolean
+R4RS 6.7  (string<? string1 string2)      ==>  boolean
+          (string>? string1 string2)      ==>  boolean
+          (string<=? string1 string2)     ==>  boolean
+          (string>=? string1 string2)     ==>  boolean
+          (string-ci<? string1 string2)   ==>  boolean
+          (string-ci>? string1 string2)   ==>  boolean
+          (string-ci<=? string1 string2)  ==>  boolean
+          (string-ci>=? string1 string2)  ==>  boolean
 
 These procedures are the lexicographic extensions to strings of
 the corresponding orderings on characters. For example, STRING<?

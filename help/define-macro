@@ -1,15 +1,17 @@
-S9fES (define-macro <symbol1> <lambda-expression>) ==> unspecific
-      (define-macro (<symbol1> <symbol2> ...) <body>) ==> unspecific
+S9fES  (define-macro <symbol1> <procedure>)                   ==>  unspecific
+       (define-macro (<symbol1> <symbol2> ...) <expression>)  ==>  unspecific
 
-DEFINE-MACRO binds a procedure resulting from the evaluation of a
-lambda expression to a symbol. Like DEFINE it has two forms. The
-first form binds <symbol1> to the procedure in its second argument.
-The second form binds <symbol1> to (lambda (<symbol2> ...) <body>).
+DEFINE-MACRO binds a procedure to a symbol. Like DEFINE it has two
+forms. The first form binds <symbol1> to the procedure in its second
+argument. The second form binds <symbol1> to
+
+(lambda (<symbol2> ...) <expression>).
+
 The procedures bound by DEFINE-MACRO may be variadic.
 
-Procedures bound by DEFINE-MACRO are commonly called `macros'. They
+Procedures bound by DEFINE-MACRO are commonly called "macros". They
 receive their arguments in textual (unevaluated) form and they are
-called at `read time'. When an expression containing a macro application
+called at "read time." When an expression containing a macro application
 is being read, the macro is applied to its arguments before the
 containing expression is evaluated. The application of the macro is
 replaced by the value returned by the macro.
@@ -22,35 +24,12 @@ replaced by the value returned by the macro.
       (display "true")
       #t)               ==>  #t
 
-(define-macro (case key . clauses)
-  (letrec
-    ((nest-if
-       (lambda (key clauses)
-         (cond ((null? clauses) '())
-               ((null? (cdr clauses))
-                 (if (eq? 'else (caar clauses))
-                     `((else ,(cadar clauses)))
-                     `(((memv ,key ',(caar clauses))
-                          ,@(cdar clauses)))))
-               (else
-                 `(((memv ,key ',(caar clauses))
-                      ,@(cdar clauses))
-                  ,@(nest-if key (cdr clauses))))))))
-    (let ((internal-key (gensym)))
-      `(let ((,internal-key ,key))
-         (cond ,@(nest-if internal-key clauses))))))
-
-(case 5
-  ((1 3 5 7 9) 'odd)
-  ((0 2 4 6 8) 'even)
-  (else        'not-a-digit))  ==>  odd
-
 Macros may not recurse directly, but they may implement recursion
 internally using LETREC or by rewriting their own applications. The
 following macro, for example, does not work, because D is undefined
 in the body of D:
 
-(define-macro (d x) (and (pair? x) (d (cdr x)))) ; wrong
+(define-macro (d x) (and (pair? x) (d (cdr x)))) ; WRONG!
 
 The following version does work, though, because the macro gets
 rewritten to another application of itself, which is subsequently

@@ -2,19 +2,16 @@
 ; By Nils M Holm, 2009
 ; See the LICENSE file of the S9fES package for terms of use
 ;
-; (replace form_1 form_2 pair) ==> pair
+; (replace object-old object-new pair)  ==>  pair
 ;
-; Replace elements of a pair.
+; Replace elements of a pair. OBJECT-OLD is the object to be
+; replaced and OBJECT-NEW is the new object.
 ;
-; Arguments: old  - element to replace
-;            new  - element to insert in the place of OLD
-;            form - pair in which elements will be replaced
-;
-; Example:   (replace '(x) '(y) '(lambda (x) y)) ==> (lambda (y) y)
+; Example:   (replace '(x) '(y) '(lambda (x) y))  ==>  (lambda (y) y)
 
-(define (replace old new form)
-  (cond ((equal? form old) new)
-        ((pair? form)
-          (cons (replace old new (car form))
-                (replace old new (cdr form))))
-        (else form)))
+(define (replace old new obj)
+  (cond ((equal? obj old) new)
+        ((pair? obj)
+          (cons (replace old new (car obj))
+                (replace old new (cdr obj))))
+        (else obj)))

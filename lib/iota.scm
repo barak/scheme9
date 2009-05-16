@@ -2,14 +2,12 @@
 ; By Nils M Holm, 2009
 ; See the LICENSE file of the S9fES package for terms of use
 ;
-; (iota integer_1 integer_2) ==> list
+; (iota integer1 integer2)  ==>  list
 ;
-; Create ranges of integers.
+; Create a range of integers starting at INTEGER1 and ending at
+; INTEGER2 (including both). Assume INTEGER1 <= INTEGER2.
 ;
-; Arguments: l - least integer in range
-;            h - greatest integer in range
-;
-; Example:   (iota 17 21) ==> (17 18 19 20 21)
+; Example:   (iota 17 21)  ==>  (17 18 19 20 21)
 
 (define (iota l h)
   (letrec

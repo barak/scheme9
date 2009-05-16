@@ -2,18 +2,17 @@
 ; By Nils M Holm, 2009
 ; See the LICENSE file of the S9fES package for terms of use
 ;
-; (print-code string . show-matches) ==> unspecific
+; (print-code string)     ==>  unspecific
+; (print-code string #t)  ==>  unspecific
 ;
-; Render Scheme code contained in a file in HTML with syntax
-; highlighting and optional CSS paren matching.
+; Render Scheme code contained in the file STRING in HTML with
+; syntax highlighting and optional CSS paren matching.
+;
 ; The CSS2 style sheet "scheme.css" contains the default style for
 ; syntax and expression highlighting. NOTE: This program handles
-; only a subset of R5RS Scheme correctly. Caveat utilitor.
+; only a subset of R4RS Scheme correctly. Caveat utilitor.
 ;
-; Arguments: file         - program file to render
-;            show-matches - when given and not #F, do CSS paren matching
-;
-; (Example): (print-code "print-code.scm") ==> unspecific
+; (Example): (print-code "print-code.scm")  ==>  unspecific
 
 (define (print-code file . show-matches)
 

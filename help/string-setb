@@ -1,7 +1,8 @@
-R4RS 6.7 (string-set! string k char) ==> unspecific
+R4RS 6.7  (string-set! string integer char)  ==>  unspecific
 
-K must be a valid index of STRING. STRING-SET! stores CHAR in
-element K of STRING and returns an unspecified value.
+INTEGER must be a valid index of STRING. STRING-SET! stores CHAR
+in the element at the INTEGER'th position of STRING and returns an
+unspecified value.
 
 (define (f) (make-string 3 #\*))
 (define (g) "***")

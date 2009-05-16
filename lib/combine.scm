@@ -2,19 +2,16 @@
 ; By Nils M Holm, 2009
 ; See the LICENSE file of the S9fES package for terms of use
 ;
-; (combine integer list) ==> list
-; (combine* integer list) ==> list
+; (combine integer list)   ==>  list
+; (combine* integer list)  ==>  list
 ;
-; Create combinations of sets.
-; COMBINE creates combinations without repetition,
-; and COMBINE* creates combinations with repetition.
-; The result is a list of sets (lists).
+; Create k-combinations of the elements of the given list. K (the
+; size of the combinations) is specified in the integer argument.
+; COMBINE creates combinations without repetition, and COMBINE*
+; creates combinations with repetition.
 ;
-; Arguments: n   - size of sets to create
-;            set - source set
-;
-; Example:   (combine 2 '(a b c)) ==> ((a b) (a c) (b c))
-;            (combine* 2 '(a b c)) ==> ((a a) (a b) (a c) (b b) (b c) (c c))
+; Example:   (combine 2 '(a b c))   ==>  ((a b) (a c) (b c))
+;            (combine* 2 '(a b c))  ==>  ((a a) (a b) (a c) (b b) (b c) (c c))
 
 (define (combine3 n set rest)
   (letrec

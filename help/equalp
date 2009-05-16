@@ -1,4 +1,4 @@
-R4RS 6.2 (equal? obj1 obj2) ==> boolean
+R4RS 6.2  (equal? object1 object2)  ==>  boolean
 
 EQUAL? recursively compares the contents of pairs, vectors, and
 strings, applying eqv? on other objects such as numbers and symbols.

@@ -1,4 +1,4 @@
-R4RS 6.4 (symbol->string symbol) ==> string
+R4RS 6.4  (symbol->string symbol)  ==>  string
 
 Returns the name of SYMBOL as a string. If the symbol was part of
 an object returned as the value of a literal expression (section

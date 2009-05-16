@@ -1,4 +1,4 @@
-R4RS 6.5.5 (abs x) ==> integer
+R4RS 6.5.5  (abs integer)  ==>  integer
 
 ABS returns the magnitude of its argument.
 

@@ -1,5 +1,5 @@
-R4RS 6.5.5 (gcd n1 ...) ==> integer
-           (lcm n1 ...) ==> integer
+R4RS 6.5.5  (gcd integer1 ...)  ==>  integer
+            (lcm integer1 ...)  ==>  integer
 
 These procedures return the greatest common divisor or least common
 multiple of their arguments. The result is always non-negative.

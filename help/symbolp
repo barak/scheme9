@@ -1,6 +1,6 @@
-R4RS 6.4 (symbol? obj) ==> boolean
+R4RS 6.4  (symbol? object)  ==>  boolean
 
-Returns #t if OBJ is a symbol, otherwise returns #f.
+Returns #T if OBJECT is a symbol, otherwise returns #F.
 
 (symbol? 'foo)          ==>  #t
 (symbol? (car '(a b)))  ==>  #t

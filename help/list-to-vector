@@ -1,5 +1,5 @@
-R4RS 6.8 (vector->list vector) ==> list
-         (list->vector list) ==> vector
+R4RS 6.8  (vector->list vector)  ==>  list
+          (list->vector list)    ==>  vector
 
 VECTOR->LIST returns a newly allocated list of the objects
 contained in the elements of VECTOR. LIST->VECTOR returns a

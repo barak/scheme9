@@ -2,18 +2,17 @@
 ; By Nils M Holm, 2009
 ; See the LICENSE file of the S9fES package for terms of use
 ;
-; (run* (symbol) query) ==> list
+; (run* (variable) query)  ==>  list
+; (run* () query)          ==>  list
 ;
-; Another Mirco Kanren -- embed logic programming into Scheme.
-; Run the given AMK query and return its result, if any.
-; See the book http://www.lulu.com/content/659829 for an
-; introduction to AMK.
-;
-; Arguments: symbol - variable binding the result (optional)
-;            query  - AMK program
+; Run the given AMK (Another Micro Kanren) query and return its
+; result, if any. See the book "Logic Programming in Scheme"
+; (http://www.t3x.org/nmh/book-pdfs/) for an introduction to AMK.
+; If a variable is given, return all values for that variable
+; that satisfy the query.
 ;
 ; Example:   (run* (vq) (appendo vq (_) '(a b c)))
-;              ==> (() (a) (a b) (a b c))
+;              ==>  (() (a) (a b) (a b c))
 
 ; ----- Core -----
 
@@ -236,4 +235,3 @@
               (== l r)))))
 
 (define (reverseo l r) (rmemqo r l))
-

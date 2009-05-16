@@ -2,19 +2,25 @@
 ; By Nils M Holm, 2009
 ; See the LICENSE file of the S9fES package for terms of use
 ;
-; (make-hash-table)      ==> hash-table
-; (make-hash-table size) ==> hash-table
+; (make-hash-table)                               ==>  hash-table
+; (make-hash-table integer)                       ==>  hash-table
+; (hash-table-ref hash-table object)              ==>  value | #f
+; (hash-table-set! hash-table object-k object-v)  ==>  unspecific
+; (hash-table->list hash-table)                   ==>  list
 ;
-; (hash-table-ref hash-table key)        ==> value | #f
-; (hash-table-set! hash-table key value) ==> unspecific
-; (hash-table->list hash-table)          ==> list
+; MAKE-HASH-TABLE creates a fresh hash table. When a size is
+; passed to it, the given number of slots will be created in
+; the table, otherwise a built-in default is used.
 ;
-; Explode a symbol into a list of single-character symbols.
+; HASH-TABLE-REF retrieves a (KEY . VALUE) pair from the hash
+; table using the given OBJECT as a key. When no pair with the
+; given key exists, it returns #F.
 ;
-; Arguments: size - size of hash table, must be prime
-;            h    - hash table
-;            k    - key, may be any Scheme object
-;            v    - value
+; HASH-TABLE-SET! stores the value OBJECT-V under the key
+; OBJECT-K in the given hash-table.
+;
+; HASH-TABLE->LIST returns a list containing all pairs of
+; the given hash table in no specific order.
 ;
 ; Example:   (let ((h (make-hash-table 11)))
 ;              (hash-table-set! h "key" 'value)

@@ -2,27 +2,24 @@
 ; By Nils M Holm, 2009
 ; See the LICENSE file of the S9fES package for terms of use
 ;
-; (read-from-string string) ==> form
+; (read-from-string string)  ==>  object
 ;
-; Read a datum from a string.
-; READ-FROM-STRING is like READ but it takes its input from
-; a string instead of a port. It returns a pair containing the
-; expression read in case of success. If there are any trailing
-; characters after the extracted datum, the trailing string is
-; placed in the cdr part of the returned pair. If the trailing
-; string is empty, the cdr part is set to (). When an empty
-; string or a string consisting of a comment exclusively is
-; passed to READ-FROM-STRING, it returns (). In case of an
-; error, a string explaining the cause of the error is returned.
-;
-; Arguments: s - string to read
+; Read a datum from a string. READ-FROM-STRING is like READ but it
+; takes its input from a string instead of a port. It returns a pair
+; containing the datum read in case of success. If there are any
+; trailing characters after the extracted datum, the trailing string
+; is placed in the cdr part of the returned pair. If the trailing
+; string is empty, the cdr part is set to (). When an empty string
+; or a string consisting of a comment exclusively is passed to
+; READ-FROM-STRING, it returns (). In case of an error, a string
+; explaining the cause of the error is returned.
 ;
 ; Example:   (read-from-string "  (this \"is\" #(a) (list)) ; comment")
-;              ==> ((this "is" #(a) (list)))
-;            (read-from-string "  (this \"is\" #(a) (list))  comment")
-;              ==> ((this "is" #(a) (list)) . "  comment")
+;              ==>  ((this "is" #(a) (list)))
+;            (read-from-string "  (this \"is\" #(a) (list))  more text")
+;              ==>  ((this "is" #(a) (list)) . "  more text")
 ;            (read-from-string ")")
-;              ==> "unexpected closing parenthesis"
+;              ==>  "unexpected closing parenthesis"
 
 (define (read-from-string s)
 
@@ -182,7 +179,7 @@
       (cond ((pair? x)
               (cons (list q (car x)) (cdr x)))
             ((null? x)
-              (string-append "form expected after "
+              (string-append "object expected after "
                              (symbol->string q)))
             (else x))))
 

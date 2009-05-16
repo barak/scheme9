@@ -1,4 +1,4 @@
-S9fES (expand-macro list) ==> list
+S9fES  (expand-macro list)  ==>  list
 
 If LIST represents an expression that applies a macro, return the
 expanded form of the macro application, else return LIST unaltered.
@@ -20,6 +20,6 @@ expanded form of the macro application, else return LIST unaltered.
               (if (< x 10)
                   (begin (display "hi")
                          (newline)
-                         (set! x (+ 1 x))
+                         (set!  1 x))
                          (loop))))))
         #f))

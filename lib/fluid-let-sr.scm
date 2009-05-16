@@ -2,10 +2,10 @@
 ; By Nils M Holm, 2009
 ; See the LICENSE file of the S9fES package for terms of use
 ;
-; (fluid-let ((variable expression) ...) body) ==> form
+; (fluid-let ((variable expression) ...) expression ...)  ==>  object
 ;
 ; Bind variables dynamically, i.e. assign a dynamic (rather than
-; a lexical/static value to each given variable. The variables
+; a lexical/static) value to each given variable. The variables
 ; must be defined outside of FLUID-LET. The difference between
 ; LET and FLUID-LET is as follows:
 ;
@@ -14,15 +14,12 @@
 ;     (let ((a 1))                   (fluid-let ((a 1))
 ;       (f))))         ==> 0           (f))))         ==> 1
 ;
-; Arguments: bind* - list of dynamic bindings
-;            body  - scope of the bindings
-;
 ; Example:   (let ((a 0))
 ;              (let ((f (lambda () a)))
 ;                (fluid-let ((a 1))
 ;                  (f))))                ==>  1
 
-; This implementation is inefficient, use FLUID-LET.SCM instead.
+; This implementation is inefficient, use "fluid-let.scm" instead.
 
 (define-syntax fluid-let
   (syntax-rules ()
