@@ -2,13 +2,11 @@
 ; By Nils M Holm, 2009
 ; See the LICENSE file of the S9fES package for terms of use
 ;
-; (explode symbol) ==> list
+; (explode symbol)  ==>  list
 ;
 ; Explode a symbol into a list of single-character symbols.
 ;
-; Arguments: x - symbol to explode
-;
-; Example:   (explode 'supernova) ==> (s u p e r n o v a)
+; Example:   (explode 'supernova)  ==>  (s u p e r n o v a)
 
 (define (explode x)
   (map (lambda (x)

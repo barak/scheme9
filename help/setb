@@ -1,4 +1,4 @@
-R4RS 4.1.6 (set! <variable> <expression>) ==> unspecific
+R4RS 4.1.6  (set! <variable> <expression>)  ==>  unspecific
 
 <Expression> is evaluated, and the resulting value is stored in the
 location to which <variable> is bound. <Variable> must be bound

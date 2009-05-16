@@ -1,7 +1,7 @@
-R4RS 6.3 (set-cdr! pair obj) ==> unspecific
+R4RS 6.3  (set-cdr! pair object)  ==>  unspecific
 
-Stores OBJ in the cdr field of PAIR. The value returned by SET-CDR!
-is unspecified.
+Stores OBJECT in the cdr field of PAIR. The value returned by
+SET-CDR! is unspecified.
 
 (define (f) (list 'not-a-constant-list))
 (define (g) '(constant-list))

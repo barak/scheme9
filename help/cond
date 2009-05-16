@@ -1,4 +1,4 @@
-R4RS 4.2.1 (cond <clause1> <clause2> ...) ==> obj
+R4RS 4.2.1  (cond <clause1> <clause2> ...)  ==>  object
 
 Syntax: Each <clause> should be of the form
 

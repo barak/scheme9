@@ -2,22 +2,22 @@
 ; By Nils M Holm, 2009
 ; See the LICENSE file of the S9fES package for terms of use
 ;
-; (module symbol definition_1 ...) ==> unspecific
-; (import symbol (symbol_1 ...) expr_1 ...) ==> form
+; (module symbol definition ...)                 ==>  unspecific
+; (import symbol (symbol-i ...) expression ...)  ==>  object
 ;
-; Simple modules.
+; Simple modules. Inside of a MODULE expression, DEFINE defines
+; a local object and DEFINE* defines a public object. SYMBOL names
+; the module itself.
 ;
-; Arguments: DEFINE (local) or DEFINE* (public) forms in MODULE
-;            symbol - name of the module
-;            body   - expressions using imported definitions
+; Expressions inside of IMPORT may use all SYMBOL-I's that are
+; being imported from the module SYMBOL.
 ;
 ; Example:   (begin ; Note: BEGIN is only needed for automatic testing
 ;              (module math
 ;                (define* (fact x)
 ;                  (if (= 0 x) 1 (* x (fact (- x 1))))))
 ;              (import math (fact)
-;                (fact 5)))
-;            ==> 120
+;                (fact 5)))                               ==> 120
 
 (define-syntax module
   (syntax-rules (define define*)

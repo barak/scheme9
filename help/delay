@@ -1,11 +1,11 @@
-R4RS 6.9 (force promise) ==> obj
-         (delay expr) ==> promise
+R4RS 6.9  (force promise)     ==>  object
+          (delay expression)  ==>  promise
 
-Forces the value of PROMISE (see DELAY, section see section 4.2.5
-Delayed evaluation). If no value has been computed for the promise,
-then a value is computed and returned. The value of the promise is
-cached (or "memoized") so that if it is forced a second time, the
-previously computed value is returned.
+FORCE forces the value of PROMISE (see DELAY, section see section
+4.2.5 Delayed evaluation). If no value has been computed for the
+promise, then a value is computed and returned. The value of the
+promise is cached (or "memoized") so that if it is forced a second
+time, the previously computed value is returned.
 
 (force (delay (+ 1 2)))        ==>  3
 (let ((p (delay (+ 1 2))))
@@ -28,9 +28,9 @@ is forced.
 (define count 0)
 (define p
   (delay (begin (set! count (+ count 1))
-  (if (> count x)
-      count
-      (force p)))))
+                (if (> count x)
+                    count
+                    (force p)))))
 (define x 5)
 p                    ==>  a promise
 (force p)            ==>  6
@@ -81,8 +81,8 @@ in some implementations:
   return the object.
 - It may be the case that there is no means by which a promise
   can be operationally distinguished from its forced value. That
-  is, expressions like the following may evaluate to either #t or
-  to #f, depending on the implementation:
+  is, expressions like the following may evaluate to either #T or
+  to #F, depending on the implementation:
 
   (eqv? (delay 1) 1)          ==>  unspecified
   (pair? (delay (cons 1 2)))  ==>  unspecified
@@ -92,3 +92,5 @@ in some implementations:
   cdr and +:
 
   (+ (delay (* 3 7)) 13)  ==>  34
+
+S9fES does not implement implicit forcing.

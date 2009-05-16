@@ -2,13 +2,11 @@
 ; By Nils M Holm, 2009
 ; See the LICENSE file of the S9fES package for terms of use
 ;
-; (intersection . list) ==> list
+; (intersection list ...)  ==>  list
 ;
 ; Compute the intersection of a number of sets.
 ;
-; Arguments: a* := sets
-;
-; Example:   (intersection '(v w x) '(w x y) '(x y z)) ==> (x)
+; Example:   (intersection '(v w x) '(w x y) '(x y z))  ==>  (x)
 
 (define (intersection . a*)
   (letrec

@@ -1,6 +1,6 @@
-R4RS 6.5.5 (- n1 n2 ...) ==> integer
+R4RS 6.5.5  (- integer1 ...)  ==>  integer
 
-With two or more arguments, this procedure returns the difference
+With two or more arguments, this procedure returns the difference of
 its arguments, associating to the left. With one argument, however,
 it returns the additive inverse of its argument.
 

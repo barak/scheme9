@@ -1,10 +1,10 @@
-R4RS 6.5.5 (= z1 z2 z3 ...) ==> boolean
-           (< x1 x2 x3 ...) ==> boolean
-           (> x1 x2 x3 ...) ==> boolean
-           (<= x1 x2 x3 ...) ==> boolean
-           (>= x1 x2 x3 ...) ==> boolean
+R4RS 6.5.5  (= integer1 integer2 ...)   ==>  boolean
+            (< integer1 integer2 ...)   ==>  boolean
+            (> integer1 integer2 ...)   ==>  boolean
+            (<= integer1 integer2 ...)  ==>  boolean
+            (>= integer1 integer2 ...)  ==>  boolean
 
-These procedures return #t if their arguments are (respectively):
+These procedures return #T if their arguments are (respectively):
 equal, monotonically increasing, monotonically decreasing, monotonically
 nondecreasing, or monotonically nonincreasing.
 

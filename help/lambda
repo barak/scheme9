@@ -1,4 +1,4 @@
-R4RS 4.1.4 (lambda <formals> <body>) ==> procedure
+R4RS 4.1.4  (lambda <formals> <body>)  ==>  procedure
 
 Syntax: <Formals> should be a formal arguments list as described
 below, and <body> should be a sequence of one or more expressions.

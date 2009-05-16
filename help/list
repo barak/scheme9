@@ -1,4 +1,4 @@
-R4RS 6.3 (list obj ...) ==> list
+R4RS 6.3  (list object ...)  ==>  list
 
 Returns a newly allocated list of its arguments.
 

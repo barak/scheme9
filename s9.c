@@ -8,7 +8,7 @@
  * Use -DBITS_PER_WORD_64 on 64-bit systems.
  */
 
-#define VERSION "2009-05-14"
+#define VERSION "2009-05-16"
 
 #define EXTERN
 #include "s9.h"
@@ -1909,6 +1909,7 @@ cell bignum_multiply(cell a, cell b) {
 	result = make_integer(0);
 	save(result);
 	while (!bignum_zero_p(a)) {
+		if (Error_flag) break;
 		r = bignum_shift_right(a);
 		i = caddr(r);
 		a = car(r);
@@ -1982,11 +1983,13 @@ cell _bignum_divide(cell a, cell b) {
 	result = make_integer(0);
 	save(result);	/* car */
 	while (!bignum_zero_p(f)) {
+		if (Error_flag) break;
 		c = make_integer(0);
 		cadddr(Stack) = c;
 		caddr(Stack) = c0 = c;
 		i = 0;
 		while (!bignum_less_p(a, c)) {
+			if (Error_flag) break;
 			caddr(Stack) = c0 = c;
 			c = bignum_add(c, b);
 			cadddr(Stack) = c;
@@ -2868,6 +2871,7 @@ cell pp_symbol_to_string(cell x) {
 	 * symbol_name(cadr(x)) may move during GC.
 	 */
 	n = make_string("", symbol_len(cadr(x))-1);
+	Tag[n] |= CONST_TAG;
 	strcpy(string(n), symbol_name(cadr(x)));
 	return n;
 }

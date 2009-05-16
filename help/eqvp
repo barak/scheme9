@@ -1,48 +1,51 @@
-R4RS 6.2 (eqv? obj1 obj2) ==> boolean
+R4RS 6.2  (eqv? object1 object2)  ==>  boolean
 
 The EQV? procedure defines a useful equivalence relation on objects.
-Briefly, it returns #t if OBJ1 and OBJ2 should normally be regarded
-as the same object. This relation is left slightly open to
-interpretation, but the following partial specification of EQV?
+Briefly, it returns #T if OBJECT1 and OBJECT2 should normally be
+regarded as the same object. This relation is left slightly open
+to interpretation, but the following partial specification of EQV?
 holds for all implementations of Scheme.
 
-The EQV? procedure returns #t if:
+The EQV? procedure returns #T if:
 
-- OBJ1 and OBJ2 are both #t or both #f.
-- OBJ1 and OBJ2 are both symbols and
-  (string=? (symbol->string OBJ1) (symbol->string OBJ2))  ==>  #t
+- OBJECT1 and OBJECT2 are both #T or both #F.
+- OBJECT1 and OBJECT2 are both symbols and
+  (string=? (symbol->string OBJECT1)
+            (symbol->string OBJECT2))  ==>  #t
 
-Note: This assumes that neither OBJ1 nor OBJ2 is an "uninterned
+Note: This assumes that neither OBJECT1 nor OBJECT2 is an "uninterned
 symbol" as alluded to in section 6.4 Symbols. This report does not
 presume to specify the behavior of EQV? on implementation-dependent
 extensions.
 
-- OBJ1 and OBJ2 are both numbers, are numerically equal (see =,
-  section see section 6.5 Numbers).
-- OBJ1 and OBJ2 are both characters and are the same character
-  according to the char=? procedure (section see section 6.6
-  Characters).
-- both OBJ1 and OBJ2 are the empty list.
-- OBJ1 and OBJ2 are pairs, vectors, or strings that denote the
-  same locations in the store (section see section 3.5 Storage
+- OBJECT1 and OBJECT2 are both numbers, are numerically equal
+  (see =, section see section 6.5 Numbers).
+- OBJECT1 and OBJECT2 are both characters and are the same
+  character according to the char=? procedure (section see
+  section 6.6 Characters).
+- both OBJECT1 and OBJECT2 are the empty list.
+- OBJECT1 and OBJECT2 are pairs, vectors, or strings that denote
+  the same locations in the store (section see section 3.5 Storage
   model).
-- OBJ1 and OBJ2 are procedures whose location tags are equal
-  (section see section 4.1.4 lambda expressions).
+- OBJECT1 and OBJECT2 are procedures whose location tags are
+  equal (section see section 4.1.4 lambda expressions).
 
-The EQV? procedure returns #f if:
+The EQV? procedure returns #F if:
 
-- OBJ1 and OBJ2 are of different types (section see section
+- OBJECT1 and OBJECT2 are of different types (section see section
   3.4 Disjointness of types).
-- one of OBJ1 and OBJ2 is #t but the other is #f.
-- OBJ1 and OBJ2 are symbols but
-  (string=? (symbol->string OBJ1) (symbol->string OBJ2))  ==>  #f
-- OBJ1 and OBJ2 are numbers for which the = procedure returns #f.
-- OBJ1 and OBJ2 are characters for which the char=? procedure
-  returns #f.
-- one of OBJ1 and OBJ2 is the empty list but the other is not.
-- OBJ1 and OBJ2 are pairs, vectors, or strings that denote
+- one of OBJECT1 and OBJECT2 is #T but the other is #F.
+- OBJECT1 and OBJECT2 are symbols but
+  (string=? (symbol->string OBJECT1)
+            (symbol->string OBJECT2))  ==>  #f
+- OBJECT1 and OBJECT2 are numbers for which the = procedure
+  returns #F.
+- OBJECT1 and OBJECT2 are characters for which the char=? procedure
+  returns #F.
+- one of OBJECT1 and OBJECT2 is the empty list but the other is not.
+- OBJECT1 and OBJECT2 are pairs, vectors, or strings that denote
   distinct locations.
-- OBJ1 and OBJ2 are procedures that would behave differently
+- OBJECT1 and OBJECT2 are procedures that would behave differently
   (return a different value or have different side effects)
   for some arguments.
 

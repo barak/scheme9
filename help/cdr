@@ -1,4 +1,4 @@
-R4RS 6.3 (cdr pair) ==> obj
+R4RS 6.3  (cdr pair)  ==>  object
 
 Returns the contents of the cdr field of PAIR. Note that it is an
 error to take the cdr of the empty list.

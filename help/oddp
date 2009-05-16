@@ -1,8 +1,8 @@
-R4RS 6.5.5 (zero? z) ==> boolean
-           (positive? x) ==> boolean
-           (negative? x) ==> boolean
-           (odd? n) ==> boolean
-           (even? n) ==> boolean
+R4RS 6.5.5  (zero? integer)      ==>  boolean
+            (positive? integer)  ==>  boolean
+            (negative? integer)  ==>  boolean
+            (odd? integer)       ==>  boolean
+            (even? integer)      ==>  boolean
 
 These numerical predicates test a number for a particular property,
-returning #t or #f.
+returning #T or #F.

@@ -1,6 +1,6 @@
-R4RS 6.3 (list? obj) ==> boolean
+R4RS 6.3  (list? object)  ==>  boolean
 
-Returns #t if OBJ is a list, otherwise returns #f. By definition,
+Returns #T if OBJECT is a list, otherwise returns #F. By definition,
 all lists have finite length and are terminated by the empty list.
 
 (list? '(a b c))      ==>  #t

@@ -1,4 +1,4 @@
-R4RS 6.2 (eq? obj1 obj2) ==> boolean
+R4RS 6.2  (eq? object1 object2)  ==>  boolean
 
 EQ? is similar to EQV? except that in some cases it is capable of
 discerning distinctions finer than those detectable by EQV?.

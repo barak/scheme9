@@ -1,12 +1,12 @@
-R4RS 6.10.3 (display obj) ==> unspecific
-            (display obj input-port) ==> unspecific
+R4RS 6.10.3  (display object)              ==>  unspecific
+             (display object output-port)  ==>  unspecific
 
-Writes a representation of obj to the given input port. Strings
+Writes a representation of OBJECT to the given OUTPUT-PORT. Strings
 that appear in the written representation are not enclosed in
 doublequotes, and no characters are escaped within those strings.
 Character objects appear in the representation as if written by
 write-char instead of by write. DISPLAY returns an unspecified
-value. The INPUT-PORT argument may be omitted, in which case it
+value. The OUTPUT-PORT argument may be omitted, in which case it
 defaults to the value returned by CURRENT-OUTPUT-PORT.
 
 Rationale: WRITE is intended for producing machine-readable output

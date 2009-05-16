@@ -2,13 +2,11 @@
 ; By Nils M Holm, 2009
 ; See the LICENSE file of the S9fES package for terms of use
 ;
-; (implode list) ==> symbol
+; (implode list)  ==>  symbol
 ;
 ; Implode a list of single-character symbols into a symbol.
 ;
-; Arguments: list - list to implode
-;
-; Example:   (implode '(b l a c k h o l e)) ==> blackhole
+; Example:   (implode '(b l a c k h o l e))  ==>  blackhole
 
 (define (implode x)
   (letrec

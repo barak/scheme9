@@ -1,8 +1,8 @@
-R4RS 6.5.5 (number? obj) ==> boolean
+R4RS 6.5.5  (number? object)  ==>  boolean
 
 The numerical type predicate can be applied to any kind of argument,
-including non-numbers. It return #t if the object is a number, and
-otherwise it returns #f.
+including non-numbers. It return #T if the object is a number, and
+otherwise it returns #F.
 
 (number? 42)   ==>  #t
 (number? -1)   ==>  #t

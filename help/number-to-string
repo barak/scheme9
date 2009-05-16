@@ -1,7 +1,7 @@
-R4RS 6.5.6 (number->string number) ==> string
-           (number->string number radix) ==> string
+R4RS 6.5.6  (number->string integer)            ==>  string
+            (number->string integer1 integer2)  ==>  string
 
-RADIX must be an integer, either 2, 8, 10, or 16. If omitted, RADIX
+INTEGER2 must be a radix of either 2, 8, 10, or 16. If omitted, it
 defaults to 10. The procedure NUMBER->STRING takes a number and a
 radix and returns as a string an external representation of the
 given number in the given radix such that

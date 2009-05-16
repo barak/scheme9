@@ -1,8 +1,8 @@
-R4RS 6.3 (cons obj1 obj2) ==> pair
+R4RS 6.3  (cons object1 object2)  ==>  pair
 
-Returns a newly allocated pair whose car is OBJ1 and whose cdr is
-OBJ2. The pair is guaranteed to be different (in the sense of EQV?)
-from every existing object.
+Returns a newly allocated pair whose car is OBJECT1 and whose cdr
+is OBJECT2. The pair is guaranteed to be different (in the sense
+of EQV?) from every existing object.
 
 (cons 'a '())         ==>  (a)
 (cons '(a) '(b c d))  ==>  ((a) b c d)

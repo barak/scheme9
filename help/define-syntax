@@ -1,7 +1,7 @@
-R4RS Appendix (define-syntax <keyword> <transformer spec>) ==> unspecific
+R4RS Appendix  (define-syntax <keyword> <transformer>)  ==>  unspecific
 
-Syntax: The <keyword> is an identifier, and the <transformer spec>
-should be an instance of SYNTAX-RULES.
+Syntax: The <keyword> is an identifier, and <transformer> should be
+an instance of SYNTAX-RULES.
 
 Semantics: The top-level syntactic environment is extended by binding
 the <keyword> to the specified transformer.

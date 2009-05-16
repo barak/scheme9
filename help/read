@@ -1,5 +1,5 @@
-R4RS 6.10.2 (read) ==> obj
-            (read input-port) ==> obj
+R4RS 6.10.2  (read)             ==>  object
+             (read input-port)  ==>  object
 
 READ converts external representations of Scheme objects into the
 objects themselves. That is, it is a parser for the nonterminal

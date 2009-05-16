@@ -1,7 +1,7 @@
-R4RS 4.2.4 (do ((<variable1> <init1> <step1>)
-                ...)
-               (<test> <expression> ...)
-               <command> ...) ==> obj
+R4RS 4.2.4  (do ((<variable1> <init1> <step1>)
+                 ...)
+                (<test> <expression> ...)
+                <command> ...)                  ==> object
 
 DO is an iteration construct. It specifies a set of variables to
 be bound, how they are to be initialized at the start, and how they

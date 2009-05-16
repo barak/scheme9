@@ -2,15 +2,19 @@
 ; By Nils M Holm, 2009
 ; See the LICENSE file of the S9fES package for terms of use
 ;
-; (re-comp string) ==> list
-; (re-match list string) ==> string | #f
+; (re-comp string)        ==>  list
+; (re-match list string)  ==>  string | #f
 ;
 ; Compile and match regular expressions.
-; RE-COMP compiles a regular expression (RE) and returns
-; it. Compiled REs are represented by lists. RE-MATCH
-; matches a compiled RE against a string. When (part of)
-; the string matches the RE, it returns the matching part.
-; When the strings ; does not match, it returns #F.
+;
+; RE-COMP compiles a regular expression (RE) and returns it.
+; Compiled REs (CREs) are represented by lists.
+;
+; RE-MATCH matches a compiled RE against a string. When
+; (part of) the string matches the CRE, it returns the
+; matching part. When the CRE does not match the string,
+; it returns #F.
+;
 ; The following RE patterns are evaluated:
 ; .          match any character
 ; [char...]  match character class (may contain ranges of the form c1-c2)
@@ -20,13 +24,9 @@
 ; +          match one or more instances of the preceding pattern
 ; ?          match the preceding pattern optionally
 ;
-; Arguments: re  - regular expression (RE-COMP)
-;            cre - compiled regular expression (RE-MATCH)
-;            s   - string to match (RE-MATCH)
-;
-; Example:   (re-match (re-comp "^a[b-y]+z$") "abz") ==> "abz"
-;            (re-match (re-comp "^a[b-y]+z$") "abbbz") ==> "abbbz"
-;            (re-match (re-comp "^a[b-y]+z$") "az") ==> #f
+; Example:   (re-match (re-comp "^a[b-y]+z$") "abz")    ==>  "abz"
+;            (re-match (re-comp "^a[b-y]+z$") "abbbz")  ==>  "abbbz"
+;            (re-match (re-comp "^a[b-y]+z$") "az")     ==>  #f
 
 (define (make-range c0 cn cls)
     (if (> c0 cn)

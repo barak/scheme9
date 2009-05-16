@@ -2,15 +2,13 @@
 ; By Nils M Holm, 2009
 ; See the LICENSE file of the S9fES package for terms of use
 ;
-; (make-partitions integer) =&gt; list
+; (make-partitions integer)  ==>  list
 ;
-; Create all partitions of a positive integer.
-; A (number-theoretical) partition of a positive integer N
-; is a set of integers whose sum is equal to N.
+; Create all partitions of a positive integer. A (number-theoretical)
+; partition of a positive integer N is a set of integers whose sum is
+; equal to N. E.g., the partitions of 3 are 3, 2+1, and 1+1+1.
 ;
-; Arguments: n - integer to partition
-;
-; Example:   (make-partitions 4) ==> ((4) (3 1) (2 2) (2 1 1) (1 1 1 1))
+; Example:   (make-partitions 4)  ==>  ((4) (3 1) (2 2) (2 1 1) (1 1 1 1))
 
 (load-from-library "iota.scm")
 (load-from-library "filter.scm")
@@ -29,8 +27,9 @@
                                  (iota 1 n)))))))
      (filter-descending
        (lambda (x)
-         (filter (lambda (p) (or (null? p)
-                                 (null? (cdr p))
-                                 (apply >= p)))
+         (filter (lambda (p)
+                   (or (null? p)
+                       (null? (cdr p))
+                       (apply >= p)))
                  x))))
     (reverse (filter-descending (partition n)))))

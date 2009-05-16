@@ -2,13 +2,11 @@
 ; By Nils M Holm, 2009
 ; See the LICENSE file of the S9fES package for terms of use
 ;
-; (depth list) ==> integer
+; (depth list)  ==>  integer
 ;
 ; Compute the depth of a list.
 ;
-; Arguments: a - list
-;
-; Example:   (depth '(a (b (c d (e))))) ==> 4
+; Example:   (depth '(a (b (c d (e)))))  ==>  4
 
 (define (depth a)
   (if (pair? a)

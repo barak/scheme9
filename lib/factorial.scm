@@ -2,13 +2,11 @@
 ; By Nils M Holm, 2009
 ; See the LICENSE file of the S9fES package for terms of use
 ;
-; (factorial integer) ==> integer
+; (factorial integer)  ==>  integer
 ;
 ; Compute the factorial of a number.
 ;
-; Arguments: n - factorial to compute
-;
-; Example:   (factorial 30) ==> 265252859812191058636308480000000
+; Example:   (factorial 30)  ==>  265252859812191058636308480000000
 
 (define (factorial n)
   (letrec

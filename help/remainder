@@ -1,6 +1,6 @@
-R4RS 6.5.5 (quotient n1 n2) ==> integer
-           (remainder n1 n2) ==> integer
-           (modulo n1 n2) ==> integer
+R4RS 6.5.5  (quotient integer1 integer2)   ==>  integer
+            (remainder integer1 integer2)  ==>  integer
+            (modulo integer1 integer2)     ==>  integer
 
 These procedures implement number-theoretic (integer) division: For
 positive integers n1 and n2, if n3 and n4 are integers such that
@@ -20,14 +20,14 @@ of its arguments. REMAINDER and MODULO differ on negative arguments--the
 remainder is either zero or has the sign of the dividend, while the
 modulo always has the sign of the divisor:
 
-(modulo 13 4)                          ==>  1
-(remainder 13 4)                       ==>  1
+(modulo 13 4)       ==>  1
+(remainder 13 4)    ==>  1
 
-(modulo -13 4)                         ==>  3
-(remainder -13 4)                      ==>  -1
+(modulo -13 4)      ==>  3
+(remainder -13 4)   ==>  -1
 
-(modulo 13 -4)                         ==>  -3
-(remainder 13 -4)                      ==>  1
+(modulo 13 -4)      ==>  -3
+(remainder 13 -4)   ==>  1
 
-(modulo -13 -4)                        ==>  -1
-(remainder -13 -4)                     ==>  -1
+(modulo -13 -4)     ==>  -1
+(remainder -13 -4)  ==>  -1

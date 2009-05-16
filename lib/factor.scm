@@ -2,14 +2,12 @@
 ; By Nils M Holm, 2009
 ; See the LICENSE file of the S9fES package for terms of use
 ;
-; (factor integer) ==> list
+; (factor integer)  ==>  list
 ;
 ; Factor an integer down to its constituent primes.
 ; The resulting list has the form ((base exponent) ...)
 ;
-; Arguments: n - integer to factor
-;
-; Example:   (factor 24) ==> ((3 1) (2 3))
+; Example:   (factor 24)  ==>  ((3 1) (2 3))
 
 (load-from-library "integer-sqrt.scm")
 

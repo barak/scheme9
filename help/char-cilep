@@ -1,10 +1,10 @@
-R4RS 6.6 (char-ci=? char1 char2) ==> boolean
-         (char-ci<? char1 char2) ==> boolean
-         (char-ci>? char1 char2) ==> boolean
-         (char-ci<=? char1 char2) ==> boolean
-         (char-ci>=? char1 char2) ==> boolean
+R4RS 6.6  (char-ci=? char1 char2)   ==>  boolean
+          (char-ci<? char1 char2)   ==>  boolean
+          (char-ci>? char1 char2)   ==>  boolean
+          (char-ci<=? char1 char2)  ==>  boolean
+          (char-ci>=? char1 char2)  ==>  boolean
 
-These procedures are similar to char=? et cetera, but they treat
+These procedures are similar to CHAR=? et cetera, but they treat
 upper case and lower case letters as the same. For example,
 
 (char-ci=? #\A #\a)  ==>  #t.

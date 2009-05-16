@@ -1,6 +1,6 @@
-R4RS 6.1 (not obj) ==> boolean
+R4RS 6.1  (not object)  ==>  boolean
 
-NOT returns #t if OBJ is false, and returns #f otherwise.
+NOT returns #T if OBJECT is false, and returns #F otherwise.
 
 (not #t)        ==>  #f
 (not 3)         ==>  #f

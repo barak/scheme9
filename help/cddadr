@@ -1,8 +1,8 @@
-R4RS 6.3 (caar pair) ==> obj
-         (cadr pair) ==> obj
-         ...
-         (cdddar pair) ==> obj
-         (cddddr pair) ==> obj
+R4RS 6.3  (caar pair)    ==>  object
+          (cadr pair)    ==>  object
+          ...
+          (cdddar pair)  ==>  object
+          (cddddr pair)  ==>  object
 
 These procedures are compositions of car and cdr, where for example
 caddr could be defined by

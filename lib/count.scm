@@ -2,13 +2,11 @@
 ; By Nils M Holm, 2009
 ; See the LICENSE file of the S9fES package for terms of use
 ;
-; (count pair) ==> integer
+; (count pair)  ==>  integer
 ;
 ; Count atomic members of a pair.
 ;
-; Arguments: x - list to count
-;
-; Example:   (count '(a (b (c)) d . e)) ==> 5
+; Example:   (count '(a (b (c)) d . e))  ==>  5
 
 (define (count x)
   (cond ((null? x) 0)

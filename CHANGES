@@ -1,5 +1,10 @@
 Change Log
 
+2009-05-16
+	Fix: made strings returned by SYMBOL->STRING immutable.
+	Updated the help pages.
+	Prepared comments in library files for automatic generation
+	of help pages. (Stay tuned.)
 2009-05-14
 	Added code to grow the memory pools when loading large images.
 	Added interpreter tag to magic header (images are not portable).

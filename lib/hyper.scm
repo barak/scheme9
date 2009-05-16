@@ -2,15 +2,11 @@
 ; By Nils M Holm, 2009
 ; See the LICENSE file of the S9fES package for terms of use
 ;
-; (hyper integer_1 integer_2 integer_3) ==> integer
+; (hyper integer1 integer2 integer3)  ==>  integer
 ;
-; Compute A hyper(N) B.
+; Compute A hyper(N) B, where N=INTEGER1, A=INTEGER2, and B=INTEGER3.
 ;
-; Arguments: n - order of hyper operator
-;            a - factor
-;            b - factor
-;
-; Example:   (hyper 4 3 3) ==> 7625597484987
+; Example:   (hyper 4 3 3)  ==>  7625597484987
 
 (define (hyper n a b)
   (cond ((= n 0) (+ 1 b))

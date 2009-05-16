@@ -2,13 +2,11 @@
 ; By Nils M Holm, 2009
 ; See the LICENSE file of the S9fES package for terms of use
 ;
-; (flatten pair) ==> list
+; (flatten pair)  ==>  list
 ;
 ; Convert tree to flat list.
 ;
-; Arguments: tree - tree to flatten
-;
-; Example:   (flatten '(a (b ((c) d . e)))) ==> (a b c d e)
+; Example:   (flatten '(a (b ((c) d . e))))  ==>  (a b c d e)
 
 (define (flatten x)
   (letrec

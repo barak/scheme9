@@ -2,16 +2,14 @@
 ; By Nils M Holm, 2009
 ; See the LICENSE file of the S9fES package for terms of use
 ;
-; (draw-tree form) ==> unspecific
+; (draw-tree object)  ==>  unspecific
 ;
-; Print a tree structure resembling a Scheme datum.
-; Each cons cell is represented by [o|o] with lines
-; leading to their car and cdr parts. Conses with a
-; cdr value of () are represented by [o|/].
+; Print a tree structure resembling a Scheme datum. Each cons
+; cell is represented by [o|o] with lines leading to their car
+; and cdr parts. Conses with a cdr value of () are represented
+; by [o|/].
 ;
-; Arguments: n - datum to print
-;
-; (Example): (draw-tree '((a . b) (c d))) ==> unspecific
+; (Example): (draw-tree '((a . b) (c d)))  ==>  unspecific
 ;
 ; Output:    [o|o]---[o|o]--- ()
 ;             |       |

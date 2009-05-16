@@ -2,23 +2,21 @@
 ; By Nils M Holm, 2009
 ; See the LICENSE file of the S9fES package for terms of use
 ;
-; (list->set list) ==> list
+; (list->set list)  ==>  list
 ;
-; Convert list to set.
-; A set is a list containing only unique members.
+; Convert list to set. A set is a list containing unique members.
 ;
-; Arguments: a - list
-;
-; Example:   (list->set '(a b c b c)) ==> (a b c)
+; Example:   (list->set '(a b c b c))  ==>  (a b c)
 
 (define (list->set a)
   (letrec
-    ((l->s
+    ((list->set2
        (lambda (a r)
          (cond ((null? a)
                  (reverse r))
                ((member (car a) r)
-                 (l->s (cdr a) r))
-               (else (l->s (cdr a)
-                           (cons (car a) r)))))))
-    (l->s a '())))
+                 (list->set2 (cdr a) r))
+               (else
+                 (list->set2 (cdr a)
+                             (cons (car a) r)))))))
+    (list->set2 a '())))

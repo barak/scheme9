@@ -1,5 +1,5 @@
-R4RS 6.10.2 (read-char) ==> char
-            (read-char input-port) ==> char
+R4RS 6.10.2  (read-char)             ==>  char | eof-object
+             (read-char input-port)  ==>  char | eof-object
 
 Returns the next character available from the input port, updating
 the port to point to the following character. If no more characters

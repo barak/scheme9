@@ -2,20 +2,18 @@
 ; By Nils M Holm, 2009
 ; See the LICENSE file of the S9fES package for terms of use
 ;
-; (write-to-string expr) ==> string
-; (display-to-string expr) ==> string
+; (write-to-string object)    ==>  string
+; (display-to-string object)  ==>  string
 ;
-; Write external representation to string.
-; WRITE-TO-STRING is like WRITE but writes its output to a string
-; instead of an output port. DISPLAY-TO-STRING is like DISPLAY but
-; writes its output to a string.
-;
-; Arguments: x - form to write
+; Write the external representation of the given OBJECT to a fresh
+; string. WRITE-TO-STRING is like WRITE but writes its output to a
+; string instead of an output port. DISPLAY-TO-STRING is like
+; DISPLAY but writes its output to a string.
 ;
 ; Example:   (write-to-string '(a 1 #\c #(v) #t "str" "\"s\"" (a . d)))
-;            ==> "(a 1 #\\c #(v) #t \"str\" \"\\\"s\\\"\" (a . d))"
+;              ==>  "(a 1 #\\c #(v) #t \"str\" \"\\\"s\\\"\" (a . d))"
 ;            (display-to-string '(a 1 #\c #(v) #t "str" "\"s\"" (a . d)))
-;            ==> "(a 1 c #(v) #t str \"s\" (a . d))"
+;              ==>  "(a 1 c #(v) #t str \"s\" (a . d))"
 
 (define (make-string-writer readable)
   (lambda (x)

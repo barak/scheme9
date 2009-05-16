@@ -1,6 +1,6 @@
-R4RS 6.1 (boolean? obj) ==> boolean
+R4RS 6.1  (boolean? object)  ==>  boolean
 
-BOOLEAN? returns #t if OBJ is either #t or #f and returns #f
+BOOLEAN? returns #T if OBJECT is either #T or #F and returns #F
 otherwise.
 
 (boolean? #f)   ==>  #t

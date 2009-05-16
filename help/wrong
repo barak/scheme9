@@ -1,9 +1,9 @@
-S9fES (wrong string) ==> undefined
-      (wrong string obj) ==> undefined
+S9fES  (wrong string)         ==>  undefined
+       (wrong string object)  ==>  undefined
 
-Display the message in STRING. If OBJ is present, display a colon,
-a space character, and the external representation of OBJ after the
-message. After printing the message, abort evaluation. No result is
-returned.
+Display the message in STRING. If OBJECT is given, display a colon,
+a space character, and the external representation of OBJECT after
+the message. After printing the message, abort evaluation. No result
+is returned.
 
-Rationale: WRONG is used by Scheme programs to signal errors.
+Rationale: WRONG is used by S9fES programs to signal errors.

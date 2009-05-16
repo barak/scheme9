@@ -44,9 +44,9 @@ a set! on an unbound variable.
 
 (define add3
   (lambda (x) (+ x 3)))
-(add3 3)                               ==>  6
+(add3 3)                 ==>  6
 (define first car)
-(first '(1 2))                         ==>  1
+(first '(1 2))           ==>  1
 
 5.2.2 Internal definitions
 
@@ -76,3 +76,5 @@ Just as for the equivalent LETREC expression, it must be possible
 to evaluate each <expression> of every internal definition in a
 <body> without assigning or referring to the value of any <variable>
 being defined.
+
+S9fES does support local definitions.

@@ -2,16 +2,12 @@
 ; By Nils M Holm, 2009
 ; See the LICENSE file of the S9fES package for terms of use
 ;
-; (remove proc^1 list) ==> list
+; (remove procedure^1 list)  ==>  list
 ;
-; Remove elements from a list.
-; The predicate P describes the property
-; of the elements to be removed.
+; Remove elements from a list. The unary predicate PROCEDURE^1
+; describes the property of the elements to be removed.
 ;
-; Arguments: p - predicate
-;            a - source list
-;
-; Example:   (remove number? '(a 1 b 2 c 3)) ==> (a b c)
+; Example:   (remove number? '(a 1 b 2 c 3))  ==>  (a b c)
 
 (load-from-library "filter.scm")
 

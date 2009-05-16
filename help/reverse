@@ -1,4 +1,4 @@
-R4RS 6.3 (reverse list) ==> list
+R4RS 6.3  (reverse list)  ==>  list
 
 Returns a newly allocated list consisting of the elements of LIST
 in reverse order.

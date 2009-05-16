@@ -2,20 +2,17 @@
 ; By Nils M Holm, 2009
 ; See the LICENSE file of the S9fES package for terms of use
 ;
-; (permute integer list) ==> list
-; (permute* integer list) ==> list
+; (permute integer list)   ==>  list
+; (permute* integer list)  ==>  list
 ;
-; Create permutations of sets.
-; PERMUTE creates permutations without repetition,
-; and PERMUTE* creates permutations with repetition.
-; The result is a list of sets (lists).
+; Create k-permutations of the elements of the given list. K (the
+; size of the permutations) is specified in the integer argument.
+; PERMUTE creates permutations without repetition and PERMUTE*
+; creates permutations with repetition.
 ;
-; Arguments: n   - size of sets to create
-;            set - source set
-;
-; Example:   (permute 2 '(a b c)) ==> ((a b) (b a) (a c) (c a) (b c) (c b))
-;            (permute* 2 '(a b c)) ==> ((a a) (a b) (a c) (b a) (b b) (b c)
-;                                       (c a) (c b) (c c))
+; Example:   (permute 2 '(a b c))   ==>  ((a b) (b a) (a c) (c a) (b c) (c b))
+;            (permute* 2 '(a b c))  ==>  ((a a) (a b) (a c) (b a) (b b) (b c)
+;                                         (c a) (c b) (c c))
 
 (load-from-library "combine.scm")
 

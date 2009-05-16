@@ -2,21 +2,16 @@
 ; By Nils M Holm, 2009
 ; See the LICENSE file of the S9fES package for terms of use
 ;
-; (substitute pair alist) ==> pair
+; (substitute pair alist)  ==>  pair
 ;
-; Substitute subforms of a given form.
-; The association list ALIST contains the
-; forms to be substituted as keys and the
-; substitutes as values.
+; Substitute objects in a given PAIR. The association list
+; ALIST contains the objects to be substituted as keys and
+; the corresponding substitutes as values.
 ;
-; arguments: form  - source form
-;            alist - substitutions
-;
-; Example:   (substitute '(* (+ 5 7) 9) '(((+ 5 7) . 12))) ==> (* 12 9)
+; Example:   (substitute '(* (+ 5 7) 9) '(((+ 5 7) . 12)))  ==>  (* 12 9)
 
 (define (substitute x a)
   (cond ((assoc x a) => cdr)
-        ((pair? x)
-          (cons (substitute (car x) a)
-                (substitute (cdr x) a)))
+        ((pair? x) (cons (substitute (car x) a)
+                         (substitute (cdr x) a)))
         (else x)))

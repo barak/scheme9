@@ -2,23 +2,22 @@
 ; By Nils M Holm, 2009
 ; See the LICENSE file of the S9fES package for terms of use
 ;
-; (pp form)         ==>  unspecific
-; (pp #t form)      ==>  unspecific
-; (pp #f form)      ==>  unspecific
+; (pp object)       ==>  unspecific
+; (pp #t object)    ==>  unspecific
+; (pp #f object)    ==>  unspecific
 ; (pp-file string)  ==>  unspecific
 ;
-; Pretty-print Scheme forms or files.
-; When the first argument is #T, format FORM as code. When the first
-; argument is #F, format FORM as data. When there is only one argument,
-; pass it to PROGRAM? to figure out wehther it is code or data.
-; NOTE: This program handles only a subset of R5RS Scheme correctly
+; Pretty-print Scheme forms or files. When the first argument of PP
+; is #T, format OBJECT as code. When the first argument is #F, format
+; OBJECT as data. When there is only one argument, pass it to PROGRAM?
+; to figure out wehther it is code or data.
+;
+; PP-FILE pretty-prints all objects in the file STRING.
+;
+; NOTE: This program handles only a subset of R4RS Scheme correctly
 ; and removes all comments from its input program. Caveat utilitor.
 ;
-; Arguments: a1   - form to pretty-print or #t/#f (PP)
-;            a2   - form to pretty-print or () (PP)
-;            file - file to pretty-print (PP-FILE)
-;
-; (Example): (pp '(let ((a 1) (b 2)) (cons a b))) ==> unspecific
+; (Example): (pp '(let ((a 1) (b 2)) (cons a b)))  ==>  unspecific
 ;
 ; Output:   (let ((a 1)
 ;                 (b 2))
@@ -27,9 +26,8 @@
 (load-from-library "programp.scm")
 (load-from-library "write-to-string.scm")
 
-; If your Scheme does not support FLUID-LET
-; or DEFINE-MACRO, there is an alternative
-; implementation using SYNTAX-RULES in
+; If your Scheme does not support FLUID-LET or DEFINE-MACRO,
+; there is an alternative implementation using SYNTAX-RULES in
 ; lib/fluid-let-sr.scm.
 
 (load-from-library "fluid-let.scm")
@@ -50,7 +48,7 @@
        (not (null? x))
        (not (vector? x))))
 
-(define (form-length x)
+(define (object-length x)
   (string-length (write-to-string x)))
 
 (define (exceeds-margin? x . opt-lead)
@@ -158,7 +156,7 @@
   (pr LP)
   (pp-simple-form (car x))
   (pr SP)
-  (fluid-let ((Offset (+ 2 (form-length (car x)) Offset)))
+  (fluid-let ((Offset (+ 2 (object-length (car x)) Offset)))
     (pp-body (cdr x)))
   (pr RP))
 
@@ -282,7 +280,7 @@
                         (pp-form (cadar b*))))
                     (else
                       (pr SP)
-                      (fluid-let ((Offset (+ 2 (form-length (caar b*))
+                      (fluid-let ((Offset (+ 2 (object-length (caar b*))
                                           Offset)))
                         (pp-form (cadar b*)))))
               (pr RP)
@@ -298,7 +296,7 @@
          (bind     (if named? (caddr x) (cadr x)))
          (body     (if named? (cdddr x) (cddr x)))
          (name-len (if named?
-                       (+ 1 (form-length (cadr x)))
+                       (+ 1 (object-length (cadr x)))
                        0)))
     (fluid-let ((Offset (+ 5 name-len Offset)))
       (if named?
