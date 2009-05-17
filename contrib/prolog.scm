@@ -2,6 +2,7 @@
 ; By Nils M Holm, 1998-2009
 ; See the LICENSE file of the S9fES package for terms of use
 ;
+; (prolog list1 list2)          ==>  list
 ; (new-database!)               ==>  unspecific
 ; (fact! list)                  ==>  unspecific
 ; (predicate! list1 list2 ...)  ==>  unspecific
@@ -10,6 +11,10 @@
 ; This is a tiny PROLOG interpreter that is based on an even
 ; tinier PROLOG interpreter written in MACLISP by Ken Kahn.
 ;
+; The PROLOG procedures takes a query LIST1 and a database
+; LIST2 as arguments, attempts to prove LIST1 in LIST2, and
+; returns the result(s).
+
 ; NEW-DATABASE! sets up a fresh PROLOG database (thereby
 ; deleting any existing one).
 ;

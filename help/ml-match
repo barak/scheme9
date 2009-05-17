@@ -1,0 +1,36 @@
+S9 LIB  (define-match symbol clause ...)  ==>  procedure
+        (ml-match name program ...)       ==>  procedure
+
+These constructs allow to write programs using pattern matching
+style. Each program is a set of clauses containing a pattern in
+the car part and a series of expressions in the cdr part. When
+the pattern matches the arguments passed to the program, the
+corresponding body is evaluated. Symbols used in the pattern
+are bound to the values matched by them in the scope of the body.
+The symbol _ matches any object without binding to it.
+
+A procedure resembling LENGTH may be written in this way using
+DEFINE-MATCH:
+
+(define-match len
+  ((())      0)               ; The empty list has a length of 0.
+  (((_ . x)) (+ 1 (len x))))  ; A list whose car part does not
+                              ; matter and whose cdr part is X
+                              ; has a length of 1 plus the length
+                              ; of X.
+
+Here is the same program using ML-style syntax:
+
+(ml-match
+  len (())      = 0
+    : ((_ . x)) = (+ 1 (len x)))
+
+(It uses : instead of | to separate cases, because | is not
+ a valid Scheme symbol.)
+
+(begin
+  (ml-match
+    appnd (() x)      = x
+        : ((h . t) x) = (cons h (appnd t x)))
+  (appnd '(a b c) '(d e f)))
+                              ==>  (a b c d e f)

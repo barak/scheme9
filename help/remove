@@ -1,0 +1,6 @@
+S9 LIB  (remove procedure^1 list)  ==>  list
+
+Remove elements from a list. The unary predicate PROCEDURE^1
+describes the property of the elements to be removed.
+
+(remove number? '(a 1 b 2 c 3))  ==>  (a b c)

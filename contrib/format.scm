@@ -26,6 +26,15 @@
 ; overview of implemented, not supported and extended control properties
 ; of STRING-F see "format.txt". For a test suite to verify this FORMAT
 ; implementation load "format-test.scm".
+;
+; Example:   (format #f "~A ~:* ~S" '(#\c "s"))
+;              ==>  "(c s)  (#\\c \"s\")"
+;
+;            (format #f "~20,'_,',,3:D" 123456789)
+;              ==>  "_________123,456,789"
+;
+;            (format #f "~@{ ~A,~A ~}" 'a 1 'b 2 'c 3)
+;              ==>  " a,1  b,2  c,3 "
 
 (define (format . args)
 
@@ -194,14 +203,14 @@
              (cond ((pair? a)
                      (string-append (if first "" " ")
                                     (to-str (car a)
-                                            'slashify
+                                            slashify
                                             readproof)
                                     (loop (cdr a) #f)))
                    ((null? a)
                      "")
                    (else (string-append
                            " . "
-                           (to-str a 'slashify readproof)))))
+                           (to-str a slashify readproof)))))
            ")"))
        ((eof-object? obj)
          (if readproof "\"#<eof-object>\"" "#<eof-object>"))

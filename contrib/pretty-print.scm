@@ -2,15 +2,20 @@
 ; By Nils M Holm, 2009
 ; See the LICENSE file of the S9fES package for terms of use
 ;
-; (pp object)       ==>  unspecific
-; (pp #t object)    ==>  unspecific
-; (pp #f object)    ==>  unspecific
-; (pp-file string)  ==>  unspecific
+; (pretty-print object)     ==>  unspecific
+; (pretty-print #t object)  ==>  unspecific
+; (pretty-print #f object)  ==>  unspecific
+; (pp object)               ==>  unspecific
+; (pp #t object)            ==>  unspecific
+; (pp #f object)            ==>  unspecific
+; (pp-file string)          ==>  unspecific
 ;
 ; Pretty-print Scheme forms or files. When the first argument of PP
 ; is #T, format OBJECT as code. When the first argument is #F, format
 ; OBJECT as data. When there is only one argument, pass it to PROGRAM?
 ; to figure out wehther it is code or data.
+;
+; PRETTY-PRINT is just a more verbose name for PP.
 ;
 ; PP-FILE pretty-prints all objects in the file STRING.
 ;
@@ -19,9 +24,9 @@
 ;
 ; (Example): (pp '(let ((a 1) (b 2)) (cons a b)))  ==>  unspecific
 ;
-; Output:   (let ((a 1)
-;                 (b 2))
-;             (cons a b))
+;            Output:  (let ((a 1)
+;                           (b 2))
+;                       (cons a b))
 
 (load-from-library "programp.scm")
 (load-from-library "write-to-string.scm")

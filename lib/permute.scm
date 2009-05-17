@@ -11,6 +11,7 @@
 ; creates permutations with repetition.
 ;
 ; Example:   (permute 2 '(a b c))   ==>  ((a b) (b a) (a c) (c a) (b c) (c b))
+;
 ;            (permute* 2 '(a b c))  ==>  ((a a) (a b) (a c) (b a) (b b) (b c)
 ;                                         (c a) (c b) (c c))
 

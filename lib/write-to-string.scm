@@ -12,6 +12,7 @@
 ;
 ; Example:   (write-to-string '(a 1 #\c #(v) #t "str" "\"s\"" (a . d)))
 ;              ==>  "(a 1 #\\c #(v) #t \"str\" \"\\\"s\\\"\" (a . d))"
+;
 ;            (display-to-string '(a 1 #\c #(v) #t "str" "\"s\"" (a . d)))
 ;              ==>  "(a 1 c #(v) #t str \"s\" (a . d))"
 

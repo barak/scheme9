@@ -6,7 +6,7 @@ expanded form of the macro application, else return LIST unaltered.
 (define-macro (while p . body)
   `(let loop ()
       (if ,p
-	  (begin ,@body (loop)))))
+          (begin ,@body (loop)))))
 
 (expand-macro '(while (< x 10)
                       (display "hello!")
