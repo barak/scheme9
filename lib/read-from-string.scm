@@ -16,8 +16,10 @@
 ;
 ; Example:   (read-from-string "  (this \"is\" #(a) (list)) ; comment")
 ;              ==>  ((this "is" #(a) (list)))
+;
 ;            (read-from-string "  (this \"is\" #(a) (list))  more text")
 ;              ==>  ((this "is" #(a) (list)) . "  more text")
+;
 ;            (read-from-string ")")
 ;              ==>  "unexpected closing parenthesis"
 

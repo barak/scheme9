@@ -1,0 +1,25 @@
+S9 LIB  (re-comp string)        ==>  list
+        (re-match list string)  ==>  string | #f
+
+Compile and match regular expressions.
+
+RE-COMP compiles a regular expression (RE) and returns it.
+Compiled REs (CREs) are represented by lists.
+
+RE-MATCH matches a compiled RE against a string. When
+(part of) the string matches the CRE, it returns the
+matching part. When the CRE does not match the string,
+it returns #F.
+
+The following RE patterns are evaluated:
+.          match any character
+[char...]  match character class (may contain ranges of the form c1-c2)
+^          match beginning of line
+$          match end of line
+*          match zero or more instances of the preceding pattern
++          match one or more instances of the preceding pattern
+?          match the preceding pattern optionally
+
+(re-match (re-comp "^a[b-y]+z$") "abz")    ==>  "abz"
+(re-match (re-comp "^a[b-y]+z$") "abbbz")  ==>  "abbbz"
+(re-match (re-comp "^a[b-y]+z$") "az")     ==>  #f

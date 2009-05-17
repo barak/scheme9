@@ -1,0 +1,31 @@
+S9 LIB  (format #t string-f object ...)           ==>  string | #t | #f
+        (format #f string-f object ...)           ==>  string | #t | #f
+        (format string string-f object ...)       ==>  string | #t | #f
+        (format output-port string-f object ...)  ==>  string | #t | #f
+
+FORMAT Returns #T, #F or a string. It has the side effect of printing
+according to the formatting instruction in STRING. If the first
+argument is #T, the output is to the current output port and #T is
+returned. If the argument is #F, a formatted string is returned as
+the result of the call. If the first argument is is a string, the
+output is appended to that string by string-append (note: this
+returns a fresh string). Otherwise the first argument must be an
+output port and #T is returned.
+
+Characters are output as if they were output by the DISPLAY function
+with the exception of those prefixed by a tilde (~). In case of a
+formatting error FORMAT prints a message on the current output port
+and aborts.  For a detailed description of the STRING-F syntax
+please consult a Common LISP FORMAT reference manual. For a quick
+overview of implemented, not supported and extended control properties
+of STRING-F see "format.txt". For a test suite to verify this FORMAT
+implementation load "format-test.scm".
+
+(format #f "~A ~:* ~S" '(#\c "s"))
+  ==>  "(c s)  (#\\c \"s\")"
+
+(format #f "~20,'_,',,3:D" 123456789)
+  ==>  "_________123,456,789"
+
+(format #f "~@{ ~A,~A ~}" 'a 1 'b 2 'c 3)
+  ==>  " a,1  b,2  c,3 "

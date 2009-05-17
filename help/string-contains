@@ -1,0 +1,10 @@
+S9 LIB  (string-contains string1 string2)     ==>  string | #f
+        (string-ci-contains string1 string2)  ==>  string | #f
+
+Find the first occurrence of a small string STRING1 in a large
+string STRING2. Return the first substring of STRING2 beginning
+with STRING1. When STRING2 does not contain STRING1, return #F.
+STRING-CI-CONTAINS performs the same function, but ignores case.
+
+(string-contains "gemeinsam" "ein")     ==>  "einsam"
+(string-contains "democracy" "people")  ==>  #f

@@ -8,7 +8,7 @@
  * Use -DBITS_PER_WORD_64 on 64-bit systems.
  */
 
-#define VERSION "2009-05-16"
+#define VERSION "2009-05-17"
 
 #define EXTERN
 #include "s9.h"
@@ -3846,9 +3846,9 @@ void dump_image(char *p) {
 	strncpy(m.version, VERSION, sizeof(m.version));
 	m.cell_size[0] = sizeof(cell)+'0';
 	n = 0x30313233L;
-	memcpy(m.byte_order, &n, sizeof(n));
+	memcpy(m.byte_order, &n, sizeof(n)>8? 8: sizeof(n));
 	n = (cell) &Primitives;
-	memcpy(m.binary_id, &n, sizeof(n));
+	memcpy(m.binary_id, &n, sizeof(n)>8? 8: sizeof(n));
 	fwrite(&m, sizeof(m), 1, f);
 	i = Pool_size;
 	fwrite(&i, sizeof(int), 1, f);
@@ -3902,6 +3902,10 @@ int load_image(char *p) {
 		error("error in image file (wrong version)", name);
 		bad = 1;
 	}
+	if (m.cell_size[0]-'0' != sizeof(cell)) {
+		error("error in image file (wrong cell size)", name);
+		bad = 1;
+	}
 	memcpy(&n, m.byte_order, sizeof(cell));
 	if (n != 0x30313233L) {
 		error("error in image file (wrong architecture)", name);
@@ -3924,14 +3928,6 @@ int load_image(char *p) {
 			break;
 		}
 		new_segment();
-	}
-	if (inodes > Pool_size) {
-		error("error in image file (too many nodes)", NOEXPR);
-		bad = 1;
-	}
-	if (ivcells > Vpool_size) {
-		error("error in image file (too many vector cells)", NOEXPR);
-		bad = 1;
 	}
 	v = Image_vars;
 	i = 0;

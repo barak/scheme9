@@ -1,0 +1,6 @@
+S9 LIB  (iota integer1 integer2)  ==>  list
+
+Create a range of integers starting at INTEGER1 and ending at
+INTEGER2 (including both). Assume INTEGER1 <= INTEGER2.
+
+(iota 17 21)  ==>  (17 18 19 20 21)

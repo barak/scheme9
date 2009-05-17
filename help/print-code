@@ -1,0 +1,11 @@
+S9 LIB  (print-code string)     ==>  unspecific
+        (print-code string #t)  ==>  unspecific
+
+Render Scheme code contained in the file STRING in HTML with
+syntax highlighting and optional CSS paren matching.
+
+The CSS2 style sheet "scheme.css" contains the default style for
+syntax and expression highlighting. NOTE: This program handles
+only a subset of R4RS Scheme correctly. Caveat utilitor.
+
+(print-code "print-code.scm")  ==>  unspecific

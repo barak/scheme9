@@ -1,5 +1,14 @@
 Change Log
 
+2009-05-17
+	Included help pages for ALL procedures of the extension
+	library! Just try (load-from-library "draw-tree") and
+	then (help 'draw-tree).
+	LOAD-FROM-LIBRARY now attaches a ".scm" suffix, if the
+	given file cannot be located, i.e., you can write
+	(load-from-library "foo") instead of (... "foo.scm").
+	Tweaked the image dump/load routines.
+	Fixed a (self-made) bug in FORMAT (~A would slashify output).
 2009-05-16
 	Fix: made strings returned by SYMBOL->STRING immutable.
 	Updated the help pages.

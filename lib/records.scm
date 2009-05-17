@@ -14,7 +14,7 @@
 ; (record-type-matches? list record)  ==>  boolean
 ; (assert-record-type list record)    ==>  record
 ;
-; The procedures implement ML-style records.
+; These procedures implement ML-style records.
 ;
 ; RECORD creates a new record from the given (TAG . OBJECT) PAIRs,
 ; where TAG is a symbol naming the record field and OBJECT is the
@@ -50,9 +50,14 @@
 ; ASSERT-RECORD-TYPE returns RECORD, if LIST is the type signature
 ; of RECORD. Otherwise, it reports an error.
 ;
+; The RECORD type also extends the built-in EQUAL? procedure to
+; handle records properly by dispatching their comparison to
+; RECORD-EQUAL?.
+;
 ; Example:   (record-ref (record (list 'name "Foo") (list 'value 31415))
 ;                        'name)
 ;              ==> "Foo"
+;
 ;            (equal? (record (list 'name "Foo") (list 'value 31415))
 ;                    (record (list 'value 31415) (list 'name "Foo")))
 ;              ==> #t

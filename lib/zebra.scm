@@ -6,12 +6,11 @@
 ;
 ; Solve the zebra puzzle using AMK.
 ;
-; (Example): (zebra)
-;              ==>  (((norwegian kools _.0 fox yellow)
-;                     (ukrainian chesterfields tea horse blue)
-;                     (englishman oldgolds milk snails red)
-;                     (japanese parliaments coffee zebra green)
-;                     (spaniard luckystrikes orangejuice dog ivory)))
+; (Example): (zebra)  ==>  (((norwegian kools _.0 fox yellow)
+;                           (ukrainian chesterfields tea horse blue)
+;                           (englishman oldgolds milk snails red)
+;                           (japanese parliaments coffee zebra green)
+;                           (spaniard luckystrikes orangejuice dog ivory)))
 
 (load-from-library "amk.scm")
 

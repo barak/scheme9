@@ -1,0 +1,25 @@
+S9 LIB  (pretty-print object)     ==>  unspecific
+        (pretty-print #t object)  ==>  unspecific
+        (pretty-print #f object)  ==>  unspecific
+        (pp object)               ==>  unspecific
+        (pp #t object)            ==>  unspecific
+        (pp #f object)            ==>  unspecific
+        (pp-file string)          ==>  unspecific
+
+Pretty-print Scheme forms or files. When the first argument of PP
+is #T, format OBJECT as code. When the first argument is #F, format
+OBJECT as data. When there is only one argument, pass it to PROGRAM?
+to figure out wehther it is code or data.
+
+PRETTY-PRINT is just a more verbose name for PP.
+
+PP-FILE pretty-prints all objects in the file STRING.
+
+NOTE: This program handles only a subset of R4RS Scheme correctly
+and removes all comments from its input program. Caveat utilitor.
+
+(pp '(let ((a 1) (b 2)) (cons a b)))  ==>  unspecific
+
+Output:  (let ((a 1)
+               (b 2))
+           (cons a b))

@@ -1011,11 +1011,16 @@
                 (loop (cdr path))))))))
 
 (define (load-from-library file)
-  (let ((full-path (locate-file file)))
-       (if full-path
-           (begin (if (not *loading*)
-                      (begin (display "; loading from ")
-                             (display full-path)
-                             (newline)))
-                  (load full-path))
-           (wrong "cannot locate file" file))))
+  (let ((full-path (locate-file file))
+        (do-load (lambda (file)
+                   (begin (if (not *loading*)
+                              (begin (display "; loading from ")
+                                     (display file)
+                                     (newline)))
+                          (load file)))))
+    (if full-path
+        (do-load full-path)
+        (let ((full-path (locate-file (string-append file ".scm"))))
+          (if full-path
+              (do-load full-path)
+              (wrong "cannot locate file" file))))))

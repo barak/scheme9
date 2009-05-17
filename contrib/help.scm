@@ -17,16 +17,16 @@
 ;
 ; (Example): (help 'symbol?)  ==>  unspecific
 ;
-; Output:    R4RS 6.4 (symbol? obj)
+;            Output: R4RS 6.4  (symbol? object)  ==>  boolean
 ;
-;            Returns #t if obj is a symbol, otherwise returns #f.
+;                    Returns #T if OBJECT is a symbol, otherwise returns #F.
 ;
-;            (symbol? 'foo)          ==>  #t
-;            (symbol? (car '(a b)))  ==>  #t
-;            (symbol? "bar")         ==>  #f
-;            (symbol? 'nil)          ==>  #t
-;            (symbol? '())           ==>  #f
-;            (symbol? #f)            ==>  #f
+;                    (symbol? 'foo)          ==>  #t
+;                    (symbol? (car '(a b)))  ==>  #t
+;                    (symbol? "bar")         ==>  #f
+;                    (symbol? 'nil)          ==>  #t
+;                    (symbol? '())           ==>  #f
+;                    (symbol? #f)            ==>  #f
 
 (load-from-library "read-line.scm")
 (load-from-library "string-contains.scm")
