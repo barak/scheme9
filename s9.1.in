@@ -522,7 +522,7 @@ The Revised^4 Report on the Algorithmic Language Scheme.
 .ne 3
 .B "http://www.lulu.com/content/1010408
 .br
-.B "http://t3x.org/nmh/book-pdfs/scheme-9-from-empty-space.zip"
+.B "http://t3x.org/nmh/book-pdfs/scheme-9-from-empty-space.zip
 .in +4
 Scheme 9 from Empty Space -- A Guide to Implementing Scheme in C.
 .in -4

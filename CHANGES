@@ -1,5 +1,7 @@
 Change Log
 
+2009-05-20
+	Simplified HASH-TABLE procedures. (lib/hash-table.scm)
 2009-05-17
 	Included help pages for ALL procedures of the extension
 	library! Just try (load-from-library "draw-tree") and
