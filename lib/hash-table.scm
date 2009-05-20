@@ -33,10 +33,10 @@
   (if (and (pair? size)
            (not (null? (cdr size))))
       (wrong "make-hash-table: too many arguments" size))
-  (let* ((size (if (null? size) 997 (car size)))
-         (h (make-vector (+ 1 size) '())))
-    (vector-set! h 0 size)
-    h))
+  (let ((size (if (null? size)
+                  997
+                  (car size))))
+    (make-vector size '())))
 
 (define (hash x k)
   (letrec
@@ -56,19 +56,19 @@
           ((number? x) (remainder x k))
           ((char? x)   (remainder (char->integer x) k))
           ((pair? x)   (remainder (count x) k))
-          ((vector? x) (remainder (vector-length x) k))
+          ((vector? x) (remainder (count (vector->list x)) k))
           (else        (- k 1)))))
 
 (define hash-table-ref
   (let ((hash hash))
     (lambda (h k)
-      (let ((i (+ 1 (hash k (vector-ref h 0)))))
+      (let ((i (hash k (vector-length h))))
         (assoc k (vector-ref h i))))))
 
 (define hash-table-set!
   (let ((hash hash))
     (lambda (h k v)
-    (let ((i (+ 1 (hash k (vector-ref h 0)))))
+    (let ((i (hash k (vector-length h))))
       (cond ((assoc k (vector-ref h i))
               => (lambda (x)
                    (set-cdr! x v)))
@@ -76,4 +76,4 @@
                                          (vector-ref h i)))))))))
 
 (define (hash-table->list h)
-  (apply append (cdr (vector->list h))))
+  (apply append (vector->list h)))
