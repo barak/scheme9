@@ -4,14 +4,15 @@
 ;
 ; To load this program, run
 ;
-; (load-from-library "prolog.scm")
-; (load-from-library "prolog-sample.scm")
+; (load-from-library "prolog-test.scm")
 ;
 ; Then try some queries like
 ;
 ; (? (female ?who))           ; Which females are there?
 ; (? (_ eric ?who))           ; Which relatives does Eric have?
 ; (? (?relation cathy ?who))  ; Cathy is related to whom in which way?
+
+(load-from-library "prolog.scm")
 
 (new-database!)      ; set up fresh database
 

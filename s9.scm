@@ -746,18 +746,20 @@
 ;   (syntax-rules (then else)
 ;     ((_ p then c)        (or p c))
 ;     ((_ p then c else a) (if p c a))))
-; =>
-; (define-macro (iff . g52)
-;   ((lambda (g52)
-;      (cond
-;        ((syntax-match g52 '(_ p then c) '(then else) '())
-;          => (lambda (env)
-;               (syntax-expand '(_ p then c) '(or p c) env)))
-;        ((syntax-match g52 '(_ p then c else a) '(then else) '())
-;          => (lambda (env)
-;               (syntax-expand '(_ p then c else a) '(if p c a) env)))
-;        (else (wrong "invalid syntax for" 'iff))))
-;    (cons 'iff g52)))
+; ==>
+; (define-macro (iff . g283)
+;   ((lambda (syntax-expand syntax-match g283)
+;      (cond ((syntax-match g283 '(_ p then c) '(then else) '())
+;              => (lambda (env)
+;                   (syntax-expand '(_ p then c) '(or p c) env)))
+;            ((syntax-match g283 '(_ p then c else a) '(then else) '())
+;              => (lambda (env)
+;                   (syntax-expand '(_ p then c else a) '(if p c a) env)))
+;            (else
+;              (wrong "invalid syntax" g283))))
+;    #<PROCEDURE syntax-expand>
+;    #<PROCEDURE syntax-match>
+;    (cons 'iff g283)))
 
 ; Match FORM against PATTERN.
 ; KEYWORDS contains the keywords of SYNTAX-RULES.
@@ -800,11 +802,7 @@
 ; BOUND is a list of initially bound variables. This function
 ; also renames variables of LET, LET*, and LETREC, e.g.:
 ;
-; (ALPHA-CONV '(LET ((X Y)) X) '()) => (LET ((##0 Y)) ##0)
-;
-; NOTE: Resulting unique names are not valid Scheme symbol
-; names, but they are only used internally, so this does
-; not matter.
+; (ALPHA-CONV '(LET ((X Y)) X) '()) => (LET ((G0 Y)) G0)
 ;
 (define (alpha-conv form bound)
   (letrec
@@ -840,7 +838,7 @@
                      (pair? (cdr form))
                      (pair? (cddr form)))
                  (let ((e (map-improper (lambda (x)
-                                          (cons x (gensym "##")))
+                                          (cons x (gensym)))
                                         (cadr form)
                                         '())))
                    `(lambda ,@(conv (cdr form)
@@ -854,7 +852,7 @@
                      (pair? (caadr form))
                      (pair? (cddr form)))
                  (let ((e (map-improper (lambda (x)
-                                          (cons x (gensym "##")))
+                                          (cons x (gensym)))
                                         (map (lambda (x)
                                                (if (pair? x) (car x) #f))
                                              (cadr form))
@@ -955,8 +953,8 @@
         ((not (rules-ok? (cddr rules)))
           (wrong "syntax-rules: invalid clause in rules" (cddr rules)))
         (else
-          (let ((app (gensym))
-                (default `((else (wrong "invalid syntax for" ',name)))))
+          (let* ((app (gensym))
+                 (default `((else (wrong "invalid syntax" ,app)))))
             `(define-macro ,(cons name app)
                (let ((,app (cons ',name ,app))
                      (syntax-match ,syntax-match)

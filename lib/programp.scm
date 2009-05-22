@@ -24,14 +24,11 @@
                (<= min k))
           (<= min k max))))
 
-  (define (non-empty-list? x)
-    (and (list? x)
-         (not (null? x))))
-
   (define (argument-list? x)
     (or (symbol? x)
         (null? x)
         (and (pair? x)
+             (symbol? (car x))
              (argument-list? (cdr x)))))
 
   (define (valid-and? x)
@@ -59,7 +56,7 @@
 
   (define (valid-define? x)
     (or (and (of-length? 3 INF x)
-             (non-empty-list? (cadr x))
+             (pair? (cadr x))
              (argument-list? (cadr x))
              (for-all program? (cddr x)))
         (and (of-length? 3 3 x)
@@ -75,7 +72,7 @@
   ; Not in R4RS
   (define (valid-define-macro? x)
     (and (of-length? 3 3 x)
-         (or (and (non-empty-list? (cadr x))
+         (or (and (pair? (cadr x))
                   (argument-list? (cadr x))
                   (program? (caddr x)))
              (and (symbol? (cadr x))
@@ -187,4 +184,5 @@
       (number? x)
       (char? x)
       (string? x)
+      (procedure? x)     ; not formally correct, but useful
       (expression? x)))
