@@ -44,15 +44,14 @@
   (define Bold #f)
 
   (define (html-display s)
-    (display
-      (apply string-append
-        (map (lambda (c)
-               (case c
-                     ((#\<) "&lt;")
-                     ((#\>) "&gt;")
-                     ((#\&) "&amp;")
-                     (else  (string c))))
-             (string->list s)))))
+    (display (apply string-append
+                    (map (lambda (c)
+                           (case c
+                             ((#\<) "&lt;")
+                             ((#\>) "&gt;")
+                             ((#\&) "&amp;")
+                             (else  (string c))))
+                         (string->list s)))))
 
   (define (change-color quoted co bo thunk)
     (cond (quoted
@@ -63,8 +62,7 @@
             (if Bold
                 (begin (display "</B>")
                        (set! Bold #f)))
-            (display "</SPAN>")
-            (display "<SPAN class=")
+            (display "</SPAN><SPAN class=")
             (display co)
             (display ">")
             (if (and bo (not Bold))
@@ -207,14 +205,11 @@
             (with-color #f
                         Color-constant
                         (lambda ()
-                          (html-display "\"")
-                          (display "<A href=\"")
+                          (display "\"<A href=\"")
                           (display s2)
-                          (display ".html")
-                          (display "\">")
+                          (display ".html\">")
                           (html-display s2)
-                          (display "</A>")
-                          (html-display "\"")))
+                          (display "</A>\"")))
             (with-color #f
                         Color-constant
                         (lambda () (html-display s)))))
@@ -257,11 +252,11 @@
   (define (print-hash-syntax c p)
     (let ((c (read-char)))
       (case c
-            ((#\f) (cons p (print-const "#f")))
-            ((#\t) (cons p (print-const "#t")))
-            ((#\\) (cons p (print-char (read-char))))
-            ((#\() (cons p (print-const "#(")))
-            (else  (wrong "unknown # syntax" c)))))
+        ((#\f) (cons p (print-const "#f")))
+        ((#\t) (cons p (print-const "#t")))
+        ((#\\) (cons p (print-char (read-char))))
+        ((#\() (cons p (print-const "#(")))
+        (else  (wrong "unknown # syntax" c)))))
 
   (define (print-quoted c p q type)
     (with-bold-color

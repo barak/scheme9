@@ -33,8 +33,8 @@ instead of (fact! '(man socrates)).
 (? query)             ==>  unspecific
 
 The following special predicates are implemented in the
-interpreter: (== A B) return a new environment if A can be
-unified with B, else NO. (Dif A B) return NO if A can be
+interpreter: (== A B) returns a new environment if A can be
+unified with B, else NO. (Dif A B) returns NO if A can be
 unified with B, else YES (use only at the end of a clause!)
 
 (begin (! (man socrates))

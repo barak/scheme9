@@ -8,7 +8,7 @@
  * Use -DBITS_PER_WORD_64 on 64-bit systems.
  */
 
-#define VERSION "2009-05-20"
+#define VERSION "2009-05-22"
 
 #define EXTERN
 #include "s9.h"
@@ -1355,6 +1355,8 @@ cell sf_if(cell x, int *pc, int *ps) {
 	return car(m);
 }
 
+cell gensym(char *prefix);
+
 cell make_temporaries(int x) {
 	cell	n, v;
 	int	k = 0;
@@ -1363,8 +1365,7 @@ cell make_temporaries(int x) {
 	n = NIL;
 	save(n);
 	while (x != NIL) {
-		sprintf(buf, "##%d", k);
-		v = add_symbol(buf);
+		v = gensym("g");
 		n = alloc(v, n);
 		car(Stack) = n;
 		x = cdr(x);
@@ -2295,10 +2296,20 @@ cell pp_file_exists_p(cell x) {
 	return TRUE;
 }
 
-cell pp_gensym(cell x) {
+cell gensym(char *prefix) {
 	static long	g = 0;
-	char		s[200], *pre;
-	int		k;
+	char		s[200];
+
+	do {
+		sprintf(s, "%s%ld", prefix, g);
+		g += 1;
+	} while (find_symbol(s) != NIL);
+	return add_symbol(s);
+}
+
+cell pp_gensym(cell x) {
+	char	*pre;
+	int	k;
 
 	if (cdr(x) == NIL) {
 		pre = "g";
@@ -2310,11 +2321,7 @@ cell pp_gensym(cell x) {
 	}
 	if (k > 100)
 		return error("gensym: prefix too long", cadr(x));
-	do {
-		sprintf(s, "%s%ld", pre, g);
-		g += 1;
-	} while (find_symbol(s) != NIL);
-	return add_symbol(s);
+	return gensym(pre);
 }
 
 cell pp_greater(cell x) {

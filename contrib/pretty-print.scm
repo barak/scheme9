@@ -102,6 +102,8 @@
             (pp-pair(vector->list x))))
         ((pair? x)
           (pp-pair x))
+        ((procedure? x)
+          (pp-simple-form (string->symbol "#<PROCEDURE>")))
         (else
           (wrong "pp-datum: unknown type"))))
 
@@ -206,7 +208,13 @@
                        (pp-datum (caar c*))))
                  (fluid-let ((Offset (+ 2 Offset)))
                    (linefeed)
-                   (pp-body (cdar c*)))
+                   (if (and (eq? 'cond what)
+                            (pair? (cdar c*))
+                            (eq? '=> (cadar c*)))
+                       (fluid-let ((Offset (+ 3 Offset)))
+                         (pr "=> ")
+                         (pp-body (cddar c*)))
+                       (pp-body (cdar c*))))
                  (pr RP)
                  (if (not (null? (cdr c*)))
                      (linefeed))

@@ -1,5 +1,6 @@
-S9 LIB  (define-match symbol clause ...)  ==>  procedure
-        (ml-match name program ...)       ==>  procedure
+S9 LIB  (define-matcher symbol clause ...)                ==>  procedure
+        (let-matcher symbol (clause ...) expression ...)  ==>  procedure
+        (ml-match name program ...)                       ==>  procedure
 
 These constructs allow to write programs using pattern matching
 style. Each program is a set of clauses containing a pattern in
@@ -10,9 +11,9 @@ are bound to the values matched by them in the scope of the body.
 The symbol _ matches any object without binding to it.
 
 A procedure resembling LENGTH may be written in this way using
-DEFINE-MATCH:
+DEFINE-MATCHER:
 
-(define-match len
+(define-matcher len
   ((())      0)               ; The empty list has a length of 0.
   (((_ . x)) (+ 1 (len x))))  ; A list whose car part does not
                               ; matter and whose cdr part is X
@@ -28,6 +29,35 @@ Here is the same program using ML-style syntax:
 (It uses : instead of | to separate cases, because | is not
  a valid Scheme symbol.)
 
+The following more elaborate example implements a subset of
+ML-MATCH by using pattern matching itself. The only difference
+to ML-MATCH is that it does not allow multiple expressions in
+bodies:
+
+(define-macro (simple-match name . clauses)
+  (let-match next-clause
+    (((out ())
+       (reverse out))
+     ((out (pattern '= expr ': . clauses))
+       (next-clause `((,pattern ,expr) ,@out) clauses))
+     ((out (pattern '= expr))
+       (next-clause `((,pattern ,expr) ,@out) ())))
+    `(define ,name
+       ,(apply match name (next-clause '() clauses)))))
+
+SIMPLE-MATCH works in the same way as ML-MATCH. Here is a
+function resembling APPEND using SIMPLE-MATCH:
+
+(simple-match
+  appnd (() x)      = x
+      : ((h . t) x) = (cons h (appnd t x)))
+
+(let-matcher fac
+  (((x)   (fac x 1))
+   ((0 r) r)
+   ((x r) (fac (- x 1) (* x r))))
+  (fac 10))
+                              ==>  3628800
 (begin
   (ml-match
     appnd (() x)      = x
