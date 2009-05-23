@@ -8,7 +8,7 @@
  * Use -DBITS_PER_WORD_64 on 64-bit systems.
  */
 
-#define VERSION "2009-05-22"
+#define VERSION "2009-05-23"
 
 #define EXTERN
 #include "s9.h"
@@ -1150,10 +1150,6 @@ int argument_list_p(cell n) {
 	return n == NIL || symbol_p(n);
 }
 
-int list_of_symbols_p(cell n) {
-	return !symbol_p(n) && argument_list_p(n);
-}
-
 #define hash(s, h) \
 	do {					\
 		h = 0;				\
@@ -1359,8 +1355,6 @@ cell gensym(char *prefix);
 
 cell make_temporaries(int x) {
 	cell	n, v;
-	int	k = 0;
-	char	buf[20];
 
 	n = NIL;
 	save(n);
@@ -1369,7 +1363,6 @@ cell make_temporaries(int x) {
 		n = alloc(v, n);
 		car(Stack) = n;
 		x = cdr(x);
-		k++;
 	}
 	unsave(1);
 	return n;

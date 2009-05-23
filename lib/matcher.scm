@@ -2,18 +2,40 @@
 ; By Nils M Holm, 2009
 ; See the LICENSE file of the S9fES package for terms of use
 ;
-; (define-matcher symbol clause ...)                ==>  procedure
-; (let-matcher symbol (clause ...) expression ...)  ==>  procedure
-; (ml-match name program ...)                       ==>  procedure
+; (define make-matcher symbol <clause> ...)           ==>  procedure
+; (define-matcher symbol <clause> ...)                ==>  unspecific
+; (let-matcher symbol (<clause> ...) expression ...)  ==>  unspecific
+; (ml-match name <program>)                           ==>  unspecific
 ;
 ; These constructs allow to write programs using pattern matching
-; style. Each program is a set of clauses containing a pattern in
-; the car part and a series of expressions in the cdr part. When
-; the pattern matches the arguments passed to the program, the
-; corresponding body is evaluated. Symbols used in the pattern
-; are bound to the values matched by them in the scope of the body.
-; The symbol _ matches any object without binding to it.
+; style.
 ;
+; The MAKE-MATCHER procedures creates a matcher from the given
+; <clause>s. Each <clause> must have the form
+;
+; (<pattern> <expression> ...)
+;
+; where <pattern> is a Scheme list and <expression> is an
+; arbitrary expression. MAKE-MATCHER returns a procedure which
+; matches its arguments against each given <pattern> and evaluates
+; the expressions associated with the first matching pattern.
+;
+; Patterns are matched as follows:
+;
+; - A list is matched by matching its members recursively.
+; - Atomic objects except for symbols match themselves;
+; - Symbols match any value and bind the symbol to that value;
+;   the <expression>s will be evaluated with these bindings in
+;   effect;
+; - The symbol _ matches any value, but does not bind to it;
+; - A quoted symbol matches the symbol being quoted.
+;
+; The SYMBOL passed to MAKE-MATCHER is the name of the resulting
+; matcher. It is merely used for error reporting. In order for
+; a matcher to recurse, it must be bound using DEFINE-MATCHER
+; or LET-MATCHER.
+;
+; DEFINE-MATCHER binds a matcher to a symbol at the toplevel.
 ; A procedure resembling LENGTH may be written in this way using
 ; DEFINE-MATCHER:
 ;
@@ -24,7 +46,23 @@
 ;                               ; has a length of 1 plus the length
 ;                               ; of X.
 ;
-; Here is the same program using ML-style syntax:
+; LET-MATCHER binds a matcher locally. Here is the above matcher
+; as a local definition:
+;
+; (let-matcher len
+;   (((())      0)
+;    (((_ . x)) (+ 1 (len x))))
+;   (len '(a b c)))
+;
+; ML-MATCH is like DEFINE-MATCHER, but expects an ML-style <program>
+; rather than a set of <clauses>. A <program> is a series of Scheme
+; datums with the following syntax:
+;
+; <program>  :=  <clause>
+;            |   <clause> : <program>
+; <clause>   :=  <pattern> = <expression> ...
+;
+; Here is the LEN function using ML-MATCH:
 ;
 ; (ml-match
 ;   len (())      = 0
@@ -39,7 +77,7 @@
 ; bodies:
 ;
 ; (define-macro (simple-match name . clauses)
-;   (let-match next-clause
+;   (let-matcher next-clause
 ;     (((out ())
 ;        (reverse out))
 ;      ((out (pattern '= expr ': . clauses))
@@ -47,15 +85,14 @@
 ;      ((out (pattern '= expr))
 ;        (next-clause `((,pattern ,expr) ,@out) ())))
 ;     `(define ,name
-;        ,(apply match name (next-clause '() clauses)))))
+;        ,(apply make-matcher name (next-clause '() clauses)))))
 ;
-; SIMPLE-MATCH works in the same way as ML-MATCH. Here is a
-; function resembling APPEND using SIMPLE-MATCH:
-;
-; (simple-match
-;   appnd (() x)      = x
-;       : ((h . t) x) = (cons h (appnd t x)))
-;
+; Example:   (begin
+;              (define-matcher len
+;                ((())      0)
+;                (((_ . x)) (+ 1 (len x))))
+;              (len '(a b c d e f)))
+;                                          ==>  6
 ; Example:   (let-matcher fac
 ;              (((x)   (fac x 1))
 ;               ((0 r) r)
@@ -69,8 +106,7 @@
 ;              (appnd '(a b c) '(d e f)))
 ;                                          ==>  (a b c d e f)
 
-
-(define (match name . clauses)
+(define (make-matcher name . clauses)
 
   (define *accessors* '())
 
@@ -93,7 +129,7 @@
         (and (,type-pred tmp)
              (,eqv-pred tmp ,pattern)))))
 
-  (define (make-matcher pattern accessor)
+  (define (single-matcher pattern accessor)
     (cond ((and (pair? pattern)
                 (eq? 'quote (car pattern)))
              (match-object 'symbol? 'eq? accessor pattern))
@@ -106,13 +142,13 @@
                             (cons 'd a)
                             (cons (append `((pair? (,(make-accessor a)
                                                       ,*args*)))
-                                          (make-matcher (car p)
+                                          (single-matcher (car p)
                                                         (cons 'a a)))
                                   r)))
                     ((null? p)
-                      (apply append (reverse (cons (make-matcher p a) r))))
+                      (apply append (reverse (cons (single-matcher p a) r))))
                     (else
-                      (apply append (reverse (cons (make-matcher p a)
+                      (apply append (reverse (cons (single-matcher p a)
                                      r)))))))
           (else
             (cond ((symbol? pattern)
@@ -155,7 +191,7 @@
                 `()))))
 
   (define (make-case pattern body)
-    (let* ((matcher (make-matcher pattern '()))
+    (let* ((matcher (single-matcher pattern '()))
            (env     (fetch-variables pattern '()))
            (vars    (map car env))
            (args    (map (lambda (x) `(,(cdr x) ,*args*))
@@ -198,10 +234,10 @@
                (else (wrong "unmatched pattern" (cons ',name ,*args*))))))))
 
 (define-macro (let-matcher name clauses . body)
-  `(letrec ((,name ,(apply match name clauses))) ,@body))
+  `(letrec ((,name ,(apply make-matcher name clauses))) ,@body))
 
 (define-macro (define-matcher name . clauses)
-  `(define ,name ,(apply match name clauses)))
+  `(define ,name ,(apply make-matcher name clauses)))
 
 (define-macro (ml-match name . clauses)
   (letrec
@@ -216,7 +252,7 @@
     (let loop ((in clauses)
                (out '()))
       (cond ((null? in)
-              `(define ,name ,(apply match name (reverse out))))
+              `(define ,name ,(apply make-matcher name (reverse out))))
             ((eq? ': (car in))
               (loop (cdr in) out))
             ((and (pair? in)
