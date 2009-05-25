@@ -15,7 +15,7 @@ BUILD_ENV=	env S9FES_LIBRARY_PATH=.:lib:contrib
 
 # Override default compiler and flags
 #CC=	gcc
-CFLAGS=	-g -Wall -ansi -pedantic -O
+#CFLAGS=	-g -Wall -ansi -pedantic -O
 
 prefix=/usr/local
 exec_prefix=$(prefix)
@@ -45,33 +45,38 @@ EXTINI=	unix_init()
 EXTOBJ=	unix.o
 EXTDEF=	-DIMAGEFILE="\"s9e.image\"" -DLIBRARY="\"s9e.scm\""
 
-all:	s9 s9.image s9.1 all-s9e
+all:	all-s9
+all:	all-s9e
 
-all-s9e:	s9e s9e.image s9e.1
+all-s9:	s9 s9.image
+all-s9:	s9.1
+
+all-s9e:	s9e s9e.image
+all-s9e:	s9e.1
 
 s9:	s9.c s9.h
-	$(CC) $(CFLAGS) $(DEFS) -o $@ $@.c
+	$(CC) $(CFLAGS) $(DEFS) -o s9 s9.c
 
 s9.image:	s9 s9.scm contrib/help.scm contrib/pretty-print.scm
-	rm -f $@ && $(BUILD_ENV) ./s9 -n $(EXTRA_STUFF) -d $@
+	rm -f s9.image && $(BUILD_ENV) ./s9 -n $(EXTRA_STUFF) -d s9.image
 
 s9e:	s9e.o $(EXTOBJ)
-	$(CC) $(CFLAGS) -o $@ s9e.o $(EXTOBJ)
+	$(CC) $(CFLAGS) -o s9e s9e.o $(EXTOBJ)
 
 s9e.scm:
-	ln -sf s9.scm $@
+	ln -sf s9.scm s9e.scm
 
 s9e.o:	s9.h
 s9e.o:	s9.c
 	$(CC) $(CFLAGS) $(DEFS) -I . -DEXTENSIONS="$(EXTINI)" $(EXTDEF) \
-		-o $@ -c s9.c
+		-o s9e.o -c s9.c
 
 unix.o:	ext/unix.c
-	$(CC) $(CFLAGS) $(OSDEF) -I . -o $@ -c ext/unix.c
+	$(CC) $(CFLAGS) $(OSDEF) -I . -o unix.o -c ext/unix.c
 
 s9e.image:	s9e s9e.scm ext/system.scm
-	rm -f $@ && \
-	$(BUILD_ENV) ./s9e -n -f ext/system.scm $(EXTRA_STUFF) -d $@
+	rm -f s9e.image && \
+	$(BUILD_ENV) ./s9e -n -f ext/system.scm $(EXTRA_STUFF) -d s9e.image
 
 %.1: %.1.in
 	sed -e "s,@LIBDIR@,$(LIBDIR)," < $@.in \
