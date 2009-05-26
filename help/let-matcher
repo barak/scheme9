@@ -12,7 +12,7 @@ The MAKE-MATCHER procedures creates a matcher from the given
 (<pattern> <expression> ...)
 
 where <pattern> is a Scheme list and <expression> is an
-arbitrary expression. MAKE-MATCHER returns a procedure which
+arbitrary expression. MAKE-MATCHER returns a procedure, which
 matches its arguments against each given <pattern> and evaluates
 the expressions associated with the first matching pattern.
 
@@ -20,10 +20,10 @@ Patterns are matched as follows:
 
 - A list is matched by matching its members recursively.
 - Atomic objects except for symbols match themselves;
-- Symbols match any value and bind the symbol to that value;
-  the <expression>s will be evaluated with these bindings in
-  effect;
-- The symbol _ matches any value, but does not bind to it;
+- Symbols match any value and binds the symbol to that value;
+  The <expression>s will be evaluated with these bindings in
+  effect.
+- The symbol _ matches any value, but does not bind to it.
 - A quoted symbol matches the symbol being quoted.
 
 The SYMBOL passed to MAKE-MATCHER is the name of the resulting

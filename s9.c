@@ -8,7 +8,7 @@
  * Use -DBITS_PER_WORD_64 on 64-bit systems.
  */
 
-#define VERSION "2009-05-23"
+#define VERSION "2009-05-26"
 
 #define EXTERN
 #include "s9.h"
@@ -47,16 +47,16 @@ void reset_counter(struct counter *c) {
 void count(struct counter *c) {
 	char	*msg = "statistics counter overflow";
 
-	c->n = c->n+1;
+	c->n++;
 	if (c->n >= 1000) {
-		c->n = c->n - 1000;
-		c->n1k = c->n1k + 1;
+		c->n -= 1000;
+		c->n1k++;
 		if (c->n1k >= 1000) {
-			c->n1k = 0;
-			c->n1m = c->n1m+1;
+			c->n1k -= 1000;
+			c->n1m++;
 			if (c->n1m >= 1000) {
-				c->n1m = 0;
-				c->n1g = c->n1g+1;
+				c->n1m -= 1000;
+				c->n1g++;
 				if (c->n1g >= 1000) {
 					error(msg, NOEXPR);
 				}
@@ -131,7 +131,7 @@ void print_calltrace(void) {
 			pr(" ");
 			print_form(Called_procedures[i]);
 		}
-		i += 1;
+		i++;
 	}
 	nl();
 }
@@ -305,7 +305,7 @@ int gc(void) {
 		if (!(Tag[i] & MARK_TAG)) {
 			cdr(i) = Free_list;
 			Free_list = i;
-			k = k+1;
+			k++;
 		}
 		else {
 			Tag[i] &= ~MARK_TAG;
@@ -453,7 +453,7 @@ cell unsave(int k) {
 		if (Stack == NIL) fatal("unsave: stack underflow");
 		n = car(Stack);
 		Stack = cdr(Stack);
-		k = k-1;
+		k--;
 	}
 	return n;
 }
@@ -500,7 +500,7 @@ cell read_list(int flags) {
 	cell	new;
 	char	badpair[] = "malformed pair";
 
-	Level = Level+1;
+	Level++;
 	m = alloc3(NIL, NIL, flags);	/* root */
 	save(m);
 	a = NIL;
@@ -530,7 +530,7 @@ cell read_list(int flags) {
 				continue;
 			}
 			unsave(1);
-			Level = Level-1;
+			Level--;
 			return m;
 		}
 		if (n == RPAREN) break;
@@ -541,9 +541,9 @@ cell read_list(int flags) {
 		car(a) = n;
 		new = alloc3(NIL, NIL, flags); /* Space for next member */
 		cdr(a) = new;
-		c = c+1;
+		c++;
 	}
-	Level = Level-1;
+	Level--;
 	if (a != NIL) cdr(a) = NIL;	/* Remove trailing empty node */
 	unsave(1);
 	return c? m: NIL;
@@ -558,21 +558,46 @@ cell quote(cell n, cell quotation) {
 
 int string_numeric_p(char *s) {
 	int	i;
+	int	got_e, got_dp;
 
 	i = 0;
 	if (s[0] == '+' || s[0] == '-') i = 1;
 	if (!s[i]) return 0;
+	got_dp = 0;
+	got_e = 0;
 	while (s[i]) {
-		if (!isdigit(s[i])) return 0;
-		i = i+1;
+		if ((s[i] == 'e' || s[i] == 'E') && !got_e) {
+			if (isdigit(s[i+1])) {
+				got_e = 1;
+			}
+			else if ((s[i+1] == '+' || s[i+1] == '-') &&
+					isdigit(s[i+2])
+			) {
+				got_e = 1;
+				i++;
+			}
+			else {
+				return 0;
+			}
+		}
+		else if (s[i] == '.' && !got_dp) {
+			got_dp = 1;
+		}
+		else if (!isdigit(s[i])) {
+			return 0;
+		}
+		i++;
 	}
 	return 1;
 }
 
-cell string_to_bignum(char *s) {
+cell string_to_bignum(char *numstr) {
 	cell	n;
 	int	k, j, v, sign;
+	char	*s, buf[TOKEN_LENGTH+2];
 
+	strcpy(buf, numstr);
+	s = buf;
 	sign = 1;
 	if (s[0] == '-') {
 		s++;
@@ -592,6 +617,71 @@ cell string_to_bignum(char *s) {
 		n = alloc3(v, n, ATOM_TAG);
 	}
 	return alloc3(T_INTEGER, n, ATOM_TAG);
+}
+
+cell real_normalize(cell x);
+cell make_integer(long i);
+cell make_real(int flags, int exp, cell mant);
+cell bignum_shift_left(cell a, int fill);
+cell bignum_add(cell a, cell b);
+
+cell string_to_real(char *s) {
+	cell	mantissa, n;
+	int	exponent, found_dp;
+	int	m_neg = 0;
+	int	i, j;
+
+	mantissa = make_integer(0);
+	save(mantissa);
+	exponent = 0;
+	i = 0;
+	if (s[i] == '+') {
+		i++;
+	}
+	else if (s[i] == '-') {
+		m_neg = 1;
+		i++;
+	}
+	found_dp = 0;
+	while (isdigit(s[i]) || s[i] == '.') {
+		if (s[i] == '.') {
+			i++;
+			found_dp = 1;
+			continue;
+		}
+		if (found_dp) exponent--;
+		mantissa = bignum_shift_left(mantissa, 0);
+		car(Stack) = mantissa;
+		mantissa = bignum_add(mantissa, make_integer(s[i]-'0'));
+		car(Stack) = mantissa;
+		i++;
+	}
+	j = 0;
+	for (n = cdr(mantissa); n != NIL; n = cdr(n))
+		j++;
+	if (j > MANTISSA_SEGMENTS)
+		return error(
+			"mantissa too big in real number literal",
+				make_string(s, strlen(s)));
+	if (s[i] == 'e' || s[i] == 'E') {
+		i++;
+		n = string_to_bignum(&s[i]);
+		if (cddr(n) != NIL)
+			return error(
+				"exponent too big in real number literal",
+				make_string(s, strlen(s)));
+		exponent += integer_value("", n);
+	}
+	unsave(1);
+	n = make_real(m_neg? REAL_NEGATIVE: 0, exponent, cdr(mantissa));
+	return real_normalize(n);
+}
+
+cell string_to_number(char *s) {
+	if (strchr(s, '.') || strchr(s, 'e') || strchr(s, 'E'))
+		return string_to_real(s);
+	else
+		return string_to_bignum(s);
 }
 
 /* Create a character literal. */
@@ -663,7 +753,7 @@ cell string_literal(void) {
 		if (Error_flag) break;
 		if (i >= TOKEN_LENGTH-2) {
 			error("string literal too long", NOEXPR);
-			i = i-1;
+			i--;
 		}
 		if (q && c != '"' && c != '\\') {
 			s[i++] = '\\';
@@ -671,7 +761,7 @@ cell string_literal(void) {
 		}
 		s[i] = c;
 		q = !q && c == '\\';
-		if (!q) i = i+1;
+		if (!q) i++;
 		c = read_c();
 	}
 	s[i] = 0;
@@ -721,15 +811,15 @@ cell symbol_or_number(int c) {
 	while (!separator(c)) {
 		if (i >= TOKEN_LENGTH-2) {
 			error("symbol too long", NOEXPR);
-			i = i-1;
+			i--;
 		}
 		s[i] = c;
-		i = i+1;
+		i++;
 		c = read_c_ci();
 	}
 	s[i] = 0;
 	reject(c);
-	if (string_numeric_p(s)) return string_to_bignum(s);
+	if (string_numeric_p(s)) return string_to_number(s);
 	return add_symbol(s);
 }
 
@@ -878,20 +968,20 @@ char *ntoa(char *b, cell x, int w) {
 	}
 	*p = 0;
 	while (x || i == 0) {
-		i += 1;
+		i++;
 		if (i >= sizeof(buf)-1) fatal("ntoa: number too big");
-		p -= 1;
+		p--;
 		*p = x % 10 + '0';
 		x = x / 10;
 	}
 	while (i < (w-neg) && i < sizeof(buf)-1) {
-		i += 1;
-		p -= 1;
+		i++;
+		p--;
 		*p = '0';
 	}
 	if (neg) {
 		if (i >= sizeof(buf)-1) fatal("ntoa: number too big");
-		p -= 1;
+		p--;
 		*p = '-';
 	}
 	strcpy(b, p);
@@ -912,6 +1002,85 @@ int print_integer(cell n) {
 		n = cdr(n);
 		first = 0;
 	}
+	return 1;
+}
+
+void print_expanded_real(cell m, cell e, int n_digits, int neg) {
+	char	buf[DIGITS_PER_WORD+3];
+	int	k, first;
+	int	dp_offset, old_offset;
+
+	dp_offset = e+n_digits;
+	if (neg) pr("-");
+	if (dp_offset <= 0) pr("0");
+	if (dp_offset < 0) pr(".");
+	while (dp_offset < 0) {
+		pr("0");
+		dp_offset++;
+	}
+	dp_offset = e+n_digits;
+	first = 1;
+	while (m != NIL) {
+		ntoa(buf, abs(car(m)), first? 0: DIGITS_PER_WORD);
+		k = strlen(buf);
+		old_offset = dp_offset;
+		dp_offset -= k;
+		if (dp_offset < 0 && old_offset >= 0) {
+			memmove(&buf[k+dp_offset+1], &buf[k+dp_offset],
+				-dp_offset+1);
+			buf[k+dp_offset] = '.';
+		}
+		pr(buf);
+		m = cdr(m);
+		first = 0;
+	}
+	if (dp_offset >= 0) {
+		while (dp_offset > 0) {
+			pr("0");
+			dp_offset--;
+		}
+		pr(".0");
+	}
+}
+
+/* Print real number. */
+int print_real(cell n) {
+	int	n_digits;
+	cell	x, m, e;
+	char	buf[DIGITS_PER_WORD+2];
+
+	if (!real_p(n)) return 0;
+	m = real_mantissa(n);
+	x = car(m);
+	n_digits = 0;
+	while (x != 0) {
+		x /= 10;
+		n_digits++;
+	}
+	m = cdr(m);
+	while (m != NIL) {
+		n_digits += DIGITS_PER_WORD;
+		m = cdr(m);
+	}
+	if (n_digits == 0) n_digits = 1;
+	m = real_mantissa(n);
+	e = real_exponent(n);
+	if (e+n_digits > -4 && e+n_digits <= 9) {
+		print_expanded_real(m, e, n_digits, real_negative_p(n));
+		return 1;
+	}
+	if (real_negative_p(n)) pr("-");
+	ntoa(buf, car(m), 0);
+	pr_raw(buf, 1);
+	pr(".");
+	pr(buf[1]? &buf[1]: "0");
+	m = cdr(m);
+	while (m != NIL) {
+		pr(ntoa(buf, car(m), DIGITS_PER_WORD));
+		m = cdr(m);
+	}
+	pr("e");
+	pr(ntoa(buf, e+n_digits-1, 0));
 	return 1;
 }
 
@@ -972,7 +1141,7 @@ int print_string(cell n) {
 		if (!Displaying && (b[0] == '"' || b[0] == '\\'))
 			pr("\\");
 		pr_raw(b, 1);
-		k = k-1;
+		k--;
 	}
 	if (!Displaying) pr("\"");
 	return 1;
@@ -990,7 +1159,7 @@ int print_symbol(cell n) {
 	while (k) {
 		b[0] = *s++;
 		pr(b);
-		k = k-1;
+		k--;
 	}
 	return 1;
 }
@@ -1066,6 +1235,7 @@ void print_form(cell n) {
 		if (print_char(n)) return;
 		if (print_procedure(n)) return;
 		if (print_integer(n)) return;
+		if (print_real(n)) return;
 		if (print_primitive(n)) return;
 		if (print_quoted(n)) return;
 		if (print_string(n)) return;
@@ -1118,10 +1288,10 @@ cell flat_copy(cell n, cell *lastp) {
 	cell	a, m, last, new;
 
 	if (n == NIL) {
-		lastp[0] = NIL;
+		if (lastp != NULL) lastp[0] = NIL;
 		return NIL;
 	}
-	m = alloc(NIL, NIL);
+	m = alloc3(NIL, NIL, Tag[n]);
 	save(m);
 	a = m;
 	last = m;
@@ -1130,13 +1300,13 @@ cell flat_copy(cell n, cell *lastp) {
 		last = a;
 		n = cdr(n);
 		if (n != NIL) {
-			new = alloc(NIL, NIL);
+			new = alloc3(NIL, NIL, Tag[n]);
 			cdr(a) = new;
 			a = cdr(a);
 		}
 	}
 	unsave(1);
-	lastp[0] = last;
+	if (lastp != NULL) lastp[0] = last;
 	return m;
 }
 
@@ -2062,6 +2232,91 @@ cell bignum_read(char *pre, int radix) {
 	return s? bignum_negate(num): num;
 }
 
+/*----- Floating Point Arithmetics -----*/
+
+cell make_real(int flags, cell exp, cell mant) {
+	cell	n;
+
+	Tmp = mant;
+	n = alloc3(exp, mant, ATOM_TAG);
+	n = alloc3(flags, n, ATOM_TAG);
+	Tmp = NIL;
+	return alloc3(T_REAL, n, ATOM_TAG);
+}
+
+cell real_normalize(cell x) {
+	cell	m, e, r;
+
+	save(x);
+	e = real_exponent(x);
+	m = alloc3(T_INTEGER, real_mantissa(x), ATOM_TAG);
+	save(m);
+	while (1) {
+		if (bignum_zero_p(m)) break;
+		r = bignum_shift_right(m);
+		if (!bignum_zero_p(cdr(r))) break;
+		m = car(Stack) = car(r);
+		e++;
+	}
+	unsave(2);
+	return make_real(real_flags(x), e, cdr(m));
+}
+
+cell bignum_to_real(cell a) {
+	int	nseg, e, flags, i;
+	cell	x, n;
+
+	x = flat_copy(a, NULL);
+	cadr(x) = abs(cadr(x));
+	save(x);
+	nseg = length(cdr(x));
+	if (nseg > MANTISSA_SEGMENTS) {
+		n = x;
+		for (i=0; i < MANTISSA_SEGMENTS; i++)
+			n = cdr(n);
+		cdr(n) = NIL;
+		e = (nseg-MANTISSA_SEGMENTS) * DIGITS_PER_WORD;
+	}
+	else {
+		e = 0;
+	}
+	while (length(cdr(x)) > 2) {
+		x = car(bignum_shift_right(x));
+		car(Stack) = x;
+		e++;
+	}
+	unsave(1);
+	flags = (e>0? REAL_INEXACT: 0) |
+		(bignum_negative_p(a)? REAL_NEGATIVE: 0);
+	x = make_real(flags, e, cdr(x));
+	return real_normalize(x);
+}
+
+int real_equal_p(cell a, cell b) {
+	cell	ma, mb;
+
+	if (integer_p(a) && integer_p(b))
+		return bignum_equal_p(a, b);
+	if (integer_p(a))
+		a = bignum_to_real(a);
+	if (integer_p(b)) {
+		save(a);
+		b = bignum_to_real(b);
+		unsave(1);
+	}
+	if (real_exponent(a) != real_exponent(b)) return 0;
+	if (real_negative_p(a) != real_negative_p(b)) return 0;
+	ma = real_mantissa(a);
+	mb = real_mantissa(b);
+	while (ma != NIL && mb != NIL) {
+		if (car(ma) != car(mb)) return 0;
+		ma = cdr(ma);
+		mb = cdr(mb);
+	}
+	if (ma != mb) return 0;
+	return 1;
+}
+
 /*----- Primitives -----*/
 
 cell pp_apply(cell x) {
@@ -2259,9 +2514,9 @@ cell pp_eq_p(cell x) {
 cell pp_equal(cell x) {
 	x = cdr(x);
 	while (cdr(x) != NIL) {
-		if (!integer_p(cadr(x)))
+		if (!number_p(cadr(x)))
 			return error("=: expected integer, got", cadr(x));
-		if (!bignum_equal_p(car(x), cadr(x))) return FALSE;
+		if (!real_equal_p(car(x), cadr(x))) return FALSE;
 		x = cdr(x);
 	}
 	return TRUE;
@@ -2295,7 +2550,7 @@ cell gensym(char *prefix) {
 
 	do {
 		sprintf(s, "%s%ld", prefix, g);
-		g += 1;
+		g++;
 	} while (find_symbol(s) != NIL);
 	return add_symbol(s);
 }
@@ -2626,6 +2881,10 @@ cell pp_peek_char(cell x) {
 
 cell pp_read_char(cell x) {
 	return read_char(x, 0);
+}
+
+cell pp_real_p(cell x) {
+	return number_p(cadr(x))? TRUE: FALSE;
 }
 
 cell pp_remainder(cell x) {
@@ -3072,7 +3331,7 @@ PRIM Primitives[] = {
  { "display",             pp_display,             1,  2, { ___,OUP,___ } },
  { "eof-object?",         pp_eof_object_p,        1,  1, { ___,___,___ } },
  { "eq?",                 pp_eq_p,                2,  2, { ___,___,___ } },
- { "=",                   pp_equal,               2, -1, { INT,INT,___ } },
+ { "=",                   pp_equal,               2, -1, { REA,REA,___ } },
  { "expand-macro",        pp_expand_macro,        1,  1, { ___,___,___ } },
  { "file-exists?",        pp_file_exists_p,       1,  1, { STR,___,___ } },
  { "gensym",              pp_gensym,              0,  1, { STR,___,___ } },
@@ -3099,6 +3358,7 @@ PRIM Primitives[] = {
  { "quotient",            pp_quotient,            2,  2, { INT,INT,___ } },
  { "read",                pp_read,                0,  1, { INP,___,___ } },
  { "read-char",           pp_read_char,           0,  1, { INP,___,___ } },
+ { "real?",               pp_real_p,              0,  1, { ___,___,___ } },
  { "remainder",           pp_remainder,           2,  2, { INT,INT,___ } },
  { "set-car!",            pp_set_car_b,           2,  2, { PAI,___,___ } },
  { "set-cdr!",            pp_set_cdr_b,           2,  2, { PAI,___,___ } },
@@ -3204,6 +3464,10 @@ cell primitive(cell x) {
 				!primitive_p(car(a))
 			)
 				return expected(car(x), "procedure", car(a));
+			break;
+		case T_REAL:
+			if (!number_p(car(a)))
+				return expected(car(x), "number", car(a));
 			break;
 		case T_STRING:
 			if (!string_p(car(a)))
@@ -3576,7 +3840,7 @@ cell _eval(cell x, int cbn) {
 				else if (procedure_p(car(Acc))) {
 					name = symbol_p(name)? name: NIL;
 					Called_procedures[Proc_ptr] = name;
-					Proc_ptr += 1;
+					Proc_ptr++;
 					if (Proc_ptr >= MAX_CALL_TRACE)
 						Proc_ptr = 0;
 					tail_call();
@@ -3858,7 +4122,7 @@ void dump_image(char *p) {
 	i = 0;
 	while (v[i]) {
 		fwrite(v[i], sizeof(cell), 1, f);
-		i = i+1;
+		i++;
 	}
 	if (	fwrite(Car, 1, Pool_size*sizeof(cell), f)
 		 != Pool_size*sizeof(cell) ||
@@ -3933,7 +4197,7 @@ int load_image(char *p) {
 	i = 0;
 	while (v[i]) {
 		fread(v[i], sizeof(cell), 1, f);
-		i = i+1;
+		i++;
 	}
 	if (	!bad &&
 		(fread(Car, 1, inodes*sizeof(cell), f)

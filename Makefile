@@ -4,11 +4,11 @@
 # Change at least this line:
 PREFIX= /u
 
-VERSION= 20090523
+VERSION= 20090526
 
 # Extras to be added to the heap image
-EXTRA_STUFF=	-f contrib/help.scm \
-		-f contrib/pretty-print.scm
+#EXTRA_STUFF=	-f contrib/help.scm \
+#		-f contrib/pretty-print.scm
 
 # Set up environment to be used during the build process
 BUILD_ENV=	env S9FES_LIBRARY_PATH=.:lib:contrib
@@ -116,7 +116,7 @@ deinstall:
 
 clean:
 	rm -f s9 s9e s9e.scm s9.image s9e.image s9.1.gz s9e.1.gz s9.1.txt \
-		*.o *.core core s9.9.tgz s9fes-$(VERSION).tar.gz __tmp[12]__ \
+		*.o *.core core s9.A.tgz s9fes-$(VERSION).tar.gz __tmp[12]__ \
 		__testfile__ rpp CHANGES.html LICENSE.html README.html \
 		s9.1.html
 

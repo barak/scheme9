@@ -1,9 +1,30 @@
 Change Log
 
+2009-05-26
+	Moved sign of reals to flags field in order to allow for -0.0.
+	Changed flat_copy() so that it can copy special atoms, too.
+	Added real number tests for =.
+	Cleanup.
+2009-05-25
+	Added a reader and printer for real numbers.
+	Implemented internal representation for real numbers.
+	Implemented comparison of real numbers in =.
+	Added more syntax tests to test suite (primarily in order to test
+	the real number reader and printer).
+	Added REAL? predicate.
+	Made NUMBER? an alias of REAL?.
+	Applied some minor cosmetics.
+	* Note that you cannot yet do anything really useful with
+	* real numbers other than translating them from/to external
+	* representation and comparing them.
+2009-05-24
+	Added code to detect real number syntax and dispatch it to
+	a specialized reader. Yes, this is a first step toward real
+	number arithmetics, but don't hold your breath right now.
 2009-05-23
 	Improved the documentation of the matcher package.
 	Removed unused list_of_symbols() function from "s9.c".
-	Thanks, Masaru KIMURA (via your downstream repository)
+	Thanks, Masaru KIMURA (also for misc. other cosmetics).
 2009-05-22
 	Moved "define-match.scm" to "matcher.scm".
 	Renamed DEFINE-MATCH to DEFINE-MATCHER, added LET-MATCHER syntax

@@ -93,7 +93,7 @@
 ;                (((_ . x)) (+ 1 (len x))))
 ;              (len '(a b c d e f)))
 ;                                          ==>  6
-; Example:   (let-matcher fac
+;            (let-matcher fac
 ;              (((x)   (fac x 1))
 ;               ((0 r) r)
 ;               ((x r) (fac (- x 1) (* x r))))

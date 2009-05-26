@@ -123,7 +123,7 @@
 
 ;; Type predicates
 
-(define number? integer?)
+(define number? real?)
 
 (define (port? x)
   (or (input-port? x)
