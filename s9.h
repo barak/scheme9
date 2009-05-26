@@ -163,6 +163,18 @@
  #endif
 #endif
 
+/*
+ * Mantissa size in integer segments.
+ * NOTE: mantissa size differs between
+ * 16-bit, 32-bit, and 64-bit systems!
+ */
+#ifdef BITS_PER_WORD_16
+ #define MANTISSA_SEGMENTS	5
+#else
+ #define MANTISSA_SEGMENTS	2
+#endif
+#define MANTISSA_SIZE		(MANTISSA_SEGMENTS * DIGITS_PER_WORD)
+
 /* GC tags */
 #define ATOM_TAG	0x01	/* Atom, Car = type, CDR = next */
 #define MARK_TAG	0x02	/* Mark */
@@ -211,10 +223,25 @@ enum EVAL_STATES {
 #define T_PAIR_OR_NIL		(-17)
 #define T_PRIMITIVE		(-18)
 #define T_PROCEDURE		(-19)
-#define T_STRING		(-20)
-#define T_SYMBOL		(-21)
-#define T_SYNTAX		(-22)
-#define T_VECTOR		(-23)
+#define T_REAL			(-20)
+#define T_STRING		(-21)
+#define T_SYMBOL		(-22)
+#define T_SYNTAX		(-23)
+#define T_VECTOR		(-24)
+
+/*
+ * Flags and structure of real numbers
+ */
+
+#define real_flags(x)		(cadr(x))
+#define real_exponent(x)	(caddr(x))
+#define real_mantissa(x)	(cdddr(x))
+
+#define REAL_NEGATIVE	0x01
+#define REAL_INEXACT	0x02
+
+#define real_inexact_p(x)	(real_flags(x) & REAL_INEXACT)
+#define real_negative_p(x)	(real_flags(x) & REAL_NEGATIVE)
 
 /*
  * Short cuts for primitive procedure definitions
@@ -226,6 +253,7 @@ enum EVAL_STATES {
 #define OUP T_OUTPUT_PORT
 #define PAI T_PAIR
 #define PRC T_PROCEDURE
+#define REA T_REAL
 #define STR T_STRING
 #define SYM T_SYMBOL
 #define VEC T_VECTOR
@@ -360,10 +388,15 @@ EXTERN cell	S_and, S_begin, S_call_ec, S_cond, S_define,
 
 #define integer_p(n) \
 	(!special_value_p(n) && (Tag[n] & ATOM_TAG) && Car[n] == T_INTEGER)
+#define number_p(n) \
+	(!special_value_p(n) && (Tag[n] & ATOM_TAG) && \
+		(Car[n] == T_REAL || Car[n] == T_INTEGER))
 #define primitive_p(n) \
 	(!special_value_p(n) && (Tag[n] & ATOM_TAG) && Car[n] == T_PRIMITIVE)
 #define procedure_p(n) \
 	(!special_value_p(n) && (Tag[n] & ATOM_TAG) && Car[n] == T_PROCEDURE)
+#define real_p(n) \
+	(!special_value_p(n) && (Tag[n] & ATOM_TAG) && Car[n] == T_REAL)
 #define special_p(n)	((n) == S_quote  || \
 			 (n) == S_if     || \
 			 (n) == S_cond   || \
