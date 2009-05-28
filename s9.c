@@ -621,7 +621,7 @@ cell string_to_bignum(char *numstr) {
 
 cell real_normalize(cell x);
 cell make_integer(long i);
-cell make_real(int flags, int exp, cell mant);
+cell make_real(int flags, cell exp, cell mant);
 cell bignum_shift_left(cell a, int fill);
 cell bignum_add(cell a, cell b);
 
