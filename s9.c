@@ -1064,7 +1064,7 @@ cell count_digits(cell m) {
 /* Print real number. */
 int print_real(cell n) {
 	int	n_digits;
-	cell	x, m, e;
+	cell	m, e;
 	char	buf[DIGITS_PER_WORD+2];
 
 	if (!real_p(n)) return 0;
