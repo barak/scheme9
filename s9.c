@@ -8,7 +8,7 @@
  * Use -DBITS_PER_WORD_64 on 64-bit systems.
  */
 
-#define VERSION "2009-05-26"
+#define VERSION "2009-05-28"
 
 #define EXTERN
 #include "s9.h"
@@ -1043,6 +1043,24 @@ void print_expanded_real(cell m, cell e, int n_digits, int neg) {
 	}
 }
 
+cell count_digits(cell m) {
+	int	k = 0;
+	cell	x;
+
+	x = car(m);
+	k = 0;
+	while (x != 0) {
+		x /= 10;
+		k++;
+	}
+	m = cdr(m);
+	while (m != NIL) {
+		k += DIGITS_PER_WORD;
+		m = cdr(m);
+	}
+	return k==0? 1: k;
+}
+
 /* Print real number. */
 int print_real(cell n) {
 	int	n_digits;
@@ -1050,26 +1068,14 @@ int print_real(cell n) {
 	char	buf[DIGITS_PER_WORD+2];
 
 	if (!real_p(n)) return 0;
-	m = real_mantissa(n);
-	x = car(m);
-	n_digits = 0;
-	while (x != 0) {
-		x /= 10;
-		n_digits++;
-	}
-	m = cdr(m);
-	while (m != NIL) {
-		n_digits += DIGITS_PER_WORD;
-		m = cdr(m);
-	}
-	if (n_digits == 0) n_digits = 1;
+	n_digits = count_digits(real_mantissa(n));
 	m = real_mantissa(n);
 	e = real_exponent(n);
 	if (e+n_digits > -4 && e+n_digits <= 9) {
-		print_expanded_real(m, e, n_digits, real_negative_p(n));
+		print_expanded_real(m, e, n_digits, real_negative_flag(n));
 		return 1;
 	}
-	if (real_negative_p(n)) pr("-");
+	if (real_negative_flag(n)) pr("-");
 	ntoa(buf, car(m), 0);
 	pr_raw(buf, 1);
 	pr(".");
@@ -2305,6 +2311,7 @@ int real_equal_p(cell a, cell b) {
 		unsave(1);
 	}
 	if (real_exponent(a) != real_exponent(b)) return 0;
+	if (real_zero_p(a) && real_zero_p(b)) return 1;
 	if (real_negative_p(a) != real_negative_p(b)) return 0;
 	ma = real_mantissa(a);
 	mb = real_mantissa(b);
@@ -2315,6 +2322,88 @@ int real_equal_p(cell a, cell b) {
 	}
 	if (ma != mb) return 0;
 	return 1;
+}
+
+/*
+ * Scale the number with the larger exponent to the
+ * smaller exponent and return a number that is equal
+ * to LARGE_EXP, but has the exponent of SMALL_EXP.
+ * When there is not enough room in the mantissa for
+ * scaling, return NIL.
+ * E.g.: scale_mantissa(1.0e0, 11.0e-1) --> 10.0e-1
+ */
+cell scale_mantissa(cell large_exp, cell small_exp) {
+	int	dgs_small, dgs_large;
+	cell	n, e;
+
+	dgs_large = count_digits(real_mantissa(large_exp));
+	dgs_small = count_digits(real_mantissa(small_exp));
+	if (	MANTISSA_SIZE - dgs_small <
+		real_exponent(large_exp) - real_exponent(small_exp)
+	)
+		return NIL;
+	n = alloc3(T_INTEGER, flat_copy(real_mantissa(large_exp), NULL),
+			ATOM_TAG);
+	save(n);
+	e = real_exponent(large_exp);
+	while (e > real_exponent(small_exp)) {
+		n = bignum_shift_left(n, 0);
+		car(Stack) = n;
+		e--;
+	}
+	unsave(1);
+	return make_real(real_flags(large_exp), e, cdr(n));
+}
+
+int real_less_p(cell a, cell b) {
+	cell	ma, mb;
+	int	ka, kb, neg;
+
+	if (integer_p(a) && integer_p(b))
+		return bignum_less_p(a, b);
+	if (integer_p(a))
+		a = bignum_to_real(a);
+	if (integer_p(b)) {
+		save(a);
+		b = bignum_to_real(b);
+		unsave(1);
+	}
+	if (real_negative_p(a) && real_positive_p(b)) return 1;
+	if (real_negative_p(b) && real_positive_p(a)) return 0;
+	if (real_positive_p(a) && real_zero_p(b)) return 0;
+	if (real_zero_p(a) && real_positive_p(a)) return 1;
+	neg = real_negative_p(a);
+	if (real_exponent(a) < real_exponent(b)) {
+		Tmp = b;
+		save(a);
+		save(b);
+		Tmp = NIL;
+		b = scale_mantissa(b, a);
+		unsave(2);
+		if (b == NIL) return neg? 0: 1;
+	}
+	if (real_exponent(b) < real_exponent(a)) {
+		Tmp = b;
+		save(a);
+		save(b);
+		Tmp = NIL;
+		a = scale_mantissa(a, b);
+		unsave(2);
+		if (a == NIL) return neg? 1: 0;
+	}
+	ma = real_mantissa(a);
+	mb = real_mantissa(b);
+	ka = length(ma);
+	kb = length(mb);
+	if (ka < kb) return 1;
+	if (ka > kb) return 0;
+	while (ma != NIL) {
+		if (car(ma) < car(mb)) return neg? 0: 1;
+		if (car(ma) > car(mb)) return neg? 1: 0;
+		ma = cdr(ma);
+		mb = cdr(mb);
+	}
+	return 0;
 }
 
 /*----- Primitives -----*/
@@ -2515,7 +2604,7 @@ cell pp_equal(cell x) {
 	x = cdr(x);
 	while (cdr(x) != NIL) {
 		if (!number_p(cadr(x)))
-			return error("=: expected integer, got", cadr(x));
+			return error("=: expected number, got", cadr(x));
 		if (!real_equal_p(car(x), cadr(x))) return FALSE;
 		x = cdr(x);
 	}
@@ -2575,9 +2664,9 @@ cell pp_gensym(cell x) {
 cell pp_greater(cell x) {
 	x = cdr(x);
 	while (cdr(x) != NIL) {
-		if (!integer_p(cadr(x)))
-			return error(">: expected integer, got", cadr(x));
-		if (!bignum_less_p(cadr(x), car(x))) return FALSE;
+		if (!number_p(cadr(x)))
+			return error(">: expected number, got", cadr(x));
+		if (!real_less_p(cadr(x), car(x))) return FALSE;
 		x = cdr(x);
 	}
 	return TRUE;
@@ -2586,9 +2675,9 @@ cell pp_greater(cell x) {
 cell pp_greater_equal(cell x) {
 	x = cdr(x);
 	while (cdr(x) != NIL) {
-		if (!integer_p(cadr(x)))
-			return error(">=: expected integer, got", cadr(x));
-		if (bignum_less_p(car(x), cadr(x))) return FALSE;
+		if (!number_p(cadr(x)))
+			return error(">=: expected number, got", cadr(x));
+		if (real_less_p(car(x), cadr(x))) return FALSE;
 		x = cdr(x);
 	}
 	return TRUE;
@@ -2615,9 +2704,9 @@ cell pp_integer_p(cell x) {
 cell pp_less(cell x) {
 	x = cdr(x);
 	while (cdr(x) != NIL) {
-		if (!integer_p(cadr(x)))
-			return error("<: expected integer, got", cadr(x));
-		if (!bignum_less_p(car(x), cadr(x))) return FALSE;
+		if (!number_p(cadr(x)))
+			return error("<: expected number, got", cadr(x));
+		if (!real_less_p(car(x), cadr(x))) return FALSE;
 		x = cdr(x);
 	}
 	return TRUE;
@@ -2626,9 +2715,9 @@ cell pp_less(cell x) {
 cell pp_less_equal(cell x) {
 	x = cdr(x);
 	while (cdr(x) != NIL) {
-		if (!integer_p(cadr(x)))
-			return error("<=: expected integer, got", cadr(x));
-		if (bignum_less_p(cadr(x), car(x))) return FALSE;
+		if (!number_p(cadr(x)))
+			return error("<=: expected number, got", cadr(x));
+		if (real_less_p(cadr(x), car(x))) return FALSE;
 		x = cdr(x);
 	}
 	return TRUE;
@@ -3335,13 +3424,13 @@ PRIM Primitives[] = {
  { "expand-macro",        pp_expand_macro,        1,  1, { ___,___,___ } },
  { "file-exists?",        pp_file_exists_p,       1,  1, { STR,___,___ } },
  { "gensym",              pp_gensym,              0,  1, { STR,___,___ } },
- { ">",                   pp_greater,             2, -1, { INT,INT,___ } },
- { ">=",                  pp_greater_equal,       2, -1, { INT,INT,___ } },
+ { ">",                   pp_greater,             2, -1, { REA,REA,___ } },
+ { ">=",                  pp_greater_equal,       2, -1, { REA,REA,___ } },
  { "input-port?",         pp_input_port_p,        1,  1, { ___,___,___ } },
  { "integer?",            pp_integer_p,           1,  1, { ___,___,___ } },
  { "integer->char",       pp_integer_to_char,     1,  1, { INT,___,___ } },
- { "<",                   pp_less,                2, -1, { INT,INT,___ } },
- { "<=",                  pp_less_equal,          2, -1, { INT,INT,___ } },
+ { "<",                   pp_less,                2, -1, { REA,REA,___ } },
+ { "<=",                  pp_less_equal,          2, -1, { REA,REA,___ } },
  { "list->string",        pp_list_to_string,      1,  1, { LST,___,___ } },
  { "list->vector",        pp_list_to_vector,      1,  1, { LST,___,___ } },
  { "load",                pp_load,                1,  1, { STR,___,___ } },
@@ -4087,7 +4176,8 @@ struct magic {
 	char	id[2];
 	char	version[10];
 	char	cell_size[1];
-	char	_pad[3];
+	char	mantissa_size[1];
+	char	_pad[2];
 	char	byte_order[8];
 	char	binary_id[8];
 };
@@ -4109,6 +4199,7 @@ void dump_image(char *p) {
 	strncpy(m.id, "S9", sizeof(m.id));
 	strncpy(m.version, VERSION, sizeof(m.version));
 	m.cell_size[0] = sizeof(cell)+'0';
+	m.mantissa_size[0] = MANTISSA_SEGMENTS+'0';
 	n = 0x30313233L;
 	memcpy(m.byte_order, &n, sizeof(n)>8? 8: sizeof(n));
 	n = (cell) &Primitives;
@@ -4168,6 +4259,10 @@ int load_image(char *p) {
 	}
 	if (m.cell_size[0]-'0' != sizeof(cell)) {
 		error("error in image file (wrong cell size)", name);
+		bad = 1;
+	}
+	if (m.mantissa_size[0]-'0' != MANTISSA_SEGMENTS) {
+		error("error in image file (wrong mantissa size)", name);
 		bad = 1;
 	}
 	memcpy(&n, m.byte_order, sizeof(cell));

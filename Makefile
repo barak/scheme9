@@ -4,11 +4,11 @@
 # Change at least this line:
 PREFIX= /u
 
-VERSION= 20090526
+VERSION= 20090528
 
 # Extras to be added to the heap image
-#EXTRA_STUFF=	-f contrib/help.scm \
-#		-f contrib/pretty-print.scm
+EXTRA_STUFF=	-f contrib/help.scm \
+		-f contrib/pretty-print.scm
 
 # Set up environment to be used during the build process
 BUILD_ENV=	env S9FES_LIBRARY_PATH=.:lib:contrib
@@ -118,6 +118,6 @@ clean:
 	rm -f s9 s9e s9e.scm s9.image s9e.image s9.1.gz s9e.1.gz s9.1.txt \
 		*.o *.core core s9.A.tgz s9fes-$(VERSION).tar.gz __tmp[12]__ \
 		__testfile__ rpp CHANGES.html LICENSE.html README.html \
-		s9.1.html
+		s9.1.html s9.exe s9e.exe
 
 # --- end of distribution Makefile ---
