@@ -15,7 +15,7 @@ BUILD_ENV=	env S9FES_LIBRARY_PATH=.:lib:contrib
 
 # Override default compiler and flags
 #CC=	gcc
-#CFLAGS=	-g -Wall -ansi -pedantic -O
+CFLAGS=	-g -Wall -ansi -pedantic -O2
 
 prefix=/usr/local
 exec_prefix=$(prefix)
