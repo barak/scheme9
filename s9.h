@@ -149,31 +149,25 @@
 #ifdef BITS_PER_WORD_64
  #define DIGITS_PER_WORD	18
  #define INT_SEG_LIMIT		1000000000000000000
+ #define MANTISSA_SEGMENTS	1
 #else
  #ifdef BITS_PER_WORD_32
   #define DIGITS_PER_WORD	9
   #define INT_SEG_LIMIT		1000000000
+   #define MANTISSA_SEGMENTS	2
  #else
   #ifdef BITS_PER_WORD_16
    #define DIGITS_PER_WORD	4
    #define INT_SEG_LIMIT	10000
+   #define MANTISSA_SEGMENTS	3
   #else
    #error "BITS_PER_WORD_* undefined (this should not happen)"
   #endif
  #endif
 #endif
 
-/*
- * Mantissa size in integer segments.
- * NOTE: mantissa size differs between
- * 16-bit, 32-bit, and 64-bit systems!
- */
-#ifdef BITS_PER_WORD_16
- #define MANTISSA_SEGMENTS	5
-#else
- #define MANTISSA_SEGMENTS	2
-#endif
-#define MANTISSA_SIZE		(MANTISSA_SEGMENTS * DIGITS_PER_WORD)
+/* Mantissa sizes differ among systems */
+#define MANTISSA_SIZE	(MANTISSA_SEGMENTS * DIGITS_PER_WORD)
 
 /* GC tags */
 #define ATOM_TAG	0x01	/* Atom, Car = type, CDR = next */
@@ -240,8 +234,8 @@ enum EVAL_STATES {
 #define REAL_NEGATIVE	0x01
 #define REAL_INEXACT	0x02
 
-#define real_inexact_p(x)	(real_flags(x) & REAL_INEXACT)
-#define real_negative_p(x)	(real_flags(x) & REAL_NEGATIVE)
+#define real_inexact_flag(x)	(real_flags(x) & REAL_INEXACT)
+#define real_negative_flag(x)	(real_flags(x) & REAL_NEGATIVE)
 
 /*
  * Short cuts for primitive procedure definitions
@@ -453,6 +447,18 @@ EXTERN cell	S_and, S_begin, S_call_ec, S_cond, S_define,
  */
 #define bignum_negative_p(a) ((cadr(a)) < 0)
 #define bignum_zero_p(a) ((cadr(a) == 0) && (cddr(a)) == NIL)
+
+/*
+ * Real-number arithmetics
+ */
+
+#define real_zero_p(x) \
+	(car(real_mantissa(x)) == 0 && cdr(real_mantissa(x)) == NIL)
+
+#define real_negative_p(x) \
+	(real_negative_flag(x) && !real_zero_p(x))
+
+#define real_positive_p(x) (!real_negative_p(x))
 
 /*
  * Prototypes

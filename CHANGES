@@ -1,5 +1,16 @@
 Change Log
 
+2009-05-28
+	Added more test cases for real <.
+	Extended domains of <=, >, >= to real.
+	Added real number tests for <=, >, and >=.
+	* Please stress-test the real number routines
+	* and do report errors!
+	* Suggestions for additional tests are welcome!
+2009-05-27
+	Added mantissa size to magic ID of image files.
+	Implemented comparison of real numbers in <.
+	Added real number tests for <.
 2009-05-26
 	Moved sign of reals to flags field in order to allow for -0.0.
 	Changed flat_copy() so that it can copy special atoms, too.
