@@ -2,8 +2,9 @@ scheme9 (2009.05.28-2) unstable; urgency=low
 
   * Enable compiler warnings and optimization
   * Flush unused variable x in print_real()
+  * Be consistent about 2nd arg to make_real, for 64-bit machines (closes: #530864)
 
- -- Barak A. Pearlmutter <bap@debian.org>  Thu, 28 May 2009 14:42:07 +0100
+ -- Barak A. Pearlmutter <bap@debian.org>  Thu, 28 May 2009 14:44:50 +0100
 
 scheme9 (2009.05.28-1) unstable; urgency=low
 
