@@ -226,13 +226,13 @@ LIMITATIONS
           Control: call-with-current-continuation.
           I/O: char-ready?.
           Transcripts: transcript-off, transcript-on.
-          Numeric tower: rational, float, complex numbers.
+          Numeric tower: rational, float (work in  progress),  complex
+          numbers.
           Numeric syntax and procedures: #e, #i, /, acos, angle, asin,
-          atan,  ceiling,  complex?, cos, denominator, exact->inexact,
-          exact?, exp,  floor,  imag-part,  inexact->exact,  inexact?,
-          log,  magnitude,  make-polar,  make-rectangular,  numerator,
-          rational, rationalize, real-part, real?, round,  sin,  sqrt,
-          tan, truncate.
+          atan, ceiling, complex?, cos, denominator, exp, floor, imag-
+          part,    log,   magnitude,   make-polar,   make-rectangular,
+          numerator, rational,  rationalize,  real-part,  round,  sin,
+          sqrt, tan, truncate.
 
 BUGS
           Nested quasiquotation is currently unsupported.
