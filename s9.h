@@ -460,6 +460,20 @@ EXTERN cell	S_and, S_begin, S_call_ec, S_cond, S_define,
 
 #define real_positive_p(x) (!real_negative_p(x))
 
+#define real_to_inexact(a) \
+	make_real(real_flags(a) | REAL_INEXACT, real_exponent(a), \
+		real_mantissa(a))
+
+#define real_to_exact(a) \
+	make_real(real_flags(a) & ~REAL_INEXACT, real_exponent(a), \
+		real_mantissa(a))
+
+#define real_negate(a) \
+	make_real(real_flags(a) & REAL_NEGATIVE?	\
+			real_flags(a) & ~REAL_NEGATIVE:\
+			real_flags(a) | REAL_NEGATIVE,	\
+		real_exponent(a), real_mantissa(a))
+
 /*
  * Prototypes
  */

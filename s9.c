@@ -8,7 +8,7 @@
  * Use -DBITS_PER_WORD_64 on 64-bit systems.
  */
 
-#define VERSION "2009-05-28"
+#define VERSION "2009-05-31"
 
 #define EXTERN
 #include "s9.h"
@@ -619,7 +619,7 @@ cell string_to_bignum(char *numstr) {
 	return alloc3(T_INTEGER, n, ATOM_TAG);
 }
 
-cell real_normalize(cell x);
+cell real_normalize(cell x, char *who);
 cell make_integer(long i);
 cell make_real(int flags, cell exp, cell mant);
 cell bignum_shift_left(cell a, int fill);
@@ -627,7 +627,8 @@ cell bignum_add(cell a, cell b);
 
 cell string_to_real(char *s) {
 	cell	mantissa, n;
-	int	exponent, found_dp;
+	cell	exponent;
+	int	found_dp;
 	int	m_neg = 0;
 	int	i, j;
 
@@ -674,7 +675,7 @@ cell string_to_real(char *s) {
 	}
 	unsave(1);
 	n = make_real(m_neg? REAL_NEGATIVE: 0, exponent, cdr(mantissa));
-	return real_normalize(n);
+	return real_normalize(n, NULL);
 }
 
 cell string_to_number(char *s) {
@@ -856,6 +857,25 @@ cell read_vector(void) {
 
 cell bignum_read(char *pre, int radix);
 
+cell read_number(int inexact) {
+	cell	n;
+	char	buf[50];
+
+	n = read_form(0);
+	if (integer_p(n)) {
+		if (!inexact) return n;
+		n = make_real(bignum_negative_p(n)? REAL_NEGATIVE: 0,
+				0, cdr(n));
+	}
+	if (!real_p(n)) {
+		sprintf(buf, "number expected after #%c, got",
+			inexact? 'i': 'e');
+		return error(buf, n);
+	}
+	if (inexact) real_flags(n) |= REAL_INEXACT;
+	return n;
+}
+
 cell read_toplevel_form(int flags) {
 	int	ll = Level;
 	cell	n;
@@ -922,6 +942,8 @@ cell read_form(int flags) {
 		case 'd':	return bignum_read("#d", 10);
 		case 'o':	return bignum_read("#o", 8);
 		case 'x':	return bignum_read("#x", 16);
+		case 'e':	return read_number(0);
+		case 'i':	return read_number(1);
 		case '<':	return unreadable();
 		default:	sprintf(buf, "unknown # syntax: #%c", c);
 				return error(buf, NOEXPR);
@@ -1053,12 +1075,13 @@ cell count_digits(cell m) {
 		x /= 10;
 		k++;
 	}
+	k = k==0? 1: k;
 	m = cdr(m);
 	while (m != NIL) {
 		k += DIGITS_PER_WORD;
 		m = cdr(m);
 	}
-	return k==0? 1: k;
+	return k;
 }
 
 /* Print real number. */
@@ -1068,8 +1091,8 @@ int print_real(cell n) {
 	char	buf[DIGITS_PER_WORD+2];
 
 	if (!real_p(n)) return 0;
-	n_digits = count_digits(real_mantissa(n));
 	m = real_mantissa(n);
+	n_digits = count_digits(m);
 	e = real_exponent(n);
 	if (e+n_digits > -4 && e+n_digits <= 9) {
 		print_expanded_real(m, e, n_digits, real_negative_flag(n));
@@ -1079,7 +1102,7 @@ int print_real(cell n) {
 	ntoa(buf, car(m), 0);
 	pr_raw(buf, 1);
 	pr(".");
-	pr(buf[1]? &buf[1]: "0");
+	pr(buf[1] || cdr(m) != NIL? &buf[1]: "0");
 	m = cdr(m);
 	while (m != NIL) {
 		pr(ntoa(buf, car(m), DIGITS_PER_WORD));
@@ -2250,8 +2273,10 @@ cell make_real(int flags, cell exp, cell mant) {
 	return alloc3(T_REAL, n, ATOM_TAG);
 }
 
-cell real_normalize(cell x) {
+cell real_normalize(cell x, char *who) {
 	cell	m, e, r;
+	int	dgs, inexact;
+	char	buf[50];
 
 	save(x);
 	e = real_exponent(x);
@@ -2264,38 +2289,53 @@ cell real_normalize(cell x) {
 		m = car(Stack) = car(r);
 		e++;
 	}
+	dgs = count_digits(cdr(m));
+	inexact = real_inexact_flag(x);
+	while (dgs > MANTISSA_SIZE) {
+		r = bignum_shift_right(m);
+		if (!bignum_zero_p(cdr(r)))
+			inexact = REAL_INEXACT;
+		m = car(Stack) = car(r);
+		dgs--;
+		e++;
+	}
 	unsave(2);
-	return make_real(real_flags(x), e, cdr(m));
+	if (bignum_zero_p(m)) e = 0;
+	r = alloc3(e, NIL, ATOM_TAG);
+	if (count_digits(r) > DIGITS_PER_WORD) {
+		sprintf(buf, "%s: floating point %sflow",
+			who? who: "internal",
+			e<0? "under": "over");
+		error(buf, NOEXPR);
+	}
+	return make_real(real_flags(x) | inexact, e, cdr(m));
 }
 
 cell bignum_to_real(cell a) {
 	int	nseg, e, flags, i;
+	int	inexact;
 	cell	x, n;
 
 	x = flat_copy(a, NULL);
 	cadr(x) = abs(cadr(x));
 	save(x);
 	nseg = length(cdr(x));
+	inexact = 0;
 	if (nseg > MANTISSA_SEGMENTS) {
 		n = x;
 		for (i=0; i < MANTISSA_SEGMENTS; i++)
 			n = cdr(n);
 		cdr(n) = NIL;
 		e = (nseg-MANTISSA_SEGMENTS) * DIGITS_PER_WORD;
+		inexact = REAL_INEXACT;
 	}
 	else {
 		e = 0;
 	}
-	while (length(cdr(x)) > 2) {
-		x = car(bignum_shift_right(x));
-		car(Stack) = x;
-		e++;
-	}
 	unsave(1);
-	flags = (e>0? REAL_INEXACT: 0) |
-		(bignum_negative_p(a)? REAL_NEGATIVE: 0);
+	flags = inexact | (bignum_negative_p(a)? REAL_NEGATIVE: 0);
 	x = make_real(flags, e, cdr(x));
-	return real_normalize(x);
+	return real_normalize(x, NULL);
 }
 
 int real_equal_p(cell a, cell b) {
@@ -2332,13 +2372,13 @@ int real_equal_p(cell a, cell b) {
  * scaling, return NIL.
  * E.g.: scale_mantissa(1.0e0, 11.0e-1) --> 10.0e-1
  */
-cell scale_mantissa(cell large_exp, cell small_exp) {
+cell scale_mantissa(cell large_exp, cell small_exp, int max_size) {
 	int	dgs_small, dgs_large;
 	cell	n, e;
 
 	dgs_large = count_digits(real_mantissa(large_exp));
 	dgs_small = count_digits(real_mantissa(small_exp));
-	if (	MANTISSA_SIZE - dgs_small <
+	if (	max_size - dgs_large <
 		real_exponent(large_exp) - real_exponent(small_exp)
 	)
 		return NIL;
@@ -2355,9 +2395,20 @@ cell scale_mantissa(cell large_exp, cell small_exp) {
 	return make_real(real_flags(large_exp), e, cdr(n));
 }
 
+void autoscale(cell *pa, cell *pb) {
+	if (real_exponent(*pa) < real_exponent(*pb)) {
+		*pb = scale_mantissa(*pb, *pa, MANTISSA_SIZE*2);
+		return;
+	}
+	if (real_exponent(*pb) < real_exponent(*pa)) {
+		*pa = scale_mantissa(*pa, *pb, MANTISSA_SIZE*2);
+	}
+}
+
 int real_less_p(cell a, cell b) {
 	cell	ma, mb;
 	int	ka, kb, neg;
+	int	dpa, dpb;
 
 	if (integer_p(a) && integer_p(b))
 		return bignum_less_p(a, b);
@@ -2373,12 +2424,16 @@ int real_less_p(cell a, cell b) {
 	if (real_positive_p(a) && real_zero_p(b)) return 0;
 	if (real_zero_p(a) && real_positive_p(a)) return 1;
 	neg = real_negative_p(a);
+	dpa = count_digits(real_mantissa(a)) + real_exponent(a);
+	dpb = count_digits(real_mantissa(b)) + real_exponent(b);
+	if (dpa < dpb) return neg? 0: 1;
+	if (dpa > dpb) return neg? 1: 0;
 	if (real_exponent(a) < real_exponent(b)) {
 		Tmp = b;
 		save(a);
 		save(b);
 		Tmp = NIL;
-		b = scale_mantissa(b, a);
+		b = scale_mantissa(b, a, MANTISSA_SIZE);
 		unsave(2);
 		if (b == NIL) return neg? 0: 1;
 	}
@@ -2387,7 +2442,7 @@ int real_less_p(cell a, cell b) {
 		save(a);
 		save(b);
 		Tmp = NIL;
-		a = scale_mantissa(a, b);
+		a = scale_mantissa(a, b, MANTISSA_SIZE);
 		unsave(2);
 		if (a == NIL) return neg? 1: 0;
 	}
@@ -2404,6 +2459,81 @@ int real_less_p(cell a, cell b) {
 		mb = cdr(mb);
 	}
 	return 0;
+}
+
+cell real_add(cell a, cell b) {
+	cell	r, m, e;
+	int	flags, nega, negb, inexact;
+
+	if (integer_p(a) && integer_p(b))
+		return bignum_add(a, b);
+	if (integer_p(a)) a = bignum_to_real(a);
+	save(a);
+	if (integer_p(b)) b = bignum_to_real(b);
+	save(b);
+	inexact = real_inexact_flag(a) | real_inexact_flag(b);
+	autoscale(&a, &b);
+	if (a == NIL || b == NIL) {
+		b = unsave(1);
+		a = unsave(1);
+		return real_less_p(a, b)?
+			real_to_inexact(b):
+			real_to_inexact(a);
+	}
+	cadr(Stack) = a;
+	car(Stack) = b;
+	e = real_exponent(a);
+	nega = real_negative_p(a);
+	negb = real_negative_p(b);
+	a = alloc3(T_INTEGER, real_mantissa(a), ATOM_TAG);
+	if (nega) a = bignum_negate(a);
+	cadr(Stack) = a;
+	b = alloc3(T_INTEGER, real_mantissa(b), ATOM_TAG);
+	if (negb) b = bignum_negate(b);
+	car(Stack) = b;
+	m = bignum_add(a, b);
+	unsave(2);
+	flags = inexact | (bignum_negative_p(m)? REAL_NEGATIVE: 0);
+	r = make_real(flags, e, cdr(bignum_abs(m)));
+	return real_normalize(r, "+");
+}
+
+cell real_subtract(cell a, cell b) {
+	cell	r;
+
+	if (integer_p(b))
+		b = bignum_negate(b);
+	else
+		b = real_negate(b);
+	save(b);
+	r = real_add(a, b);
+	unsave(1);
+	return r;
+}
+
+cell real_multiply(cell a, cell b) {
+	cell	r, m, e, ma, mb, ea, eb, neg;
+	int	inexact;
+
+	if (integer_p(a) && integer_p(b))
+		return bignum_multiply(a, b);
+	if (integer_p(a)) a = bignum_to_real(a);
+	save(a);
+	if (integer_p(b)) b = bignum_to_real(b);
+	save(b);
+	inexact = real_inexact_flag(a) | real_inexact_flag(b);
+	neg = real_negative_flag(a) != real_negative_flag(b);
+	ea = real_exponent(a);
+	eb = real_exponent(b);
+	ma = alloc3(T_INTEGER, real_mantissa(a), ATOM_TAG);
+	cadr(Stack) = ma;
+	mb = alloc3(T_INTEGER, real_mantissa(b), ATOM_TAG);
+	car(Stack) = mb;
+	e = ea + eb;
+	m = bignum_multiply(ma, mb);
+	unsave(2);
+	r = make_real(inexact | (neg? REAL_NEGATIVE: 0), e, cdr(m));
+	return real_normalize(r, "*");
 }
 
 /*----- Primitives -----*/
@@ -2611,6 +2741,23 @@ cell pp_equal(cell x) {
 	return TRUE;
 }
 
+cell pp_exact_to_inexact(cell x) {
+	int	flags;
+
+	x = cadr(x);
+	if (integer_p(x)) {
+		flags = (bignum_negative_p(x)? REAL_NEGATIVE: 0) |
+			REAL_INEXACT;
+		return make_real(flags, 0, cdr(bignum_abs(x)));
+	}
+	return real_to_inexact(x);
+}
+
+cell pp_exact_p(cell x) {
+	if (integer_p(cadr(x))) return TRUE;
+	return real_inexact_flag(cadr(x))? FALSE: TRUE;
+}
+
 cell expand_quasiquote(cell x);
 cell expand_syntax(cell x);
 
@@ -2681,6 +2828,17 @@ cell pp_greater_equal(cell x) {
 		x = cdr(x);
 	}
 	return TRUE;
+}
+
+cell pp_inexact_p(cell x) {
+	if (integer_p(cadr(x))) return FALSE;
+	return real_inexact_flag(cadr(x))? TRUE: FALSE;
+}
+
+cell pp_inexact_to_exact(cell x) {
+	x = cadr(x);
+	if (integer_p(x)) return x;
+	return real_to_exact(x);
 }
 
 cell pp_input_port_p(cell x) {
@@ -2851,14 +3009,18 @@ cell pp_minus(cell x) {
 	cell	a;
 
 	x = cdr(x);
-	if (cdr(x) == NIL) return bignum_negate(car(x));
+	if (cdr(x) == NIL) {
+		if (integer_p(car(x)))
+			return bignum_negate(car(x));
+		return real_negate(car(x));
+	}
 	a = car(x);
 	x = cdr(x);
 	save(a);
 	while (x != NIL) {
-		if (!integer_p(car(x)))
-			return error("-: expected integer, got", car(x));
-		a = bignum_subtract(a, car(x));
+		if (!number_p(car(x)))
+			return error("-: expected number, got", car(x));
+		a = real_subtract(a, car(x));
 		car(Stack) = a;
 		x = cdr(x);
 	}
@@ -2915,9 +3077,9 @@ cell pp_plus(cell x) {
 	a = make_integer(0);
 	save(a);
 	while (x != NIL) {
-		if (!integer_p(car(x)))
-			return error("+: expected integer, got", car(x));
-		a = bignum_add(a, car(x));
+		if (!number_p(car(x)))
+			return error("+: expected number, got", car(x));
+		a = real_add(a, car(x));
 		car(Stack) = a;
 		x = cdr(x);
 	}
@@ -3256,9 +3418,9 @@ cell pp_times(cell x) {
 	a = make_integer(1);
 	save(a);
 	while (x != NIL) {
-		if (!integer_p(car(x)))
-			return error("*: expected integer, got", car(x));
-		a = bignum_multiply(a, car(x));
+		if (!number_p(car(x)))
+			return error("*: expected number, got", car(x));
+		a = real_multiply(a, car(x));
 		car(Stack) = a;
 		x = cdr(x);
 	}
@@ -3395,22 +3557,22 @@ PRIM Primitives[] = {
  { "char?",               pp_char_p,              1,  1, { ___,___,___ } },
  { "char->integer",       pp_char_to_integer,     1,  1, { CHR,___,___ } },
  { "char-alphabetic?",    pp_char_alphabetic_p,   1,  1, { CHR,___,___ } },
- { "char-ci<=?",          pp_char_ci_le_p,        2, -1, { CHR,CHR,___ } },
- { "char-ci<?",           pp_char_ci_lt_p,        2, -1, { CHR,CHR,___ } },
- { "char-ci=?",           pp_char_ci_eq_p,        2, -1, { CHR,CHR,___ } },
- { "char-ci>=?",          pp_char_ci_ge_p,        2, -1, { CHR,CHR,___ } },
- { "char-ci>?",           pp_char_ci_gt_p,        2, -1, { CHR,CHR,___ } },
+ { "char-ci<=?",          pp_char_ci_le_p,        2, -1, { CHR,___,___ } },
+ { "char-ci<?",           pp_char_ci_lt_p,        2, -1, { CHR,___,___ } },
+ { "char-ci=?",           pp_char_ci_eq_p,        2, -1, { CHR,___,___ } },
+ { "char-ci>=?",          pp_char_ci_ge_p,        2, -1, { CHR,___,___ } },
+ { "char-ci>?",           pp_char_ci_gt_p,        2, -1, { CHR,___,___ } },
  { "char-downcase",       pp_char_downcase,       1,  1, { CHR,___,___ } },
  { "char-lower-case?",    pp_char_lower_case_p,   1,  1, { CHR,___,___ } },
  { "char-numeric?",       pp_char_numeric_p,      1,  1, { CHR,___,___ } },
  { "char-upcase",         pp_char_upcase,         1,  1, { CHR,___,___ } },
  { "char-upper-case?",    pp_char_upper_case_p,   1,  1, { CHR,___,___ } },
  { "char-whitespace?",    pp_char_whitespace_p,   1,  1, { CHR,___,___ } },
- { "char<=?",             pp_char_le_p,           2, -1, { CHR,CHR,___ } },
- { "char<?",              pp_char_lt_p,           2, -1, { CHR,CHR,___ } },
- { "char=?",              pp_char_eq_p,           2, -1, { CHR,CHR,___ } },
- { "char>=?",             pp_char_ge_p,           2, -1, { CHR,CHR,___ } },
- { "char>?",              pp_char_gt_p,           2, -1, { CHR,CHR,___ } },
+ { "char<=?",             pp_char_le_p,           2, -1, { CHR,___,___ } },
+ { "char<?",              pp_char_lt_p,           2, -1, { CHR,___,___ } },
+ { "char=?",              pp_char_eq_p,           2, -1, { CHR,___,___ } },
+ { "char>=?",             pp_char_ge_p,           2, -1, { CHR,___,___ } },
+ { "char>?",              pp_char_gt_p,           2, -1, { CHR,___,___ } },
  { "close-input-port",    pp_close_input_port,    1,  1, { INP,___,___ } },
  { "close-output-port",   pp_close_output_port,   1,  1, { OUP,___,___ } },
  { "cons",                pp_cons,                2,  2, { ___,___,___ } },
@@ -3420,29 +3582,33 @@ PRIM Primitives[] = {
  { "display",             pp_display,             1,  2, { ___,OUP,___ } },
  { "eof-object?",         pp_eof_object_p,        1,  1, { ___,___,___ } },
  { "eq?",                 pp_eq_p,                2,  2, { ___,___,___ } },
- { "=",                   pp_equal,               2, -1, { REA,REA,___ } },
+ { "=",                   pp_equal,               2, -1, { REA,___,___ } },
+ { "exact->inexact",      pp_exact_to_inexact,    1,  1, { REA,___,___ } },
+ { "exact?",              pp_exact_p,             1,  1, { REA,___,___ } },
  { "expand-macro",        pp_expand_macro,        1,  1, { ___,___,___ } },
  { "file-exists?",        pp_file_exists_p,       1,  1, { STR,___,___ } },
  { "gensym",              pp_gensym,              0,  1, { STR,___,___ } },
- { ">",                   pp_greater,             2, -1, { REA,REA,___ } },
- { ">=",                  pp_greater_equal,       2, -1, { REA,REA,___ } },
+ { ">",                   pp_greater,             2, -1, { REA,___,___ } },
+ { ">=",                  pp_greater_equal,       2, -1, { REA,___,___ } },
+ { "inexact->exact",      pp_inexact_to_exact,    1,  1, { REA,___,___ } },
+ { "inexact?",            pp_inexact_p,           1,  1, { REA,___,___ } },
  { "input-port?",         pp_input_port_p,        1,  1, { ___,___,___ } },
  { "integer?",            pp_integer_p,           1,  1, { ___,___,___ } },
  { "integer->char",       pp_integer_to_char,     1,  1, { INT,___,___ } },
- { "<",                   pp_less,                2, -1, { REA,REA,___ } },
- { "<=",                  pp_less_equal,          2, -1, { REA,REA,___ } },
+ { "<",                   pp_less,                2, -1, { REA,___,___ } },
+ { "<=",                  pp_less_equal,          2, -1, { REA,___,___ } },
  { "list->string",        pp_list_to_string,      1,  1, { LST,___,___ } },
  { "list->vector",        pp_list_to_vector,      1,  1, { LST,___,___ } },
  { "load",                pp_load,                1,  1, { STR,___,___ } },
  { "make-string",         pp_make_string,         1,  2, { INT,___,___ } },
  { "make-vector",         pp_make_vector,         1,  2, { INT,___,___ } },
- { "-",                   pp_minus,               1, -1, { INT,___,___ } },
+ { "-",                   pp_minus,               1, -1, { REA,___,___ } },
  { "open-input-file",     pp_open_input_file,     1,  1, { STR,___,___ } },
  { "open-output-file",    pp_open_output_file,    1,  1, { STR,___,___ } },
  { "output-port?",        pp_output_port_p,       1,  1, { ___,___,___ } },
  { "pair?",               pp_pair_p,              1,  1, { ___,___,___ } },
  { "peek-char",           pp_peek_char,           0,  1, { INP,___,___ } },
- { "+",                   pp_plus,                0, -1, { ___,___,___ } },
+ { "+",                   pp_plus,                0, -1, { REA,___,___ } },
  { "procedure?",          pp_procedure_p,         1,  1, { ___,___,___ } },
  { "quotient",            pp_quotient,            2,  2, { INT,INT,___ } },
  { "read",                pp_read,                0,  1, { INP,___,___ } },
@@ -3462,22 +3628,22 @@ PRIM Primitives[] = {
  { "string-length",       pp_string_length,       1,  1, { STR,___,___ } },
  { "string-ref",          pp_string_ref,          2,  2, { STR,INT,___ } },
  { "string-set!",         pp_string_set_b,        3,  3, { STR,INT,CHR } },
- { "string-ci<=?",        pp_string_ci_le_p,      2, -1, { STR,STR,___ } },
- { "string-ci<?",         pp_string_ci_lt_p,      2, -1, { STR,STR,___ } },
- { "string-ci=?",         pp_string_ci_eq_p,      2, -1, { STR,STR,___ } },
- { "string-ci>=?",        pp_string_ci_ge_p,      2, -1, { STR,STR,___ } },
- { "string-ci>?",         pp_string_ci_gt_p,      2, -1, { STR,STR,___ } },
- { "string<=?",           pp_string_le_p,         2, -1, { STR,STR,___ } },
- { "string<?",            pp_string_lt_p,         2, -1, { STR,STR,___ } },
- { "string=?",            pp_string_eq_p,         2, -1, { STR,STR,___ } },
- { "string>=?",           pp_string_ge_p,         2, -1, { STR,STR,___ } },
- { "string>?",            pp_string_gt_p,         2, -1, { STR,STR,___ } },
+ { "string-ci<=?",        pp_string_ci_le_p,      2, -1, { STR,___,___ } },
+ { "string-ci<?",         pp_string_ci_lt_p,      2, -1, { STR,___,___ } },
+ { "string-ci=?",         pp_string_ci_eq_p,      2, -1, { STR,___,___ } },
+ { "string-ci>=?",        pp_string_ci_ge_p,      2, -1, { STR,___,___ } },
+ { "string-ci>?",         pp_string_ci_gt_p,      2, -1, { STR,___,___ } },
+ { "string<=?",           pp_string_le_p,         2, -1, { STR,___,___ } },
+ { "string<?",            pp_string_lt_p,         2, -1, { STR,___,___ } },
+ { "string=?",            pp_string_eq_p,         2, -1, { STR,___,___ } },
+ { "string>=?",           pp_string_ge_p,         2, -1, { STR,___,___ } },
+ { "string>?",            pp_string_gt_p,         2, -1, { STR,___,___ } },
  { "string?",             pp_string_p,            1,  1, { ___,___,___ } },
  { "substring",           pp_substring,           3,  3, { STR,INT,INT } },
  { "symbol?",             pp_symbol_p,            1,  1, { ___,___,___ } },
  { "symbol->string",      pp_symbol_to_string,    1,  1, { SYM,___,___ } },
  { "symbols",             pp_symbols,             0,  0, { ___,___,___ } },
- { "*",                   pp_times,               0, -1, { ___,___,___ } },
+ { "*",                   pp_times,               0, -1, { REA,___,___ } },
  { "trace",               pp_trace,               0, -1, { ___,___,___ } },
  { "unquote",             pp_unquote,             1,  1, { ___,___,___ } },
  { "unquote-splicing",    pp_unquote_splicing,    1,  1, { ___,___,___ } },

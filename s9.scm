@@ -378,15 +378,21 @@
   (let ((fold-left fold-left))
     (lambda (a . b)
       (fold-left (lambda (a b)
-                   (if (> a b) a b))
-                 a b))))
+                   (if (or (inexact? a) (inexact? b))
+                       (exact->inexact (if (> a b) a b))
+                       (if (> a b) a b)))
+                 a
+                 b))))
 
 (define min
   (let ((fold-left fold-left))
     (lambda (a . b)
       (fold-left (lambda (a b)
-                   (if (< a b) a b))
-                 a b))))
+                   (if (or (inexact? a) (inexact? b))
+                       (exact->inexact (if (< a b) a b))
+                       (if (< a b) a b)))
+                 a
+                 b))))
 
 (define (modulo a b)
   (let ((rem (remainder a b)))

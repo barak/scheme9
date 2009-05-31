@@ -1,5 +1,28 @@
 Change Log
 
+2009-05-31
+	Implemented real number multiplication (*).
+	Just try: (expt 9.9 999999999). Is this cool?
+	Intercepted numeric underflow and overflow.
+	Added test cases for real *.
+	Added #E and #I syntax.
+	Added real number test cases for #E, #I, EXACT->INEXACT,
+	INEXACT->EXACT, NEGATIVE?, POSITIVE?, ZERO?.
+2009-05-30
+	Fixed INEXACT->EXACT (sign error).
+	Implemented real -.
+	Implemented exactness in
+	- the +, MIN, and MAX procedures;
+	- bignum-->real conversion;
+	- real number normalization.
+	Added real number tests for -, ABS, MIN, MAX.
+	Added test cases for EXACT->INEXACT and INEXACT->EXACT.
+2009-05-29
+	Implementated real +.
+	Implemented EXACT? and INEXACT?.
+	Implemented EXACT->INEXACT and INEXACT->EXACT.
+	Fixed a few bugs in real <.
+	Added real number tests for +.
 2009-05-28
 	Added more test cases for real <.
 	Extended domains of <=, >, >= to real.

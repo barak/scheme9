@@ -23,12 +23,15 @@
 	You can run the interpreter in its build directory without
 	installing it. Just run "make" and then "./s9".
 
+	The S9 code is only loosely coupled to its Makefile, so in
+	most cases running "cc -Dsystem -o s9 s9.c" (where system=unix
+	or system=plan9) will compile the interpreter just fine.
+
 	On most systems of the Unix family (plus CygWin and MINGW),
 	you can compile and install S9fES by running "make install".
 
-	Once installed, entering "s9" starts the interpreter.
+	Once installed, typing "s9" starts the interpreter.
 
-	(load-from-library "help.scm") loads the online help system.
 	(help) explains the online help system.
 	(apropos) returns a list of all help topics.
 
@@ -123,7 +126,7 @@
 	If you installed the extension library functions in LIBDIR,
 	they can be loaded by the LOAD-FROM-LIBRARY procedure:
 
-	> (load-from-library "draw-tree.scm")
+	> (load-from-library "draw-tree")
 	; loading from /usr/local/share/s9fes/draw-tree.scm
 	> (draw-tree '(a b c))
 	[o|o]---[o|o]---[o|/]
@@ -132,16 +135,6 @@
 	> _
 
 	Feel free to explore them.
-
-	The extension library contains an online help system that can
-	also be loaded with LOAD-FROM-LIBRARY. It contains descriptions
-	of all R4RS procedures and all additional procedures implemented
-	by S9fES:
-
-	> (load-from-library "help.scm")
-	; loading from /usr/local/share/s9fes/contrib/help.scm
-	> (help)
-	  ... HELP explains itself ...
 
 
 	EXTENDED INTERPRETER
