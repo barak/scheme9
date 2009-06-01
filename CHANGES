@@ -1,5 +1,16 @@
 Change Log
 
+2009-06-01
+	Implemented real number division (/).
+	Made INTEGER? return #T for reals that can be converted to
+	integer without loss of precision.
+	Made INEXACT->EXACT return an integer whenever possible.
+	Extended domain of EXPT to real.
+	Implemented the internal EXPONENT and MANTISSA procedures.
+	Fixed a GC leak in real_normalize(). Thanks, Masaru KIMURA.
+	Added test cases for / and EXPT.
+	Added more type test cases.
+	Updated the S9(1) man page.
 2009-05-31
 	Implemented real number multiplication (*).
 	Just try: (expt 9.9 999999999). Is this cool?

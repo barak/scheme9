@@ -3,13 +3,12 @@
 .TH s9 1 2009-02-24 Debian Scheme 9 From Empty Space
 .ll 70
 .lt 70
-.ds N "pi
-.de HD		\" Header
+.de HD		\" header
 'sp 1v
 .tl 'S9(1)'Scheme 9 from Empty Space'S9(1)'
 'sp 2v
 ..
-.de FO		\" Footer
+.de FO		\" footer
 'sp 3v
 .tl 'S9 Interpreter'Page %'S9(1)'
 'bp
@@ -29,7 +28,7 @@
 .de I
 \fI\\$1\fP
 ..
-.de SH		\" subheader macro
+.de SH		\" subheading
 .ne 5
 .sp
 .in 0i
@@ -38,17 +37,9 @@
 .fi
 .in 1i
 ..
-.de ST		\" start a table
-.in 1i
-.nf
-..
-.de ET		\" end a table
-.fi
-.in 0
-..
 .wh 0 HD	\" traps for header
 .wh -5 FO	\" and footer
-.nh		\" disable hyphenation
+.nh
 .sp
 .SH NAME
 .B "s9
@@ -130,7 +121,11 @@ environments. It employs a constant-space mark and sweep garbage
 collector with in-situ string and vector pool compaction. Memory
 pools grow on demand.
 .br
-The interpreter uses bignum integer arithmetics exclusively.
+The interpreter uses arbitrary-precision integer arithmetics and
+decimal-based floating point arithmetics. Real numbers are represented
+by
+.I exact
+values as long as the internal representation allows for it.
 It provides both low-level macros (see
 .B MACROS
 below) and \fBdefine-syntax\fP/\fBsyntax-rules\fP.
@@ -161,6 +156,16 @@ that does not use quasiquotation.
 If
 .I form
 applies a macro, return the expanded form, else return the form.
+.in -4
+.br
+.ne 3
+.B "(exponent real) ==> integer
+.in +4
+Return the exponent of the internal representation of
+.IR real .
+When
+.I real
+is an integer, return 0.
 .in -4
 .br
 .ne 3
@@ -229,6 +234,16 @@ When the file can be located, return its full path, else
 return \fB#f\fP.
 .in -4
 .br
+.ne 3
+.B "(mantissa real) ==> integer
+.in +4
+Return the mantissa of the internal representation of
+.IR real .
+When
+.I real
+is an integer, return that integer.
+.in -4
+.br
 .ne 2
 .B "(print form ...) ==> unspecific
 .in +4
@@ -273,7 +288,7 @@ Return a list of all defined symbols.
 .B "(trace #t) ==> list | #t
 .in +4
 Trace the procedure or syntax bound to the given
-.IR symbols .
+.IR symbol s.
 When
 .B #t
 is passed to
@@ -422,12 +437,9 @@ Transcripts:
 .BR transcript-off ,
 .BR transcript-on .
 .br
-Numeric tower: rational, float (work in progress), complex numbers.
+Numeric tower: rational and complex numbers.
 .br
-Numeric syntax and procedures:
-.BR #e ,
-.BR #i ,
-.BR / ,
+Numeric procedures:
 .BR acos ,
 .BR angle ,
 .BR asin ,

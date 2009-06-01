@@ -8,7 +8,7 @@
  * Use -DBITS_PER_WORD_64 on 64-bit systems.
  */
 
-#define VERSION "2009-05-31"
+#define VERSION "2009-06-01"
 
 #define EXTERN
 #include "s9.h"
@@ -1109,6 +1109,7 @@ int print_real(cell n) {
 		m = cdr(m);
 	}
 	pr("e");
+	if (e+n_digits-1 >= 0) pr("+");
 	pr(ntoa(buf, e+n_digits-1, 0));
 	return 1;
 }
@@ -2299,9 +2300,9 @@ cell real_normalize(cell x, char *who) {
 		dgs--;
 		e++;
 	}
-	unsave(2);
 	if (bignum_zero_p(m)) e = 0;
 	r = alloc3(e, NIL, ATOM_TAG);
+	unsave(2);
 	if (count_digits(r) > DIGITS_PER_WORD) {
 		sprintf(buf, "%s: floating point %sflow",
 			who? who: "internal",
@@ -2365,43 +2366,38 @@ int real_equal_p(cell a, cell b) {
 }
 
 /*
- * Scale the number with the larger exponent to the
- * smaller exponent and return a number that is equal
- * to LARGE_EXP, but has the exponent of SMALL_EXP.
- * When there is not enough room in the mantissa for
- * scaling, return NIL.
- * E.g.: scale_mantissa(1.0e0, 11.0e-1) --> 10.0e-1
+ * Scale the number R so that it gets exponent DESIRED_E
+ * without changing its value. When there is not enough
+ ; room in the mantissa of R for scaling, return NIL.
+ * E.g.: scale_mantissa(1.0e0, -2) --> 100.0e-2
  */
-cell scale_mantissa(cell large_exp, cell small_exp, int max_size) {
-	int	dgs_small, dgs_large;
+cell scale_mantissa(cell r, cell desired_e, int max_size) {
+	int	dgs;
 	cell	n, e;
 
-	dgs_large = count_digits(real_mantissa(large_exp));
-	dgs_small = count_digits(real_mantissa(small_exp));
-	if (	max_size - dgs_large <
-		real_exponent(large_exp) - real_exponent(small_exp)
-	)
+	dgs = count_digits(real_mantissa(r));
+	if (max_size - dgs < real_exponent(r) - desired_e)
 		return NIL;
-	n = alloc3(T_INTEGER, flat_copy(real_mantissa(large_exp), NULL),
+	n = alloc3(T_INTEGER, flat_copy(real_mantissa(r), NULL),
 			ATOM_TAG);
 	save(n);
-	e = real_exponent(large_exp);
-	while (e > real_exponent(small_exp)) {
+	e = real_exponent(r);
+	while (e > desired_e) {
 		n = bignum_shift_left(n, 0);
 		car(Stack) = n;
 		e--;
 	}
 	unsave(1);
-	return make_real(real_flags(large_exp), e, cdr(n));
+	return make_real(real_flags(r), e, cdr(n));
 }
 
 void autoscale(cell *pa, cell *pb) {
 	if (real_exponent(*pa) < real_exponent(*pb)) {
-		*pb = scale_mantissa(*pb, *pa, MANTISSA_SIZE*2);
+		*pb = scale_mantissa(*pb, real_exponent(*pa), MANTISSA_SIZE*2);
 		return;
 	}
 	if (real_exponent(*pb) < real_exponent(*pa)) {
-		*pa = scale_mantissa(*pa, *pb, MANTISSA_SIZE*2);
+		*pa = scale_mantissa(*pa, real_exponent(*pb), MANTISSA_SIZE*2);
 	}
 }
 
@@ -2433,7 +2429,7 @@ int real_less_p(cell a, cell b) {
 		save(a);
 		save(b);
 		Tmp = NIL;
-		b = scale_mantissa(b, a, MANTISSA_SIZE);
+		b = scale_mantissa(b, real_exponent(a), MANTISSA_SIZE);
 		unsave(2);
 		if (b == NIL) return neg? 0: 1;
 	}
@@ -2442,7 +2438,7 @@ int real_less_p(cell a, cell b) {
 		save(a);
 		save(b);
 		Tmp = NIL;
-		a = scale_mantissa(a, b, MANTISSA_SIZE);
+		a = scale_mantissa(a, real_exponent(b), MANTISSA_SIZE);
 		unsave(2);
 		if (a == NIL) return neg? 1: 0;
 	}
@@ -2534,6 +2530,44 @@ cell real_multiply(cell a, cell b) {
 	unsave(2);
 	r = make_real(inexact | (neg? REAL_NEGATIVE: 0), e, cdr(m));
 	return real_normalize(r, "*");
+}
+
+cell real_divide(cell x, cell a, cell b) {
+	cell	r, m, e, ma, mb, ea, eb, neg;
+	int	inexact, nd;
+
+	if (integer_p(a)) a = bignum_to_real(a);
+	if (real_zero_p(a)) {
+		return make_real(0, 0, cdr(make_integer(0)));
+	}
+	save(a);
+	if (integer_p(b)) b = bignum_to_real(b);
+	save(b);
+	inexact = real_inexact_flag(a) | real_inexact_flag(b);
+	neg = real_negative_flag(a) != real_negative_flag(b);
+	ea = real_exponent(a);
+	eb = real_exponent(b);
+	ma = alloc3(T_INTEGER, real_mantissa(a), ATOM_TAG);
+	cadr(Stack) = ma;
+	mb = alloc3(T_INTEGER, real_mantissa(b), ATOM_TAG);
+	car(Stack) = mb;
+	if (bignum_zero_p(mb)) {
+		unsave(2);
+		return error("floating point divide by zero", x);
+	}
+	nd = count_digits(cdr(ma));
+	while (nd < MANTISSA_SIZE + count_digits(cdr(mb))) {
+		ma = bignum_shift_left(ma, 0);
+		cadr(Stack) = ma;
+		nd++;
+		ea--;
+	}
+	e = ea - eb;
+	m = bignum_divide(NOEXPR, ma, mb);
+	if (!bignum_zero_p(cdr(m))) inexact = REAL_INEXACT;
+	unsave(2);
+	r = make_real(inexact | (neg? REAL_NEGATIVE: 0), e, cdar(m));
+	return real_normalize(r, "/");
 }
 
 /*----- Primitives -----*/
@@ -2716,6 +2750,32 @@ cell pp_display(cell x) {
 	return UNSPECIFIC;
 }
 
+cell pp_divide(cell x) {
+	cell	a, expr;
+
+	expr = x;
+	x = cdr(x);
+	if (cdr(x) == NIL) {
+		a = make_integer(1);
+		save(a);
+		a = real_divide(expr, a, car(x));
+		unsave(1);
+		return a;
+	}
+	a = car(x);
+	x = cdr(x);
+	save(a);
+	while (x != NIL) {
+		if (!number_p(car(x)))
+			return error("/: expected number, got", car(x));
+		a = real_divide(expr, a, car(x));
+		car(Stack) = a;
+		x = cdr(x);
+	}
+	unsave(1);
+	return a;
+}
+
 cell pp_delete_file(cell x) {
 	if (remove(string(cadr(x))) < 0)
 		error("delete-file: file does not exist", cadr(x));
@@ -2769,6 +2829,11 @@ cell pp_expand_macro(cell x) {
 	x = expand_syntax(x);
 	unsave(1);
 	return x;
+}
+
+cell pp_exponent(cell x) {
+	if (integer_p(cadr(x))) return make_integer(0);
+	return make_integer(real_exponent(cadr(x)));
 }
 
 cell pp_file_exists_p(cell x) {
@@ -2835,9 +2900,24 @@ cell pp_inexact_p(cell x) {
 	return real_inexact_flag(cadr(x))? TRUE: FALSE;
 }
 
+cell real_to_integer(cell x) {
+	cell	n;
+
+	if (real_exponent(x) >= 0) {
+		n = scale_mantissa(x, 0, MANTISSA_SIZE);
+		if (n == NIL) return NIL;
+		return alloc3(T_INTEGER, real_mantissa(n), ATOM_TAG);
+	}
+	return NIL;
+}
+
 cell pp_inexact_to_exact(cell x) {
+	cell	n;
+
 	x = cadr(x);
 	if (integer_p(x)) return x;
+	n = real_to_integer(x);
+	if (n != NIL) return n;
 	return real_to_exact(x);
 }
 
@@ -2856,7 +2936,9 @@ cell pp_integer_to_char(cell x) {
 }
 
 cell pp_integer_p(cell x) {
-	return integer_p(cadr(x))? TRUE: FALSE;
+	if (integer_p(cadr(x))) return TRUE;
+	if (real_to_integer(cadr(x)) != NIL) return TRUE;
+	return FALSE;
 }
 
 cell pp_less(cell x) {
@@ -3003,6 +3085,11 @@ cell pp_make_vector(cell x) {
 	m = cddr(x) == NIL? FALSE: caddr(x);
 	for (i=0; i<k; i++) v[i] = m;
 	return n;
+}
+
+cell pp_mantissa(cell x) {
+	if (integer_p(cadr(x))) return cadr(x);
+	return alloc3(T_INTEGER, real_mantissa(cadr(x)), ATOM_TAG);
 }
 
 cell pp_minus(cell x) {
@@ -3580,12 +3667,14 @@ PRIM Primitives[] = {
  { "current-output-port", pp_current_output_port, 0,  0, { ___,___,___ } },
  { "delete-file",         pp_delete_file,         1,  1, { STR,___,___ } },
  { "display",             pp_display,             1,  2, { ___,OUP,___ } },
+ { "/",                   pp_divide,              1, -1, { REA,___,___ } },
  { "eof-object?",         pp_eof_object_p,        1,  1, { ___,___,___ } },
  { "eq?",                 pp_eq_p,                2,  2, { ___,___,___ } },
  { "=",                   pp_equal,               2, -1, { REA,___,___ } },
  { "exact->inexact",      pp_exact_to_inexact,    1,  1, { REA,___,___ } },
  { "exact?",              pp_exact_p,             1,  1, { REA,___,___ } },
  { "expand-macro",        pp_expand_macro,        1,  1, { ___,___,___ } },
+ { "exponent",            pp_exponent,            1,  1, { REA,___,___ } },
  { "file-exists?",        pp_file_exists_p,       1,  1, { STR,___,___ } },
  { "gensym",              pp_gensym,              0,  1, { STR,___,___ } },
  { ">",                   pp_greater,             2, -1, { REA,___,___ } },
@@ -3602,6 +3691,7 @@ PRIM Primitives[] = {
  { "load",                pp_load,                1,  1, { STR,___,___ } },
  { "make-string",         pp_make_string,         1,  2, { INT,___,___ } },
  { "make-vector",         pp_make_vector,         1,  2, { INT,___,___ } },
+ { "mantissa",            pp_mantissa,            1,  1, { REA,___,___ } },
  { "-",                   pp_minus,               1, -1, { REA,___,___ } },
  { "open-input-file",     pp_open_input_file,     1,  1, { STR,___,___ } },
  { "open-output-file",    pp_open_output_file,    1,  1, { STR,___,___ } },
