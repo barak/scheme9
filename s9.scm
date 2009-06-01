@@ -348,7 +348,7 @@
                ((even? y) (square (expt2 x (quotient y 2))))
                (else      (* x (square (expt2 x (quotient y 2)))))))))
     (if (negative? y)
-        (wrong "expt: negative exponent" y)
+        (/ (expt2 (exact->inexact x) y))
         (expt2 x y))))
 
 (define gcd
