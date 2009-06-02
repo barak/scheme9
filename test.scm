@@ -1850,6 +1850,16 @@
 (test (remainder -12345  12345) 0)
 (test (remainder -12345 -12345) 0)
 
+(test (sqrt 0) 0)
+(test (sqrt 1) 1)
+(test (sqrt 144) 12)
+(test (sqrt 15241578750190521) 123456789)
+(test (sqrt 15241578750190521.0) 123456789.0)
+(test (< 1.4142135620   (sqrt 2) 1.4142135629) #t)
+(test (< 11.090536500 (sqrt 123) 11.090536509) #t)
+(test (sqrt 15239.9025) 123.45)
+(test (sqrt 1e20) 1e10)
+
 (test (zero? -1) #f)
 (test (zero?  0) #t)
 (test (zero?  1) #f)

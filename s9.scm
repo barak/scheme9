@@ -347,9 +347,12 @@
          (cond ((zero? y) 1)
                ((even? y) (square (expt2 x (quotient y 2))))
                (else      (* x (square (expt2 x (quotient y 2)))))))))
-    (if (negative? y)
-        (/ (expt2 (exact->inexact x) y))
-        (expt2 x y))))
+    (let ((y (if (integer? y)
+                 (inexact->exact y)
+                 (wrong "expt: expected integer, but got" y))))
+      (if (negative? y)
+          (/ (expt2 (exact->inexact x) y))
+          (expt2 x y)))))
 
 (define gcd
   (let ((fold-left fold-left))
@@ -405,6 +408,17 @@
 (define (odd? x) (not (even? x)))
 
 (define (positive? x) (> x 0))
+
+(define (sqrt square)
+  (letrec
+    ((sqrt2 (lambda (x last)
+       (if (= last x)
+           x
+           (sqrt2 (/ (+ x (/ square x)) 2)
+                  x)))))
+    (if (negative? square)
+        (wrong "sqrt: negative argument" square)
+        (sqrt2 square 0))))
 
 (define (zero? x) (= 0 x))
 

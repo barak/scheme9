@@ -148,12 +148,12 @@
 /* N-bit arithmetics require sizeof(cell) >= N/8 */
 #ifdef BITS_PER_WORD_64
  #define DIGITS_PER_WORD	18
- #define INT_SEG_LIMIT		1000000000000000000
+ #define INT_SEG_LIMIT		1000000000000000000L
  #define MANTISSA_SEGMENTS	2
 #else
  #ifdef BITS_PER_WORD_32
   #define DIGITS_PER_WORD	9
-  #define INT_SEG_LIMIT		1000000000
+  #define INT_SEG_LIMIT		1000000000L
    #define MANTISSA_SEGMENTS	2
  #else
   #ifdef BITS_PER_WORD_16
@@ -479,7 +479,7 @@ EXTERN cell	S_and, S_begin, S_call_ec, S_cond, S_define,
  */
 cell	error(char *msg, cell expr);
 void	fatal(char *msg);
-cell	make_integer(long i);
+cell	make_integer(cell i);
 int	integer_value(char *src, cell x);
 cell	alloc3(cell pcar, cell pcdr, int ptag);
 cell	make_string(char *s, int k);

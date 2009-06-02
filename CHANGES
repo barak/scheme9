@@ -1,5 +1,14 @@
 Change Log
 
+2009-06-02
+	* I have tested this release on my Alpha with -DBITS_PER_WORD_64
+	* and it passed all tests. If make test still fails on Linux/PPC,
+	* I would need SSH access to a PPC box to investigate further.
+	Implemented SQRT.
+	Fixed INTEGER? (mistook random objects for integers).
+	Removed some 64-bit glitches.
+	Applied some cosmetics.
+	Added test cases.
 2009-06-01
 	Implemented real number division (/).
 	Made INTEGER? return #T for reals that can be converted to
