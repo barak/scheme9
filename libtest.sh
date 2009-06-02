@@ -15,6 +15,7 @@ cat >$testfile <<EOT
 (define Errors 0)
 
 (define (check src expr result)
+;  (write src) (display " ==> ") (write expr) (newline)
   (if (not (equal? expr result))
       (begin (write src)
              (display " FAILED!")

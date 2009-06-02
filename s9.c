@@ -8,7 +8,7 @@
  * Use -DBITS_PER_WORD_64 on 64-bit systems.
  */
 
-#define VERSION "2009-06-01"
+#define VERSION "2009-06-02"
 
 #define EXTERN
 #include "s9.h"
@@ -592,8 +592,8 @@ int string_numeric_p(char *s) {
 }
 
 cell string_to_bignum(char *numstr) {
-	cell	n;
-	int	k, j, v, sign;
+	cell	n, v;
+	int	k, j, sign;
 	char	*s, buf[TOKEN_LENGTH+2];
 
 	strcpy(buf, numstr);
@@ -620,7 +620,7 @@ cell string_to_bignum(char *numstr) {
 }
 
 cell real_normalize(cell x, char *who);
-cell make_integer(long i);
+cell make_integer(cell i);
 cell make_real(int flags, cell exp, cell mant);
 cell bignum_shift_left(cell a, int fill);
 cell bignum_add(cell a, cell b);
@@ -707,7 +707,7 @@ int strcmp_ci(char *s1, char *s2) {
 /* Read a character literal. */
 cell character(void) {
 	char	buf[10], msg[50];
-	int	i, c;
+	int	i, c = 0; /*LINT*/
 
 	for (i=0; i<sizeof(buf)-1; i++) {
 		c = read_c();
@@ -1043,7 +1043,7 @@ void print_expanded_real(cell m, cell e, int n_digits, int neg) {
 	dp_offset = e+n_digits;
 	first = 1;
 	while (m != NIL) {
-		ntoa(buf, abs(car(m)), first? 0: DIGITS_PER_WORD);
+		ntoa(buf, labs(car(m)), first? 0: DIGITS_PER_WORD);
 		k = strlen(buf);
 		old_offset = dp_offset;
 		dp_offset -= k;
@@ -1804,7 +1804,7 @@ cell sf_define_macro(cell x, int *pc, int *ps) {
 
 /*----- Bignums -----*/
 
-cell make_integer(long i) {
+cell make_integer(cell i) {
 	cell	n;
 
 	n = alloc3(i, NIL, ATOM_TAG);
@@ -1825,7 +1825,7 @@ int integer_value(char *src, cell x) {
 cell bignum_abs(cell a) {
 	cell	n;
 
-	n = alloc3(abs(cadr(a)), cddr(a), ATOM_TAG);
+	n = alloc3(labs(cadr(a)), cddr(a), ATOM_TAG);
 	return alloc3(T_INTEGER, n, ATOM_TAG);
 }
 
@@ -1851,8 +1851,7 @@ cell bignum_add(cell a, cell b);
 cell bignum_subtract(cell a, cell b);
 
 cell _bignum_add(cell a, cell b) {
-	cell	fa, fb, result;
-	long	r;
+	cell	fa, fb, result, r;
 	int	carry;
 
 	if (bignum_negative_p(a)) {
@@ -1959,9 +1958,8 @@ cell bignum_equal_p(cell a, cell b) {
 }
 
 cell _bignum_subtract(cell a, cell b) {
-	cell	fa, fb, result;
+	cell	fa, fb, result, r;
 	int	borrow;
-	long	r;
 
 	if (bignum_negative_p(a)) {
 		if (bignum_negative_p(b)) {
@@ -2033,9 +2031,8 @@ cell bignum_subtract(cell a, cell b) {
 }
 
 cell bignum_shift_left(cell a, int fill) {
-	long	r, c;
+	cell	r, c, result;
 	int	carry;
-	cell	result;
 
 	a = reverse_segments(cdr(a));
 	save(a);
@@ -2064,9 +2061,8 @@ cell bignum_shift_left(cell a, int fill) {
 
 /* Result: (a/10 . a%10) */
 cell bignum_shift_right(cell a) {
-	long	r, c;
+	cell	r, c, result;
 	int	carry;
-	cell	result;
 
 	a = cdr(a);
 	save(a);
@@ -2318,7 +2314,7 @@ cell bignum_to_real(cell a) {
 	cell	x, n;
 
 	x = flat_copy(a, NULL);
-	cadr(x) = abs(cadr(x));
+	cadr(x) = labs(cadr(x));
 	save(x);
 	nseg = length(cdr(x));
 	inexact = 0;
@@ -2378,8 +2374,7 @@ cell scale_mantissa(cell r, cell desired_e, int max_size) {
 	dgs = count_digits(real_mantissa(r));
 	if (max_size - dgs < real_exponent(r) - desired_e)
 		return NIL;
-	n = alloc3(T_INTEGER, flat_copy(real_mantissa(r), NULL),
-			ATOM_TAG);
+	n = alloc3(T_INTEGER, flat_copy(real_mantissa(r), NULL), ATOM_TAG);
 	save(n);
 	e = real_exponent(r);
 	while (e > desired_e) {
@@ -2534,7 +2529,7 @@ cell real_multiply(cell a, cell b) {
 
 cell real_divide(cell x, cell a, cell b) {
 	cell	r, m, e, ma, mb, ea, eb, neg;
-	int	inexact, nd;
+	int	inexact, nd, dd;
 
 	if (integer_p(a)) a = bignum_to_real(a);
 	if (real_zero_p(a)) {
@@ -2556,7 +2551,8 @@ cell real_divide(cell x, cell a, cell b) {
 		return error("floating point divide by zero", x);
 	}
 	nd = count_digits(cdr(ma));
-	while (nd < MANTISSA_SIZE + count_digits(cdr(mb))) {
+	dd = MANTISSA_SIZE + count_digits(cdr(mb));
+	while (nd < dd) {
 		ma = bignum_shift_left(ma, 0);
 		cadr(Stack) = ma;
 		nd++;
@@ -2900,11 +2896,11 @@ cell pp_inexact_p(cell x) {
 	return real_inexact_flag(cadr(x))? TRUE: FALSE;
 }
 
-cell real_to_integer(cell x) {
+cell real_to_integer(cell r) {
 	cell	n;
 
-	if (real_exponent(x) >= 0) {
-		n = scale_mantissa(x, 0, MANTISSA_SIZE);
+	if (real_exponent(r) >= 0) {
+		n = scale_mantissa(r, 0, MANTISSA_SIZE);
 		if (n == NIL) return NIL;
 		return alloc3(T_INTEGER, real_mantissa(n), ATOM_TAG);
 	}
@@ -2937,7 +2933,8 @@ cell pp_integer_to_char(cell x) {
 
 cell pp_integer_p(cell x) {
 	if (integer_p(cadr(x))) return TRUE;
-	if (real_to_integer(cadr(x)) != NIL) return TRUE;
+	if (real_p(cadr(x)) && real_to_integer(cadr(x)) != NIL)
+		return TRUE;
 	return FALSE;
 }
 
@@ -4580,6 +4577,7 @@ void load_library(void) {
 	char	*path, buf[256], *p;
 	char	libdir[240], libfile[256];
 	char	*home;
+	cell	new;
 
 	path = strdup(string(car(S_library_path)));
 	home = getenv("HOME");
@@ -4602,7 +4600,8 @@ void load_library(void) {
 		if (load_image(libfile) == 0) {
 			free(path);
 			/* *library-path* is overwritten by load_image() */
-			car(S_library_path) = get_library_path();
+			new = get_library_path();
+			car(S_library_path) = new;
 			return;
 		}
 		if (strlen(LIBRARY) + strlen(libdir) >= sizeof(libfile)-1)
@@ -4654,6 +4653,8 @@ void add_primitives(char *name, PRIM *p) {
 void unix_init(void);
 
 void make_initial_env(void) {
+	cell	new;
+
 	Environment = alloc(NIL, NIL);
 	Environment = extend(add_symbol("**"), NIL, Environment);
 	S_latest = cdadr(Environment);
@@ -4661,7 +4662,8 @@ void make_initial_env(void) {
 	S_extensions = cdadr(Environment);
 	Environment = extend(add_symbol("*library-path*"), NIL, Environment);
 	S_library_path = cdadr(Environment);
-	car(S_library_path) = get_library_path();
+	new = get_library_path();
+	car(S_library_path) = new;
 	Environment = extend(add_symbol("*loading*"), FALSE, Environment);
 	S_loading = cdadr(Environment);
 	Apply_magic = NULL;
