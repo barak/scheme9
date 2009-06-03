@@ -283,6 +283,7 @@ EXTERN cell	State_stack;
 EXTERN cell	Tmp_car,
 		Tmp_cdr,
 		Tmp;
+EXTERN cell	New;
 EXTERN cell	Symbols;
 EXTERN cell	Program;
 EXTERN cell	Called_procedures[10];

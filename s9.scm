@@ -347,12 +347,9 @@
          (cond ((zero? y) 1)
                ((even? y) (square (expt2 x (quotient y 2))))
                (else      (* x (square (expt2 x (quotient y 2)))))))))
-    (let ((y (if (integer? y)
-                 (inexact->exact y)
-                 (wrong "expt: expected integer, but got" y))))
-      (if (negative? y)
-          (/ (expt2 (exact->inexact x) y))
-          (expt2 x y)))))
+    (if (negative? y)
+        (/ (expt2 (exact->inexact x) y))
+        (expt2 x y))))
 
 (define gcd
   (let ((fold-left fold-left))
@@ -408,6 +405,90 @@
 (define (odd? x) (not (even? x)))
 
 (define (positive? x) (> x 0))
+
+(define (ceiling x) (- (floor (- x))))
+
+(define (round x)
+  (let ((x+ (+ 0.5 x)))
+    (let ((rx (floor x+)))
+      (if (and (odd? rx) (= x+ rx))
+          (- rx 1)
+          rx))))
+
+(define (truncate x)
+  ((if (< x 0) ceiling floor) x))
+
+(define *pi* 3.14159265358979323846264338327950288419716939937510)
+
+(define (->circle x)
+  (let ((x+ (abs x)))
+    (let ((d (* 360 (quotient (inexact->exact (floor x+)) 360))))
+      (let ((x+ (- x+ d)))
+        (if (negative? x)
+            (- 360 x+)
+            x+)))))
+
+(define ->rad
+  (let ((*pi* *pi*))
+    (lambda (x)
+      (/ (* x *pi*) 180))))
+
+(define (p-series x y r add last)
+  (letrec
+    ((fact
+       (lambda (x)
+         (if (zero? x)
+             1
+             (* x (fact (- x 1)))))))
+    (if (= r last)
+        r
+        (p-series x
+                  (+ 2 y)
+                  ((if add + -) r (/ (expt x y)
+                                     (fact y)))
+                  (not add)
+                  r))))
+
+(define cos
+  (let ((p-series p-series)
+        (->circle ->circle)
+        (->rad    ->rad))
+    (lambda (x)
+      (let ((x (->circle x)))
+        (cond ((=   0 x)      (if (inexact? x) (exact->inexact  1.0)  1.0))
+              ((=  90 x)      (if (inexact? x) (exact->inexact  0.0)  0.0))
+              ((= 180 x)      (if (inexact? x) (exact->inexact -1.0) -1.0))
+              ((= 270 x)      (if (inexact? x) (exact->inexact  0.0)  0.0))
+              ((<=   0 x  90) (p-series    (->rad x)         2 1.0 #f 0))
+              ((<=  90 x 180) (- (p-series (->rad (- 180 x)) 2 1.0 #f 0)))
+              ((<= 180 x 270) (- (p-series (->rad (- x 180)) 2 1.0 #f 0)))
+              (else           (p-series    (->rad (- 360 x)) 2 1.0 #f 0)))))))
+
+(define sin
+  (let ((p-series p-series)
+        (->circle ->circle)
+        (->rad    ->rad))
+    (lambda (x)
+      (let ((x (->circle x)))
+        (let ((x1 (->rad x))
+              (x2 (->rad (- 180 x)))
+              (x3 (->rad (- x 180)))
+              (x4 (->rad (- 360 x))))
+          (cond ((=   0 x)      (if (inexact? x) (exact->inexact  0.0)  0.0))
+                ((=  90 x)      (if (inexact? x) (exact->inexact  1.0)  1.0))
+                ((= 180 x)      (if (inexact? x) (exact->inexact  0.0)  0.0))
+                ((= 270 x)      (if (inexact? x) (exact->inexact -1.0) -1.0))
+                ((<=   0 x  90) (p-series    x1 3 x1 #f 0))
+                ((<=  90 x 180) (p-series    x2 3 x2 #f 0))
+                ((<= 180 x 270) (- (p-series x3 3 x3 #f 0)))
+                (else           (- (p-series x4 3 x4 #f 0)))))))))
+
+(define (tan x)
+  (let ((x (->circle x)))
+    (cond ((memv x '(  0 180)) (if (inexact? x) (exact->inexact  0.0)  0.0))
+          ((memv x '( 45 225)) (if (inexact? x) (exact->inexact  1.0)  1.0))
+          ((memv x '(135 315)) (if (inexact? x) (exact->inexact -1.0) -1.0))
+          (else                (/ (sin x) (cos x))))))
 
 (define (sqrt square)
   (letrec
@@ -503,7 +584,7 @@
 ;; Input/output procedures
 
 (define (newline . port)
-  (apply display #\newline port))
+  (apply write-char #\newline port))
 
 (define (call-with-input-file file proc)
   (let ((f (open-input-file file)))
@@ -991,7 +1072,7 @@
   (letrec
     ((p (lambda (x* first)
           (cond ((not (null? x*))
-                  (if (not first) (display #\space))
+                  (if (not first) (write-char #\space))
                   (write (car x*))
                   (p (cdr x*) #f))))))
     (p x* #t)
