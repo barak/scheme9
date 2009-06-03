@@ -1,5 +1,14 @@
 Change Log
 
+2009-06-03
+	Implemented CEILING, FLOOR, ROUND, TRUNCATE procedures.
+	Implemented SIN, COS, and TAN procedures.
+	Added tests for all of the above.
+	Made procedures expecting integers accept real numbers too, as
+	long as they are exact and can be converted to integer without
+	loss of precision. Added tests.
+	Made the reader accept an excess number of digits in the mantissa,
+	giving an inexact number.
 2009-06-02
 	* I have tested this release on my Alpha with -DBITS_PER_WORD_64
 	* and it passed all tests. If make test still fails on Linux/PPC,

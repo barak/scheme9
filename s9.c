@@ -8,7 +8,7 @@
  * Use -DBITS_PER_WORD_64 on 64-bit systems.
  */
 
-#define VERSION "2009-06-02"
+#define VERSION "2009-06-03"
 
 #define EXTERN
 #include "s9.h"
@@ -660,10 +660,6 @@ cell string_to_real(char *s) {
 	j = 0;
 	for (n = cdr(mantissa); n != NIL; n = cdr(n))
 		j++;
-	if (j > MANTISSA_SEGMENTS)
-		return error(
-			"mantissa too big in real number literal",
-				make_string(s, strlen(s)));
 	if (s[i] == 'e' || s[i] == 'E') {
 		i++;
 		n = string_to_bignum(&s[i]);
@@ -1811,9 +1807,13 @@ cell make_integer(cell i) {
 	return alloc3(T_INTEGER, n, ATOM_TAG);
 }
 
+cell integer_argument(char *who, cell x);
+
 int integer_value(char *src, cell x) {
 	char	msg[100];
 
+	x = integer_argument(src, x);
+	if (x == NIL) return 0;
 	if (cddr(x) != NIL) {
 		sprintf(msg, "%s: integer argument too big", src);
 		error(msg, x);
@@ -2259,6 +2259,25 @@ cell bignum_read(char *pre, int radix) {
 }
 
 /*----- Floating Point Arithmetics -----*/
+
+cell real_to_integer(cell x);
+
+cell integer_argument(char *who, cell x) {
+	cell	n;
+	char	msg[100];
+
+	if (real_p(x)) {
+		n = real_to_integer(x);
+		if (n == NIL || real_inexact_flag(x)) {
+			sprintf(msg, "%s: expected integer, got (inexact)",
+				who);
+			error(msg, x);
+			return NIL;
+		}
+		return n;
+	}
+	return x;
+}
 
 cell make_real(int flags, cell exp, cell mant) {
 	cell	n;
@@ -2841,6 +2860,27 @@ cell pp_file_exists_p(cell x) {
 	return TRUE;
 }
 
+cell pp_floor(cell x) {
+	cell	m, e;
+
+	x = cadr(x);
+	e = real_exponent(x);
+	if (e >= 0) return x;
+	m = alloc3(T_INTEGER, real_mantissa(x), ATOM_TAG);
+	save(m);
+	while (e < 0) {
+		m = bignum_shift_right(m);
+		car(Stack) = m = car(m);
+		e++;
+	}
+	if (real_negative_p(x)) {
+		/* sign not in mantissa! */
+		m = bignum_add(m, make_integer(1));
+	}
+	unsave(1);
+	return make_real(real_flags(x), e, cdr(m));
+}
+
 cell gensym(char *prefix) {
 	static long	g = 0;
 	char		s[200];
@@ -3177,7 +3217,14 @@ cell pp_procedure_p(cell x) {
 }
 
 cell pp_quotient(cell x) {
-	return car(bignum_divide(x, cadr(x), caddr(x)));
+	char	name[] = "quotient";
+	cell	a, b;
+
+	a = integer_argument(name, cadr(x));
+	save(a);
+	b = integer_argument(name, caddr(x));
+	unsave(1);
+	return car(bignum_divide(x, a, b));
 }
 
 cell pp_read(cell x) {
@@ -3223,7 +3270,14 @@ cell pp_real_p(cell x) {
 }
 
 cell pp_remainder(cell x) {
-	return cdr(bignum_divide(x, cadr(x), caddr(x)));
+	char	name[] = "remainder";
+	cell	a, b;
+
+	a = integer_argument(name, cadr(x));
+	save(a);
+	b = integer_argument(name, caddr(x));
+	unsave(1);
+	return cdr(bignum_divide(x, a, b));
 }
 
 cell pp_set_car_b(cell x) {
@@ -3673,6 +3727,7 @@ PRIM Primitives[] = {
  { "expand-macro",        pp_expand_macro,        1,  1, { ___,___,___ } },
  { "exponent",            pp_exponent,            1,  1, { REA,___,___ } },
  { "file-exists?",        pp_file_exists_p,       1,  1, { STR,___,___ } },
+ { "floor",               pp_floor,               1,  1, { REA,___,___ } },
  { "gensym",              pp_gensym,              0,  1, { STR,___,___ } },
  { ">",                   pp_greater,             2, -1, { REA,___,___ } },
  { ">=",                  pp_greater_equal,       2, -1, { REA,___,___ } },
@@ -3786,8 +3841,9 @@ cell primitive(cell x) {
 				return expected(car(x), "input-port", car(a));
 			break;
 		case T_INTEGER:
-			if (!integer_p(car(a)))
-				return expected(car(x), "integer", car(a));
+		case T_REAL:
+			if (!number_p(car(a)))
+				return expected(car(x), "number", car(a));
 			break;
 		case T_OUTPUT_PORT:
 			if (!output_port_p(car(a)))
@@ -3806,10 +3862,6 @@ cell primitive(cell x) {
 				!primitive_p(car(a))
 			)
 				return expected(car(x), "procedure", car(a));
-			break;
-		case T_REAL:
-			if (!number_p(car(a)))
-				return expected(car(x), "number", car(a));
 			break;
 		case T_STRING:
 			if (!string_p(car(a)))
