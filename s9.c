@@ -8,7 +8,7 @@
  * Use -DBITS_PER_WORD_64 on 64-bit systems.
  */
 
-#define VERSION "2009-06-03"
+#define VERSION "2009-06-04"
 
 #define EXTERN
 #include "s9.h"
@@ -45,8 +45,6 @@ void reset_counter(struct counter *c) {
 }
 
 void count(struct counter *c) {
-	char	*msg = "statistics counter overflow";
-
 	c->n++;
 	if (c->n >= 1000) {
 		c->n -= 1000;
@@ -58,7 +56,8 @@ void count(struct counter *c) {
 				c->n1m -= 1000;
 				c->n1g++;
 				if (c->n1g >= 1000) {
-					error(msg, NOEXPR);
+					error("statistics counter overflow",
+						NOEXPR);
 				}
 			}
 		}

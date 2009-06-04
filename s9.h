@@ -272,7 +272,6 @@ EXTERN int	Pool_size,
 EXTERN cell	*Car,
 		*Cdr;
 EXTERN char	*Tag;
-extern cell	New;
 EXTERN cell	Free_list;
 EXTERN cell	*Vectors;
 EXTERN cell	Free_vecs;
@@ -286,7 +285,7 @@ EXTERN cell	Tmp_car,
 EXTERN cell	New;
 EXTERN cell	Symbols;
 EXTERN cell	Program;
-EXTERN cell	Called_procedures[10];
+EXTERN cell	Called_procedures[MAX_CALL_TRACE];
 EXTERN int	Proc_ptr;
 EXTERN cell	Environment;
 EXTERN cell	Acc;
