@@ -418,6 +418,53 @@
 (define (truncate x)
   ((if (< x 0) ceiling floor) x))
 
+; used by EXP and SIN
+(define (fact2 x r)
+  (if (= x 0)
+      r
+      (fact2 (- x 1) (* x r))))
+
+(define exp
+  (let ((fact2 fact2))
+    (lambda (x)
+      (letrec
+        ((e-series
+           (lambda (x y r last)
+             (if (= r last)
+                 r
+                 (e-series x
+                           (+ 1 y)
+                           (+ r (/ (expt x y)
+                                   (fact2 y 1)))
+                           r)))))
+    (if (>= x 2.0)
+        (let ((e^x/2 (+ 1 (/ x 2) (e-series (/ x 2) 2 0.0 1.0))))
+          (* e^x/2 e^x/2))
+        (+ 1 x (e-series x 2 0.0 1.0)))))))
+
+(define (log x)
+  (letrec
+    ((l-series
+       (lambda (x y r last lim)
+         (cond ((and lim (zero? lim))
+                 r)
+               ((= r last)
+                 (* 2 r))
+               (else
+                 (l-series x
+                           (+ 2 y)
+                           (+ r (/ (expt (/ (- x 1)
+                                            (+ x 1))
+                                         y)
+                                   y))
+                           r
+                           (if lim (- lim 1) lim)))))))
+    (if (< 0.1 x 5)
+        (l-series x 1 0.0 1.0 #f)
+        (let ((approx (l-series x 1 0.0 1.0 5)))
+          (let ((a (/ x (exp approx))))
+            (+ approx (log a)))))))
+
 (define *pi* 3.14159265358979323846264338327950288419716939937510)
 
 (define (->circle x)
@@ -433,21 +480,17 @@
     (lambda (x)
       (/ (* x *pi*) 180))))
 
-(define (p-series x y r add last)
-  (letrec
-    ((fact
-       (lambda (x)
-         (if (zero? x)
-             1
-             (* x (fact (- x 1)))))))
-    (if (= r last)
-        r
-        (p-series x
-                  (+ 2 y)
-                  ((if add + -) r (/ (expt x y)
-                                     (fact y)))
-                  (not add)
-                  r))))
+(define p-series
+  (let ((fact2 fact2))
+    (lambda (x y r add last)
+      (if (= r last)
+          r
+          (p-series x
+                    (+ 2 y)
+                    ((if add + -) r (/ (expt x y)
+                                       (fact2 y 1)))
+                    (not add)
+                    r)))))
 
 (define cos
   (let ((p-series p-series)
@@ -470,18 +513,22 @@
         (->rad    ->rad))
     (lambda (x)
       (let ((x (->circle x)))
-        (let ((x1 (->rad x))
-              (x2 (->rad (- 180 x)))
-              (x3 (->rad (- x 180)))
-              (x4 (->rad (- 360 x))))
-          (cond ((=   0 x)      (if (inexact? x) (exact->inexact  0.0)  0.0))
-                ((=  90 x)      (if (inexact? x) (exact->inexact  1.0)  1.0))
-                ((= 180 x)      (if (inexact? x) (exact->inexact  0.0)  0.0))
-                ((= 270 x)      (if (inexact? x) (exact->inexact -1.0) -1.0))
-                ((<=   0 x  90) (p-series    x1 3 x1 #f 0))
-                ((<=  90 x 180) (p-series    x2 3 x2 #f 0))
-                ((<= 180 x 270) (- (p-series x3 3 x3 #f 0)))
-                (else           (- (p-series x4 3 x4 #f 0)))))))))
+        (cond ((=   0 x)      (if (inexact? x) (exact->inexact  0.0)  0.0))
+              ((=  90 x)      (if (inexact? x) (exact->inexact  1.0)  1.0))
+              ((= 180 x)      (if (inexact? x) (exact->inexact  0.0)  0.0))
+              ((= 270 x)      (if (inexact? x) (exact->inexact -1.0) -1.0))
+              ((<=   0 x  90)
+                (let ((x (->rad x)))
+                  (p-series x 3 x #f 0)))
+              ((<=  90 x 180)
+                (let ((x (->rad (- 180 x))))
+                  (p-series x 3 x #f 0)))
+              ((<= 180 x 270)
+                (let ((x (->rad (- x 180))))
+                  (- (p-series x 3 x #f 0))))
+              (else
+                (let ((x (->rad (- 360 x))))
+                  (- (p-series x 3 x #f 0)))))))))
 
 (define (tan x)
   (let ((x (->circle x)))

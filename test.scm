@@ -1745,6 +1745,12 @@
 (test (exact? (inexact->exact #i-1.2345e+100)) #t)
 (test (exact? (inexact->exact #i-1.2345e-100)) #t)
 
+(test (exp 0) 1)
+(test (< 1.6487212700 (exp 0.5) 1.6487212709) #t)
+(test (< 2.7182818280 (exp 1.0) 2.7182818289) #t)
+(test (< 7.3890560980 (exp 2.0) 7.3890560990) #t)
+(test (< 20.085536920 (exp 3.0) 20.085536929) #t)
+
 (test (inexact?  0) #f)
 (test (inexact?  1) #f)
 (test (inexact? -1) #f)
@@ -1788,6 +1794,11 @@
 (test (lcm 17) 17)
 (test (lcm 12 18) 36)
 (test (lcm 5 12 18) 180)
+
+(test (log 1) 0.0)
+(test (< -2.3025850930 (log 0.1) -2.3025850920) #t)
+(test (<  0.6931471800 (log 2.0)  0.6931471809) #t)
+(test (<  1.0986122880 (log 3.0)  1.0986122889) #t)
 
 (test (min 1) 1)
 (test (min 2 1 3) 1)
