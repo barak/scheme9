@@ -145,11 +145,15 @@
  #endif
 #endif
 
-/* N-bit arithmetics require sizeof(cell) >= N/8 */
+/*
+ * N-bit arithmetics require sizeof(cell) >= N/8.
+ * When MANTISSA_SIZE (below) gets more than 60 places, you
+ * will have to supply a better value for PI in "s9.scm".
+ */
 #ifdef BITS_PER_WORD_64
  #define DIGITS_PER_WORD	18
  #define INT_SEG_LIMIT		1000000000000000000L
- #define MANTISSA_SEGMENTS	2
+ #define MANTISSA_SEGMENTS	1
 #else
  #ifdef BITS_PER_WORD_32
   #define DIGITS_PER_WORD	9

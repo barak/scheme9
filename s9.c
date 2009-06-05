@@ -8,7 +8,7 @@
  * Use -DBITS_PER_WORD_64 on 64-bit systems.
  */
 
-#define VERSION "2009-06-04"
+#define VERSION "2009-06-05"
 
 #define EXTERN
 #include "s9.h"
