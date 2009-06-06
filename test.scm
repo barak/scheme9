@@ -2465,8 +2465,8 @@
 (test (string-copy "") "")
 (test (string-copy "abcdef") "abcdef")
 (test (begin (let ((s "abc"))
-                (let ((s2 (string-copy s)))
-                  (string-set! s2 1 #\x)
+                (let ((ss (string-copy s)))
+                  (string-set! ss 1 #\x)
                   s)))
       "abc")
 
@@ -2610,6 +2610,10 @@
 (test (begin (vector-set! v 2 'c) v) '#(a 2 c))
 (test (begin (vector-set! v 1 'b) v) '#(a b c))
 (test (begin (vector-set! v 1.0 'x) v) '#(a x c))
+
+; --- Reader Bugs ---
+
+(test (equal? 's2 0.0) #f)
 
 ; --- I/O ---
 
