@@ -1,8 +1,8 @@
-R4RS 6.6  (char-alphabetic? char)    ==>  boolean
-          (char-numeric? char)       ==>  boolean
-          (char-whitespace? char)    ==>  boolean
-          (char-upper-case? letter)  ==>  boolean
-          (char-lower-case? letter)  ==>  boolean
+R4RS 6.6  (char-alphabetic? char)  ==>  boolean
+          (char-numeric? char)     ==>  boolean
+          (char-whitespace? char)  ==>  boolean
+          (char-upper-case? char)  ==>  boolean
+          (char-lower-case? char)  ==>  boolean
 
 These procedures return #T if their arguments are alphabetic,
 numeric, whitespace, upper case, or lower case characters, respectively,

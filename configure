@@ -16,16 +16,10 @@ if [ -x "$f" ]; then
 else
 	echo
 	cat <<EOT
-Cowardice asks the question, "Is it safe?" Expediency asks the
-question, "It it politic?"   Vanity asks the question,  "Is it
-popular?"   But, conscience asks the question,  "Is it right?"
-And there comes a time  when one must take a position  that is
-neither safe nor politic,  not popular,  but one must take it,
-because one's conscienceness tells one that it is right.
--- Martin Luther King, Jr.
+Laws represent the failure of love. -- Arthur Laffin
 EOT
 fi
 
 echo
-echo "Now edit the PREFIX variable of Makefile, then run 'make'"
+echo "Now edit the PREFIX variable of Makefile, then run 'make'."
 echo

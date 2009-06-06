@@ -1,0 +1,18 @@
+S9fES  (exponent number)  ==>  integer
+       (mantissa number)  ==>  integer
+
+EXPONENT returns the exponent of NUMBER, if NUMBER is represented
+by a floating point number internally. If it is an integer, it
+return 0, indicating (* NUMBER (expt 10 0)).
+
+MANTISSA returns the mantissa of NUMBER, if NUMBER is represented
+by a floating point number internally. For integers, it returns
+NUMBER.
+
+(exponent 1.23e10)  ==>   8  ; 123.0e8
+(exponent 0.0001)   ==>  -4  ; 1.0e-4
+(exponent 123)      ==>   0
+
+(mantissa 1.23e10)  ==>  123
+(mantissa 0.0001)   ==>    1
+(mantissa 123)      ==>  123
