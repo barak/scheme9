@@ -1,8 +1,10 @@
 scheme9 (2009.06.06-1) unstable; urgency=low
 
   * New Upstream Version
+  * work around s2 = 0.0 reader bug, add test case for this
+  * missing prototype for forward ref of bignum_abs() in s9.c
 
- -- Barak A. Pearlmutter <bap@debian.org>  Sat, 06 Jun 2009 21:08:05 +0100
+ -- Barak A. Pearlmutter <bap@debian.org>  Sat, 06 Jun 2009 22:39:06 +0100
 
 scheme9 (2009.06.05-1) unstable; urgency=low
 
