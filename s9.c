@@ -865,6 +865,8 @@ cell read_vector(void) {
 
 cell bignum_read(char *pre, int radix);
 
+cell bignum_abs(cell a);
+
 cell read_number(int inexact) {
 	cell	n, m;
 	char	buf[50];
