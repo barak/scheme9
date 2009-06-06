@@ -254,6 +254,8 @@
       (case c
         ((#\f) (cons p (print-const "#f")))
         ((#\t) (cons p (print-const "#t")))
+        ((#\e) (cons p (print-const "#e")))
+        ((#\i) (cons p (print-const "#i")))
         ((#\\) (cons p (print-char (read-char))))
         ((#\() (cons p (print-const "#(")))
         (else  (wrong "unknown # syntax" c)))))

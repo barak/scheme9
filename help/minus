@@ -1,4 +1,4 @@
-R4RS 6.5.5  (- integer1 ...)  ==>  integer
+R4RS 6.5.5  (- number1 ...)  ==>  number
 
 With two or more arguments, this procedure returns the difference of
 its arguments, associating to the left. With one argument, however,

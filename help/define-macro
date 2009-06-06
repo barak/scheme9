@@ -1,4 +1,4 @@
-S9fES  (define-macro <symbol1> <procedure>)                   ==>  unspecific
+S9fES  (define-macro <symbol> <procedure>)                    ==>  unspecific
        (define-macro (<symbol1> <symbol2> ...) <expression>)  ==>  unspecific
 
 DEFINE-MACRO binds a procedure to a symbol. Like DEFINE it has two

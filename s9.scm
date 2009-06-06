@@ -573,24 +573,77 @@
      (conv
        (lambda (n rdx res)
          (if (zero? n)
-             res
+             (if (null? res) '(#\0) res)
              (conv (quotient n rdx)
                    rdx
                    (cons (vector-ref digits (remainder n rdx))
                          res)))))
+     (conv-int
+       (lambda (n rdx)
+         (if (negative? n)
+             (list->string (cons #\- (conv (abs n) rdx '())))
+             (list->string (conv n rdx '())))))
+     (number-of-digits
+       (lambda (n r)
+         (if (zero? n)
+             (if (zero? r) 1 r)
+             (number-of-digits (quotient n 10) (+ 1 r)))))
+     (conv-sci-real
+       (lambda (m e)
+         (let ((ms (conv-int m 10))
+               (es (conv-int e 10))
+               (i  (if (negative? m) 2 1)))
+           (let ((k (string-length ms)))
+             (string-append (substring ms 0 i)
+                            "."
+                            (if (= k i) "0" (substring ms i k))
+                            "e"
+                            (if (<= 0 e) "+" "")
+                            es)))))
+     (zeroes
+       (lambda (n)
+         (letrec
+           ((loop
+              (lambda (n z)
+                (if (positive? n)
+                    (loop (- n 1) (cons #\0 z))
+                    (list->string z)))))
+           (loop n '()))))
+     (conv-expanded-real
+       (lambda (n offset)
+	 (let ((m (abs n)))
+           (string-append (if (negative? n) "-" "")
+                          (cond ((negative? offset) "0.")
+                                ((zero? offset)     "0")
+                                (else               ""))
+                          (zeroes (- offset))
+                          (let ((ms (conv-int m 10)))
+                            (let ((k (string-length ms)))
+                              (if (<= 0 offset k)
+                                (string-append (substring ms 0 offset)
+                                               "."
+                                               (substring ms offset k))
+                                ms)))))))
+     (conv-real
+       (lambda (n)
+         (let ((m (mantissa n))
+               (e (exponent n)))
+           (let ((d (number-of-digits m 0)))
+             (if (< -4 (+ e d) 10)
+                 (conv-expanded-real m (+ e d))
+                 (conv-sci-real m (+ e d -1)))))))
      (get-radix
        (lambda ()
          (cond ((null? radix) 10)
                ((<= 2 (car radix) 36) (car radix))
                (else (wrong "number->string: bad radix" radix))))))
     (let ((r (get-radix)))
-      (cond ((zero? n)
-              "0")
-            ((negative? n)
-              (list->string
-                (cons #\- (conv (abs n) r '()))))
+      (cond ((not (or (integer? n) (= 10 r)))
+              (wrong "number->string: real number needs a radix of 10" n))
+            ((integer? n)
+              (conv-int (inexact->exact n) r))
             (else
-              (list->string (conv n r '())))))))
+              (conv-real n))))))
 
 (define (string . x) (list->string x))
 

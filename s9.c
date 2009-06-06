@@ -8,7 +8,7 @@
  * Use -DBITS_PER_WORD_64 on 64-bit systems.
  */
 
-#define VERSION "2009-06-05"
+#define VERSION "2009-06-06"
 
 #define EXTERN
 #include "s9.h"
@@ -555,9 +555,16 @@ cell quote(cell n, cell quotation) {
 	return alloc(quotation, q);
 }
 
+#define exponent_char_p(c) \
+	(c == 'd' || c == 'D' || \
+	 c == 'e' || c == 'E' || \
+	 c == 'f' || c == 'F' || \
+	 c == 'l' || c == 'L' || \
+	 c == 's' || c == 'S')
+
 int string_numeric_p(char *s) {
 	int	i;
-	int	got_e, got_dp;
+	int	got_d, got_e, got_dp;
 
 	i = 0;
 	if (s[0] == '+' || s[0] == '-') i = 1;
@@ -565,7 +572,7 @@ int string_numeric_p(char *s) {
 	got_dp = 0;
 	got_e = 0;
 	while (s[i]) {
-		if ((s[i] == 'e' || s[i] == 'E') && !got_e) {
+		if (exponent_char_p(s[i]) && got_d && !got_e) {
 			if (isdigit(s[i+1])) {
 				got_e = 1;
 			}
@@ -582,7 +589,10 @@ int string_numeric_p(char *s) {
 		else if (s[i] == '.' && !got_dp) {
 			got_dp = 1;
 		}
-		else if (!isdigit(s[i])) {
+		else if (isdigit(s[i])) {
+			got_d = 1;
+		}
+		else {
 			return 0;
 		}
 		i++;
@@ -659,7 +669,7 @@ cell string_to_real(char *s) {
 	j = 0;
 	for (n = cdr(mantissa); n != NIL; n = cdr(n))
 		j++;
-	if (s[i] == 'e' || s[i] == 'E') {
+	if (exponent_char_p(s[i])) {
 		i++;
 		n = string_to_bignum(&s[i]);
 		if (cddr(n) != NIL)
@@ -674,10 +684,13 @@ cell string_to_real(char *s) {
 }
 
 cell string_to_number(char *s) {
-	if (strchr(s, '.') || strchr(s, 'e') || strchr(s, 'E'))
-		return string_to_real(s);
-	else
-		return string_to_bignum(s);
+	int	i;
+
+	for (i=0; s[i]; i++) {
+		if (s[i] == '.' || exponent_char_p(s[i]))
+			return string_to_real(s);
+	}
+	return string_to_bignum(s);
 }
 
 /* Create a character literal. */
@@ -853,14 +866,15 @@ cell read_vector(void) {
 cell bignum_read(char *pre, int radix);
 
 cell read_number(int inexact) {
-	cell	n;
+	cell	n, m;
 	char	buf[50];
 
 	n = read_form(0);
 	if (integer_p(n)) {
 		if (!inexact) return n;
+		m = bignum_abs(n);
 		n = make_real(bignum_negative_p(n)? REAL_NEGATIVE: 0,
-				0, cdr(n));
+				0, cdr(m));
 	}
 	if (!real_p(n)) {
 		sprintf(buf, "number expected after #%c, got",
@@ -2941,7 +2955,9 @@ cell real_to_integer(cell r) {
 	if (real_exponent(r) >= 0) {
 		n = scale_mantissa(r, 0, MANTISSA_SIZE);
 		if (n == NIL) return NIL;
-		return alloc3(T_INTEGER, real_mantissa(n), ATOM_TAG);
+		n = alloc3(T_INTEGER, real_mantissa(n), ATOM_TAG);
+		if (real_negative_p(r)) n = bignum_negate(n);
+		return n;
 	}
 	return NIL;
 }
@@ -3124,8 +3140,12 @@ cell pp_make_vector(cell x) {
 }
 
 cell pp_mantissa(cell x) {
+	cell	m;
+
 	if (integer_p(cadr(x))) return cadr(x);
-	return alloc3(T_INTEGER, real_mantissa(cadr(x)), ATOM_TAG);
+	m = alloc3(T_INTEGER, real_mantissa(cadr(x)), ATOM_TAG);
+	if (real_negative_p(cadr(x))) m = bignum_negate(m);
+	return m;
 }
 
 cell pp_minus(cell x) {

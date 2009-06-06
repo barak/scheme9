@@ -1,7 +1,7 @@
-S9 LIB  (module symbol definition ...)                 ==>  unspecific
+S9 LIB  (module symbol <definition> ...)               ==>  unspecific
         (import symbol (symbol-i ...) expression ...)  ==>  object
 
-Simple modules. Inside of a MODULE expression, DEFINE defines
+Simple modules. Inside of a MODULE <definition>, DEFINE defines
 a local object and DEFINE* defines a public object. SYMBOL names
 the module itself.
 

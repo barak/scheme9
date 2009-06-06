@@ -1,5 +1,14 @@
 Change Log
 
+2009-06-06
+	Extended domain of NUMBER->STRING to REAL.
+	Added support for the "precision markers" D,F,L,S, although
+	only one floating point precision exists.
+	Fix: MANTISSA did not return negative signs.
+	Fix: INEXACT->EXACT lost the sign of its operand.
+	Fix: #I created a double sign in negative integers.
+	Added/updated help pages for various procedures.
+	Added more tests.
 2009-06-05
 	Fix: SIN, COS, TAN expected degrees, should be radians. Oops.
 	Ran further 64-bit tests on the Alpha, all passed.
