@@ -8,7 +8,7 @@
  * Use -DBITS_PER_WORD_64 on 64-bit systems.
  */
 
-#define VERSION "2009-06-06"
+#define VERSION "2009-06-07"
 
 #define EXTERN
 #include "s9.h"
@@ -67,27 +67,19 @@ void count(struct counter *c) {
 char *counter_to_string(struct counter *c) {
 	static char	buf[16];
 
-	memset(buf, ' ', sizeof(buf)-1);
-	buf[sizeof(buf)-1] = 0;
-	if (c->n1g) {
-		sprintf(buf, "%3d,", c->n1g);
+	if (c->n1g != 0) {
+		sprintf(buf, "%3d,%03d,%03d,%03d",
+				c->n1g, c->n1m, c->n1k, c->n);
 	}
-	if (c->n1m || c->n1g) {
-		if (c->n1g)
-			sprintf(&buf[4], "%03d,", c->n1m);
-		else
-			sprintf(&buf[4], "%3d,", c->n1m);
+	else if (c->n1m != 0) {
+		sprintf(buf, "%7d,%03d,%03d", c->n1m, c->n1k, c->n);
 	}
-	if (c->n1k || c->n1m || c->n1g) {
-		if (c->n1g || c->n1m)
-			sprintf(&buf[8], "%03d,", c->n1k);
-		else
-			sprintf(&buf[8], "%3d,", c->n1k);
+	else if (c->n1k != 0) {
+		sprintf(buf, "%11d,%03d", c->n1k, c->n);
 	}
-	if (c->n1g || c->n1m || c->n1k)
-		sprintf(&buf[12], "%03d", c->n);
-	else
-		sprintf(&buf[12], "%3d", c->n);
+	else {
+		sprintf(buf, "%15d", c->n);
+	}
 	return buf;
 }
 
@@ -877,6 +869,7 @@ cell read_number(int inexact) {
 		m = bignum_abs(n);
 		n = make_real(bignum_negative_p(n)? REAL_NEGATIVE: 0,
 				0, cdr(m));
+		n = real_normalize(n, "numeric literal");
 	}
 	if (!real_p(n)) {
 		sprintf(buf, "number expected after #%c, got",
@@ -2832,13 +2825,15 @@ cell pp_equal(cell x) {
 }
 
 cell pp_exact_to_inexact(cell x) {
+	cell	n;
 	int	flags;
 
 	x = cadr(x);
 	if (integer_p(x)) {
 		flags = (bignum_negative_p(x)? REAL_NEGATIVE: 0) |
 			REAL_INEXACT;
-		return make_real(flags, 0, cdr(bignum_abs(x)));
+		n = make_real(flags, 0, cdr(bignum_abs(x)));
+		return real_normalize(n, "exact->inexact");
 	}
 	return real_to_inexact(x);
 }
@@ -2876,7 +2871,7 @@ cell pp_file_exists_p(cell x) {
 }
 
 cell pp_floor(cell x) {
-	cell	m, e;
+	cell	n, m, e;
 
 	x = cadr(x);
 	e = real_exponent(x);
@@ -2893,7 +2888,8 @@ cell pp_floor(cell x) {
 		m = bignum_add(m, make_integer(1));
 	}
 	unsave(1);
-	return make_real(real_flags(x), e, cdr(m));
+	n = make_real(real_flags(x), e, cdr(m));
+	return real_normalize(n, "floor");
 }
 
 cell gensym(char *prefix) {
@@ -3336,6 +3332,7 @@ cell pp_stats(cell x) {
 	reset_counter(&Collections);
 	o_run_stats = Run_stats;
 	Run_stats = 1;
+	gcv(); /* start from a known state */
 	n = _eval(cadr(x), 0);
 	Run_stats = o_run_stats;
 	if (!Error_flag) {
