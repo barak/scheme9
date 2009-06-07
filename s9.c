@@ -569,6 +569,7 @@ int string_numeric_p(char *s) {
 	i = 0;
 	if (s[0] == '+' || s[0] == '-') i = 1;
 	if (!s[i]) return 0;
+	got_d = 0;
 	got_dp = 0;
 	got_e = 0;
 	while (s[i]) {
@@ -864,6 +865,7 @@ cell read_vector(void) {
 }
 
 cell bignum_read(char *pre, int radix);
+cell bignum_abs(cell a);
 
 cell read_number(int inexact) {
 	cell	n, m;
