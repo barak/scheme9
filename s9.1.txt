@@ -233,16 +233,17 @@ LIMITATIONS
           I/O: char-ready?.
           Transcripts: transcript-off, transcript-on.
           Numeric tower: rational and complex numbers.
-          Numeric  procedures:  acos,  angle,  asin,  atan,  complex?,
-          denominator,   imag-part,   magnitude,   make-polar,   make-
-          rectangular, numerator, rational?, rationalize, real-part.
+          Numeric procedures  and  syntax:  #  as  digits  of  inexact
+          numbers,  acos,  angle,  asin,  atan, complex?, denominator,
+          imag-part,    magnitude,    make-polar,    make-rectangular,
+          numerator, rational?, rationalize, real-part.
 
 BUGS
           Nested quasiquotation is currently unsupported.
 
 FILES
           $HOME/.s9fes/rc
-              If present, this file is  loaded  when  the  interpreter
+              If  present,  this  file  is loaded when the interpreter
               starts up.
           @LIBDIR@
               The S9fES procedure library (source code).
@@ -253,10 +254,9 @@ FILES
           *.scm
               Scheme source code.
 
-ENVIRONMENT
-          S9FES_LIBRARY_PATH
-              A  colon-separated  list  of  directories  which will be
-              searched for the s9  library  when  the  interpreter  is
+
+
+
 
 
 
@@ -266,12 +266,17 @@ S9 Interpreter                  Page 4                           S9(1)
 S9(1)                  Scheme 9 from Empty Space                 S9(1)
 
 
-              launched.  The  same  directories  will be search by the
+
+ENVIRONMENT
+          S9FES_LIBRARY_PATH
+              A colon-separated list  of  directories  which  will  be
+              searched  for  the  s9  library  when the interpreter is
+              launched. The same directories will  be  search  by  the
               locate-file procedure.
               Default: .:~/.s9fes:@LIBDIR@:@LIBDIR@/contrib
 
 SIGNALS
-          These work only if POSIX  signal  handling  was  enabled  at
+          These  work  only  if  POSIX  signal handling was enabled at
           compile time.
 
           SIGINT
@@ -285,16 +290,11 @@ REFERENCES
 
           http://www.lulu.com/content/1010408
           http://t3x.org/nmh/book-pdfs/scheme-9-from-empty-space.zip
-              Scheme 9 from Empty Space --  A  Guide  to  Implementing
+              Scheme  9  from  Empty  Space -- A Guide to Implementing
               Scheme in C.
 
 AUTHOR
           Nils M Holm < nmh at t3x.org >
-
-
-
-
-
 
 
 

@@ -565,130 +565,247 @@
 
 ;; String procedures
 
-(define (number->string n . radix)
-  (letrec
-    ((digits
-       (list->vector
-         (string->list "0123456789abcdefghijklmnopqrstuvwxyz")))
-     (conv
-       (lambda (n rdx res)
-         (if (zero? n)
-             (if (null? res) '(#\0) res)
-             (conv (quotient n rdx)
-                   rdx
-                   (cons (vector-ref digits (remainder n rdx))
-                         res)))))
-     (conv-int
-       (lambda (n rdx)
-         (if (negative? n)
-             (list->string (cons #\- (conv (abs n) rdx '())))
-             (list->string (conv n rdx '())))))
-     (number-of-digits
-       (lambda (n r)
-         (if (zero? n)
-             (if (zero? r) 1 r)
-             (number-of-digits (quotient n 10) (+ 1 r)))))
-     (conv-sci-real
-       (lambda (m e)
-         (let ((ms (conv-int m 10))
-               (es (conv-int e 10))
-               (i  (if (negative? m) 2 1)))
-           (let ((k (string-length ms)))
-             (string-append (substring ms 0 i)
-                            "."
-                            (if (= k i) "0" (substring ms i k))
-                            "e"
-                            (if (<= 0 e) "+" "")
-                            es)))))
-     (zeroes
-       (lambda (n)
-         (letrec
-           ((loop
-              (lambda (n z)
-                (if (positive? n)
-                    (loop (- n 1) (cons #\0 z))
-                    (list->string z)))))
-           (loop n '()))))
-     (conv-expanded-real
-       (lambda (n offset)
-	 (let ((m (abs n)))
-           (string-append (if (negative? n) "-" "")
-                          (cond ((negative? offset) "0.")
-                                ((zero? offset)     "0")
-                                (else               ""))
-                          (zeroes (- offset))
-                          (let ((ms (conv-int m 10)))
-                            (let ((k (string-length ms)))
-                              (if (<= 0 offset k)
-                                (string-append (substring ms 0 offset)
-                                               "."
-                                               (substring ms offset k))
-                                ms)))))))
-     (conv-real
-       (lambda (n)
-         (let ((m (mantissa n))
-               (e (exponent n)))
-           (let ((d (number-of-digits m 0)))
-             (if (< -4 (+ e d) 10)
-                 (conv-expanded-real m (+ e d))
-                 (conv-sci-real m (+ e d -1)))))))
-     (get-radix
-       (lambda ()
-         (cond ((null? radix) 10)
-               ((<= 2 (car radix) 36) (car radix))
-               (else (wrong "number->string: bad radix" radix))))))
-    (let ((r (get-radix)))
-      (cond ((not (or (integer? n) (= 10 r)))
-              (wrong "number->string: real number needs a radix of 10" n))
-            ((integer? n)
-              (conv-int (inexact->exact n) r))
-            (else
-              (conv-real n))))))
-
 (define (string . x) (list->string x))
 
-(define (string->number str . radix)
-  (letrec
-    ((digits
-       (string->list "0123456789abcdefghijklmnopqrstuvwxyz"))
-     (value-of-digit
-       (lambda (x)
-         (letrec
-           ((v (lambda (x d n)
-                 (cond ((null? d) 36)
-                       ((char=? (car d) x) n)
-                       (else (v x (cdr d) (+ n 1)))))))
-           (v (char-downcase x) digits 0))))
-     (conv3
-       (lambda (lst res rdx)
-         (if (null? lst)
-             res
-             (let ((dval (value-of-digit (car lst))))
-               (and (< dval rdx)
-                    (conv3 (cdr lst)
-                           (+ (value-of-digit (car lst))
-                              (* res rdx))
-                           rdx))))))
-     (conv
-       (lambda (lst rdx)
-         (if (null? lst)
-             #f
-             (conv3 lst 0 rdx))))
-     (sconv
-       (lambda (lst rdx)
-         (cond ((null? lst) #f)
-               ((char=? (car lst) #\+)
-                 (conv (cdr lst) rdx))
-               ((char=? (car lst) #\-)
-                 (let ((r (conv (cdr lst) rdx)))
-                   (if r (- r) #f)))
-               (else (conv lst rdx)))))
-     (get-radix
-       (lambda ()
-         (cond ((null? radix) 10)
-               ((<= 2 (car radix) 36) (car radix))
-               (else (wrong "string->number: bad radix" radix))))))
-    (sconv (string->list str) (get-radix))))
+; Used by NUMBER->STRING and STRING->NUMBER
+(define (number-of-digits n r)
+    (if (zero? n)
+        (if (zero? r) 1 r)
+        (number-of-digits (quotient n 10) (+ 1 r))))
+
+(define number->string
+  (let ((number-of-digits number-of-digits))
+    (lambda (n . radix)
+      (letrec
+        ((digits
+           (list->vector
+             (string->list "0123456789abcdefghijklmnopqrstuvwxyz")))
+         (conv
+           (lambda (n rdx res)
+             (if (zero? n)
+                 (if (null? res) '(#\0) res)
+                 (conv (quotient n rdx)
+                       rdx
+                       (cons (vector-ref digits (remainder n rdx))
+                             res)))))
+         (conv-int
+           (lambda (n rdx)
+             (if (negative? n)
+                 (list->string (cons #\- (conv (abs n) rdx '())))
+                 (list->string (conv n rdx '())))))
+         (conv-sci-real
+           (lambda (m e)
+             (let ((ms (conv-int m 10))
+                   (es (conv-int e 10))
+                   (i  (if (negative? m) 2 1)))
+               (let ((k (string-length ms)))
+                 (string-append (substring ms 0 i)
+                                "."
+                                (if (= k i) "0" (substring ms i k))
+                                "e"
+                                (if (<= 0 e) "+" "")
+                                es)))))
+         (zeroes
+           (lambda (n)
+             (letrec
+               ((loop
+                  (lambda (n z)
+                    (if (positive? n)
+                        (loop (- n 1) (cons #\0 z))
+                        (list->string z)))))
+               (loop n '()))))
+         (conv-expanded-real
+           (lambda (n offset)
+             (let ((m (abs n)))
+               (string-append (if (negative? n) "-" "")
+                              (cond ((negative? offset) "0.")
+                                    ((zero? offset)     "0")
+                                    (else               ""))
+                              (zeroes (- offset))
+                              (let ((ms (conv-int m 10)))
+                                (let ((k (string-length ms)))
+                                  (if (<= 0 offset k)
+                                    (string-append (substring ms 0 offset)
+                                                   "."
+                                                   (substring ms offset k))
+                                    ms)))))))
+         (conv-real
+           (lambda (n)
+             (let ((m (mantissa n))
+                   (e (exponent n)))
+               (let ((d (number-of-digits m 0)))
+                 (if (< -4 (+ e d) 10)
+                     (conv-expanded-real m (+ e d))
+                     (conv-sci-real m (+ e d -1)))))))
+         (get-radix
+           (lambda ()
+             (cond ((null? radix) 10)
+                   ((<= 2 (car radix) 36) (car radix))
+                   (else (wrong "number->string: invalid radix"
+                                (car radix)))))))
+        (let ((r (get-radix)))
+          (cond ((not (or (integer? n) (= 10 r)))
+                  (wrong "number->string: real number needs a radix of 10" n))
+                ((integer? n)
+                  (conv-int (inexact->exact n) r))
+                (else
+                  (conv-real n))))))))
+
+(define string->number
+  (let ((number-of-digits number-of-digits))
+    (lambda (str . radix)
+      (letrec
+        ((digits
+           (string->list "0123456789abcdefghijklmnopqrstuvwxyz"))
+         (value-of-digit
+           (lambda (x)
+             (letrec
+               ((v (lambda (x d n)
+                     (cond ((null? d) 36)
+                           ((char=? (car d) x) n)
+                           (else (v x (cdr d) (+ n 1)))))))
+               (v (char-downcase x) digits 0))))
+         (find-exponent-mark
+           (lambda (c)
+             (memv c '(#\d #\D #\e #\E #\f #\F #\l #\L #\s #\S))))
+         (result  cons)
+         (value   car)
+         (rest    cdr)
+         (FAIL    '(#f . #f))
+         (failed? (lambda (res)
+                    (eq? #f (cdr res))))
+         (ok?     (lambda (res)
+                    (not (eq? #f (cdr res)))))
+         (conv3
+           (lambda (lst val rdx)
+             (if (null? lst)
+                 (result val '())
+                 (let ((dval (value-of-digit (car lst))))
+                   (if (< dval rdx)
+                       (conv3 (cdr lst)
+                              (+ (value-of-digit (car lst))
+                                 (* val rdx))
+                              rdx)
+                       (result val lst))))))
+         (conv
+           (lambda (lst rdx)
+             (if (null? lst)
+                 FAIL
+                 (conv3 lst 0 rdx))))
+         (conv-int
+           (lambda (lst rdx)
+             (cond ((null? lst)
+                     FAIL)
+                   ((char=? (car lst) #\+)
+                     (conv (cdr lst) rdx))
+                   ((char=? (car lst) #\-)
+                     (let ((r (conv (cdr lst) rdx)))
+                       (if (ok? r)
+                           (result (- (value r)) (rest r))
+                           FAIL)))
+                   (else (conv lst rdx)))))
+         (make-frag
+           (lambda (x)
+             (let ((d (number-of-digits x -1)))
+               (- (/ x (expt 10.0 d)) 1.0))))
+         (make-real
+           (lambda (int frag expn)
+             (let ((v (* (+ (exact->inexact (abs int)) (make-frag frag))
+                         (expt 10.0 expn))))
+               (if (negative? int) (- v) v))))
+         (conv-exponent
+           (lambda (int frag lst)
+             (if (null? lst)
+                 FAIL
+                 (let ((exp-part (conv-int lst 10)))
+                   (if (failed? exp-part)
+                       FAIL
+                       (result (make-real int frag (value exp-part))
+                               (rest exp-part)))))))
+         (conv-decimals
+           (lambda (int lst)
+             (cond ((null? lst)
+                     (result (exact->inexact int) '()))
+                   ((find-exponent-mark (car lst))
+                     (conv-exponent int 10 (cdr lst)))
+                   (else
+                     (let ((frag-part (conv3 lst 1 10)))
+                       (if (null? (rest frag-part))
+                           (result (make-real int (value frag-part) 0)
+                                   '())
+                           (conv-exponent int
+                                          (value frag-part)
+                                          (cdr (rest frag-part)))))))))
+         (radix-ten?
+           (lambda (rdx)
+             (if (not (= 10 rdx))
+                 (if (null? radix)
+                     #f
+                     (wrong "string->number: real number needs a radix of 10"))
+                 #t)))
+         (mantissa-digits?
+           (lambda (x)
+             (cond ((null? x)                    #f)
+                   ((char-numeric? (car x))      #t)
+                   ((find-exponent-mark (car x)) #f)
+                   (else (mantissa-digits? (cdr x))))))
+         (conv-real
+           (lambda (lst rdx)
+             (let ((int-part (conv-int lst rdx)))
+               (cond ((failed? int-part)
+                       FAIL)
+                     ((and (zero? (value int-part))
+                           (not (mantissa-digits? lst)))
+                       FAIL)
+                     ((null? (rest int-part))
+                       int-part)
+                     ((find-exponent-mark (car (rest int-part)))
+                       (if (radix-ten? rdx)
+                           (conv-exponent (value int-part)
+                                          10
+                                          (cdr (rest int-part)))
+                           FAIL))
+                     ((char=? #\. (car (rest int-part)))
+                       (if (radix-ten? rdx)
+                           (conv-decimals (value int-part)
+                                          (cdr (rest int-part)))
+                           FAIL))
+                     (else
+                       int-part)))))
+         (get-radix
+           (lambda ()
+             (cond ((null? radix) 10)
+                   ((<= 2 (car radix) 36) (car radix))
+                   (else (wrong "string->number: invalid radix"
+                                (car radix)))))))
+        (let ((radix   (get-radix))
+              (inexact #f)
+              (lst     (string->list str)))
+          (if (and (> (string-length str) 1)
+                   (char=? #\# (car lst)))
+              (let ((mod (cadr lst)))
+                (set! lst (cddr lst))
+                (cond ((char=? mod #\e))
+                      ((char=? mod #\d))
+                      ((char=? mod #\i) (set! inexact #t))
+                      ((char=? mod #\b) (set! radix 2))
+                      ((char=? mod #\o) (set! radix 8))
+                      ((char=? mod #\x) (set! radix 16))
+                      (else             (set! lst '())))))
+          (let ((r (cond ((null? lst)
+                           FAIL)
+                         ((char=? #\- (car lst))
+                           (conv-real (cdr lst) radix))
+                         (else
+                           (conv-real lst radix)))))
+            (if (null? (rest r))
+                (let ((v (if (char=? #\- (car lst))
+                             (- (value r))
+                             (value r))))
+                  (if inexact
+                      (exact->inexact v)
+                      v))
+                #f)))))))
 
 ;; Vector procedures
 
