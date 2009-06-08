@@ -1,5 +1,8 @@
 Change Log
 
+2009-06-08
+	Made PRINT-CODE recognize new numeric functions as primitives.
+	Fixed INVERSEO procedure in AMK.
 2009-06-07
 	Made STRING->NUMBER recognize real numbers.
 	Fix: missing initialization of got_d in string_numeric().

@@ -143,7 +143,7 @@
                             (cons (append `((pair? (,(make-accessor a)
                                                       ,*args*)))
                                           (single-matcher (car p)
-                                                        (cons 'a a)))
+                                                          (cons 'a a)))
                                   r)))
                     ((null? p)
                       (apply append (reverse (cons (single-matcher p a) r))))
@@ -197,7 +197,7 @@
            (args    (map (lambda (x) `(,(cdr x) ,*args*))
                          env)))
       `((and ,@matcher)
-               ((lambda ,vars ,@body) ,@args))))
+         ((lambda ,vars ,@body) ,@args))))
 
   (define (gen-cad*r path)
     (let ((name (string->symbol

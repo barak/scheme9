@@ -212,6 +212,14 @@
          (all (cdro l d)
               (memo x d)))))
 
+(define (rmemo x l)
+  (fresh (d)
+    (any (all (cdro l d)
+              (memo x d))
+         (caro l x))))
+
+(define (reverseo l r) (rmemo r l))
+
 (define (appendo x y r)
   (any (all (== x '())
             (== y r))
@@ -233,5 +241,3 @@
               (rmemqo x d r))
          (all (caro l x)
               (== l r)))))
-
-(define (reverseo l r) (rmemqo r l))

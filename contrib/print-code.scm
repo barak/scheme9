@@ -100,7 +100,7 @@
                         (lambda () (display c)))))
         (read-char))
 
-  (define (r5rs-syntax? s)
+  (define (r4rs-syntax? s)
     (and (memq (string->symbol s)
                '(and begin case cond define define-syntax delay do
                  else if lambda let let* letrec quote quasiquote or
@@ -112,35 +112,38 @@
                '(define-macro))
          #t))
 
-  (define (r5rs-procedure? s)
+  (define (r4rs-procedure? s)
     (and (memq (string->symbol s)
-               '(* + - < <= = > >= abs append apply assoc assq assv
-                 boolean?  caaaar caaadr caaar caadar caaddr caadr
+               '(* + - / < <= = > >= abs append apply assoc assq assv
+                 boolean? caaaar caaadr caaar caadar caaddr caadr
                  caar cadaar cadadr cadar caddar cadddr caddr cadr
-                 call-with-input-file call-with-output-file car cdaaar
-                 cdaadr cdaar cdadar cdaddr cdadr cdar cddaar cddadr
-                 cddar cdddar cddddr cdddr cddr cdr char->integer
-                 char-alphabetic? char-ci<=? char-ci<? char-ci=?
-                 char-ci>=? char-ci>? char-downcase char-lower-case?
-                 char-numeric? char-upcase char-upper-case?
-                 char-whitespace? char<=? char<? char=? char>=? char>?
-                 char? close-input-port close-output-port cons
-                 current-input-port current-output-port display
-                 eof-object? eq? equal? eqv? even? expt for-each
-                 force gcd input-port? integer->char integer? lcm
-                 length list list->string list->vector list-ref
-                 list-tail list? load make-string make-vector map
-                 max member memq memv min modulo negative? newline
-                 not null? number->string number? odd? open-input-file
-                 open-output-file output-port? pair? peek-char port?
-                 positive? procedure? quotient read read-char remainder
-                 reverse set-car! set-cdr! sqrt string string->list
-                 string->number string->symbol string-append
-                 string-ci<=? string-ci<? string-ci=? string-ci>=?
-                 string-ci>? string-copy string-fill! string-length
-                 string-ref string-set! string<=? string<? string=?
-                 string>=? string>? string? substring symbol->string
-                 symbol? unquote unquote-splicing vector vector->list
+                 call-with-input-file call-with-output-file car
+                 cdaaar cdaadr cdaar cdadar cdaddr cdadr cdar cddaar
+                 cddadr cddar cdddar cddddr cdddr cddr cdr ceiling
+                 char->integer char-alphabetic? char-ci<=? char-ci<?
+                 char-ci=? char-ci>=? char-ci>? char-downcase
+                 char-lower-case? char-numeric? char-upcase
+                 char-upper-case? char-whitespace? char<=? char<?
+                 char=? char>=? char>? char? close-input-port
+                 close-output-port cons cos current-input-port
+                 current-output-port display eof-object? eq? equal?
+                 eqv? even? exact->inexact exact? exp expt floor
+                 for-each force gcd inexct->exact inexact? input-port?
+                 integer->char integer? lcm length list list->string
+                 list->vector list-ref list-tail list? load log
+                 make-string make-vector map max member memq memv
+                 min modulo negative? newline not null? number->string
+                 number? odd? open-input-file open-output-file
+                 output-port? pair? peek-char port? positive?
+                 procedure? quotient read read-char real? remainder
+                 reverse round set-car! set-cdr! sin sqrt string
+                 string->list string->number string->symbol
+                 string-append string-ci<=? string-ci<? string-ci=?
+                 string-ci>=? string-ci>? string-copy string-fill!
+                 string-length string-ref string-set! string<=?
+                 string<? string=? string>=? string>? string?
+                 substring symbol->string symbol? tan truncate
+                 unquote unquote-splicing vector vector->list
                  vector-fill! vector-length vector-ref vector-set!
                  vector? with-input-from-file with-output-to-file
                  write write-char zero?))
@@ -166,11 +169,11 @@
                 (with-color q
                             Color-constant
                             (lambda () (html-display (cdr c/s)))))
-              ((r5rs-syntax? (cdr c/s))
+              ((r4rs-syntax? (cdr c/s))
                 (with-bold-color q
                                  Color-std-syntax
                                  (lambda () (html-display (cdr c/s)))))
-              ((r5rs-procedure? (cdr c/s))
+              ((r4rs-procedure? (cdr c/s))
                 (with-color q
                             Color-std-proc
                             (lambda () (html-display (cdr c/s)))))
