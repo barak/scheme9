@@ -42,10 +42,10 @@
   (letrec
     ((string->hash
        (lambda (s k)
-         (let ((k (string-length s)))
+         (let ((ks (string-length s)))
            (let loop ((h 0)
                       (i 0))
-             (if (>= i k)
+             (if (>= i ks)
                  h
                  (loop (remainder
                          (+ (* 8 h) (char->integer (string-ref s i)))
