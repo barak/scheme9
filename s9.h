@@ -441,7 +441,9 @@ EXTERN cell	S_and, S_begin, S_call_ec, S_cond, S_define,
 /*
  * Allocators
  */
-#define alloc(pa, pd)	alloc3((pa), (pd), 0)
+#define alloc(pa, pd)		alloc3((pa), (pd), 0)
+
+#define alloc_atom(pa, pd)	alloc3((pa), (pd), ATOM_TAG)
 
 #define save(n)		(Stack = alloc((n), Stack))
 #define save_state(v)	(State_stack = alloc3((v), State_stack, ATOM_TAG))

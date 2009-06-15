@@ -1,5 +1,13 @@
 Change Log
 
+2009-06-15
+	Minor cleanup, added comments where necessary.
+	Ran tests on the Alpha.
+	* Do not expect any updates in the near future.
+	* I need a break from programming.
+2009-06-09
+	Fixed a variable collision in the hash table implementation.
+	(lib/hash-table.scm)
 2009-06-08
 	Made PRINT-CODE recognize new numeric functions as primitives.
 	Fixed INVERSEO procedure in AMK.

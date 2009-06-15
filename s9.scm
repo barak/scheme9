@@ -42,6 +42,8 @@
 
 (define (null? x) (eq? '() x))
 
+(define (void) (if #f #f))
+
 ;; Auxiliary definitions, will be redefined later
 
 (define (append a b)
@@ -330,7 +332,7 @@
   (if (null? a*)
       (wrong "for-each: too few arguments")
       (apply map f a*))
-  (if #f #f))
+  (void))
 
 ;; Arithmetic procedures
 
@@ -1307,8 +1309,6 @@
                   (p (cdr x*) #f))))))
     (p x* #t)
     (newline)))
-
-(define (void) (if #f #f))
 
 (define (locate-file file)
   (letrec

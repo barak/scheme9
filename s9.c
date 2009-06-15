@@ -8,7 +8,7 @@
  * Use -DBITS_PER_WORD_64 on 64-bit systems.
  */
 
-#define VERSION "2009-06-08"
+#define VERSION "2009-06-15"
 
 #define EXTERN
 #include "s9.h"
@@ -616,9 +616,9 @@ cell string_to_bignum(char *numstr) {
 		s[k-j] = 0;
 		k -= j;
 		if (k == 0) v *= sign;
-		n = alloc3(v, n, ATOM_TAG);
+		n = alloc_atom(v, n);
 	}
-	return alloc3(T_INTEGER, n, ATOM_TAG);
+	return alloc_atom(T_INTEGER, n);
 }
 
 cell real_normalize(cell x, char *who);
@@ -631,7 +631,7 @@ cell string_to_real(char *s) {
 	cell	mantissa, n;
 	cell	exponent;
 	int	found_dp;
-	int	m_neg = 0;
+	int	neg = 0;
 	int	i, j;
 
 	mantissa = make_integer(0);
@@ -642,7 +642,7 @@ cell string_to_real(char *s) {
 		i++;
 	}
 	else if (s[i] == '-') {
-		m_neg = 1;
+		neg = 1;
 		i++;
 	}
 	found_dp = 0;
@@ -672,7 +672,7 @@ cell string_to_real(char *s) {
 		exponent += integer_value("", n);
 	}
 	unsave(1);
-	n = make_real(m_neg? REAL_NEGATIVE: 0, exponent, cdr(mantissa));
+	n = make_real(neg? REAL_NEGATIVE: 0, exponent, cdr(mantissa));
 	return real_normalize(n, NULL);
 }
 
@@ -690,14 +690,14 @@ cell string_to_number(char *s) {
 cell make_char(int x) {
 	cell n;
 
-	n = alloc3(x, NIL, ATOM_TAG);
-	return alloc3(T_CHAR, n, ATOM_TAG);
+	n = alloc_atom(x, NIL);
+	return alloc_atom(T_CHAR, n);
 }
 
 int strcmp_ci(char *s1, char *s2) {
 	int	c1, c2;
 
-	for (;;) {
+	while (1) {
 		c1 = tolower(*s1++);
 		c2 = tolower(*s2++);
 		if (!c1 || !c2 || c1 != c2) break;
@@ -1022,8 +1022,7 @@ int print_integer(cell n) {
 	if (!integer_p(n)) return 0;
 	n = cdr(n);
 	first = 1;
-	while (1) {
-		if (n == NIL) break;
+	while (n != NIL) {
 		pr(ntoa(buf, car(n), first? 0: DIGITS_PER_WORD));
 		n = cdr(n);
 		first = 0;
@@ -1696,7 +1695,7 @@ cell sf_lambda(cell x) {
 		n = caddr(x);
 	n = alloc(n, Environment);
 	n = alloc(cadr(x), n);
-	return alloc3(T_PROCEDURE, n, ATOM_TAG);
+	return alloc_atom(T_PROCEDURE, n);
 }
 
 cell sf_quote(cell x) {
@@ -1811,8 +1810,8 @@ cell sf_define_macro(cell x, int *pc, int *ps) {
 cell make_integer(cell i) {
 	cell	n;
 
-	n = alloc3(i, NIL, ATOM_TAG);
-	return alloc3(T_INTEGER, n, ATOM_TAG);
+	n = alloc_atom(i, NIL);
+	return alloc_atom(T_INTEGER, n);
 }
 
 cell integer_argument(char *who, cell x);
@@ -1833,15 +1832,15 @@ int integer_value(char *src, cell x) {
 cell bignum_abs(cell a) {
 	cell	n;
 
-	n = alloc3(labs(cadr(a)), cddr(a), ATOM_TAG);
-	return alloc3(T_INTEGER, n, ATOM_TAG);
+	n = alloc_atom(labs(cadr(a)), cddr(a));
+	return alloc_atom(T_INTEGER, n);
 }
 
 cell bignum_negate(cell a) {
 	cell	n;
 
-	n = alloc3(-cadr(a), cddr(a), ATOM_TAG);
-	return alloc3(T_INTEGER, n, ATOM_TAG);
+	n = alloc_atom(-cadr(a), cddr(a));
+	return alloc_atom(T_INTEGER, n);
 }
 
 cell reverse_segments(cell n) {
@@ -1849,7 +1848,7 @@ cell reverse_segments(cell n) {
 
 	m = NIL;
 	while (n != NIL) {
-		m = alloc3(car(n), m, ATOM_TAG);
+		m = alloc_atom(car(n), m);
 		n = cdr(n);
 	}
 	return m;
@@ -1907,13 +1906,13 @@ cell _bignum_add(cell a, cell b) {
 			r -= INT_SEG_LIMIT;
 			carry = 1;
 		}
-		result = alloc3(r, result, ATOM_TAG);
+		result = alloc_atom(r, result);
 		car(Stack) = result;
 		if (a != NIL) a = cdr(a);
 		if (b != NIL) b = cdr(b);
 	}
 	unsave(3);
-	return alloc3(T_INTEGER, result, ATOM_TAG);
+	return alloc_atom(T_INTEGER, result);
 }
 
 cell bignum_add(cell a, cell b) {
@@ -2017,7 +2016,7 @@ cell _bignum_subtract(cell a, cell b) {
 			r += INT_SEG_LIMIT;
 			borrow = 1;
 		}
-		result = alloc3(r, result, ATOM_TAG);
+		result = alloc_atom(r, result);
 		car(Stack) = result;
 		if (a != NIL) a = cdr(a);
 		if (b != NIL) b = cdr(b);
@@ -2025,7 +2024,7 @@ cell _bignum_subtract(cell a, cell b) {
 	unsave(3);
 	while (car(result) == 0 && cdr(result) != NIL)
 		result = cdr(result);
-	return alloc3(T_INTEGER, result, ATOM_TAG);
+	return alloc_atom(T_INTEGER, result);
 }
 
 cell bignum_subtract(cell a, cell b) {
@@ -2058,13 +2057,13 @@ cell bignum_shift_left(cell a, int fill) {
 			r = car(a) * 10 + carry;
 			carry = 0;
 		}
-		result = alloc3(r, result, ATOM_TAG);
+		result = alloc_atom(r, result);
 		car(Stack) = result;
 		a = cdr(a);
 	}
-	if (carry) result = alloc3(carry, result, ATOM_TAG);
+	if (carry) result = alloc_atom(carry, result);
 	unsave(2);
-	return alloc3(T_INTEGER, result, ATOM_TAG);
+	return alloc_atom(T_INTEGER, result);
 }
 
 /* Result: (a/10 . a%10) */
@@ -2082,13 +2081,13 @@ cell bignum_shift_right(cell a) {
 		r = car(a) / 10;
 		r += carry * (INT_SEG_LIMIT/10);
 		carry = c;
-		result = alloc3(r, result, ATOM_TAG);
+		result = alloc_atom(r, result);
 		car(Stack) = result;
 		a = cdr(a);
 	}
 	result = reverse_segments(result);
 	if (car(result) == 0 && cdr(result) != NIL) result = cdr(result);
-	result = alloc3(T_INTEGER, result, ATOM_TAG);
+	result = alloc_atom(T_INTEGER, result);
 	car(Stack) = result;
 	carry = make_integer(carry);
 	unsave(2);
@@ -2241,8 +2240,7 @@ cell bignum_read(char *pre, int radix) {
 		c = read_c_ci();
 	}
 	nd = 0;
-	while (1) {
-		if (separator(c)) break;
+	while (!separator(c)) {
 		p = 0;
 		while (digits[p] && digits[p] != c) p++;
 		if (p >= radix) {
@@ -2291,12 +2289,24 @@ cell make_real(int flags, cell exp, cell mant) {
 	cell	n;
 
 	Tmp = mant;
-	n = alloc3(exp, mant, ATOM_TAG);
-	n = alloc3(flags, n, ATOM_TAG);
+	n = alloc_atom(exp, mant);
+	n = alloc_atom(flags, n);
 	Tmp = NIL;
-	return alloc3(T_REAL, n, ATOM_TAG);
+	return alloc_atom(T_REAL, n);
 }
 
+/*
+ * Remove trailing zeros and move the decimal
+ * point to the END of the mantissa, e.g.:
+ * real_normalize(1.234e0) --> 1234e-3
+ *
+ * Limit the mantissa to MANTISSA_SEGMENTS
+ * machine words. When doing so causes a loss
+ * of precision, mark the resulting number as
+ * inexact.
+ *
+ * Also handle numeric overflow/underflow.
+ */
 cell real_normalize(cell x, char *who) {
 	cell	m, e, r;
 	int	dgs, inexact;
@@ -2304,10 +2314,9 @@ cell real_normalize(cell x, char *who) {
 
 	save(x);
 	e = real_exponent(x);
-	m = alloc3(T_INTEGER, real_mantissa(x), ATOM_TAG);
+	m = alloc_atom(T_INTEGER, real_mantissa(x));
 	save(m);
-	while (1) {
-		if (bignum_zero_p(m)) break;
+	while (!bignum_zero_p(m)) {
 		r = bignum_shift_right(m);
 		if (!bignum_zero_p(cdr(r))) break;
 		m = car(Stack) = car(r);
@@ -2324,7 +2333,7 @@ cell real_normalize(cell x, char *who) {
 		e++;
 	}
 	if (bignum_zero_p(m)) e = 0;
-	r = alloc3(e, NIL, ATOM_TAG);
+	r = alloc_atom(e, NIL);
 	unsave(2);
 	if (count_digits(r) > DIGITS_PER_WORD) {
 		sprintf(buf, "%s: floating point %sflow",
@@ -2392,7 +2401,9 @@ int real_equal_p(cell a, cell b) {
  * Scale the number R so that it gets exponent DESIRED_E
  * without changing its value. When there is not enough
  ; room in the mantissa of R for scaling, return NIL.
- * E.g.: scale_mantissa(1.0e0, -2) --> 100.0e-2
+ * E.g.: scale_mantissa(1.0e0, -2, *) --> 100.0e-2
+ *
+ * Allow the mantissa to grow to MAX_SIZE segments.
  */
 cell scale_mantissa(cell r, cell desired_e, int max_size) {
 	int	dgs;
@@ -2401,7 +2412,7 @@ cell scale_mantissa(cell r, cell desired_e, int max_size) {
 	dgs = count_digits(real_mantissa(r));
 	if (max_size - dgs < real_exponent(r) - desired_e)
 		return NIL;
-	n = alloc3(T_INTEGER, flat_copy(real_mantissa(r), NULL), ATOM_TAG);
+	n = alloc_atom(T_INTEGER, flat_copy(real_mantissa(r), NULL));
 	save(n);
 	e = real_exponent(r);
 	while (e > desired_e) {
@@ -2503,10 +2514,10 @@ cell real_add(cell a, cell b) {
 	e = real_exponent(a);
 	nega = real_negative_p(a);
 	negb = real_negative_p(b);
-	a = alloc3(T_INTEGER, real_mantissa(a), ATOM_TAG);
+	a = alloc_atom(T_INTEGER, real_mantissa(a));
 	if (nega) a = bignum_negate(a);
 	cadr(Stack) = a;
-	b = alloc3(T_INTEGER, real_mantissa(b), ATOM_TAG);
+	b = alloc_atom(T_INTEGER, real_mantissa(b));
 	if (negb) b = bignum_negate(b);
 	car(Stack) = b;
 	m = bignum_add(a, b);
@@ -2543,9 +2554,9 @@ cell real_multiply(cell a, cell b) {
 	neg = real_negative_flag(a) != real_negative_flag(b);
 	ea = real_exponent(a);
 	eb = real_exponent(b);
-	ma = alloc3(T_INTEGER, real_mantissa(a), ATOM_TAG);
+	ma = alloc_atom(T_INTEGER, real_mantissa(a));
 	cadr(Stack) = ma;
-	mb = alloc3(T_INTEGER, real_mantissa(b), ATOM_TAG);
+	mb = alloc_atom(T_INTEGER, real_mantissa(b));
 	car(Stack) = mb;
 	e = ea + eb;
 	m = bignum_multiply(ma, mb);
@@ -2569,9 +2580,9 @@ cell real_divide(cell x, cell a, cell b) {
 	neg = real_negative_flag(a) != real_negative_flag(b);
 	ea = real_exponent(a);
 	eb = real_exponent(b);
-	ma = alloc3(T_INTEGER, real_mantissa(a), ATOM_TAG);
+	ma = alloc_atom(T_INTEGER, real_mantissa(a));
 	cadr(Stack) = ma;
-	mb = alloc3(T_INTEGER, real_mantissa(b), ATOM_TAG);
+	mb = alloc_atom(T_INTEGER, real_mantissa(b));
 	car(Stack) = mb;
 	if (bignum_zero_p(mb)) {
 		unsave(2);
@@ -2591,6 +2602,19 @@ cell real_divide(cell x, cell a, cell b) {
 	unsave(2);
 	r = make_real(inexact | (neg? REAL_NEGATIVE: 0), e, cdar(m));
 	return real_normalize(r, "/");
+}
+
+cell real_to_integer(cell r) {
+	cell	n;
+
+	if (real_exponent(r) >= 0) {
+		n = scale_mantissa(r, 0, MANTISSA_SIZE);
+		if (n == NIL) return NIL;
+		n = alloc_atom(T_INTEGER, real_mantissa(n));
+		if (real_negative_p(r)) n = bignum_negate(n);
+		return n;
+	}
+	return NIL;
 }
 
 /*----- Primitives -----*/
@@ -2752,7 +2776,7 @@ cell pp_cons(cell x) {
 cell make_port(int portno, cell type) {
 	cell	n;
 
-	n = alloc3(portno, NIL, ATOM_TAG);
+	n = alloc_atom(portno, NIL);
 	return alloc3(type, n, ATOM_TAG|PORT_TAG);
 }
 
@@ -2876,7 +2900,7 @@ cell pp_floor(cell x) {
 	x = cadr(x);
 	e = real_exponent(x);
 	if (e >= 0) return x;
-	m = alloc3(T_INTEGER, real_mantissa(x), ATOM_TAG);
+	m = alloc_atom(T_INTEGER, real_mantissa(x));
 	save(m);
 	while (e < 0) {
 		m = bignum_shift_right(m);
@@ -2945,19 +2969,6 @@ cell pp_greater_equal(cell x) {
 cell pp_inexact_p(cell x) {
 	if (integer_p(cadr(x))) return FALSE;
 	return real_inexact_flag(cadr(x))? TRUE: FALSE;
-}
-
-cell real_to_integer(cell r) {
-	cell	n;
-
-	if (real_exponent(r) >= 0) {
-		n = scale_mantissa(r, 0, MANTISSA_SIZE);
-		if (n == NIL) return NIL;
-		n = alloc3(T_INTEGER, real_mantissa(n), ATOM_TAG);
-		if (real_negative_p(r)) n = bignum_negate(n);
-		return n;
-	}
-	return NIL;
 }
 
 cell pp_inexact_to_exact(cell x) {
@@ -3141,7 +3152,7 @@ cell pp_mantissa(cell x) {
 	cell	m;
 
 	if (integer_p(cadr(x))) return cadr(x);
-	m = alloc3(T_INTEGER, real_mantissa(cadr(x)), ATOM_TAG);
+	m = alloc_atom(T_INTEGER, real_mantissa(cadr(x)));
 	if (real_negative_p(cadr(x))) m = bignum_negate(m);
 	return m;
 }
@@ -4379,7 +4390,7 @@ cell _eval(cell x, int cbn) {
 			if (s == EV_DEFINE) make_dynamic(Acc);
 			if (s == EV_MACRO) {
 				if (procedure_p(Acc)) {
-					Acc = alloc3(T_SYNTAX, Acc, ATOM_TAG);
+					Acc = alloc_atom(T_SYNTAX, Acc);
 				}
 				if (syntax_p(Acc)) {
 					/* Acc = Acc; */
@@ -4713,8 +4724,8 @@ void add_primitives(char *name, PRIM *p) {
 		if (Apply_magic == NULL && !strcmp(p[i].name, "apply"))
 			Apply_magic = &p[i];
 		v = add_symbol(p[i].name);
-		n = alloc3((cell) &p[i], NIL, ATOM_TAG);
-		n = alloc3(T_PRIMITIVE, n, ATOM_TAG);
+		n = alloc_atom((cell) &p[i], NIL);
+		n = alloc_atom(T_PRIMITIVE, n);
 		Environment = extend(v, n, Environment);
 	}
 }
