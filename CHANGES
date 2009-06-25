@@ -1,10 +1,15 @@
 Change Log
 
+2009-06-25
+	Fix: Stack was not cleaned up properly in some error conditions.
+	Fix: (*) and (+) could crash the interpreter.
+	Internal: Added 64-bit emulation for 32-bit systems.
 2009-06-15
 	Minor cleanup, added comments where necessary.
-	Ran tests on the Alpha.
 	* Do not expect any updates in the near future.
 	* I need a break from programming.
+	* Bug reports are still welcome, but will get low
+	* priority for now.
 2009-06-09
 	Fixed a variable collision in the hash table implementation.
 	(lib/hash-table.scm)
