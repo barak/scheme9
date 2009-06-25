@@ -8,7 +8,7 @@
  * Use -DBITS_PER_WORD_64 on 64-bit systems.
  */
 
-#define VERSION "2009-06-15"
+#define VERSION "2009-06-25"
 
 #define EXTERN
 #include "s9.h"
@@ -19,11 +19,12 @@
 #endif
 
 int	Verbose_GC = 0;
+cell	Debug;
 
 cell	*GC_root[] = { &Program, &Symbols, &Environment, &Tmp,
 			&Tmp_car, &Tmp_cdr, &Stack, &Stack_bottom,
 			&State_stack, &Acc, &Trace_list, &File_list,
-			NULL };
+			&Debug, NULL };
 
 /*----- Counter -----*/
 
@@ -665,10 +666,12 @@ cell string_to_real(char *s) {
 	if (exponent_char_p(s[i])) {
 		i++;
 		n = string_to_bignum(&s[i]);
-		if (cddr(n) != NIL)
+		if (cddr(n) != NIL) {
+			unsave(1);
 			return error(
 				"exponent too big in real number literal",
 				make_string(s, strlen(s)));
+		}
 		exponent += integer_value("", n);
 	}
 	unsave(1);
@@ -734,7 +737,7 @@ cell make_string(char *s, int k) {
 	cell	n;
 
 	n = allocv(T_STRING, k+1);
-	strcpy(string(n), s);
+	memcpy(string(n), s, k+1);
 	return n;
 }
 
@@ -861,14 +864,15 @@ cell bignum_abs(cell a);
 
 cell read_number(int inexact) {
 	cell	n, m;
+	int	flags;
 	char	buf[50];
 
 	n = read_form(0);
 	if (integer_p(n)) {
 		if (!inexact) return n;
+		flags = bignum_negative_p(n)? REAL_NEGATIVE: 0;
 		m = bignum_abs(n);
-		n = make_real(bignum_negative_p(n)? REAL_NEGATIVE: 0,
-				0, cdr(m));
+		n = make_real(flags, 0, cdr(m));
 		n = real_normalize(n, "numeric literal");
 	}
 	if (!real_p(n)) {
@@ -1383,7 +1387,6 @@ void rehash(cell e) {
 	v = vector(car(e));
 	for (i=0; i<k; i++) v[i] = NIL;
 	p = cdr(e);
-	v = vector(car(e));
 	while (p != NIL) {
 		s = symbol_name(caar(p));
 		h = 0;
@@ -1398,8 +1401,10 @@ void rehash(cell e) {
 cell extend(cell v, cell a, cell e) {
 	cell	n, new;
 
+	Tmp = v;
 	n = alloc(a, NIL);
 	n = alloc(v, n);
+	Tmp = NIL;
 	new = alloc(n, cdr(e));
 	cdr(e) = new;
 	if (car(S_loading) == FALSE) rehash(e);
@@ -1430,7 +1435,6 @@ cell try_hash(cell v, cell e) {
 	hv = vector(car(e));
 	k = vector_len(car(e));
 	s = symbol_name(v);
-	h = 0;
 	hash(s, h);
 	p = hv[h%k];
 	while (p != NIL) {
@@ -1763,7 +1767,7 @@ cell sf_define(cell x, int *pc, int *ps) {
 		car(Environment) = new;
 		v = cadar(Environment);
 	}
-	car(Stack) = cdr(v); /* unsave(1); save(cdr(v)); */
+	car(Stack) = cdr(v);
 	*pc = 2;
 	if (!atom_p(a) && car(a) == S_lambda)
 		*ps = EV_DEFINE;	/* use dynamic scoping */
@@ -1799,7 +1803,7 @@ cell sf_define_macro(cell x, int *pc, int *ps) {
 		car(Environment) = new;
 		v = cadar(Environment);
 	}
-	car(Stack) = cdr(v); /* unsave(1); save(cdr(v)); */
+	car(Stack) = cdr(v);
 	*pc = 2;
 	*ps = EV_MACRO;
 	return a;
@@ -1866,28 +1870,18 @@ cell _bignum_add(cell a, cell b) {
 			/* -A+-B --> -(|A|+|B|) */
 			a = bignum_abs(a);
 			save(a);
-			b = bignum_abs(b);
-			save(b);
-			a = bignum_add(a, b);
-			unsave(2);
+			a = bignum_add(a, bignum_abs(b));
+			unsave(1);
 			return bignum_negate(a);
 		}
 		else {
 			/* -A+B --> B-|A| */
-			a = bignum_abs(a);
-			save(a);
-			a = bignum_subtract(b, a);
-			unsave(1);
-			return a;
+			return bignum_subtract(b, bignum_abs(a));
 		}
 	}
 	else if (bignum_negative_p(b)) {
 		/* A+-B --> A-|B| */
-		b = bignum_abs(b);
-		save(b);
-		a = bignum_subtract(a, b);
-		unsave(1);
-		return a;
+		return bignum_subtract(a, bignum_abs(b));
 	}
 	/* A+B */
 	a = reverse_segments(cdr(a));
@@ -1973,28 +1967,18 @@ cell _bignum_subtract(cell a, cell b) {
 			/* -A--B --> -A+|B| --> |B|-|A| */
 			a = bignum_abs(a);
 			save(a);
-			b = bignum_abs(b);
-			save(b);
-			a = bignum_subtract(b, a);
-			unsave(2);
+			a = bignum_subtract(bignum_abs(b), a);
+			unsave(1);
 			return a;
 		}
 		else {
 			/* -A-B --> -(|A|+B) */
-			a = bignum_abs(a);
-			save(a);
-			a = bignum_add(a, b);
-			unsave(1);
-			return bignum_negate(a);
+			return bignum_negate(bignum_add(bignum_abs(a), b));
 		}
 	}
 	else if (bignum_negative_p(b)) {
 		/* A--B --> A+|B| */
-		b = bignum_abs(b);
-		save(b);
-		a = bignum_add(a, b);
-		unsave(1);
-		return a;
+		return bignum_add(a, bignum_abs(b));
 	}
 	/* A-B, A<B --> -(B-A) */
 	if (bignum_less_p(a, b))
@@ -2246,6 +2230,7 @@ cell bignum_read(char *pre, int radix) {
 		if (p >= radix) {
 			sprintf(buf, "invalid digit in %s number: %c",
 				pre, c);
+			unsave(2);
 			return error(buf, NOEXPR);
 		}
 		num = bignum_multiply(num, base);
@@ -2255,11 +2240,11 @@ cell bignum_read(char *pre, int radix) {
 		nd++;
 		c = read_c_ci();
 	}
+	unsave(2);
 	if (!nd) {
 		sprintf(buf, "digits expected after %s", pre);
 		return error(buf, NOEXPR);
 	}
-	unsave(2);
 	reject(c);
 	return s? bignum_negate(num): num;
 }
@@ -2319,7 +2304,8 @@ cell real_normalize(cell x, char *who) {
 	while (!bignum_zero_p(m)) {
 		r = bignum_shift_right(m);
 		if (!bignum_zero_p(cdr(r))) break;
-		m = car(Stack) = car(r);
+		m = car(r);
+		car(Stack) = m;
 		e++;
 	}
 	dgs = count_digits(cdr(m));
@@ -2328,7 +2314,8 @@ cell real_normalize(cell x, char *who) {
 		r = bignum_shift_right(m);
 		if (!bignum_zero_p(cdr(r)))
 			inexact = REAL_INEXACT;
-		m = car(Stack) = car(r);
+		m = car(r);
+		car(Stack) = m;
 		dgs--;
 		e++;
 	}
@@ -2400,7 +2387,7 @@ int real_equal_p(cell a, cell b) {
 /*
  * Scale the number R so that it gets exponent DESIRED_E
  * without changing its value. When there is not enough
- ; room in the mantissa of R for scaling, return NIL.
+ * room for scaling the mantissa of R, return NIL.
  * E.g.: scale_mantissa(1.0e0, -2, *) --> 100.0e-2
  *
  * Allow the mantissa to grow to MAX_SIZE segments.
@@ -2429,7 +2416,7 @@ void autoscale(cell *pa, cell *pb) {
 		*pb = scale_mantissa(*pb, real_exponent(*pa), MANTISSA_SIZE*2);
 		return;
 	}
-	if (real_exponent(*pb) < real_exponent(*pa)) {
+	if (real_exponent(*pa) > real_exponent(*pb)) {
 		*pa = scale_mantissa(*pa, real_exponent(*pb), MANTISSA_SIZE*2);
 	}
 }
@@ -2606,12 +2593,14 @@ cell real_divide(cell x, cell a, cell b) {
 
 cell real_to_integer(cell r) {
 	cell	n;
+	int	neg;
 
 	if (real_exponent(r) >= 0) {
+		neg = real_negative_p(r);
 		n = scale_mantissa(r, 0, MANTISSA_SIZE);
 		if (n == NIL) return NIL;
 		n = alloc_atom(T_INTEGER, real_mantissa(n));
-		if (real_negative_p(r)) n = bignum_negate(n);
+		if (neg) n = bignum_negate(n);
 		return n;
 	}
 	return NIL;
@@ -2813,8 +2802,10 @@ cell pp_divide(cell x) {
 	x = cdr(x);
 	save(a);
 	while (x != NIL) {
-		if (!number_p(car(x)))
+		if (!number_p(car(x))) {
+			unsave(1);
 			return error("/: expected number, got", car(x));
+		}
 		a = real_divide(expr, a, car(x));
 		car(Stack) = a;
 		x = cdr(x);
@@ -2904,7 +2895,8 @@ cell pp_floor(cell x) {
 	save(m);
 	while (e < 0) {
 		m = bignum_shift_right(m);
-		car(Stack) = m = car(m);
+		m = car(m);
+		car(Stack) = m;
 		e++;
 	}
 	if (real_negative_p(x)) {
@@ -3170,8 +3162,10 @@ cell pp_minus(cell x) {
 	x = cdr(x);
 	save(a);
 	while (x != NIL) {
-		if (!number_p(car(x)))
+		if (!number_p(car(x))) {
+			unsave(1);
 			return error("-: expected number, got", car(x));
+		}
 		a = real_subtract(a, car(x));
 		car(Stack) = a;
 		x = cdr(x);
@@ -3225,12 +3219,15 @@ cell pp_plus(cell x) {
 	cell	a;
 
 	x = cdr(x);
+	if (x == NIL) return make_integer(0);
 	if (cdr(x) == NIL) return car(x);
 	a = make_integer(0);
 	save(a);
 	while (x != NIL) {
-		if (!number_p(car(x)))
+		if (!number_p(car(x))) {
+			unsave(1);
 			return error("+: expected number, got", car(x));
+		}
 		a = real_add(a, car(x));
 		car(Stack) = a;
 		x = cdr(x);
@@ -3581,12 +3578,15 @@ cell pp_times(cell x) {
 	cell	a;
 
 	x = cdr(x);
+	if (x == NIL) return make_integer(1);
 	if (cdr(x) == NIL) return car(x);
 	a = make_integer(1);
 	save(a);
 	while (x != NIL) {
-		if (!number_p(car(x)))
+		if (!number_p(car(x))) {
+			unsave(1);
 			return error("*: expected number, got", car(x));
+		}
 		a = real_multiply(a, car(x));
 		car(Stack) = a;
 		x = cdr(x);
@@ -3911,9 +3911,12 @@ cell primitive(cell x) {
 }
 
 /* Return (#<procedure> (quote #f)) or () */
-cell make_application(cell proc_sym) {
+cell make_application(char *proc_name) {
+	cell	proc_sym;
 	cell	app, p;
 
+	proc_sym = find_symbol(proc_name);
+	if (proc_sym == NIL) return NIL;
 	p = lookup(proc_sym, Environment);
 	if (p == NIL) return NIL;
 	p = cadr(p);
@@ -3922,15 +3925,6 @@ cell make_application(cell proc_sym) {
 	app = alloc(S_quote, app);
 	app = alloc(app, NIL);
 	return alloc(p, app);
-}
-
-/* Return (#<procedure> (quote #f)) or () */
-cell make_application_by_name(char *proc_name) {
-	cell	p_sym;
-
-	p_sym = find_symbol(proc_name);
-	if (p_sym == NIL) return NIL;
-	return make_application(p_sym);
 }
 
 int has_property_p(int (*p)(cell x), cell x) {
@@ -3955,7 +3949,7 @@ int syntax_object_p(cell x) {
 }
 
 int quasiquotation_p(cell x) {
-	return car(x) == S_quasiquote;
+	return pair_p(x) && car(x) == S_quasiquote;
 }
 
 int uses_transformer_p(cell x) {
@@ -4002,7 +3996,7 @@ cell expand_quasiquote(cell x) {
 	if (Error_flag) return x;
 	if (atom_p(x)) return x;
 	if (!uses_quasiquote_p(x)) return x;
-	app = make_application_by_name("expand-quasiquote");
+	app = make_application("expand-quasiquote");
 	if (app == NIL) return x;
 	save(app);
 	x = expand_qq(x, app);
@@ -4025,8 +4019,6 @@ cell expand_all_syntax(cell x) {
 			return _eval(app, 1);
 		}
 	}
-	n = a = NIL;
-	save(n);
 	/*
 	 * If DEFINE-MACRO is followed by (MACRO-NAME ...)
 	 * unbind the MACRO-NAME first.
@@ -4038,6 +4030,8 @@ cell expand_all_syntax(cell x) {
 		m = lookup(caadr(x), Environment);
 		if (m != NIL) cadr(m) = UNDEFINED;
 	}
+	n = a = NIL;
+	save(n);
 	while (!atom_p(x)) {
 		m = alloc(expand_all_syntax(car(x)), NIL);
 		if (n == NIL) {
@@ -4092,7 +4086,10 @@ cell bind_arguments(cell n, cell name) {
 	rib = NIL;
 	save(rib);
 	while (!atom_p(v)) {
-		if (atom_p(a)) return too_few_args(n);
+		if (atom_p(a)) {
+			unsave(1);
+			return too_few_args(n);
+		}
 		Tmp = alloc(car(a), NIL);
 		Tmp = alloc(car(v), Tmp);
 		rib = alloc(Tmp, rib);
@@ -4107,6 +4104,7 @@ cell bind_arguments(cell n, cell name) {
 		car(Stack) = rib;
 	}
 	else if (a != NIL) {
+		unsave(1);
 		return too_many_args(n);
 	}
 	Tmp = NIL;
@@ -4437,8 +4435,8 @@ cell eval(cell x) {
 	x = expand_quasiquote(x);
 	car(Stack) = x;
 	x = expand_syntax(x);
-	x = _eval(x, 0);
 	unsave(1);
+	x = _eval(x, 0);
 	return x;
 }
 

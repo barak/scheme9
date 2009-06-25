@@ -4,7 +4,7 @@
 # Change at least this line:
 PREFIX= /u
 
-VERSION= 20090615
+VERSION= 20090625
 
 # Extras to be added to the heap image
 EXTRA_STUFF=	-f contrib/help.scm \
