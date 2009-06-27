@@ -712,7 +712,7 @@
                (- (/ x (expt 10.0 d)) 1.0))))
          (make-real
            (lambda (int frag expn)
-             (let ((v (* (+ (exact->inexact (abs int)) (make-frag frag))
+             (let ((v (* (+ (+ 0.0 (abs int)) (make-frag frag))
                          (expt 10.0 expn))))
                (if (negative? int) (- v) v))))
          (conv-exponent
