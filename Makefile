@@ -79,8 +79,8 @@ s9e.image:	s9e s9e.scm ext/system.scm
 	$(BUILD_ENV) ./s9e -n -f ext/system.scm $(EXTRA_STUFF) -d s9e.image
 
 %.1: %.1.in
-	sed -e "s,@LIBDIR@,$(LIBDIR)," < $@.in \
-	 | sed -e "s,@DATADIR@,$(DATADIR)," > $@
+	sed -e "s,@LIBDIR@,$(LIBDIR),g" < $@.in \
+	 | sed -e "s,@DATADIR@,$(DATADIR),g" > $@
 
 %.gz: %
 	gzip -9 < $* > $@
