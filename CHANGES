@@ -1,5 +1,11 @@
 Change Log
 
+2009-07-01
+	Added the ACOS, ASIN, ATAN procedures.
+	Fix: real number normalization *first* removed trailing
+	zeros and *then* truncated the mantissa. Oops.
+2009-06-29
+	Added '#' syntax for unspecific digits in inexact numbers.
 2009-06-26
 	Fix: STRING->NUMBER always returned an inexact result for
 	real number representations.
