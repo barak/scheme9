@@ -622,6 +622,9 @@ char* translate(char *s, int old_c, int new_c) {
 	return new;
 }
 
+cell make_real(int flags, cell exp, cell mant);
+cell real_normalize(cell x, char *who);
+
 cell string_to_bignum(char *numstr, int force_exact) {
 	cell	n, v;
 	int	k, j, sign, exact;
@@ -652,12 +655,10 @@ cell string_to_bignum(char *numstr, int force_exact) {
 		return alloc_atom(T_INTEGER, n);
 	car(n) = labs(car(n));
 	n = make_real((sign<0? REAL_NEGATIVE: 0) | REAL_INEXACT, 0, n);
-	return real_normalize(n);
+	return real_normalize(n, NULL);
 }
 
-cell real_normalize(cell x, char *who);
 cell make_integer(cell i);
-cell make_real(int flags, cell exp, cell mant);
 cell bignum_shift_left(cell a, int fill);
 cell bignum_add(cell a, cell b);
 
