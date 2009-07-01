@@ -8,7 +8,7 @@
  * Use -DBITS_PER_WORD_64 on 64-bit systems.
  */
 
-#define VERSION "2009-06-26"
+#define VERSION "2009-07-01"
 
 #define EXTERN
 #include "s9.h"
@@ -557,21 +557,25 @@ cell quote(cell n, cell quotation) {
 
 int string_numeric_p(char *s) {
 	int	i;
-	int	got_d, got_e, got_dp;
+	int	got_d, got_e, got_dp, got_s;
 
 	i = 0;
-	if (s[0] == '+' || s[0] == '-') i = 1;
-	if (!s[i]) return 0;
+	got_s = 0;
 	got_d = 0;
 	got_dp = 0;
 	got_e = 0;
+	if (s[0] == '+' || s[0] == '-') {
+		i = 1;
+		got_s = 1;
+	}
+	if (!s[i]) return 0;
 	while (s[i]) {
 		if (exponent_char_p(s[i]) && got_d && !got_e) {
-			if (isdigit(s[i+1])) {
+			if (isdigit(s[i+1]) || s[i+1] == '#') {
 				got_e = 1;
 			}
 			else if ((s[i+1] == '+' || s[i+1] == '-') &&
-					isdigit(s[i+2])
+				(isdigit(s[i+2]) || s[i+2] == '#')
 			) {
 				got_e = 1;
 				i++;
@@ -582,6 +586,9 @@ int string_numeric_p(char *s) {
 		}
 		else if (s[i] == '.' && !got_dp) {
 			got_dp = 1;
+		}
+		else if (s[i] == '#' && (got_d || got_dp || got_s)) {
+			got_d = 1;
 		}
 		else if (isdigit(s[i])) {
 			got_d = 1;
@@ -594,12 +601,34 @@ int string_numeric_p(char *s) {
 	return 1;
 }
 
-cell string_to_bignum(char *numstr) {
-	cell	n, v;
-	int	k, j, sign;
-	char	*s, buf[TOKEN_LENGTH+2];
+char *copy_string(char *s) {
+	char	*new;
 
-	strcpy(buf, numstr);
+	new = malloc(strlen(s)+1);
+	if (s == NULL) fatal("copy_string(): out of memory");
+	strcpy(new, s);
+	return new;
+}
+
+char* translate(char *s, int old_c, int new_c) {
+	char	*new;
+
+	new = copy_string(s);
+	s = new;
+	while (*s) {
+		if (*s == old_c) *s = new_c;
+		s++;
+	}
+	return new;
+}
+
+cell string_to_bignum(char *numstr, int force_exact) {
+	cell	n, v;
+	int	k, j, sign, exact;
+	char	*s, *buf;
+
+	buf = translate(numstr, '#', '5');
+	exact = strchr(numstr, '#') == NULL;
 	s = buf;
 	sign = 1;
 	if (s[0] == '-') {
@@ -619,7 +648,11 @@ cell string_to_bignum(char *numstr) {
 		if (k == 0) v *= sign;
 		n = alloc_atom(v, n);
 	}
-	return alloc_atom(T_INTEGER, n);
+	if (exact || force_exact)
+		return alloc_atom(T_INTEGER, n);
+	car(n) = labs(car(n));
+	n = make_real((sign<0? REAL_NEGATIVE: 0) | REAL_INEXACT, 0, n);
+	return real_normalize(n);
 }
 
 cell real_normalize(cell x, char *who);
@@ -633,7 +666,8 @@ cell string_to_real(char *s) {
 	cell	exponent;
 	int	found_dp;
 	int	neg = 0;
-	int	i, j;
+	int	i, j, v;
+	int	exact;
 
 	mantissa = make_integer(0);
 	save(mantissa);
@@ -647,7 +681,8 @@ cell string_to_real(char *s) {
 		i++;
 	}
 	found_dp = 0;
-	while (isdigit(s[i]) || s[i] == '.') {
+	exact = 1;
+	while (isdigit(s[i]) || s[i] == '#' || s[i] == '.') {
 		if (s[i] == '.') {
 			i++;
 			found_dp = 1;
@@ -656,7 +691,14 @@ cell string_to_real(char *s) {
 		if (found_dp) exponent--;
 		mantissa = bignum_shift_left(mantissa, 0);
 		car(Stack) = mantissa;
-		mantissa = bignum_add(mantissa, make_integer(s[i]-'0'));
+		if (s[i] == '#') {
+			exact = 0;
+			v = 5;
+		}
+		else {
+			v = s[i]-'0';
+		}
+		mantissa = bignum_add(mantissa, make_integer(v));
 		car(Stack) = mantissa;
 		i++;
 	}
@@ -665,7 +707,7 @@ cell string_to_real(char *s) {
 		j++;
 	if (exponent_char_p(s[i])) {
 		i++;
-		n = string_to_bignum(&s[i]);
+		n = string_to_bignum(&s[i], 1);
 		if (cddr(n) != NIL) {
 			unsave(1);
 			return error(
@@ -675,7 +717,8 @@ cell string_to_real(char *s) {
 		exponent += integer_value("", n);
 	}
 	unsave(1);
-	n = make_real(neg? REAL_NEGATIVE: 0, exponent, cdr(mantissa));
+	n = make_real((neg? REAL_NEGATIVE: 0) | (exact? 0: REAL_INEXACT),
+			exponent, cdr(mantissa));
 	return real_normalize(n, NULL);
 }
 
@@ -686,7 +729,7 @@ cell string_to_number(char *s) {
 		if (s[i] == '.' || exponent_char_p(s[i]))
 			return string_to_real(s);
 	}
-	return string_to_bignum(s);
+	return string_to_bignum(s, 0);
 }
 
 /* Create a character literal. */
@@ -804,9 +847,8 @@ cell unreadable(void) {
 #define separator(c) \
 	((c) == ' '  || (c) == '\t' || (c) == '\n' || \
 	 (c) == '\r' || (c) == '('  || (c) == ')'  || \
-	 (c) == ';'  || (c) == '#'  || (c) == '\'' || \
-	 (c) == '`'  || (c) == ','  || (c) == '"'  || \
-	 (c) == EOF)
+	 (c) == ';'  || (c) == '\'' || (c) == '`'  || \
+	 (c) == ','  || (c) == '"'  || (c) == EOF)
 
 cell symbol_or_number(int c) {
 	char	s[TOKEN_LENGTH];
@@ -2301,13 +2343,6 @@ cell real_normalize(cell x, char *who) {
 	e = real_exponent(x);
 	m = alloc_atom(T_INTEGER, real_mantissa(x));
 	save(m);
-	while (!bignum_zero_p(m)) {
-		r = bignum_shift_right(m);
-		if (!bignum_zero_p(cdr(r))) break;
-		m = car(r);
-		car(Stack) = m;
-		e++;
-	}
 	dgs = count_digits(cdr(m));
 	inexact = real_inexact_flag(x);
 	while (dgs > MANTISSA_SIZE) {
@@ -2317,6 +2352,13 @@ cell real_normalize(cell x, char *who) {
 		m = car(r);
 		car(Stack) = m;
 		dgs--;
+		e++;
+	}
+	while (!bignum_zero_p(m)) {
+		r = bignum_shift_right(m);
+		if (!bignum_zero_p(cdr(r))) break;
+		m = car(r);
+		car(Stack) = m;
 		e++;
 	}
 	if (bignum_zero_p(m)) e = 0;
@@ -4658,7 +4700,7 @@ void load_library(void) {
 	char	*home;
 	cell	new;
 
-	path = strdup(string(car(S_library_path)));
+	path = copy_string(string(car(S_library_path)));
 	home = getenv("HOME");
 	if (home == NULL) home = ".";
 	p = strtok(path, ":");

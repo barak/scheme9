@@ -552,6 +552,37 @@
               ((or (= x 3pi/4) (= x 7pi/4)) (if (inexact? x) #i-1.0 -1.0))
               (else                         (/ (sin x) (cos x))))))))
 
+(define atan
+  (let ((pi/2 pi/2))
+    (letrec
+      ((at-series
+         (lambda (x y r last)
+           (if (= r last)
+               r
+               (at-series x
+                          (+ 1 y)
+                          (+ r (* (/ (* (expt 2 (+ y y))
+                                        (expt (fact2 y 1) 2))
+                                     (fact2 (+ y y 1) 1))
+                                  (/ (expt x (+ y y 1))
+                                     (expt (+ 1 (* x x))
+                                           (+ 1 y)))))
+                          r)))))
+      (lambda (x)
+        (cond ((negative? x)
+                (- (at-series (- x) 0 0 1)))
+              ((> x 1)
+                (- pi/2 (atan (/ x))))
+              (else (at-series x 0 0 1)))))))
+
+(define (asin x)
+  (atan (/ x (sqrt (- 1 (* x x))))))
+
+(define acos
+  (let ((pi/2 pi/2))
+    (lambda (x)
+      (- pi/2 (asin x)))))
+
 (define (sqrt square)
   (letrec
     ((sqrt2 (lambda (x last)
@@ -712,7 +743,7 @@
                (- (/ x (expt 10.0 d)) 1.0))))
          (make-real
            (lambda (int frag expn)
-             (let ((v (* (+ (+ 0.0 (abs int)) (make-frag frag))
+             (let ((v (* (+ 0.0 (abs int) (make-frag frag))
                          (expt 10.0 expn))))
                (if (negative? int) (- v) v))))
          (conv-exponent
