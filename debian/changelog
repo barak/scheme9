@@ -1,8 +1,9 @@
 scheme9 (2009.06.26-2rc) unstable; urgency=low
 
   * rev deb std
+  * fix minor Makefile bug in processing manpage .in files
 
- -- Barak A. Pearlmutter <bap@debian.org>  Wed, 01 Jul 2009 13:40:04 +0200
+ -- Barak A. Pearlmutter <bap@debian.org>  Wed, 01 Jul 2009 13:51:19 +0200
 
 scheme9 (2009.06.26-1) unstable; urgency=low
 
