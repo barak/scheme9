@@ -1,11 +1,12 @@
-scheme9 (2009.06.26-2rc) unstable; urgency=low
+scheme9 (2009.07.01-1) unstable; urgency=low
 
   * rev deb std
   * fix minor Makefile bug in processing manpage .in files
   * quash s9(1) warning via aggressive soft hyphenation of default search path
   * distinguish unicode hyphen and ascii dash in man pages
+  * New Upstream Version
 
- -- Barak A. Pearlmutter <bap@debian.org>  Wed, 01 Jul 2009 14:23:11 +0200
+ -- Barak A. Pearlmutter <bap@debian.org>  Wed, 01 Jul 2009 20:12:00 +0200
 
 scheme9 (2009.06.26-1) unstable; urgency=low
 
