@@ -54,8 +54,8 @@
 .B "s9e
 - Extended Scheme Interpreter
 .SH USAGE
-.B "s9e [-h?] [-gnqv] [-m size[m]] [-f program] [-d image] [-i]
-.B "    [-- argument ...]
+.B "s9e [\-h?] [\-gnqv] [\-m size[m]] [\-f program] [\-d image] [\-i]
+.B "    [\-\- argument ...]
 .SH "DESCRIPTION
 .B "Scheme 9 from Empty Space
 is an interpreter for a broad subset of
@@ -108,12 +108,12 @@ and the group ID
 .in -4
 .br
 .ne 3
-.B "(unix:command-line) ==> list of string
+.B "(unix:command\-line) ==> list of string
 .in +4
 Return the command line arguments passed to
 .B s9e
 .I after
-the "--" argument.
+the "\-\-" argument.
 .in -4
 .br
 .ne 3
@@ -136,7 +136,7 @@ as an exit code to the calling process.
 .in -4
 .br
 .ne 3
-.B "(unix:flush output-port) ==> boolean
+.B "(unix:flush output\-port) ==> boolean
 .in +4
 Flush the given output port.
 .in -4
@@ -286,7 +286,7 @@ Remove directory
 .in -4
 .br
 .ne 3
-.B "(unix:spawn string) ==> (input-port output-port)
+.B "(unix:spawn string) ==> (input\-port output\-port)
 .in +4
 Spawn an inferior process running the command
 .IR string .
@@ -295,7 +295,7 @@ can be used to read the output of the command and the second
 one to send input to the command. The command will be
 executed using
 .br
-\fCexecl("/bin/sh", "/bin/sh", "-c", \fP\fIstring\fP\fC, NULL);\fP
+\fCexecl("/bin/sh", "/bin/sh", "\-c", \fP\fIstring\fP\fC, NULL);\fP
 .in -4
 .br
 .ne 3
@@ -394,7 +394,7 @@ format
 .sp
 .I "user+bits
 or
-.I "user-bits
+.I "user\-bits
 .sp
 where
 .I user
@@ -455,10 +455,10 @@ its user unchanged.
 .in -4
 .sp
 .ne 3
-.B "(command-line) ==> list of string
+.B "(command\-line) ==> list of string
 .in +4
 See
-.BR unix:command-line .
+.BR unix:command\-line .
 .in -4
 .sp
 .ne 3
@@ -479,26 +479,26 @@ is optional and a return value of 0 is the default.
 .in -4
 .sp
 .ne 3
-.B "(flush output-port) ==> boolean
+.B "(flush output\-port) ==> boolean
 .in +4
 See
 .BR unix:flush .
 .in -4
 .sp
 .ne 3
-.B "(format-time string time-list) ==> string | #f
+.B "(format\-time string time\-list) ==> string | #f
 .in +4
 Format a time specification as returned by
-.B unix-time->time
+.B unix\-time\->time
 according to the description in
 .IR string .
 This a poor man's Common LISP
-.BR format -style
+.BR format \-style
 procedure intended for making time lists more readable. It
 returns
 .B #f
 if
-.I time-list
+.I time\-list
 is not a proper time list or
 .I string
 is erroneous (i.e.: contains a wrong format descriptor).
@@ -523,9 +523,9 @@ with zeros.
 .sp
 Example:
 .nf
-(format-time "~w ~4y-~@m-~2d ~2h:~2m:~2s"
+(format\-time "~w ~4y\-~@m\-~2d ~2h:~2m:~2s"
              '(1 2009 3 9 8 53 20))
-  ==> "Tue 2009-Apr-09 08:53:20"
+  ==> "Tue 2009\-Apr\-09 08:53:20"
 .fi
 .in -4
 .sp
@@ -593,14 +593,14 @@ See
 .in -4
 .sp
 .ne 2
-.B "(group-name string|integer) ==> string
+.B "(group\-name string|integer) ==> string
 .in +4
 Return the group name for the group \fPstring\fP or the group ID \fBinteger\fP.
 (Yes, getting a group name for a group name is an identity operation.)
 .in -4
 .sp
 .ne 3
-.B "(group-gid string|integer) ==> string
+.B "(group\-gid string|integer) ==> string
 .in +4
 Return the group ID for the group \fPstring\fP or the group ID \fBinteger\fP.
 (Yes, getting a group ID for a group ID is an identity operation.)
@@ -649,7 +649,7 @@ See
 .in -4
 .sp
 .ne 3
-.B "(spawn string) ==> (input-port output-port)
+.B "(spawn string) ==> (input\-port output\-port)
 .in +4
 See
 .BR unix:spawn.
@@ -663,67 +663,67 @@ See
 .in -4
 .sp
 .ne 3
-.B "(stat-name string) ==> string
+.B "(stat\-name string) ==> string
 .in +4
 Return the file name of the file \fPstring\fP.
 .in -4
 .sp
 .ne 3
-.B "(stat-size string) ==> integer
+.B "(stat\-size string) ==> integer
 .in +4
 Return the size of the file \fPstring\fP.
 .in -4
 .sp
 .ne 3
-.B "(stat-uid string) ==> integer
+.B "(stat\-uid string) ==> integer
 .in +4
 Return the UID of the owner of the file \fPstring\fP.
 .in -4
 .sp
 .ne 3
-.B "(stat-gid string) ==> integer
+.B "(stat\-gid string) ==> integer
 .in +4
 Return the GID of the owning group of the file \fPstring\fP.
 .in -4
 .sp
 .ne 3
-.B "(stat-mode string) ==> integer
+.B "(stat\-mode string) ==> integer
 .in +4
 Return the permission bits of the file \fPstring\fP.
 .in -4
 .sp
 .ne 3
-.B "(stat-ctime string) ==> integer
+.B "(stat\-ctime string) ==> integer
 .in +4
 Return the inode change time of the file \fPstring\fP.
 .in -4
 .sp
 .ne 3
-.B "(stat-atime string) ==> integer
+.B "(stat\-atime string) ==> integer
 .in +4
 Return the access time of the file \fPstring\fP.
 .in -4
 .sp
 .ne 3
-.B "(stat-mtime string) ==> integer
+.B "(stat\-mtime string) ==> integer
 .in +4
 Return the modification time of the file \fPstring\fP.
 .in -4
 .sp
 .ne 3
-.B "(stat-dev string) ==> integer
+.B "(stat\-dev string) ==> integer
 .in +4
 Return the device ID of the device on which the file \fPstring\fP resides.
 .in -4
 .sp
 .ne 3
-.B "(stat-ino string) ==> integer
+.B "(stat\-ino string) ==> integer
 .in +4
 Return the inode number of the file \fPstring\fP.
 .in -4
 .sp
 .ne 3
-.B "(stat-nlink  string) ==> integer
+.B "(stat\-nlink  string) ==> integer
 .in +4
 Return the link count of the file \fPstring\fP.
 .in -4
@@ -750,19 +750,19 @@ See
 .in -4
 .sp
 .ne 3
-.B "(time->unix-time time-list) ==> integer | #f
+.B "(time\->unix\-time time\-list) ==> integer | #f
 .in +4
 Convert a time list as described in
-.B unix-time->time
+.B unix\-time\->time
 to the number of seconds since the Unix epoch. Return
 .B #f
 if
-.I time-list
+.I time\-list
 is not a proper time list.
 .in -4
 .sp
 .ne 3
-.B "(unix-time->time integer) ==> time-list
+.B "(unix\-time\->time integer) ==> time\-list
 .in +4
 Convert the number of seconds since the Unix epoch given as the
 .I integer
@@ -794,41 +794,41 @@ See
 .in -4
 .sp
 .ne 3
-.B "(user-name integer|string) ==> string
+.B "(user\-name integer|string) ==> string
 .in +4
 Return the user name for the user \fPstring\fP or the user ID \fBinteger\fP.
 (Yes, getting a user name for a user name is an identity operation.)
 .in -4
 .sp
 .ne 3
-.B "(user-uid integer|string) ==> integer
+.B "(user\-uid integer|string) ==> integer
 .in +4
 Return the user ID for the user \fPstring\fP or the user ID \fBinteger\fP.
 (Yes, getting a user ID for a user ID is an identity operation.)
 .in -4
 .sp
 .ne 3
-.B "(user-gid integer|string) ==> integer
+.B "(user\-gid integer|string) ==> integer
 .in +4
 Return the group ID for the user \fPstring\fP or the user ID \fBinteger\fP.
 .in -4
 .sp
 .ne 3
-.B "(user-gecos integer|string) ==> string
+.B "(user\-gecos integer|string) ==> string
 .in +4
 Return the GECOS information (full name) for the user \fPstring\fP or
 the user ID \fBinteger\fP.
 .in -4
 .sp
 .ne 3
-.B "(user-home integer|string) ==> string
+.B "(user\-home integer|string) ==> string
 .in +4
 Return the home directory for the user \fPstring\fP or the user ID
 \fBinteger\fP.
 .in -4
 .sp
 .ne 3
-.B "(user-shell integer|string) ==> string
+.B "(user\-shell integer|string) ==> string
 .in +4
 Return the login shell for the user \fPstring\fP or the user ID \fBinteger\fP.
 .in -4

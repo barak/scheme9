@@ -45,7 +45,7 @@
 .B "s9
 - Scheme Interpreter
 .SH USAGE
-.B "s9 [-h?] [-gnqv] [-m size[m]] [-f program] [-d image] [-i]
+.B "s9 [\-h?] [\-gnqv] [\-m size[m]] [\-f program] [\-d image] [\-i]
 .SH "DESCRIPTION
 .B "Scheme 9 from Empty Space
 is an interpreter for a broad subset of
@@ -53,55 +53,55 @@ R4RS Scheme. The
 .B s9
 command starts the interpreter.
 .SH "OPTIONS
-.B "-h or -?
+.B "\-h or \-?
 .in +4
 Display a brief summary of options.
 .in -4
-.B "-d file
+.B "\-d file
 .in +4
 Dump heap image to
 .I file
 and exit.
 .in -4
-.B "-f program
+.B "\-f program
 .in +4
 Run
 .I program
-and exit (may be repeated, implies -q).
+and exit (may be repeated, implies \-q).
 .in -4
-.B "-g
+.B "\-g
 .in +4
-Print GC summaries (\fB-gg\fP = more verbose).
+Print GC summaries (\fB\-gg\fP = more verbose).
 .in -4
-.B "-i
+.B "\-i
 .in +4
 Enter interactive mode (after
-.BR -f ).
+.BR \-f ).
 .in -4
-.B "-n
+.B "\-n
 .in +4
 Do not load
 .I $HOME/.s9fes/rc
 file, if any.
 .in -4
-.B "-m N[m]
+.B "\-m N[m]
 .in +4
 Set memory limit to
 .I N
 kilo (or mega) nodes.
 .in -4
-.B "-q
+.B "\-q
 .in +4
 Be quiet: skip banners and prompts, exit on errors.
 .in -4
-.B -v
+.B \-v
 .in +4
 Display version and exit.
 .in -4
-.B --
+.B \-\-
 .in +4
 Arguments following
-.B --
+.B \-\-
 are not interpreted by S9fES.
 .in -4
 .SH "ONLINE HELP
@@ -114,7 +114,7 @@ to invoke the online help system. When using a custom heap image that
 does not contain the online help system, you will have to
 run the following command first:
 .sp
-\fB(load-from-library "help.scm")\fP
+\fB(load\-from\-library "help.scm")\fP
 .SH "TECHNICAL DETAILS
 S9fES is a tree-walking interpreter using deep binding and hashed
 environments. It employs a constant-space mark and sweep garbage
@@ -128,12 +128,12 @@ by
 values as long as the internal representation allows for it.
 It provides both low-level macros (see
 .B MACROS
-below) and \fBdefine-syntax\fP/\fBsyntax-rules\fP.
+below) and \fBdefine\-syntax\fP/\fBsyntax\-rules\fP.
 .SH "ADDITIONS
 These S9fES procedures are not in R4RS:
 .sp
 .ne 3
-.B "(delete-file string) ==> unspecific
+.B "(delete\-file string) ==> unspecific
 .in +4
 Delete the file specifed in the
 .I string
@@ -142,7 +142,7 @@ or cannot be deleted, report an error.
 .in -4
 .br
 .ne 3
-.B "(expand-quasiquote form) ==> expanded-form
+.B "(expand\-quasiquote form) ==> expanded\-form
 .in +4
 If
 .I form
@@ -151,7 +151,7 @@ that does not use quasiquotation.
 .in -4
 .br
 .ne 3
-.B "(expand-macro form) ==> expanded-form
+.B "(expand\-macro form) ==> expanded\-form
 .in +4
 If
 .I form
@@ -169,7 +169,7 @@ is an integer, return 0.
 .in -4
 .br
 .ne 3
-.B "(file-exists? string) ==> boolean
+.B "(file\-exists? string) ==> boolean
 .in +4
 Return
 .B "#t
@@ -179,7 +179,7 @@ argument exists and otherwise \fB#f\fP.
 .in -4
 .br
 .ne 4
-.B "(fold-left proc base list ...) ==> form
+.B "(fold\-left proc base list ...) ==> form
 .in +4
 Combine the elements of the
 .IR list s
@@ -191,7 +191,7 @@ is the leftmost element.
 .in -4
 .br
 .ne 4
-.B "(fold-right proc base list ...) ==> form
+.B "(fold\-right proc base list ...) ==> form
 .in +4
 Combine the elements of the
 .IR list s
@@ -212,7 +212,7 @@ argument is given, use it as prefix for the fresh symbol.
 .in -4
 .br
 .ne 2
-.B "(load-from-library string) ==> unspecific
+.B "(load\-from\-library string) ==> unspecific
 .in +4
 Attempt to
 .B load
@@ -223,7 +223,7 @@ from each directory of
 .in -4
 .br
 .ne 2
-.B "(locate-file string) ==> string | #f
+.B "(locate\-file string) ==> string | #f
 .in +4
 Search for the file
 .I string
@@ -253,13 +253,13 @@ separated by spaces.
 .in -4
 .br
 .ne 2
-.B "(set-input-port! input-port) ==> unspecific
+.B "(set\-input\-port! input\-port) ==> unspecific
 .in +4
 Destructively set the current input port.
 .in -4
 .br
 .ne 2
-.B "(set-output-port! output-port) ==> unspecific
+.B "(set\-output\-port! output\-port) ==> unspecific
 .in +4
 Destructively set the current output port.
 .in -4
@@ -318,7 +318,7 @@ may be omitted.
 .in -4
 .sp
 Redefinition of these procedures is safe except for
-.BR expand-quasiquote
+.BR expand\-quasiquote
 and
 .BR wrong .
 .SH "VARIABLES
@@ -337,7 +337,7 @@ top level.
 Compiled-in extensions.
 .in -4
 .ne 2
-.B "*library-path* (string)
+.B "*library\-path* (string)
 .in +4
 A verbatim copy of the
 .I S9FES_LIBRARY_PATH
@@ -360,9 +360,9 @@ its own application:
 .sp
 .ne 2
 .nf
-(define-macro (when p . c)
+(define\-macro (when p . c)
   `(if ,p (begin ,@c)))
-(expand-macro '(when (= 1 1) (display "true") (newline) #t))
+(expand\-macro '(when (= 1 1) (display "true") (newline) #t))
   ==>  (if (= 1 1)
            (begin (display "true")
                   (newline)
@@ -371,13 +371,13 @@ its own application:
 .fi
 .sp
 The
-.B define-macro
+.B define\-macro
 form introduces a new macro:
 .sp
 .ne 3
-.B "(define-macro name procedure) ==> unspecific
+.B "(define\-macro name procedure) ==> unspecific
 .br
-.B "(define-macro (name args ...) body) ==> unspecific
+.B "(define\-macro (name args ...) body) ==> unspecific
 .sp
 Both of these forms introduce the keyword
 .I name
@@ -398,18 +398,18 @@ work, because
 is undefined in the body of
 .IR d :
 .sp
-.B "(define-macro (d x) (and (pair? x) (d (cdr x)))) ; wrong"
+.B "(define\-macro (d x) (and (pair? x) (d (cdr x)))) ; wrong"
 .sp
 The following version
 .I does
 work, though:
 .sp
-.B "(define-macro (d x) (and (pair? x) `(d ,(cdr x)))) ; OK"
+.B "(define\-macro (d x) (and (pair? x) `(d ,(cdr x)))) ; OK"
 .SH "ALLOCATION STRATEGY
 The S9fES memory pool grows exponentially until the memory limit
 its reached. When the limit is reached, the current computation
 is aborted. A memory limit can be specified using the
-.B -m
+.B \-m
 command line option. The limit is specified in units of 1024
 nodes (or in units of 1024*1024 nodes by appending an
 .B m
@@ -418,7 +418,7 @@ suffix).
 Note that computations may abort
 .I before
 the limit is reached due to the way the pool grows. Use the
-.B -g
+.B \-g
 command line option to experiment with pool sizes.
 .br
 Specifying a memory limit of zero disables the memory limit and
@@ -428,14 +428,14 @@ option should be used with care.
 These parts of R4RS are not implemented:
 .sp
 Control:
-.BR call-with-current-continuation .
+.BR call\-with\-current\-continuation .
 .br
 I/O:
-.BR char-ready? .
+.BR char\-ready? .
 .br
 Transcripts:
-.BR transcript-off ,
-.BR transcript-on .
+.BR transcript\-off ,
+.BR transcript\-on .
 .br
 Numeric tower: rational and complex numbers.
 .br
@@ -448,14 +448,14 @@ as digits of inexact numbers,
 .BR atan ,
 .BR complex? ,
 .BR denominator ,
-.BR imag-part ,
+.BR imag\-part ,
 .BR magnitude ,
-.BR make-polar ,
-.BR make-rectangular ,
+.BR make\-polar ,
+.BR make\-rectangular ,
 .BR numerator ,
 .BR rational? ,
 .BR rationalize ,
-.BR real-part .
+.BR real\-part .
 .SH "BUGS
 Nested quasiquotation is currently unsupported.
 .SH "FILES
@@ -492,7 +492,7 @@ Scheme source code.
 A colon-separated list of directories which will be searched for
 the s9 library when the interpreter is launched. The same directories
 will be search by the
-.B locate-file
+.B locate\-file
 procedure.
 .br
 Default:
@@ -513,7 +513,7 @@ Terminate the interpreter process (emergency exit).
 .in -4
 .SH "REFERENCES
 .ne 3
-.B "http://www-swiss.ai.mit.edu/~jaffer/r4rs_toc.html
+.B "http://www\-swiss.ai.mit.edu/~jaffer/r4rs_toc.html
 .in +4
 The Revised^4 Report on the Algorithmic Language Scheme.
 .in -4
@@ -521,7 +521,7 @@ The Revised^4 Report on the Algorithmic Language Scheme.
 .ne 3
 .B "http://www.lulu.com/content/1010408
 .br
-.B "http://t3x.org/nmh/book-pdfs/scheme-9-from-empty-space.zip
+.B "http://t3x.org/nmh/book\-pdfs/scheme\-9\-from\-empty\-space.zip
 .in +4
 Scheme 9 from Empty Space -- A Guide to Implementing Scheme in C.
 .in -4
