@@ -3,7 +3,7 @@ Section: lisp
 Priority: extra
 Maintainer: Barak A. Pearlmutter <bap@debian.org>
 Build-Depends: debhelper (> 7.2.5)
-Standards-Version: 3.8.1
+Standards-Version: 3.8.2
 Homepage: http://t3x.org/s9fes/
 Vcs-Git: git://git.debian.org/git/collab-maint/scheme9.git
 Vcs-Browser: http://git.debian.org/?p=collab-maint/scheme9.git
