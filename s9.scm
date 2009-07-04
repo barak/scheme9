@@ -576,12 +576,20 @@
               (else (at-series x 0 0 1)))))))
 
 (define (asin x)
-  (atan (/ x (sqrt (- 1 (* x x))))))
+  (cond ((= 1 x)
+          (* 2 (atan x)))
+        ((negative? x)
+          (- (asin (- x))))
+        (else
+          (atan (/ x (sqrt (- 1 (* x x))))))))
 
 (define acos
-  (let ((pi/2 pi/2))
+  (let ((pi   pi)
+        (pi/2 pi/2))
     (lambda (x)
-      (- pi/2 (asin x)))))
+      (cond ((= -1 x) pi)
+            ((=  1 x) 0)
+            (else (- pi/2 (asin x)))))))
 
 (define (sqrt square)
   (letrec
@@ -685,7 +693,8 @@
                   (conv-real n))))))))
 
 (define string->number
-  (let ((number-of-digits number-of-digits))
+  (let ((number-of-digits number-of-digits)
+        (inexact #f))
     (lambda (str . radix)
       (letrec
         ((digits
@@ -758,7 +767,7 @@
          (conv-decimals
            (lambda (int lst)
              (cond ((null? lst)
-                     (result (exact->inexact int) '()))
+                     (result (+ 0.0 int) '()))
                    ((find-exponent-mark (car lst))
                      (conv-exponent int 10 (cdr lst)))
                    (else
@@ -805,14 +814,23 @@
                            FAIL))
                      (else
                        int-part)))))
+         (replace-inexact-digits!
+           (lambda (a)
+             (cond ((null? a) #f)
+                   ((char=? #\# (car a))
+                     (set-car! a #\5)
+                     (set! inexact #t)
+                     (replace-inexact-digits! (cdr a)))
+                   (else
+                     (replace-inexact-digits! (cdr a))))))
          (get-radix
            (lambda ()
              (cond ((null? radix) 10)
                    ((<= 2 (car radix) 36) (car radix))
                    (else (wrong "string->number: invalid radix"
                                 (car radix)))))))
+        (set! inexact #f)
         (let ((radix   (get-radix))
-              (inexact #f)
               (lst     (string->list str)))
           (if (and (> (string-length str) 1)
                    (char=? #\# (car lst)))
@@ -825,6 +843,10 @@
                       ((char=? mod #\o) (set! radix 8))
                       ((char=? mod #\x) (set! radix 16))
                       (else             (set! lst '())))))
+          (if (or (null? lst)
+                  (memv (car lst) '(#\+ #\- #\.))
+                  (char-numeric? (car lst)))
+              (replace-inexact-digits! lst))
           (let ((r (cond ((null? lst)
                            FAIL)
                          ((char=? #\- (car lst))
