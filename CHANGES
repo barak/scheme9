@@ -1,5 +1,10 @@
 Change Log
 
+2009-07-04
+	Added support for unspecific digits (#) to STRING->NUMBER.
+	Fix: (ASIN 1) and (ACOS 0) were undefined.
+	Fixed some minor flaws.
+	Added tests for ACOS, ASIN, ATAN, and STRING->NUMBER.
 2009-07-01
 	Added the ACOS, ASIN, ATAN procedures.
 	Fix: real number normalization *first* removed trailing
