@@ -1,5 +1,9 @@
 Change Log
 
+2009-07-05
+	Test suite failed on 64-bit machines due strange rounding
+	errors in ATAN. Decreased accuracy to 4 digits as a lame
+	work-around. Suggestions welcome.
 2009-07-04
 	Added support for unspecific digits (#) to STRING->NUMBER.
 	Fix: (ASIN 1) and (ACOS 0) were undefined.
