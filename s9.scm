@@ -570,10 +570,10 @@
                           r)))))
       (lambda (x)
         (cond ((negative? x)
-                (- (at-series (- x) 0 0 1)))
+                (- (at-series (- x) 0.0 0 1)))
               ((> x 1)
                 (- pi/2 (atan (/ x))))
-              (else (at-series x 0 0 1)))))))
+              (else (at-series x 0.0 0 1)))))))
 
 (define (asin x)
   (cond ((= 1 x)

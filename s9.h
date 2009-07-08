@@ -10,10 +10,6 @@
  */
 
 /*
- * Compiler-specific stuff
- */
-
-/*
  * Tell later MSC compilers to let us use the standard CLIB API.
  * Blake McBride <blake@mcbride.name>
  */

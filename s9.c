@@ -8,7 +8,7 @@
  * Use -DBITS_PER_WORD_64 on 64-bit systems.
  */
 
-#define VERSION "2009-07-05"
+#define VERSION "2009-07-08"
 
 #define EXTERN
 #include "s9.h"
@@ -4862,7 +4862,7 @@ void init(void) {
 void usage(char *name, int quit) {
 	pr("Usage: ");
 	pr(name);
-	pr(" [-h?] [-gnqv] [-d image] [-f program] [-i] [-m size[m]]"); nl();
+	pr(" [-h?] [-gnqv] [-m size[m]] [-f program] [-d image] [-i]"); nl();
 	pr("             [-- argument ...]\n");
 	if (quit) exit(1);
 }

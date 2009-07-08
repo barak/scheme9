@@ -1,5 +1,7 @@
 Change Log
 
+2009-07-08
+	Fixed that rounding bug in ATAN.
 2009-07-05
 	Test suite failed on 64-bit machines due strange rounding
 	errors in ATAN. Decreased accuracy to 4 digits as a lame
