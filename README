@@ -23,9 +23,9 @@
 	You can run the interpreter in its build directory without
 	installing it. Just run "make" and then "./s9".
 
-	The S9 code is only loosely coupled to its Makefile, so in
-	most cases running "cc -Dsystem -o s9 s9.c" (where system=unix
-	or system=plan9) will compile the interpreter just fine.
+	The S9 code is only loosely coupled to its Makefile, so in most
+	cases running "cc -Dunix -o s9 s9.c" or "8c -Dplan9 -o s9 s9.c"
+	will compile the interpreter just fine.
 
 	On most systems of the Unix family (plus CygWin and MINGW),
 	you can compile and install S9fES by running "make install".
@@ -62,7 +62,7 @@
 	To install S9fES manually,
 
 	- Copy the "s9" binary to a location where it can be executed
-	  (e.g. /usr/local/bin)
+	  (e.g. /usr/local/bin).
 
 	- Copy the file "s9.scm" to a publically readable directory
 	  (default: /usr/local/share/s9fes). This directory will be
