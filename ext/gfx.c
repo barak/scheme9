@@ -126,7 +126,6 @@ void refresh(int dummy);
 cell x11_init(char *title) {
 	XEvent		e;
 	XGCValues	v;
-	int		i = -1;
 	char		*dpyname;
 	int		scrn;
 	XSizeHints	*wm_size;
@@ -357,7 +356,7 @@ char *font_alloc(int size) {
 }
 
 char **loadvf(char *file, int *statusp) {
-	int	infd, n, i, k, p;
+	int	infd, n, i, k;
 	char	buf[4], ch[1];
 
 	Pt = 0;
@@ -461,7 +460,6 @@ cell pp_gfx_put_string(cell expr) {
 	char	msg2[] = "gfx:put-string: expected string, got";
 	int	x, y, r, m;
 	char	*s;
-	int	cx, i, k;
 
 	x = integer_value(self, cadr(expr));
 	y = integer_value(self, caddr(expr));
@@ -499,7 +497,6 @@ void load_font(void) {
 	char	*path, buf[256], *p;
 	char	libdir[240], libfile[256];
 	char	*home;
-	cell	new;
 	char	fontfile[] = "system.vf";
 	int	status;
 
@@ -533,8 +530,7 @@ void load_font(void) {
 }
 
 cell pp_gfx_init(cell x) {
-	int	p;
-	char	fp[256], base[240];
+	char	fp[256];
 	char	m1[] = "Scheme 9 Scientific Calculator",
 		m2[] = "By Nils M Holm, 2009";
 
