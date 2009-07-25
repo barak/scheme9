@@ -17,6 +17,7 @@
 #include <X11/Xlib.h>
 #include <X11/Xutil.h>
 #include <ctype.h>
+#include <fcntl.h>
 
 #define	XLIM		13333.0
 #define YLIM		10000.0
