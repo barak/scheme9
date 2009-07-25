@@ -101,7 +101,7 @@ s9sc.scm:	s9.scm
 
 s9sc.o:	s9.c
 	$(CC) $(CFLAGS) $(DEFS) -I . -DEXTENSIONS="gfx_init()" \
-		-DIMAGEFILE="\"s9sc.image\"" \ -DLIBRARY="\"s9sc.scm\"" \
+		-DIMAGEFILE="\"s9sc.image\"" -DLIBRARY="\"s9sc.scm\"" \
 		-o s9sc.o -c s9.c
 
 gfx.o:	ext/gfx.c
