@@ -220,25 +220,26 @@ enum EVAL_STATES {
 #define ENDOFFILE		(-4)
 #define UNDEFINED		(-5)
 #define UNSPECIFIC		(-6)
-#define DOT			(-7)
-#define RPAREN			(-8)
-#define NOEXPR			(-9)
+#define NAN			(-7)
+#define DOT			(-8)
+#define RPAREN			(-9)
+#define NOEXPR			(-10)
 /* Types */
-#define T_NONE			(-10)
-#define T_BOOLEAN		(-11)
-#define T_CHAR			(-12)
-#define T_INPUT_PORT		(-13)
-#define T_INTEGER		(-14)
-#define T_OUTPUT_PORT		(-15)
-#define T_PAIR			(-16)
-#define T_PAIR_OR_NIL		(-17)
-#define T_PRIMITIVE		(-18)
-#define T_PROCEDURE		(-19)
-#define T_REAL			(-20)
-#define T_STRING		(-21)
-#define T_SYMBOL		(-22)
-#define T_SYNTAX		(-23)
-#define T_VECTOR		(-24)
+#define T_NONE			(-11)
+#define T_BOOLEAN		(-12)
+#define T_CHAR			(-13)
+#define T_INPUT_PORT		(-14)
+#define T_INTEGER		(-15)
+#define T_OUTPUT_PORT		(-16)
+#define T_PAIR			(-17)
+#define T_PAIR_OR_NIL		(-18)
+#define T_PRIMITIVE		(-19)
+#define T_PROCEDURE		(-20)
+#define T_REAL			(-21)
+#define T_STRING		(-22)
+#define T_SYMBOL		(-23)
+#define T_SYNTAX		(-24)
+#define T_VECTOR		(-25)
 
 /*
  * Flags and structure of real numbers
@@ -257,6 +258,7 @@ enum EVAL_STATES {
 /*
  * Short cuts for primitive procedure definitions
  */
+#define BOL T_BOOLEAN
 #define CHR T_CHAR
 #define INP T_INPUT_PORT
 #define INT T_INTEGER
@@ -335,8 +337,7 @@ EXTERN cell	S_and, S_begin, S_call_ec, S_cond, S_define,
  * I/O
  */
 #define nl()		pr("\n")
-#define reject(c)	ungetc((c), Ports[Input_port])
-
+#define reject(c)	ungetc(c, Ports[Input_port])
 #define read_c()	getc(Ports[Input_port])
 #define read_c_ci()	tolower(read_c())
 
@@ -496,14 +497,15 @@ EXTERN cell	S_and, S_begin, S_call_ec, S_cond, S_define,
 /*
  * Prototypes
  */
+void	add_primitives(char *name, PRIM *p);
+cell	add_symbol(char *s);
+cell	alloc3(cell pcar, cell pcdr, int ptag);
+int	alloc_port(void);
+char	*copy_string(char *s);
 cell	error(char *msg, cell expr);
 void	fatal(char *msg);
 cell	make_integer(cell i);
+cell	make_port(int portno, cell type);
 int	integer_value(char *src, cell x);
-cell	alloc3(cell pcar, cell pcdr, int ptag);
 cell	make_string(char *s, int k);
 cell	unsave(int k);
-cell	add_symbol(char *s);
-int	alloc_port(void);
-cell	make_port(int portno, cell type);
-void	add_primitives(char *name, PRIM *p);

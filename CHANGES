@@ -1,5 +1,9 @@
 Change Log
 
+2009-07-25
+	Added statistics package to CONTRIB.
+	Added the Scheme 9 Scientific Calculator extension (S9SC).
+	Note that S9SC is *very* experimental at this stage.
 2009-07-08
 	Fixed that rounding bug in ATAN.
 2009-07-05
