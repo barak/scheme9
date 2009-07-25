@@ -52,12 +52,12 @@ all:	all-s9
 all:	all-s9e
 
 all-s9:	s9 s9.image
-all-s9:	s9.1.gz
+all-s9:	s9.1
 
 all-s9e:	s9e s9e.image
-all-s9e:	s9e.1.gz
+all-s9e:	s9e.1
 
-all-s9sc:	s9sc s9sc.image system.vf # s9sc.1.gz
+all-s9sc:	s9sc s9sc.image system.vf # s9sc.1
 
 s9:	s9.c s9.h
 	$(CC) $(CFLAGS) $(DEFS) -o s9 s9.c
