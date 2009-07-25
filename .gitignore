@@ -4,6 +4,7 @@
 /debian/*.substvars
 /debian/files
 /debian/scheme9
+/mkvfont
 /s9
 /s9.1
 /s9.1.gz
@@ -13,3 +14,7 @@
 /s9e.1.gz
 /s9e.image
 /s9e.scm
+/s9sc
+/s9sc.image
+/s9sc.scm
+/system.vf
