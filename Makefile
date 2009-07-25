@@ -4,7 +4,7 @@
 # Change at least this line:
 #PREFIX= /u
 
-VERSION= 20090708
+VERSION= 20090725
 
 # Extras to be added to the heap image
 EXTRA_STUFF=	-f contrib/help.scm \
@@ -38,6 +38,9 @@ MANDIR=$(mandir)/man1
 # Which OS are we using (unix or plan9)?
 OSDEF=	-Dunix
 
+# For the S9fES Scientific Calculator; uncomment, if needed
+X11BASE=	/usr/X11R6
+
 DEFS=	$(OSDEF) \
 	-DDEFAULT_LIBRARY_PATH="\".:~/s9fes:$(LIBDIR):$(LIBDIR)/contrib\""
 
@@ -49,16 +52,21 @@ all:	all-s9
 all:	all-s9e
 
 all-s9:	s9 s9.image
-all-s9:	s9.1
+all-s9:	s9.1.gz
 
 all-s9e:	s9e s9e.image
-all-s9e:	s9e.1
+all-s9e:	s9e.1.gz
+
+all-s9sc:	s9sc s9sc.image system.vf # s9sc.1.gz
 
 s9:	s9.c s9.h
 	$(CC) $(CFLAGS) $(DEFS) -o s9 s9.c
 
 s9.image:	s9 s9.scm contrib/help.scm contrib/pretty-print.scm
 	rm -f s9.image && $(BUILD_ENV) ./s9 -n $(EXTRA_STUFF) -d s9.image
+
+s9.1.gz:	s9.1
+	sed -e "s,@LIBDIR@,$(LIBDIR)," <s9.1 |gzip -9 >s9.1.gz
 
 s9e:	s9e.o $(EXTOBJ)
 	$(CC) $(CFLAGS) -o s9e s9e.o $(EXTOBJ)
@@ -84,6 +92,30 @@ s9e.image:	s9e s9e.scm ext/system.scm
 
 %.gz: %
 	gzip -9 < $* > $@
+
+s9sc:	s9sc.o gfx.o
+	$(CC) $(CFLAGS) -o s9sc s9sc.o gfx.o -L $(X11BASE)/lib -lX11
+
+s9sc.scm:	s9.scm
+	ln -s s9.scm s9sc.scm
+
+s9sc.o:	s9.c
+	$(CC) $(CFLAGS) $(DEFS) -I . -DEXTENSIONS="gfx_init()" \
+		-DIMAGEFILE="\"s9sc.image\"" \ -DLIBRARY="\"s9sc.scm\"" \
+		-o s9sc.o -c s9.c
+
+gfx.o:	ext/gfx.c
+	$(CC) $(CFLAGS) -I $(X11BASE)/include -I . -o gfx.o -c ext/gfx.c
+
+system.vf:	ext/sys6x12.vfd mkvfont
+	./mkvfont 6 12 ext/sys6x12.vfd system.vf
+
+mkvfont:	ext/mkvfont.c
+	$(CC) $(CFLAGS) -o mkvfont ext/mkvfont.c
+
+s9sc.image:	s9sc s9sc.scm ext/sc.scm
+	rm -f s9sc.image && \
+	$(BUILD_ENV) ./s9sc -n -f ext/sc.scm $(EXTRA_STUFF) -d s9sc.image
 
 lint:
 	gcc -g -Wall -ansi -pedantic s9.c && rm a.out
@@ -133,8 +165,9 @@ deinstall:
 	-rmdir $(MANDIR)
 
 clean:
-	rm -f s9.1 s9e.1
-	rm -f s9 s9e s9e.scm s9.image s9e.image s9.1.gz s9e.1.gz s9.1.txt \
+	rm -f s9.1 s9e.1 s9.1.txt s9e.1.txt
+	rm -f s9 s9.image s9.1.gz s9.s.txt s9e s9e.scm s9e.image s9e.1.gz \
+		s9sc s9sc.scm s9sc.image s9sc.1.gz mkvfont system.vf \
 		*.o *.core core s9.A.tgz s9fes-$(VERSION).tar.gz __tmp[12]__ \
 		__testfile__ rpp CHANGES.html LICENSE.html README.html \
 		s9.1.html s9.exe s9e.exe

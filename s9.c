@@ -8,7 +8,7 @@
  * Use -DBITS_PER_WORD_64 on 64-bit systems.
  */
 
-#define VERSION "2009-07-08"
+#define VERSION "2009-07-25"
 
 #define EXTERN
 #include "s9.h"
@@ -1295,6 +1295,9 @@ void print_form(cell n) {
 	}
 	if (n == NIL) {
 		pr("()");
+	}
+	if (n == NAN) {
+		pr("#<NaN>");
 	}
 	else if (eof_p(n)) {
 		pr("#<eof>");
@@ -2616,7 +2619,7 @@ cell real_divide(cell x, cell a, cell b) {
 	car(Stack) = mb;
 	if (bignum_zero_p(mb)) {
 		unsave(2);
-		return error("floating point divide by zero", x);
+		return NAN;
 	}
 	nd = count_digits(cdr(ma));
 	dd = MANTISSA_SIZE + count_digits(cdr(mb));
@@ -4772,6 +4775,7 @@ void add_primitives(char *name, PRIM *p) {
 }
 
 /* Extension prototypes */
+void gfx_init(void);
 void unix_init(void);
 
 void make_initial_env(void) {

@@ -305,7 +305,7 @@
 
 (define (list-tail x n)
   (cond ((zero? n) x)
-        ((null? x) (wrong "list-tail: index out of range"))
+        ((null? x) (wrong "list-tail: index out of range" n))
         (else (list-tail (cdr x) (- n 1)))))
 
 (define (list-ref x n)
@@ -350,7 +350,7 @@
                ((even? y) (square (expt2 x (quotient y 2))))
                (else      (* x (square (expt2 x (quotient y 2)))))))))
     (if (negative? y)
-        (/ (expt2 (exact->inexact x) y))
+        (/ (expt2 (+ 0.0 x) y))
         (expt2 x y))))
 
 (define gcd
@@ -413,7 +413,7 @@
 (define (round x)
   (let ((x+ (+ 0.5 x)))
     (let ((rx (floor x+)))
-      (if (and (odd? rx) (= x+ rx))
+      (if (and (odd? (inexact->exact rx)) (= x+ rx))
           (- rx 1)
           rx))))
 
