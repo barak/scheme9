@@ -531,7 +531,6 @@ void load_font(void) {
 }
 
 cell pp_gfx_init(cell x) {
-	char	fp[256];
 	char	m1[] = "Scheme 9 Scientific Calculator",
 		m2[] = "By Nils M Holm, 2009";
 
