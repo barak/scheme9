@@ -442,7 +442,7 @@ void putv(int x, int y, int scale, int mode, char *v) {
 	}
 }
 
-cell put_string(int x, int y, int r, int m, char *s) {
+void put_string(int x, int y, int r, int m, char *s) {
 	int	i, k, cx;
 
 	cx = FSX * r;
