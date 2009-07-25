@@ -6,8 +6,10 @@
 /debian/scheme9
 /s9
 /s9.1
+/s9.1.gz
 /s9.image
 /s9e
+/s9e.1
+/s9e.1.gz
 /s9e.image
 /s9e.scm
-s9e.1
