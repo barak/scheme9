@@ -91,7 +91,7 @@ void clear(void) {
 	Initial = 1;
 }
 
-void log(int op, int x, int y, int dx, int dy, int r, int m, int f, char *s) {
+void gfx_log(int op, int x, int y, int dx, int dy, int r, int m, int f, char *s) {
 	struct jrnl	*jp;
 	char	*t;
 
@@ -239,7 +239,7 @@ cell pp_gfx_line(cell expr) {
 		return error(msg2, cadr(cddddr(expr)));
 	dy = integer_value(self, car(cddddr(expr)));
 	m = cadr(cddddr(expr)) == TRUE;
-	log(LINE, x, y, dx, dy, 0, m, 0, NULL);
+	gfx_log(LINE, x, y, dx, dy, 0, m, 0, NULL);
 	line(x, y, dx, dy, m);
 	return UNSPECIFIC;
 }
@@ -283,7 +283,7 @@ cell pp_gfx_box(cell expr) {
 	dy = integer_value(self, car(cddddr(expr)));
 	m = cadr(cddddr(expr)) == TRUE;
 	f = caddr(cddddr(expr)) == TRUE;
-	log(BOX, x, y, dx, dy, 0, m, f, NULL);
+	gfx_log(BOX, x, y, dx, dy, 0, m, f, NULL);
 	box(x, y, dx, dy, m, f);
 	return UNSPECIFIC;
 }
@@ -332,7 +332,7 @@ cell pp_gfx_ellipse(cell expr) {
 	dy = integer_value(self, car(cddddr(expr)));
 	m = cadr(cddddr(expr)) == TRUE;
 	f = caddr(cddddr(expr)) == TRUE;
-	log(ELLIPSE, x, y, dx, dy, 0, m, f, NULL);
+	gfx_log(ELLIPSE, x, y, dx, dy, 0, m, f, NULL);
 	ellipse(x, y, dx, dy, m, f);
 	return UNSPECIFIC;
 }
@@ -472,7 +472,7 @@ cell pp_gfx_put_string(cell expr) {
 		return error(msg2, cadr(cddddr(expr)));
 	m = car(cddddr(expr)) == TRUE;
 	s = string(cadr(cddddr(expr)));
-	log(STRING, x, y, 0, 0, r, m, 0, s);
+	gfx_log(STRING, x, y, 0, 0, r, m, 0, s);
 	put_string(x, y, r, m, s);
 	return UNSPECIFIC;
 }
@@ -542,8 +542,8 @@ cell pp_gfx_init(cell x) {
 	x11_init("S9fES GFX");
 	if (Error_flag) return UNSPECIFIC;
 	load_font();
-	log(STRING, 6666-5000, 5500, 0, 0, 7, 1, 0, m1);
-	log(STRING, 6666-2000, 4500, 0, 0, 5, 1, 0, m2);
+	gfx_log(STRING, 6666-5000, 5500, 0, 0, 7, 1, 0, m1);
+	gfx_log(STRING, 6666-2000, 4500, 0, 0, 5, 1, 0, m2);
 	Initial = 1;
 	return UNSPECIFIC;
 }
