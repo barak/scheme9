@@ -50,6 +50,7 @@ EXTDEF=	-DIMAGEFILE="\"s9e.image\"" -DLIBRARY="\"s9e.scm\""
 
 all:	all-s9
 all:	all-s9e
+all:    all-s9sc
 
 all-s9:	s9 s9.image
 all-s9:	s9.1
@@ -57,8 +58,9 @@ all-s9:	s9.1
 all-s9e:	s9e s9e.image
 all-s9e:	s9e.1
 
-all-s9sc:	s9sc s9sc.image sys6x12.vf
+all-s9sc:	s9sc s9sc.image
 all-s9sc:	s9sc.1
+all-s9sc:	sys6x12.vf
 
 s9:	s9.c s9.h
 	$(CC) $(CFLAGS) $(DEFS) -o s9 s9.c
@@ -115,9 +117,6 @@ s9sc.image:	s9sc s9sc.scm ext/sc.scm
 	rm -f s9sc.image && \
 	$(BUILD_ENV) ./s9sc -n -f ext/sc.scm $(EXTRA_STUFF) -d s9sc.image
 
-s9sc.1.gz:	s9sc.1
-	gzip -9c <s9sc.1 >s9sc.1.gz
-
 lint:
 	gcc -g -Wall -ansi -pedantic s9.c && rm a.out
 
@@ -173,15 +172,18 @@ deinstall:
 	rm $(DESTDIR)$(BINDIR)/s9
 	rm $(DESTDIR)$(BINDIR)/s9e
 	-rmdir $(DESTDIR)$(BINDIR)
-	rm $(DESTDIR)$(MANDIR)/s9.1.gz
-	-rmdir $(DESTDIR)$(MANDIR)
 
 clean:
-	rm -f s9.1 s9e.1 s9.1.txt s9e.1.txt
-	rm -f s9 s9.image s9.1.gz s9.s.txt s9e s9e.scm s9e.image s9e.1.gz \
-		s9sc s9sc.scm s9sc.image s9sc.1.gz mkvfont sys6x12.vf \
+	rm -f s9.1     s9e.1     s9sc.1
+	rm -f s9.1.gz  s9e.1.gz  s9sc.1.gz
+	rm -f s9.1.txt s9e.1.txt s9sc.1.txt
+	rm -f s9 s9e s9sc
+	rm -f s9.image  s9e.image s9sc.image
+	rm -f s9.s.txt
+	rm -f s9e.scm s9sc.scm
+	rm -f mkvfont sys6x12.vf \
 		*.o *.core core s9.B.tgz s9fes-$(VERSION).tar.gz __tmp[12]__ \
 		__testfile__ rpp CHANGES.html LICENSE.html README.html \
-		s9.1.html s9.exe s9e.exe
+		s9.1.html s9.exe s9e.exe s9sc.exe
 
 # --- end of distribution Makefile ---
