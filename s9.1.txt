@@ -988,3 +988,1323 @@ AUTHOR
 
 S9 Interpreter                  Page 5                           S9(1)
 
+
+S9(1)                  Scheme 9 from Empty Space                 S9(1)
+
+
+
+NAME
+          s9 - Scheme Interpreter
+
+USAGE
+          s9 [-h?] [-gnqv] [-m size[m]] [-f program] [-d image] [-i]
+
+DESCRIPTION
+          Scheme  9  from  Empty  Space  is an interpreter for a broad
+          subset  of  R4RS  Scheme.  The   s9   command   starts   the
+          interpreter.
+
+OPTIONS
+          -h or -?
+              Display a brief summary of options.
+          -d file
+              Dump heap image to file and exit.
+          -f program
+              Run program and exit (may be repeated, implies -q).
+          -g
+              Print GC summaries (-gg = more verbose).
+          -i
+              Enter interactive mode (after -f).
+          -n
+              Do not load $HOME/.s9fes/rc file, if any.
+          -m N[m]
+              Set memory limit to N kilo (or mega) nodes.
+          -q
+              Be quiet: skip banners and prompts, exit on errors.
+          -v
+              Display version and exit.
+          --
+              Arguments following -- are not interpreted by S9fES.
+
+ONLINE HELP
+          When  the  interpreter is running and the default heap image
+          is loaded, just type
+
+          (help)
+
+          to invoke the online help system. When using a  custom  heap
+          image that does not contain the online help system, you will
+          have to run the following command first:
+
+          (load-from-library "help.scm")
+
+TECHNICAL DETAILS
+          S9fES is a tree-walking interpreter using deep  binding  and
+          hashed  environments.  It  employs a constant-space mark and
+          sweep garbage collector with in-situ string and vector  pool
+          compaction. Memory pools grow on demand.
+          The interpreter uses arbitrary-precision integer arithmetics
+          and decimal-based floating point arithmetics.  Real  numbers
+          are  represented  by  exact  values  as long as the internal
+          representation allows for it.  It  provides  both  low-level
+
+
+
+
+
+S9 Interpreter                  Page 1                           S9(1)
+
+
+S9(1)                  Scheme 9 from Empty Space                 S9(1)
+
+
+          macros (see MACROS below) and define-syntax/syntax-rules.
+
+ADDITIONS
+          These S9fES procedures are not in R4RS:
+
+          (delete-file string) ==> unspecific
+              Delete  the file specifed in the string argument. If the
+              file does not exist or  cannot  be  deleted,  report  an
+              error.
+          (expand-quasiquote form) ==> expanded-form
+              If  form  is  a quasiquoted expression, rewrite it as an
+              equivalent expression that does not use  quasiquotation.
+          (expand-macro form) ==> expanded-form
+              If  form applies a macro, return the expanded form, else
+              return the form.
+          (exponent real) ==> integer
+              Return the exponent of the  internal  representation  of
+              real.  When real is an integer, return 0.
+          (file-exists? string) ==> boolean
+              Return  #t  if  the file specifed in the string argument
+              exists and otherwise #f.
+          (fold-left proc base list ...) ==> form
+              Combine the elements of the lists using  proc.   Combine
+              elements   left-associatively.   Base  is  the  leftmost
+              element.
+          (fold-right proc base list ...) ==> form
+              Combine the elements of the lists using  proc.   Combine
+              elements  right-associatively.   Base  is  the rightmost
+              element.
+          (gensym) ==> symbol
+          (gensym string) ==> symbol
+              Return a fresh symbol. When a string argument is  given,
+              use it as prefix for the fresh symbol.
+          (load-from-library string) ==> unspecific
+              Attempt  to  load the file string from each directory of
+              S9FES_LIBRARY_PATH.
+          (locate-file string) ==> string | #f
+              Search  for  the  file  string  in  each   directory  of
+              S9FES_LIBRARY_PATH  in  sequence.   When the file can be
+              located, return its full path, else return #f.
+          (mantissa real) ==> integer
+              Return the mantissa of the  internal  representation  of
+              real.  When real is an integer, return that integer.
+          (print form ...) ==> unspecific
+              Write multiple forms separated by spaces.
+          (set-input-port! input-port) ==> unspecific
+              Destructively set the current input port.
+          (set-output-port! output-port) ==> unspecific
+              Destructively set the current output port.
+          (stats form) ==> normal form
+              Evaluate  the  given form and return its normal form. In
+              addition, print the number  of  reduction  steps,  nodes
+              allocated,  and  garbage  collections  performed  during
+              evaluation. Note that form must be quoted.
+          (symbols) ==> list
+              Return a list of all defined symbols.
+
+
+
+
+S9 Interpreter                  Page 2                           S9(1)
+
+
+S9(1)                  Scheme 9 from Empty Space                 S9(1)
+
+
+          (trace symbol ...) ==> list | #t
+          (trace #t) ==> list | #t
+              Trace  the  procedure  or  syntax  bound  to  the  given
+              symbols.    When  #t  is  passed  to  trace,  trace  all
+              procedures and syntax (expect lots of output!). When  no
+              arguments  are  passed  to  it,  disable tracing.  Trace
+              returns the symbols that were being  traced  before  its
+              invocation.
+          (void) ==> unspecific
+              Return an unspecific value.
+          (wrong string form) ==> bottom
+              Print  an  error message of the form error: string: form
+              and terminate program execution.  Form may be omitted.
+
+          Redefinition of these procedures is safe except for  expand-
+          quasiquote and wrong.
+
+VARIABLES
+          These  variables  are  pre-defined  in the dynamic top-level
+          scope of the interpreter.
+
+          ** (form)
+              The  normal  form  of  the  expression   most   recently
+              evaluated at the top level.
+          *extensions* (list of symbols)
+              Compiled-in extensions.
+          *library-path* (string)
+              A  verbatim  copy  of the S9FES_LIBRARY_PATH environment
+              variable (see below).
+          *loading* (boolean)
+              Set to #t when loading a file, else #f.
+
+MACROS
+          A S9fES  macro  is  a  procedure  that  is  applied  to  its
+          unevaluated  arguments.   The  macro application is replaced
+          with the value returned  by  the  procedure.   This  happens
+          before  the  expression  containing the macro application is
+          evaluated, so a macro rewrites its own application:
+
+          (define-macro (when p . c)
+            `(if ,p (begin ,@c)))
+          (expand-macro '(when (= 1 1) (display "true") (newline) #t))
+            ==>  (if (= 1 1)
+                     (begin (display "true")
+                            (newline)
+                            #t))
+          (when (= 1 1) 1 2 3)  ==>  3
+
+          The define-macro form introduces a new macro:
+
+          (define-macro name procedure) ==> unspecific
+          (define-macro (name args ...) body) ==> unspecific
+
+          Both of these forms introduce the keyword name and  bind  it
+          to  a procedure. The first form requires the second argument
+          to be a procedure. Like in define forms the  second  variant
+          implies a procedure definition.
+
+
+
+S9 Interpreter                  Page 3                           S9(1)
+
+
+S9(1)                  Scheme 9 from Empty Space                 S9(1)
+
+
+          Macros  may contain applications of macros that were defined
+          earlier.  Macros may not  recurse  directly,  but  they  may
+          implement  recursion internally using letrec or by rewriting
+          their own applications. The following  macro,  for  example,
+          does not work, because d is undefined in the body of d:
+
+          (define-macro (d x) (and (pair? x) (d (cdr x)))) ; wrong
+
+          The following version does work, though:
+
+          (define-macro (d x) (and (pair? x) `(d ,(cdr x)))) ; OK
+
+ALLOCATION STRATEGY
+          The  S9fES  memory pool grows exponentially until the memory
+          limit its reached. When the limit is  reached,  the  current
+          computation  is  aborted.  A  memory  limit can be specified
+          using the -m command line option. The limit is specified  in
+          units  of  1024  nodes  (or  in  units of 1024*1024 nodes by
+          appending an m suffix).
+          Note that computations may abort before the limit is reached
+          due  to  the  way  the  pool  grows. Use the -g command line
+          option to experiment with pool sizes.
+          Specifying a memory limit of zero disables the memory  limit
+          and  the  interpreter will allocate as much memory as it can
+          get. This option should be used with care.
+
+LIMITATIONS
+          These parts of R4RS are not implemented:
+
+          Control: call-with-current-continuation.
+          I/O: char-ready?.
+          Transcripts: transcript-off, transcript-on.
+          Numeric tower: rational and complex numbers.
+          Numeric procedures: angle, complex?, denominator, imag-part,
+          magnitude,    make-polar,    make-rectangular,    numerator,
+          rational?, rationalize, real-part.
+
+BUGS
+          Nested quasiquotation is currently unsupported.
+
+FILES
+          $HOME/.s9fes/rc
+              If present, this file is  loaded  when  the  interpreter
+              starts up.
+          @LIBDIR@
+              The S9fES procedure library (source code).
+          @LIBDIR@/contrib
+              Contributions to the procedure library (source code).
+          @LIBDIR@/s9.image
+              The interpreter heap image.
+          *.scm
+              Scheme source code.
+
+ENVIRONMENT
+          S9FES_LIBRARY_PATH
+              A  colon-separated  list  of  directories  which will be
+              searched for the s9  library  when  the  interpreter  is
+
+
+
+S9 Interpreter                  Page 4                           S9(1)
+
+
+S9(1)                  Scheme 9 from Empty Space                 S9(1)
+
+
+              launched.  The  same  directories  will be search by the
+              locate-file procedure.
+              Default: .:~/.s9fes:@LIBDIR@:@LIBDIR@/contrib
+
+SIGNALS
+          These work only if POSIX  signal  handling  was  enabled  at
+          compile time.
+
+          SIGINT
+              Abort input or terminate program execution.
+          SIGQUIT
+              Terminate the interpreter process (emergency exit).
+
+REFERENCES
+          http://www-swiss.ai.mit.edu/~jaffer/r4rs_toc.html
+              The Revised^4 Report on the Algorithmic Language Scheme.
+
+          http://www.lulu.com/content/1010408
+          http://t3x.org/nmh/book-pdfs/scheme-9-from-empty-space.zip
+              Scheme 9 from Empty Space --  A  Guide  to  Implementing
+              Scheme in C.
+
+AUTHOR
+          Nils M Holm < nmh at t3x.org >
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+S9 Interpreter                  Page 5                           S9(1)
+
+
+S9(1)                  Scheme 9 from Empty Space                 S9(1)
+
+
+
+NAME
+          s9 - Scheme Interpreter
+
+USAGE
+          s9 [-h?] [-gnqv] [-m size[m]] [-f program] [-d image] [-i]
+
+DESCRIPTION
+          Scheme  9  from  Empty  Space  is an interpreter for a broad
+          subset  of  R4RS  Scheme.  The   s9   command   starts   the
+          interpreter.
+
+OPTIONS
+          -h or -?
+              Display a brief summary of options.
+          -d file
+              Dump heap image to file and exit.
+          -f program
+              Run program and exit (may be repeated, implies -q).
+          -g
+              Print GC summaries (-gg = more verbose).
+          -i
+              Enter interactive mode (after -f).
+          -n
+              Do not load $HOME/.s9fes/rc file, if any.
+          -m N[m]
+              Set memory limit to N kilo (or mega) nodes.
+          -q
+              Be quiet: skip banners and prompts, exit on errors.
+          -v
+              Display version and exit.
+          --
+              Arguments following -- are not interpreted by S9fES.
+
+ONLINE HELP
+          When  the  interpreter is running and the default heap image
+          is loaded, just type
+
+          (help)
+
+          to invoke the online help system. When using a  custom  heap
+          image that does not contain the online help system, you will
+          have to run the following command first:
+
+          (load-from-library "help.scm")
+
+TECHNICAL DETAILS
+          S9fES is a tree-walking interpreter using deep  binding  and
+          hashed  environments.  It  employs a constant-space mark and
+          sweep garbage collector with in-situ string and vector  pool
+          compaction. Memory pools grow on demand.
+          The interpreter uses arbitrary-precision integer arithmetics
+          and decimal-based floating point arithmetics.  Real  numbers
+          are  represented  by  exact  values  as long as the internal
+          representation allows for it.  It  provides  both  low-level
+
+
+
+
+
+S9 Interpreter                  Page 1                           S9(1)
+
+
+S9(1)                  Scheme 9 from Empty Space                 S9(1)
+
+
+          macros (see MACROS below) and define-syntax/syntax-rules.
+
+ADDITIONS
+          These S9fES procedures are not in R4RS:
+
+          (delete-file string) ==> unspecific
+              Delete  the file specifed in the string argument. If the
+              file does not exist or  cannot  be  deleted,  report  an
+              error.
+          (expand-quasiquote form) ==> expanded-form
+              If  form  is  a quasiquoted expression, rewrite it as an
+              equivalent expression that does not use  quasiquotation.
+          (expand-macro form) ==> expanded-form
+              If  form applies a macro, return the expanded form, else
+              return the form.
+          (exponent real) ==> integer
+              Return the exponent of the  internal  representation  of
+              real.  When real is an integer, return 0.
+          (file-exists? string) ==> boolean
+              Return  #t  if  the file specifed in the string argument
+              exists and otherwise #f.
+          (fold-left proc base list ...) ==> form
+              Combine the elements of the lists using  proc.   Combine
+              elements   left-associatively.   Base  is  the  leftmost
+              element.
+          (fold-right proc base list ...) ==> form
+              Combine the elements of the lists using  proc.   Combine
+              elements  right-associatively.   Base  is  the rightmost
+              element.
+          (gensym) ==> symbol
+          (gensym string) ==> symbol
+              Return a fresh symbol. When a string argument is  given,
+              use it as prefix for the fresh symbol.
+          (load-from-library string) ==> unspecific
+              Attempt  to  load the file string from each directory of
+              S9FES_LIBRARY_PATH.
+          (locate-file string) ==> string | #f
+              Search  for  the  file  string  in  each   directory  of
+              S9FES_LIBRARY_PATH  in  sequence.   When the file can be
+              located, return its full path, else return #f.
+          (mantissa real) ==> integer
+              Return the mantissa of the  internal  representation  of
+              real.  When real is an integer, return that integer.
+          (print form ...) ==> unspecific
+              Write multiple forms separated by spaces.
+          (set-input-port! input-port) ==> unspecific
+              Destructively set the current input port.
+          (set-output-port! output-port) ==> unspecific
+              Destructively set the current output port.
+          (stats form) ==> normal form
+              Evaluate  the  given form and return its normal form. In
+              addition, print the number  of  reduction  steps,  nodes
+              allocated,  and  garbage  collections  performed  during
+              evaluation. Note that form must be quoted.
+          (symbols) ==> list
+              Return a list of all defined symbols.
+
+
+
+
+S9 Interpreter                  Page 2                           S9(1)
+
+
+S9(1)                  Scheme 9 from Empty Space                 S9(1)
+
+
+          (trace symbol ...) ==> list | #t
+          (trace #t) ==> list | #t
+              Trace  the  procedure  or  syntax  bound  to  the  given
+              symbols.    When  #t  is  passed  to  trace,  trace  all
+              procedures and syntax (expect lots of output!). When  no
+              arguments  are  passed  to  it,  disable tracing.  Trace
+              returns the symbols that were being  traced  before  its
+              invocation.
+          (void) ==> unspecific
+              Return an unspecific value.
+          (wrong string form) ==> bottom
+              Print  an  error message of the form error: string: form
+              and terminate program execution.  Form may be omitted.
+
+          Redefinition of these procedures is safe except for  expand-
+          quasiquote and wrong.
+
+VARIABLES
+          These  variables  are  pre-defined  in the dynamic top-level
+          scope of the interpreter.
+
+          ** (form)
+              The  normal  form  of  the  expression   most   recently
+              evaluated at the top level.
+          *extensions* (list of symbols)
+              Compiled-in extensions.
+          *library-path* (string)
+              A  verbatim  copy  of the S9FES_LIBRARY_PATH environment
+              variable (see below).
+          *loading* (boolean)
+              Set to #t when loading a file, else #f.
+
+MACROS
+          A S9fES  macro  is  a  procedure  that  is  applied  to  its
+          unevaluated  arguments.   The  macro application is replaced
+          with the value returned  by  the  procedure.   This  happens
+          before  the  expression  containing the macro application is
+          evaluated, so a macro rewrites its own application:
+
+          (define-macro (when p . c)
+            `(if ,p (begin ,@c)))
+          (expand-macro '(when (= 1 1) (display "true") (newline) #t))
+            ==>  (if (= 1 1)
+                     (begin (display "true")
+                            (newline)
+                            #t))
+          (when (= 1 1) 1 2 3)  ==>  3
+
+          The define-macro form introduces a new macro:
+
+          (define-macro name procedure) ==> unspecific
+          (define-macro (name args ...) body) ==> unspecific
+
+          Both of these forms introduce the keyword name and  bind  it
+          to  a procedure. The first form requires the second argument
+          to be a procedure. Like in define forms the  second  variant
+          implies a procedure definition.
+
+
+
+S9 Interpreter                  Page 3                           S9(1)
+
+
+S9(1)                  Scheme 9 from Empty Space                 S9(1)
+
+
+          Macros  may contain applications of macros that were defined
+          earlier.  Macros may not  recurse  directly,  but  they  may
+          implement  recursion internally using letrec or by rewriting
+          their own applications. The following  macro,  for  example,
+          does not work, because d is undefined in the body of d:
+
+          (define-macro (d x) (and (pair? x) (d (cdr x)))) ; wrong
+
+          The following version does work, though:
+
+          (define-macro (d x) (and (pair? x) `(d ,(cdr x)))) ; OK
+
+ALLOCATION STRATEGY
+          The  S9fES  memory pool grows exponentially until the memory
+          limit its reached. When the limit is  reached,  the  current
+          computation  is  aborted.  A  memory  limit can be specified
+          using the -m command line option. The limit is specified  in
+          units  of  1024  nodes  (or  in  units of 1024*1024 nodes by
+          appending an m suffix).
+          Note that computations may abort before the limit is reached
+          due  to  the  way  the  pool  grows. Use the -g command line
+          option to experiment with pool sizes.
+          Specifying a memory limit of zero disables the memory  limit
+          and  the  interpreter will allocate as much memory as it can
+          get. This option should be used with care.
+
+LIMITATIONS
+          These parts of R4RS are not implemented:
+
+          Control: call-with-current-continuation.
+          I/O: char-ready?.
+          Transcripts: transcript-off, transcript-on.
+          Numeric tower: rational and complex numbers.
+          Numeric procedures: angle, complex?, denominator, imag-part,
+          magnitude,    make-polar,    make-rectangular,    numerator,
+          rational?, rationalize, real-part.
+
+BUGS
+          Nested quasiquotation is currently unsupported.
+
+FILES
+          $HOME/.s9fes/rc
+              If present, this file is  loaded  when  the  interpreter
+              starts up.
+          @LIBDIR@
+              The S9fES procedure library (source code).
+          @LIBDIR@/contrib
+              Contributions to the procedure library (source code).
+          @LIBDIR@/s9.image
+              The interpreter heap image.
+          *.scm
+              Scheme source code.
+
+ENVIRONMENT
+          S9FES_LIBRARY_PATH
+              A  colon-separated  list  of  directories  which will be
+              searched for the s9  library  when  the  interpreter  is
+
+
+
+S9 Interpreter                  Page 4                           S9(1)
+
+
+S9(1)                  Scheme 9 from Empty Space                 S9(1)
+
+
+              launched.  The  same  directories  will be search by the
+              locate-file procedure.
+              Default: .:~/.s9fes:@LIBDIR@:@LIBDIR@/contrib
+
+SIGNALS
+          These work only if POSIX  signal  handling  was  enabled  at
+          compile time.
+
+          SIGINT
+              Abort input or terminate program execution.
+          SIGQUIT
+              Terminate the interpreter process (emergency exit).
+
+REFERENCES
+          http://www-swiss.ai.mit.edu/~jaffer/r4rs_toc.html
+              The Revised^4 Report on the Algorithmic Language Scheme.
+
+          http://www.lulu.com/content/1010408
+          http://t3x.org/nmh/book-pdfs/scheme-9-from-empty-space.zip
+              Scheme 9 from Empty Space --  A  Guide  to  Implementing
+              Scheme in C.
+
+AUTHOR
+          Nils M Holm < nmh at t3x.org >
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+S9 Interpreter                  Page 5                           S9(1)
+
+
+S9(1)                  Scheme 9 from Empty Space                 S9(1)
+
+
+
+NAME
+          s9 - Scheme Interpreter
+
+USAGE
+          s9 [-h?] [-gnqv] [-m size[m]] [-f program] [-d image] [-i]
+
+DESCRIPTION
+          Scheme  9  from  Empty  Space  is an interpreter for a broad
+          subset  of  R4RS  Scheme.  The   s9   command   starts   the
+          interpreter.
+
+OPTIONS
+          -h or -?
+              Display a brief summary of options.
+          -d file
+              Dump heap image to file and exit.
+          -f program
+              Run program and exit (may be repeated, implies -q).
+          -g
+              Print GC summaries (-gg = more verbose).
+          -i
+              Enter interactive mode (after -f).
+          -n
+              Do not load $HOME/.s9fes/rc file, if any.
+          -m N[m]
+              Set memory limit to N kilo (or mega) nodes.
+          -q
+              Be quiet: skip banners and prompts, exit on errors.
+          -v
+              Display version and exit.
+          --
+              Arguments following -- are not interpreted by S9fES.
+
+ONLINE HELP
+          When  the  interpreter is running and the default heap image
+          is loaded, just type
+
+          (help)
+
+          to invoke the online help system. When using a  custom  heap
+          image that does not contain the online help system, you will
+          have to run the following command first:
+
+          (load-from-library "help.scm")
+
+TECHNICAL DETAILS
+          S9fES is a tree-walking interpreter using deep  binding  and
+          hashed  environments.  It  employs a constant-space mark and
+          sweep garbage collector with in-situ string and vector  pool
+          compaction. Memory pools grow on demand.
+          The interpreter uses arbitrary-precision integer arithmetics
+          and decimal-based floating point arithmetics.  Real  numbers
+          are  represented  by  exact  values  as long as the internal
+          representation allows for it.  It  provides  both  low-level
+
+
+
+
+
+S9 Interpreter                  Page 1                           S9(1)
+
+
+S9(1)                  Scheme 9 from Empty Space                 S9(1)
+
+
+          macros (see MACROS below) and define-syntax/syntax-rules.
+
+ADDITIONS
+          These S9fES procedures are not in R4RS:
+
+          (delete-file string) ==> unspecific
+              Delete  the file specifed in the string argument. If the
+              file does not exist or  cannot  be  deleted,  report  an
+              error.
+          (expand-quasiquote form) ==> expanded-form
+              If  form  is  a quasiquoted expression, rewrite it as an
+              equivalent expression that does not use  quasiquotation.
+          (expand-macro form) ==> expanded-form
+              If  form applies a macro, return the expanded form, else
+              return the form.
+          (exponent real) ==> integer
+              Return the exponent of the  internal  representation  of
+              real.  When real is an integer, return 0.
+          (file-exists? string) ==> boolean
+              Return  #t  if  the file specifed in the string argument
+              exists and otherwise #f.
+          (fold-left proc base list ...) ==> form
+              Combine the elements of the lists using  proc.   Combine
+              elements   left-associatively.   Base  is  the  leftmost
+              element.
+          (fold-right proc base list ...) ==> form
+              Combine the elements of the lists using  proc.   Combine
+              elements  right-associatively.   Base  is  the rightmost
+              element.
+          (gensym) ==> symbol
+          (gensym string) ==> symbol
+              Return a fresh symbol. When a string argument is  given,
+              use it as prefix for the fresh symbol.
+          (load-from-library string) ==> unspecific
+              Attempt  to  load the file string from each directory of
+              S9FES_LIBRARY_PATH.
+          (locate-file string) ==> string | #f
+              Search  for  the  file  string  in  each   directory  of
+              S9FES_LIBRARY_PATH  in  sequence.   When the file can be
+              located, return its full path, else return #f.
+          (mantissa real) ==> integer
+              Return the mantissa of the  internal  representation  of
+              real.  When real is an integer, return that integer.
+          (print form ...) ==> unspecific
+              Write multiple forms separated by spaces.
+          (set-input-port! input-port) ==> unspecific
+              Destructively set the current input port.
+          (set-output-port! output-port) ==> unspecific
+              Destructively set the current output port.
+          (stats form) ==> normal form
+              Evaluate  the  given form and return its normal form. In
+              addition, print the number  of  reduction  steps,  nodes
+              allocated,  and  garbage  collections  performed  during
+              evaluation. Note that form must be quoted.
+          (symbols) ==> list
+              Return a list of all defined symbols.
+
+
+
+
+S9 Interpreter                  Page 2                           S9(1)
+
+
+S9(1)                  Scheme 9 from Empty Space                 S9(1)
+
+
+          (trace symbol ...) ==> list | #t
+          (trace #t) ==> list | #t
+              Trace  the  procedure  or  syntax  bound  to  the  given
+              symbols.    When  #t  is  passed  to  trace,  trace  all
+              procedures and syntax (expect lots of output!). When  no
+              arguments  are  passed  to  it,  disable tracing.  Trace
+              returns the symbols that were being  traced  before  its
+              invocation.
+          (void) ==> unspecific
+              Return an unspecific value.
+          (wrong string form) ==> bottom
+              Print  an  error message of the form error: string: form
+              and terminate program execution.  Form may be omitted.
+
+          Redefinition of these procedures is safe except for  expand-
+          quasiquote and wrong.
+
+VARIABLES
+          These  variables  are  pre-defined  in the dynamic top-level
+          scope of the interpreter.
+
+          ** (form)
+              The  normal  form  of  the  expression   most   recently
+              evaluated at the top level.
+          *extensions* (list of symbols)
+              Compiled-in extensions.
+          *library-path* (string)
+              A  verbatim  copy  of the S9FES_LIBRARY_PATH environment
+              variable (see below).
+          *loading* (boolean)
+              Set to #t when loading a file, else #f.
+
+MACROS
+          A S9fES  macro  is  a  procedure  that  is  applied  to  its
+          unevaluated  arguments.   The  macro application is replaced
+          with the value returned  by  the  procedure.   This  happens
+          before  the  expression  containing the macro application is
+          evaluated, so a macro rewrites its own application:
+
+          (define-macro (when p . c)
+            `(if ,p (begin ,@c)))
+          (expand-macro '(when (= 1 1) (display "true") (newline) #t))
+            ==>  (if (= 1 1)
+                     (begin (display "true")
+                            (newline)
+                            #t))
+          (when (= 1 1) 1 2 3)  ==>  3
+
+          The define-macro form introduces a new macro:
+
+          (define-macro name procedure) ==> unspecific
+          (define-macro (name args ...) body) ==> unspecific
+
+          Both of these forms introduce the keyword name and  bind  it
+          to  a procedure. The first form requires the second argument
+          to be a procedure. Like in define forms the  second  variant
+          implies a procedure definition.
+
+
+
+S9 Interpreter                  Page 3                           S9(1)
+
+
+S9(1)                  Scheme 9 from Empty Space                 S9(1)
+
+
+          Macros  may contain applications of macros that were defined
+          earlier.  Macros may not  recurse  directly,  but  they  may
+          implement  recursion internally using letrec or by rewriting
+          their own applications. The following  macro,  for  example,
+          does not work, because d is undefined in the body of d:
+
+          (define-macro (d x) (and (pair? x) (d (cdr x)))) ; wrong
+
+          The following version does work, though:
+
+          (define-macro (d x) (and (pair? x) `(d ,(cdr x)))) ; OK
+
+ALLOCATION STRATEGY
+          The  S9fES  memory pool grows exponentially until the memory
+          limit its reached. When the limit is  reached,  the  current
+          computation  is  aborted.  A  memory  limit can be specified
+          using the -m command line option. The limit is specified  in
+          units  of  1024  nodes  (or  in  units of 1024*1024 nodes by
+          appending an m suffix).
+          Note that computations may abort before the limit is reached
+          due  to  the  way  the  pool  grows. Use the -g command line
+          option to experiment with pool sizes.
+          Specifying a memory limit of zero disables the memory  limit
+          and  the  interpreter will allocate as much memory as it can
+          get. This option should be used with care.
+
+LIMITATIONS
+          These parts of R4RS are not implemented:
+
+          Control: call-with-current-continuation.
+          I/O: char-ready?.
+          Transcripts: transcript-off, transcript-on.
+          Numeric tower: rational and complex numbers.
+          Numeric procedures: angle, complex?, denominator, imag-part,
+          magnitude,    make-polar,    make-rectangular,    numerator,
+          rational?, rationalize, real-part.
+
+BUGS
+          Nested quasiquotation is currently unsupported.
+
+FILES
+          $HOME/.s9fes/rc
+              If present, this file is  loaded  when  the  interpreter
+              starts up.
+          @LIBDIR@
+              The S9fES procedure library (source code).
+          @LIBDIR@/contrib
+              Contributions to the procedure library (source code).
+          @LIBDIR@/s9.image
+              The interpreter heap image.
+          *.scm
+              Scheme source code.
+
+ENVIRONMENT
+          S9FES_LIBRARY_PATH
+              A  colon-separated  list  of  directories  which will be
+              searched for the s9  library  when  the  interpreter  is
+
+
+
+S9 Interpreter                  Page 4                           S9(1)
+
+
+S9(1)                  Scheme 9 from Empty Space                 S9(1)
+
+
+              launched.  The  same  directories  will be search by the
+              locate-file procedure.
+              Default: .:~/.s9fes:@LIBDIR@:@LIBDIR@/contrib
+
+SIGNALS
+          These work only if POSIX  signal  handling  was  enabled  at
+          compile time.
+
+          SIGINT
+              Abort input or terminate program execution.
+          SIGQUIT
+              Terminate the interpreter process (emergency exit).
+
+REFERENCES
+          http://www-swiss.ai.mit.edu/~jaffer/r4rs_toc.html
+              The Revised^4 Report on the Algorithmic Language Scheme.
+
+          http://www.lulu.com/content/1010408
+          http://t3x.org/nmh/book-pdfs/scheme-9-from-empty-space.zip
+              Scheme 9 from Empty Space --  A  Guide  to  Implementing
+              Scheme in C.
+
+AUTHOR
+          Nils M Holm < nmh at t3x.org >
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+S9 Interpreter                  Page 5                           S9(1)
+
+
+S9(1)                  Scheme 9 from Empty Space                 S9(1)
+
+
+
+NAME
+          s9 - Scheme Interpreter
+
+USAGE
+          s9 [-h?] [-gnqv] [-m size[m]] [-f program] [-d image] [-i]
+
+DESCRIPTION
+          Scheme  9  from  Empty  Space  is an interpreter for a broad
+          subset  of  R4RS  Scheme.  The   s9   command   starts   the
+          interpreter.
+
+OPTIONS
+          -h or -?
+              Display a brief summary of options.
+          -d file
+              Dump heap image to file and exit.
+          -f program
+              Run program and exit (may be repeated, implies -q).
+          -g
+              Print GC summaries (-gg = more verbose).
+          -i
+              Enter interactive mode (after -f).
+          -n
+              Do not load $HOME/.s9fes/rc file, if any.
+          -m N[m]
+              Set memory limit to N kilo (or mega) nodes.
+          -q
+              Be quiet: skip banners and prompts, exit on errors.
+          -v
+              Display version and exit.
+          --
+              Arguments following -- are not interpreted by S9fES.
+
+ONLINE HELP
+          When  the  interpreter is running and the default heap image
+          is loaded, just type
+
+          (help)
+
+          to invoke the online help system. When using a  custom  heap
+          image that does not contain the online help system, you will
+          have to run the following command first:
+
+          (load-from-library "help.scm")
+
+TECHNICAL DETAILS
+          S9fES is a tree-walking interpreter using deep  binding  and
+          hashed  environments.  It  employs a constant-space mark and
+          sweep garbage collector with in-situ string and vector  pool
+          compaction. Memory pools grow on demand.
+          The interpreter uses arbitrary-precision integer arithmetics
+          and decimal-based floating point arithmetics.  Real  numbers
+          are  represented  by  exact  values  as long as the internal
+          representation allows for it.  It  provides  both  low-level
+
+
+
+
+
+S9 Interpreter                  Page 1                           S9(1)
+
+
+S9(1)                  Scheme 9 from Empty Space                 S9(1)
+
+
+          macros (see MACROS below) and define-syntax/syntax-rules.
+
+ADDITIONS
+          These S9fES procedures are not in R4RS:
+
+          (delete-file string) ==> unspecific
+              Delete  the file specifed in the string argument. If the
+              file does not exist or  cannot  be  deleted,  report  an
+              error.
+          (expand-quasiquote form) ==> expanded-form
+              If  form  is  a quasiquoted expression, rewrite it as an
+              equivalent expression that does not use  quasiquotation.
+          (expand-macro form) ==> expanded-form
+              If  form applies a macro, return the expanded form, else
+              return the form.
+          (exponent real) ==> integer
+              Return the exponent of the  internal  representation  of
+              real.  When real is an integer, return 0.
+          (file-exists? string) ==> boolean
+              Return  #t  if  the file specifed in the string argument
+              exists and otherwise #f.
+          (fold-left proc base list ...) ==> form
+              Combine the elements of the lists using  proc.   Combine
+              elements   left-associatively.   Base  is  the  leftmost
+              element.
+          (fold-right proc base list ...) ==> form
+              Combine the elements of the lists using  proc.   Combine
+              elements  right-associatively.   Base  is  the rightmost
+              element.
+          (gensym) ==> symbol
+          (gensym string) ==> symbol
+              Return a fresh symbol. When a string argument is  given,
+              use it as prefix for the fresh symbol.
+          (load-from-library string) ==> unspecific
+              Attempt  to  load the file string from each directory of
+              S9FES_LIBRARY_PATH.
+          (locate-file string) ==> string | #f
+              Search  for  the  file  string  in  each   directory  of
+              S9FES_LIBRARY_PATH  in  sequence.   When the file can be
+              located, return its full path, else return #f.
+          (mantissa real) ==> integer
+              Return the mantissa of the  internal  representation  of
+              real.  When real is an integer, return that integer.
+          (print form ...) ==> unspecific
+              Write multiple forms separated by spaces.
+          (set-input-port! input-port) ==> unspecific
+              Destructively set the current input port.
+          (set-output-port! output-port) ==> unspecific
+              Destructively set the current output port.
+          (stats form) ==> normal form
+              Evaluate  the  given form and return its normal form. In
+              addition, print the number  of  reduction  steps,  nodes
+              allocated,  and  garbage  collections  performed  during
+              evaluation. Note that form must be quoted.
+          (symbols) ==> list
+              Return a list of all defined symbols.
+
+
+
+
+S9 Interpreter                  Page 2                           S9(1)
+
+
+S9(1)                  Scheme 9 from Empty Space                 S9(1)
+
+
+          (trace symbol ...) ==> list | #t
+          (trace #t) ==> list | #t
+              Trace  the  procedure  or  syntax  bound  to  the  given
+              symbols.    When  #t  is  passed  to  trace,  trace  all
+              procedures and syntax (expect lots of output!). When  no
+              arguments  are  passed  to  it,  disable tracing.  Trace
+              returns the symbols that were being  traced  before  its
+              invocation.
+          (void) ==> unspecific
+              Return an unspecific value.
+          (wrong string form) ==> bottom
+              Print  an  error message of the form error: string: form
+              and terminate program execution.  Form may be omitted.
+
+          Redefinition of these procedures is safe except for  expand-
+          quasiquote and wrong.
+
+VARIABLES
+          These  variables  are  pre-defined  in the dynamic top-level
+          scope of the interpreter.
+
+          ** (form)
+              The  normal  form  of  the  expression   most   recently
+              evaluated at the top level.
+          *extensions* (list of symbols)
+              Compiled-in extensions.
+          *library-path* (string)
+              A  verbatim  copy  of the S9FES_LIBRARY_PATH environment
+              variable (see below).
+          *loading* (boolean)
+              Set to #t when loading a file, else #f.
+
+MACROS
+          A S9fES  macro  is  a  procedure  that  is  applied  to  its
+          unevaluated  arguments.   The  macro application is replaced
+          with the value returned  by  the  procedure.   This  happens
+          before  the  expression  containing the macro application is
+          evaluated, so a macro rewrites its own application:
+
+          (define-macro (when p . c)
+            `(if ,p (begin ,@c)))
+          (expand-macro '(when (= 1 1) (display "true") (newline) #t))
+            ==>  (if (= 1 1)
+                     (begin (display "true")
+                            (newline)
+                            #t))
+          (when (= 1 1) 1 2 3)  ==>  3
+
+          The define-macro form introduces a new macro:
+
+          (define-macro name procedure) ==> unspecific
+          (define-macro (name args ...) body) ==> unspecific
+
+          Both of these forms introduce the keyword name and  bind  it
+          to  a procedure. The first form requires the second argument
+          to be a procedure. Like in define forms the  second  variant
+          implies a procedure definition.
+
+
+
+S9 Interpreter                  Page 3                           S9(1)
+
+
+S9(1)                  Scheme 9 from Empty Space                 S9(1)
+
+
+          Macros  may contain applications of macros that were defined
+          earlier.  Macros may not  recurse  directly,  but  they  may
+          implement  recursion internally using letrec or by rewriting
+          their own applications. The following  macro,  for  example,
+          does not work, because d is undefined in the body of d:
+
+          (define-macro (d x) (and (pair? x) (d (cdr x)))) ; wrong
+
+          The following version does work, though:
+
+          (define-macro (d x) (and (pair? x) `(d ,(cdr x)))) ; OK
+
+ALLOCATION STRATEGY
+          The  S9fES  memory pool grows exponentially until the memory
+          limit its reached. When the limit is  reached,  the  current
+          computation  is  aborted.  A  memory  limit can be specified
+          using the -m command line option. The limit is specified  in
+          units  of  1024  nodes  (or  in  units of 1024*1024 nodes by
+          appending an m suffix).
+          Note that computations may abort before the limit is reached
+          due  to  the  way  the  pool  grows. Use the -g command line
+          option to experiment with pool sizes.
+          Specifying a memory limit of zero disables the memory  limit
+          and  the  interpreter will allocate as much memory as it can
+          get. This option should be used with care.
+
+LIMITATIONS
+          These parts of R4RS are not implemented:
+
+          Control: call-with-current-continuation.
+          I/O: char-ready?.
+          Transcripts: transcript-off, transcript-on.
+          Numeric tower: rational and complex numbers.
+          Numeric procedures: angle, complex?, denominator, imag-part,
+          magnitude,    make-polar,    make-rectangular,    numerator,
+          rational?, rationalize, real-part.
+
+BUGS
+          Nested quasiquotation is currently unsupported.
+
+FILES
+          $HOME/.s9fes/rc
+              If present, this file is  loaded  when  the  interpreter
+              starts up.
+          @LIBDIR@
+              The S9fES procedure library (source code).
+          @LIBDIR@/contrib
+              Contributions to the procedure library (source code).
+          @LIBDIR@/s9.image
+              The interpreter heap image.
+          *.scm
+              Scheme source code.
+
+ENVIRONMENT
+          S9FES_LIBRARY_PATH
+              A  colon-separated  list  of  directories  which will be
+              searched for the s9  library  when  the  interpreter  is
+
+
+
+S9 Interpreter                  Page 4                           S9(1)
+
+
+S9(1)                  Scheme 9 from Empty Space                 S9(1)
+
+
+              launched.  The  same  directories  will be search by the
+              locate-file procedure.
+              Default: .:~/.s9fes:@LIBDIR@:@LIBDIR@/contrib
+
+SIGNALS
+          These work only if POSIX  signal  handling  was  enabled  at
+          compile time.
+
+          SIGINT
+              Abort input or terminate program execution.
+          SIGQUIT
+              Terminate the interpreter process (emergency exit).
+
+REFERENCES
+          http://www-swiss.ai.mit.edu/~jaffer/r4rs_toc.html
+              The Revised^4 Report on the Algorithmic Language Scheme.
+
+          http://www.lulu.com/content/1010408
+          http://t3x.org/nmh/book-pdfs/scheme-9-from-empty-space.zip
+              Scheme 9 from Empty Space --  A  Guide  to  Implementing
+              Scheme in C.
+
+AUTHOR
+          Nils M Holm < nmh at t3x.org >
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+S9 Interpreter                  Page 5                           S9(1)
+

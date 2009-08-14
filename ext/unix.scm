@@ -2,6 +2,8 @@
 ; By Nils M Holm, 2009
 ; See the LICENSE file of the S9fES package for terms of use
 ;
+; An interface to some Unix system services.
+;
 ; (chdir string) ==> boolean
 ; (chmod string integer) ==> boolean
 ; (chmod string string)  ==> boolean
@@ -57,12 +59,10 @@
 ; (user-shell string|integer) ==> string | #f
 ; (utimes string) ==> boolean
 ;
-; An interface to some Unix system services.
-;
 ; (Example): (getcwd) ==> "/u/home/nmh"
 
 (if (not (memq 'unix *extensions*))
-    (wrong "The system functions require the 'unix' extension"))
+    (wrong "The unix system interface requires the \"unix\" extension"))
 
 (load-from-library "bitwise-ops.scm")
 (load-from-library "for-all.scm")
@@ -392,3 +392,5 @@
                 (else
                   (loop (cdr f)
                         (cons (string (car f)) s))))))))
+
+(define (unix:unix) #t)

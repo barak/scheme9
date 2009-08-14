@@ -1,6 +1,7 @@
 /*
- *	Graphics routines
- *	By Nils M Holm, 1997,1998,2003,2009
+ *	Scientific Calculator graphics routines
+ *	By Nils M Holm, 2009
+ *	Based on the T3X graphics class by NMH, 1997,1998,2003
  *
  *	DISCMAILER: I know virtually nothing about X11 programming.
  *	This code works for me, but is probably broken in general.
@@ -17,6 +18,7 @@
 #include <X11/Xlib.h>
 #include <X11/Xutil.h>
 #include <ctype.h>
+#include <fcntl.h>
 
 #define	XLIM		13333.0
 #define YLIM		10000.0
@@ -91,7 +93,9 @@ void clear(void) {
 	Initial = 1;
 }
 
-void log(int op, int x, int y, int dx, int dy, int r, int m, int f, char *s) {
+void sc_log(int op, int x, int y, int dx, int dy, int r, int m, int f,
+		char *s)
+{
 	struct jrnl	*jp;
 	char	*t;
 
@@ -105,7 +109,7 @@ void log(int op, int x, int y, int dx, int dy, int r, int m, int f, char *s) {
 		strcpy(s, t);
 	}
 	if (jp == NULL || s == NULL) {
-		fprintf(stderr, "gfx: out of memory\n");
+		fprintf(stderr, "sc: out of memory\n");
 		exit(1);
 	}
 	jp->op = op;
@@ -126,7 +130,6 @@ void refresh(int dummy);
 cell x11_init(char *title) {
 	XEvent		e;
 	XGCValues	v;
-	int		i = -1;
 	char		*dpyname;
 	int		scrn;
 	XSizeHints	*wm_size;
@@ -140,14 +143,14 @@ cell x11_init(char *title) {
 	wm_hints = XAllocWMHints();
 	wm_class = XAllocClassHint();
 	if (!(wm_size && wm_hints && wm_class))
-		error("gfx: not enough memory", NOEXPR);
+		error("sc: not enough memory", NOEXPR);
 	dpyname = getenv("DISPLAY");
 	Dsp = XOpenDisplay(dpyname);
+	if (!Dsp) return error("sc: could not open display", NOEXPR);
 	scrn = DefaultScreen(Dsp);
-	if (!Dsp) return error("gfx: could not open display", NOEXPR);
 	Win = XCreateSimpleWindow(Dsp, RootWindow(Dsp, scrn), 10, 10,
 		Xn, Yn, 0, BlackPixel(Dsp, scrn), WhitePixel(Dsp, scrn));
-	if (!Dsp) return error("gfx: could not create window", NOEXPR);
+	if (!Win) return error("sc: could not create window", NOEXPR);
 	XSelectInput(Dsp, Win, ExposureMask);
 	v.plane_mask = AllPlanes;
 	v.foreground = 0;
@@ -177,7 +180,7 @@ cell x11_init(char *title) {
 	return 0;
 }
 
-cell pp_gfx_fini(cell x) {
+cell pp_sc_fini(cell x) {
 	if (!Dsp) return UNSPECIFIC;
 	clear();
 	XFreeGC(Dsp, Csr_set);
@@ -224,10 +227,10 @@ void line(int x, int y, int dx, int dy, int m) {
 	XDrawLine(Dsp, Win, Csr, x, y, dx, dy);
 }
 
-cell pp_gfx_line(cell expr) {
-	char	self[] = "gfx:line";
-	char	msg1[] = "gfx:line: expected integer, got";
-	char	msg2[] = "gfx:line: expected boolean, got";
+cell pp_sc_line(cell expr) {
+	char	self[] = "sc:line";
+	char	msg1[] = "sc:line: expected integer, got";
+	char	msg2[] = "sc:line: expected boolean, got";
 	int	x, y, dx, dy, m;
 
 	x = integer_value(self, cadr(expr));
@@ -239,7 +242,7 @@ cell pp_gfx_line(cell expr) {
 		return error(msg2, cadr(cddddr(expr)));
 	dy = integer_value(self, car(cddddr(expr)));
 	m = cadr(cddddr(expr)) == TRUE;
-	log(LINE, x, y, dx, dy, 0, m, 0, NULL);
+	sc_log(LINE, x, y, dx, dy, 0, m, 0, NULL);
 	line(x, y, dx, dy, m);
 	return UNSPECIFIC;
 }
@@ -265,10 +268,10 @@ void box(int x, int y, int dx, int dy, int m, int f) {
 		XDrawRectangle(Dsp, Win, Csr, x, y, dx-x, dy-y);
 }
 
-cell pp_gfx_box(cell expr) {
-	char	self[] = "gfx:box";
-	char	msg1[] = "gfx:box: expected integer, got";
-	char	msg2[] = "gfx:box: expected boolean, got";
+cell pp_sc_box(cell expr) {
+	char	self[] = "sc:box";
+	char	msg1[] = "sc:box: expected integer, got";
+	char	msg2[] = "sc:box: expected boolean, got";
 	int	x, y, dx, dy, m, f;
 
 	x = integer_value(self, cadr(expr));
@@ -283,12 +286,12 @@ cell pp_gfx_box(cell expr) {
 	dy = integer_value(self, car(cddddr(expr)));
 	m = cadr(cddddr(expr)) == TRUE;
 	f = caddr(cddddr(expr)) == TRUE;
-	log(BOX, x, y, dx, dy, 0, m, f, NULL);
+	sc_log(BOX, x, y, dx, dy, 0, m, f, NULL);
 	box(x, y, dx, dy, m, f);
 	return UNSPECIFIC;
 }
 
-cell pp_gfx_clear(cell expr) {
+cell pp_sc_clear(cell expr) {
 	clear();
 	return UNSPECIFIC;
 }
@@ -314,10 +317,10 @@ void ellipse(int x, int y, int dx, int dy, int m, int f) {
 		XDrawArc(Dsp, Win, Csr, x, y, dx-x, dy-y, 0, 360*64);
 }
 
-cell pp_gfx_ellipse(cell expr) {
-	char	self[] = "gfx:ellipse";
-	char	msg1[] = "gfx:ellipse: expected integer, got";
-	char	msg2[] = "gfx:ellipse: expected boolean, got";
+cell pp_sc_ellipse(cell expr) {
+	char	self[] = "sc:ellipse";
+	char	msg1[] = "sc:ellipse: expected integer, got";
+	char	msg2[] = "sc:ellipse: expected boolean, got";
 	int	x, y, dx, dy, m, f;
 
 	x = integer_value(self, cadr(expr));
@@ -332,23 +335,16 @@ cell pp_gfx_ellipse(cell expr) {
 	dy = integer_value(self, car(cddddr(expr)));
 	m = cadr(cddddr(expr)) == TRUE;
 	f = caddr(cddddr(expr)) == TRUE;
-	log(ELLIPSE, x, y, dx, dy, 0, m, f, NULL);
+	sc_log(ELLIPSE, x, y, dx, dy, 0, m, f, NULL);
 	ellipse(x, y, dx, dy, m, f);
 	return UNSPECIFIC;
-}
-
-cell ratio(void) {
-	cell	r;
-
-	r = (cell) Fx * (cell) 100;
-	return r / Fy;
 }
 
 char *font_alloc(int size) {
 	char	*a;
 
 	if (size + Pt >= FONT_POOL_SIZE) {
-		error("gfx: out of font memory", NOEXPR);
+		error("sc: out of font memory", NOEXPR);
 		return NULL;
 	}
 	a = &Pool[Pt];
@@ -357,7 +353,7 @@ char *font_alloc(int size) {
 }
 
 char **loadvf(char *file, int *statusp) {
-	int	infd, n, i, k, p;
+	int	infd, n, i, k;
 	char	buf[4], ch[1];
 
 	Pt = 0;
@@ -442,7 +438,7 @@ void putv(int x, int y, int scale, int mode, char *v) {
 	}
 }
 
-cell put_string(int x, int y, int r, int m, char *s) {
+void put_string(int x, int y, int r, int m, char *s) {
 	int	i, k, cx;
 
 	cx = FSX * r;
@@ -455,13 +451,12 @@ cell put_string(int x, int y, int r, int m, char *s) {
 	}
 }
 
-cell pp_gfx_put_string(cell expr) {
-	char	self[] = "gfx:put-string";
-	char	msg1[] = "gfx:put-string: expected boolean, got";
-	char	msg2[] = "gfx:put-string: expected string, got";
+cell pp_sc_put_string(cell expr) {
+	char	self[] = "sc:put-string";
+	char	msg1[] = "sc:put-string: expected boolean, got";
+	char	msg2[] = "sc:put-string: expected string, got";
 	int	x, y, r, m;
 	char	*s;
-	int	cx, i, k;
 
 	x = integer_value(self, cadr(expr));
 	y = integer_value(self, caddr(expr));
@@ -472,26 +467,26 @@ cell pp_gfx_put_string(cell expr) {
 		return error(msg2, cadr(cddddr(expr)));
 	m = car(cddddr(expr)) == TRUE;
 	s = string(cadr(cddddr(expr)));
-	log(STRING, x, y, 0, 0, r, m, 0, s);
+	sc_log(STRING, x, y, 0, 0, r, m, 0, s);
 	put_string(x, y, r, m, s);
 	return UNSPECIFIC;
 }
 
-cell pp_gfx_string_width(cell expr) {
+cell pp_sc_string_width(cell expr) {
 	char	*s;
 	int	r;
 
 	s = string(cadr(expr));
-	r = integer_value("gfx:string-width", caddr(expr));
+	r = integer_value("sc:string-width", caddr(expr));
 	return make_integer(strlen(s) * FSX * 10/(10-r));
 }
 
-cell pp_gfx_string_height(cell expr) {
+cell pp_sc_string_height(cell expr) {
 	char	*s;
 	int	r;
 
 	s = string(cadr(expr));
-	r = integer_value("gfx:string-width", caddr(expr));
+	r = integer_value("sc:string-height", caddr(expr));
 	return make_integer(FSY * 10/(10-r));
 }
 
@@ -499,8 +494,7 @@ void load_font(void) {
 	char	*path, buf[256], *p;
 	char	libdir[240], libfile[256];
 	char	*home;
-	cell	new;
-	char	fontfile[] = "system.vf";
+	char	fontfile[] = "sys6x12.vf";
 	int	status;
 
 	path = copy_string(string(car(S_library_path)));
@@ -532,9 +526,7 @@ void load_font(void) {
 	fatal(buf);
 }
 
-cell pp_gfx_init(cell x) {
-	int	p;
-	char	fp[256], base[240];
+cell pp_sc_init(cell x) {
 	char	m1[] = "Scheme 9 Scientific Calculator",
 		m2[] = "By Nils M Holm, 2009";
 
@@ -542,8 +534,8 @@ cell pp_gfx_init(cell x) {
 	x11_init("S9fES GFX");
 	if (Error_flag) return UNSPECIFIC;
 	load_font();
-	log(STRING, 6666-5000, 5500, 0, 0, 7, 1, 0, m1);
-	log(STRING, 6666-2000, 4500, 0, 0, 5, 1, 0, m2);
+	sc_log(STRING, 6666-5000, 5500, 0, 0, 7, 1, 0, m1);
+	sc_log(STRING, 6666-2000, 4500, 0, 0, 5, 1, 0, m2);
 	Initial = 1;
 	return UNSPECIFIC;
 }
@@ -624,21 +616,22 @@ void refresh(int dummy) {
 	ualarm(200000L, 0);
 }
 
-cell pp_gfx_write_canvas(cell expr) {
+cell pp_sc_write_canvas(cell expr) {
 	char	*s;
 
 	s = string(cadr(expr));
 	if ((DumpFd = fopen(s, "r")) != NULL) {
 		fclose(DumpFd);
 		refresh(0);
-		return error("gfx:write-canvas: file exists", cadr(expr));
+		return error("sc:write-canvas: file exists", cadr(expr));
 	}
 	if ((DumpFd = fopen(s, "w")) == NULL) {
 		refresh(0);
-		return error("gfx:write-canvas: cannot create file",
+		return error("sc:write-canvas: cannot create file",
 			cadr(expr));
 	}
 	fprintf(DumpFd, "%%!PS-Adobe-3.0\n"
+			"%%%%Creator: Scheme 9 Scientific Calculator\n"
 			"%%%%BoundingBox: 0 0 1333 1000\n"
 			"%%%%EndComments\n"
 			"0 0 translate 0.1 0.1 scale\n"
@@ -667,9 +660,8 @@ cell pp_gfx_write_canvas(cell expr) {
                 	"\tx y lineto\n"
                 	"\tclosepath\n"
         		"} def\n"
+			"/K 0.5522847498 def\n"
 			"/ellipse {\n"
-			"\t%% Draw an ellipse using four bezier curves\n"
-			"\t%% Based on code by RedGrittyBrick, 2003-10-20\n"
 			"\tsetgray\n"
 			"\t/dy exch def\n"
 			"\t/dx exch def\n"
@@ -679,21 +671,20 @@ cell pp_gfx_write_canvas(cell expr) {
 			"\t/ry dy y sub 2 div  def\n"
 			"\t/y  ry y add  def\n"
 			"\t/x  rx x add  def\n"
-			"\t/kappa 0.5522847498 def\n"
 			"\tnewpath\n"
 			"\tx\n"
 			"\ty ry add  moveto\n"
-			"\tx kappa rx mul add  y ry add\n"
-			"\tx rx add  y kappa ry mul add\n"
+			"\tx K rx mul add  y ry add\n"
+			"\tx rx add  y K ry mul add\n"
 			"\tx rx add  y  curveto\n"
-			"\tx rx add  y kappa ry mul sub\n"
-			"\tx kappa rx mul add  y ry sub\n"
+			"\tx rx add  y K ry mul sub\n"
+			"\tx K rx mul add  y ry sub\n"
 			"\tx y ry sub  curveto\n"
-			"\tx kappa rx mul sub  y ry sub\n"
-			"\tx rx sub  y kappa ry mul sub\n"
+			"\tx K rx mul sub  y ry sub\n"
+			"\tx rx sub  y K ry mul sub\n"
 			"\tx rx sub  y  curveto\n"
-			"\tx rx sub  y kappa ry mul add\n"
-			"\tx kappa rx mul sub  y ry add\n"
+			"\tx rx sub  y K ry mul add\n"
+			"\tx K rx mul sub  y ry add\n"
 			"\tx y ry add  curveto\n"
 			"} def\n");
 	redraw();
@@ -702,20 +693,20 @@ cell pp_gfx_write_canvas(cell expr) {
 	return UNSPECIFIC;
 }
 
-struct Primitive_procedure Gfx_primitives[] = {
- { "gfx:box",           pp_gfx_box,           6,  6, { REA,REA,REA } },
- { "gfx:clear",         pp_gfx_clear,         0,  0, { ___,___,___ } },
- { "gfx:write-canvas",  pp_gfx_write_canvas,  1,  1, { STR,___,___ } },
- { "gfx:ellipse",       pp_gfx_ellipse,       6,  6, { REA,REA,REA } },
- { "gfx:fini",          pp_gfx_fini,          0,  0, { ___,___,___ } },
- { "gfx:init",          pp_gfx_init,          0,  0, { ___,___,___ } },
- { "gfx:line",          pp_gfx_line,          5,  5, { REA,REA,REA } },
- { "gfx:put-string",    pp_gfx_put_string,    5,  5, { REA,REA,REA } },
- { "gfx:string-width",  pp_gfx_string_width,  2,  2, { STR,REA,___ } },
- { "gfx:string-height", pp_gfx_string_height, 2,  2, { STR,REA,___ } },
+struct Primitive_procedure SC_primitives[] = {
+ { "sc:box",           pp_sc_box,           6,  6, { REA,REA,REA } },
+ { "sc:clear",         pp_sc_clear,         0,  0, { ___,___,___ } },
+ { "sc:write-canvas",  pp_sc_write_canvas,  1,  1, { STR,___,___ } },
+ { "sc:ellipse",       pp_sc_ellipse,       6,  6, { REA,REA,REA } },
+ { "sc:fini",          pp_sc_fini,          0,  0, { ___,___,___ } },
+ { "sc:init",          pp_sc_init,          0,  0, { ___,___,___ } },
+ { "sc:line",          pp_sc_line,          5,  5, { REA,REA,REA } },
+ { "sc:put-string",    pp_sc_put_string,    5,  5, { REA,REA,REA } },
+ { "sc:string-width",  pp_sc_string_width,  2,  2, { STR,REA,___ } },
+ { "sc:string-height", pp_sc_string_height, 2,  2, { STR,REA,___ } },
  { NULL }
 };
 
-void gfx_init(void) {
-	add_primitives("gfx", Gfx_primitives);
+void sc_init(void) {
+	add_primitives("sc", SC_primitives);
 }

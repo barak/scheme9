@@ -1,0 +1,363 @@
+.\" S9SC(1) Manual Page
+.\" By Nils M Holm, 2009
+.ll 70
+.lt 70
+.de HD		\" header
+'sp 1v
+.tl 'S9SC(1)'Scheme 9 Scientific Calculator'S9SC(1)'
+'sp 2v
+..
+.de FO		\" footer
+'sp 3v
+.tl 'S9SC(1)'Page %'S9SC(1)'
+'bp
+..
+.de B
+\fB\\$1\fP
+..
+.de BR
+\fB\\$1\fP\\$2
+..
+.de IR
+\fI\\$1\fP\\$2
+..
+.de RB
+\\$1\fB\\$2\\fP
+..
+.de I
+\fI\\$1\fP
+..
+.de SH		\" subheading
+.ne 5
+.sp
+.in 0i
+.nf
+\fB\\$1\fP
+.fi
+.in 1i
+..
+.wh 0 HD	\" traps for header
+.wh -5 FO	\" and footer
+.nh
+.sp
+.SH NAME
+.B "s9sc
+- Scheme 9 Scientific Calculator
+.SH USAGE
+.B "s9sc [-h?] [-gnqv] [-m size[m]] [-f program] [-d image] [-i]
+.SH "DESCRIPTION
+The
+.B "Scheme 9 Scientific Calculator
+is an extended R4RS Scheme interpreter containing some extra procedures
+for curve plotting and low-level vector graphics on X11 displays. The
+.B s9sc
+command starts the interpreter. See the
+.B s9(1)
+man page for command line options.
+.SH "THE CANVAS
+The S9SC canvas has a virtual size of 13333 times 10000 pixels, which
+is transparently mapped to whatever resolution the real X11 real window
+has. The (0,0) coordinate is at the lower left corner of the window.
+The canvas is white and figures can be drawn in black or white color.
+.SH "PROCEDURES
+.sp
+.B "Initialization and Shutdown
+.sp
+.B "(sc:init)  ==>  unspecific
+.br
+.in +4
+Initialize the Scientific Calculator package. Load the default font
+and open an X11 window for displaying vector graphics. This is
+automatically done when S9SC starts, so this procedure only has to
+be called to re-initialize the package after shutting it down with
+.BR sc:fini .
+.in -4
+.sp
+.B "(sc:fini)  ==>  unspecific
+.in +4
+Shut down the Scientific Calculator. Close the X11 window used
+for displaying vector graphics. After shutting down the package
+calling any S9SC procedure will yield an undefined result.
+.in -4
+.sp
+.B "Vector Graphics
+.sp
+.B "(box int1 int2 int3 int3 bool1 bool2)  ==>  unspecific
+.in +4
+Draw a box with the lower left corner at (\fIint1\fP,\fIint2\fP) and
+the upper right corner at (\fIint3\fP,\fIint4\fP). When
+.I bool1
+is
+.BR #t ,
+draw the box with black ink and else erase it (draw it with white ink).
+When
+.I bool2
+is 
+.BR #t ,
+fill the box, else draw just an outline.
+.in -4
+.sp
+.B "(clear)  ==>  unspecific
+.in +4
+Clear the canvas.
+.in -4
+.sp
+.B "(ellipse int1 int2 int3 int3 bool1 bool2)  ==>  unspecific
+.in +4
+Draw an ellipse touching the four edges of an imaginary box with the
+lower left corner at (\fIint1\fP,\fIint2\fP) and the upper right corner
+at (\fIint3\fP,\fIint4\fP). When
+.I bool1
+is
+.BR #t ,
+draw the ellipse with black ink and else erase it (draw it with white ink).
+When
+.I bool2
+is 
+.BR #t ,
+fill the ellipse, else draw just an outline.
+.in -4
+.sp
+.B "(line int1 int2 int3 int3 bool)  ==>  unspecific
+.in +4
+Draw a straight line from (\fIint1\fP,\fIint2\fP) to (\fIint3\fP,\fIint4\fP).
+When
+.I bool
+is
+.BR #t ,
+draw the line with black ink and else erase it (draw it with white ink).
+.in -4
+.sp
+.B "(put-string int1 int2 int3 bool string)  ==>  unspecific
+.in +4
+Write the text contained in
+.I string
+to the canvas. The lower left corner of the imaginary box enclosing the
+text will be at (\fIint1\fP,\fIint2\fP).
+.I Int3
+specifies a scaling factor for increasing the text size. Valid values
+range from 1 (no magnification) to 10 (large text). When
+.I bool
+is
+.BR #t ,
+write the text with black ink and else erase it (write it with white ink).
+.br
+.B Note:
+Non-printable ASCII characters and non-ASCII characters will print as
+blanks.
+.in -4
+.sp
+.B "(string-height string integer)  ==>  integer
+.in +4
+Return the height in virtual pixels of the given
+.I string
+when printed with a scaling factor of
+.IR integer .
+.in -4
+.sp
+.B "(string-width string integer)  ==>  integer
+.in +4
+Return the width in virtual pixels of the given
+.I string
+when printed with a scaling factor of
+.IR integer .
+.in -4
+.sp
+.B "(write-canvas string)  ==>  unspecific
+.in +4
+Write an embedded Postscript representation (an ``EPS file'') of the complete
+canvas to the file specified in
+.IR string .
+No external resources are required by the resulting file. When the given
+file exists, an error is reported.
+.in -4
+.sp
+.B "Curve Plotting
+.sp
+.B "(setup real1 real2 real3 real4 option ...)  ==>  unspecific
+.in +4
+Set up a visual Cartesian coordinate system ranging from
+.I real1
+to
+.I real2
+on the X-axis and from
+.I real3
+to
+.I real4
+on the Y-axis. Ticks and labels will be printed on both axes
+by default. Neither
+.I real1
+nor
+.I real3
+may be positive. The following
+.IR option s
+may be passed to
+.BR setup :
+.sp
+.B "x-grid: boolean (default: #f)
+.br
+.B "y-grid: boolean (default: #f)
+.in +4
+Whether or not to draw a visual grid on the X/Y-axis.
+.in -4
+.br
+.B "x-labels: boolean (default: #t)
+.br
+.B "y-labels: boolean (default: #t)
+.in +4
+Whether or not to draw labels next to ticks.
+.in -4
+.br
+.B "x-lstep: integer (default: 1)
+.br
+.B "y-lstep: integer (default: 1)
+.in +4
+Print a label next to every
+.IR integer 'th
+tick.
+.in -4
+.br
+.B "x-step: real (default: X-range/20)
+.br
+.B "y-step: real (default: Y-range/20)
+.in +4
+The distance between two ticks on the X/Y-axis.
+.in -4
+.br
+.B "x-ticks: boolean (default: #t)
+.br
+.B "y-ticks: boolean (default: #t)
+.in +4
+Whether or not to draw ticks on the X/Y-axis.
+.in -4
+.sp
+Both the X and Y parts of an option can be set by omitting
+the
+.B x-
+or
+.B y-
+prefix, e.g.:
+.B grid:
+sets
+.B x-grid:
+and
+.B y-grid:
+at once.
+.sp
+Example:
+.br
+.B "(setup -1 1 -1 1 step: 0.05 lstep: 2 grid: #t)
+.in -4
+.sp
+.B "(plot procedure option ...)  ==>  unspecific
+.br
+.B "(plot list option ...)       ==>  unspecific
+.in +4
+Plot the function computed by
+.I procedure
+or the set contained in
+.IR list .
+The
+.B setup
+procedure must be used to establish a coordinate system before plotting
+a function or set. For automatic plotting, see
+.B plot*
+below. X-values that are not in the domain of a function will not plot,
+so the following example will work fine:
+.sp
+(setup -1 1 -10 10)
+.br
+(plot /)
+.sp
+The following
+.IR option s
+may be passed to
+.BR plot :
+.sp
+.B "from: real (default: beginning of X-range)
+.in +4
+Leftmost X-coordinate to plot.
+.in -4
+.br
+.B "to: real (default: end of X-range)
+.in +4
+Rightmost X-coordinate to plot.
+.in -4
+.br
+.B "spread: boolean (default: #f)
+.in +4
+When setting \fBspread: #t\fP while plotting a set, the items of
+the set will be spread so that they fill the range of the X-axis
+completely. When the X-axis is shorter than the size of the set,
+the set will be compressed (which will result in a loss of items).
+.B Spread:
+has no effect when plotting functions.
+.in -4
+.br
+.B "res: integer (default: 100)
+.in +4
+The number of points to be plotted.
+.in -4
+.br
+.B "type: line | scatter | pin | bar (default: line)
+.in +4
+The kind of rendering to be used.
+.B Line
+will plot a smooth line,
+.B scatter
+will draw individual dots.
+.B pin
+will print vertical lines from the X-axis to the corresponding
+Y-value, and
+.B bar
+will print solid bars instead of pins.
+.in -4
+.br
+.B "style: 0..4 (default: 0)
+.br
+.in +4
+Use a specific style in bar and scatter plots. In bar plots, style 0
+renders empty boxes and larger values fill the boxes with darker
+scales of gray. In scatter plots, 0=white squares, 1=black squares,
+2=white circles, 3=black circles, 4=crosses.
+.in -4
+.sp
+.B "(plot* int1 int2 procedure option ...)  ==>  unspecific
+.br
+.B "(plot* int1 int2 list option ...)       ==>  unspecific
+.in +4
+Like
+.BR plot ,
+this procedure plots a function or set, but it computes the range
+of the Y-axis automatically, so no coordinate system has to be set up
+prior to calling
+.BR plot* .
+.I Int1
+and
+.I int2
+specify the beginning and end of the X-axis. When a coordinate
+system was set up before,
+.B plot*
+will erase it and set up a new one.
+.B Plot*
+supports the same options as
+.BR plot .
+.in -4
+.sp
+.B "(caption (integer1 string1) ...)  ==>  unspecific
+.in +4
+Display a box containing the caption explaining multiple plot styles
+used in a single diagram. Currently the caption can only be used in
+combination with scatter plots. Each
+.I integer
+in a two-element list passed to
+.B caption
+represents a style (0..4) and the associated
+.I string
+contains the description for the corresponding style.
+.in -4
+.sp
+.SH "SEE ALSO
+.B s9(1)
+.SH AUTHOR
+Nils M Holm < nmh at t3x.org >
