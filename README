@@ -17,6 +17,11 @@
 	without having to jump through too many hoops (b) study the
 	implementation of Scheme (in a language other than Scheme). 
 
+	There are two experimental extensions to the interpreter. S9E
+	adds procedures implementing common Unix system calls. S9SC,
+	the "Scheme 9 Scientific Calculator", adds a function plotter
+	and vector graphics device that is mapped to an X11 window.
+
 
 	QUICK START
 
@@ -143,6 +148,17 @@
 	procedures. See the S9E(1) man page for details. To (attempt to)
 	compile this extension, run "make all-s9e". To install the
 	extended interpreter, type "make install-s9e" (as root).
+
+
+	SCHEME 9 SCIENTIFIC CALCULATOR
+
+	The experimental S9SC interpreter maps a vector graphics device
+	to an X11 window on a Unix system and implements a function
+	plotter in the style of a "scientific calculator" on top of that
+	device. To (attempt to) compile S9SC, run "make all-s9sc" and to
+	install it, run "make install-s9sc". See the S9SC(1) man page
+	for further explanations. To see S9SC in action, just start it
+	and then type, for instance, "(plot* -7 7 sin)".
 
 
 	CONTACT

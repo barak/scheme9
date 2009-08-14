@@ -349,9 +349,12 @@
          (cond ((zero? y) 1)
                ((even? y) (square (expt2 x (quotient y 2))))
                (else      (* x (square (expt2 x (quotient y 2)))))))))
-    (if (negative? y)
-        (/ (expt2 (+ 0.0 x) y))
-        (expt2 x y))))
+    (cond ((negative? y)
+            (/ (expt2 (+ 0.0 x) y)))
+          ((integer? y)
+            (expt2 x y))
+          (else
+            (exp (* y (log x)))))))
 
 (define gcd
   (let ((fold-left fold-left))
@@ -461,11 +464,14 @@
                                    y))
                            r
                            (if lim (- lim 1) lim)))))))
-    (if (< 0.1 x 5)
-        (l-series x 1 0.0 1.0 #f)
-        (let ((approx (l-series x 1 0.0 1.0 5)))
-          (let ((a (/ x (exp approx))))
-            (+ approx (log a)))))))
+    (cond ((negative? x)
+            (/ 1.0 0))
+          ((< 0.1 x 5)
+            (l-series x 1 0.0 1.0 #f))
+          (else
+            (let ((approx (l-series x 1 0.0 1.0 5)))
+              (let ((a (/ x (exp approx))))
+                (+ approx (log a))))))))
 
 ; auxilary definitions for SIN, COS, TAN
 (define pi 3.141592653589793238462643383279502884197169399375105820974944)

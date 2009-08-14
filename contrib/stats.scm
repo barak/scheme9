@@ -50,7 +50,7 @@
 ; (sqr real)  ==>  real
 ;
 ; Square a number.
-; E.g.: (sqr 5)  ==> 25
+; E.g.: (sqr 5)  ==>  25
 ;
 ; (sign real)  ==>  -1 | 0 | +1
 ;
@@ -62,7 +62,12 @@
 ; Compute real!.
 ; E.g.: (! 5)  ==>  120
 ;
-; (mean set)  ==> real
+; (sort list)  ==>  list
+;
+; Sort a list, result is in numerically ascending order.
+; E.g.: (sort '(3 1 5 2 4))  ==>  (1 2 3 4 5)
+;
+; (mean set)  ==>  real
 ;
 ; Compute the arithmetic mean of a data set.
 ; E.g.: (mean '(1 2 3 4))  ==>  2.5
@@ -250,7 +255,7 @@
 ;           (nth '(1 2 3) 1)                   ==>  2
 ;           (sort '(2 3 1))                    ==>  (1 2 3)
 ;           (iota 1 4)                         ==>  (1 2 3 4)
-;           (sqr 5)                            ==> 25
+;           (sqr 5)                            ==>  25
 ;           (sign -1.4142)                     ==>  -1
 ;           (! 5)                              ==>  120
 ;           (mean '(1 2 3 4))                  ==>  2.5
@@ -335,26 +340,26 @@
   (define pi 3.141592653589793238462643383279502884197169399375105820974944)
   (define e  2.718281828459045235360287471352662497757247093699959574966967)
 
-  (define (sc:id x) x)
+  (define (st:id x) x)
 
-  (define (sc:floor-int x) (inexact->exact (floor x)))
+  (define (st:floor-int x) (inexact->exact (floor x)))
 
-  (define (sc:round-int x) (inexact->exact (round x)))
+  (define (st:round-int x) (inexact->exact (round x)))
 
-  (define (sc:round-at k x)
+  (define (st:round-at k x)
     (let ((k (expt 10 k)))
       (/ (round (* x k)) k)))
 
-  (define sc:size length)
+  (define st:size length)
 
-  (define sc:nth list-ref)
+  (define st:nth list-ref)
 
-  (define (sc:sort values)
+  (define (st:sort values)
     (mergesort < values))
 
-  (define (sc:sqr x) (* x x))
+  (define (st:sqr x) (* x x))
 
-  (define (sc:sign x)
+  (define (st:sign x)
     (cond ((zero? x)      0)
           ((positive? x)  1)
           (else          -1)))
@@ -369,20 +374,20 @@
         x
         (map cons (iota 1 (size x)) x)))
 
-  (define (sc:mean values)
+  (define (st:mean values)
     (let ((values (->values values)))
-      (/ (apply + values) (sc:size values))))
+      (/ (apply + values) (st:size values))))
 
-  (define (sc:maxval x) (apply max x))
+  (define (st:maxval x) (apply max x))
 
-  (define (sc:minval x) (apply min x))
+  (define (st:minval x) (apply min x))
 
-  (define (sc:range values)
+  (define (st:range values)
     (let ((values (->values values)))
-      (- (sc:maxval values)
-         (sc:minval values))))
+      (- (st:maxval values)
+         (st:minval values))))
 
-  (define (sc:pctile n values)
+  (define (st:pctile n values)
     (let ((values (->values values)))
       (cond ((not (<= 1 n 100))
               (wrong "pctile: first argument N must be 1 <= N <= 100"))
@@ -390,24 +395,24 @@
                  (null? (cdr values)))
               (wrong "pctile: too few values" values))
             (else
-              (let ((vs (sc:sort values))
-                    (i  (/ (* (sc:size values) n) 100)))
+              (let ((vs (st:sort values))
+                    (i  (/ (* (st:size values) n) 100)))
                 (cond ((= n 100)
                         (car (reverse vs)))
                       ((= i (floor i))
-                        (let ((t (list-tail vs (- (sc:floor-int i) 1))))
+                        (let ((t (list-tail vs (- (st:floor-int i) 1))))
                           (/ (+ (car t) (cadr t)) 2)))
-                      (else (list-ref vs (sc:floor-int i)))))))))
+                      (else (list-ref vs (st:floor-int i)))))))))
 
-  (define (sc:qtile n values)
+  (define (st:qtile n values)
     (if (not (<= 1 n 4))
         (wrong "qtile: first argument N must be 1 <= N <= 4")
-        (sc:pctile (* n 25) values)))
+        (st:pctile (* n 25) values)))
 
-  (define (sc:median values)
-    (sc:pctile 50 values))
+  (define (st:median values)
+    (st:pctile 50 values))
 
-  (define (sc:freq values)
+  (define (st:freq values)
     (let* ((values (->values values))
            (h  (make-hash-table (length values))))
       (let loop ((v values))
@@ -418,8 +423,8 @@
               (hash-table-set! h (car v) (+ 1 n))
               (loop (cdr v)))))))
 
-  (define (sc:modes values)
-    (let ((vf (sc:freq values)))
+  (define (st:modes values)
+    (let ((vf (st:freq values)))
       (let loop ((v   vf)
                  (max 0))
         (cond ((null? v)
@@ -446,117 +451,117 @@
             r
             (loop (+ i inc) (fa r (fx i)))))))
 
-  (define (sc:sum f start lim . step)
+  (define (st:sum f start lim . step)
     (apply acc + f 0 start lim step))
 
-  (define (sc:sum* f . values)
+  (define (st:sum* f . values)
     (apply + (apply map f values)))
 
-  (define (sc:prod f start lim . step)
+  (define (st:prod f start lim . step)
       (apply acc * f 1 start lim step))
 
-  (define (sc:prod* f . values)
+  (define (st:prod* f . values)
     (apply * (apply map f values)))
 
-  (define (sc:slope set)
+  (define (st:slope set)
     (let* ((set     (->set set))
            (xvalues (map car set))
            (yvalues (map cdr set))
-           (x-mean  (sc:mean xvalues))
-           (y-mean  (sc:mean yvalues))
-           (n       (sc:size set)))
-     (/ (sc:sum* (lambda (xi yi)
+           (x-mean  (st:mean xvalues))
+           (y-mean  (st:mean yvalues))
+           (n       (st:size set)))
+     (/ (st:sum* (lambda (xi yi)
                    (* (- xi x-mean)
                       (- yi y-mean)))
                  xvalues
                  yvalues)
-        (sc:sum* (lambda (xi)
-                   (sc:sqr (- xi x-mean)))
+        (st:sum* (lambda (xi)
+                   (st:sqr (- xi x-mean)))
                  xvalues))))
 
-  (define (sc:y-int set)
+  (define (st:y-int set)
     (let* ((set    (->set set))
-           (x-mean (sc:mean (map car set)))
-           (y-mean (sc:mean (map cdr set))))
-      (- y-mean (* (sc:slope set) x-mean))))
+           (x-mean (st:mean (map car set)))
+           (y-mean (st:mean (map cdr set))))
+      (- y-mean (* (st:slope set) x-mean))))
 
-  (define (sc:stddev-slope set)
+  (define (st:stddev-slope set)
     (let* ((set     (->set set))
            (xvalues (map car set))
            (yvalues (map cdr set))
-           (x-mean  (sc:mean xvalues))
-           (y-mean  (sc:mean yvalues))
-           (b       (sc:slope set))
-           (n       (sc:size set)))
-      (sqrt (/ (- (sc:sum* (lambda (yi)
-                             (sc:sqr (- yi y-mean)))
+           (x-mean  (st:mean xvalues))
+           (y-mean  (st:mean yvalues))
+           (b       (st:slope set))
+           (n       (st:size set)))
+      (sqrt (/ (- (st:sum* (lambda (yi)
+                             (st:sqr (- yi y-mean)))
                            yvalues)
-                  (* b (sc:sum* (lambda (xi yi)
+                  (* b (st:sum* (lambda (xi yi)
                                   (* (- xi x-mean)
                                      (- yi y-mean)))
                                 xvalues
                                 yvalues)))
                (- n 1)))))
 
-  (define (sc:stderr-slope set)
+  (define (st:stderr-slope set)
     (let* ((set     (->set set))
            (xvalues (map car set))
-           (x-mean  (sc:mean xvalues))
-           (n       (sc:size set)))
+           (x-mean  (st:mean xvalues))
+           (n       (st:size set)))
       (/ (stddev-slope set)
-         (sqrt (sc:sum* (lambda (xi)
-                          (sc:sqr (- xi x-mean)))
+         (sqrt (st:sum* (lambda (xi)
+                          (st:sqr (- xi x-mean)))
                         xvalues)))))
 
   (define (var* set dec)
     (let ((values (->values set))
-          (n      (sc:size set)))
-      (/ (- (sc:sum* sc:sqr values)
-            (/ (sc:sqr (sc:sum* sc:id values))
+          (n      (st:size set)))
+      (/ (- (st:sum* st:sqr values)
+            (/ (st:sqr (st:sum* st:id values))
                n))
          (+ n dec))))
 
-  (define (sc:var set) (var* set -1))
+  (define (st:var set) (var* set -1))
 
-  (define (sc:var-pop set) (var* set 0))
+  (define (st:var-pop set) (var* set 0))
 
-  (define (sc:stddev set) (sqrt (sc:var set)))
+  (define (st:stddev set) (sqrt (st:var set)))
 
-  (define (sc:stddev-pop set) (sqrt (sc:var-pop set)))
+  (define (st:stddev-pop set) (sqrt (st:var-pop set)))
 
-  (define (sc:corr set)
+  (define (st:corr set)
     (let* ((set     (->set set))
            (xvalues (map car set))
            (yvalues (map cdr set))
-           (n       (sc:size set))
-           (S_xy    (- (sc:sum* * xvalues yvalues)
-                       (/ (* (sc:sum* sc:id xvalues)
-                             (sc:sum* sc:id yvalues))
+           (n       (st:size set))
+           (S_xy    (- (st:sum* * xvalues yvalues)
+                       (/ (* (st:sum* st:id xvalues)
+                             (st:sum* st:id yvalues))
                           n)))
-           (S_xx    (- (sc:sum* sc:sqr xvalues)
-                       (/ (sc:sqr (sc:sum* sc:id xvalues))
+           (S_xx    (- (st:sum* st:sqr xvalues)
+                       (/ (st:sqr (st:sum* st:id xvalues))
                           n)))
-           (S_yy    (- (sc:sum* sc:sqr yvalues)
-                       (/ (sc:sqr (sc:sum* sc:id yvalues))
+           (S_yy    (- (st:sum* st:sqr yvalues)
+                       (/ (st:sqr (st:sum* st:id yvalues))
                           n))))
       (/ S_xy (sqrt (* S_xx S_yy)))))
 
-  (define (sc:zscores values)
+  (define (st:zscores values)
     (let ((values (->values values)))
-      (let ((M (sc:mean values))
-            (S (sc:stddev values)))
+      (let ((M (st:mean values))
+            (S (st:stddev values)))
         (map (lambda (x) (/ (- x M) S))
              values))))
 
-  (define (sc:zscores-pop values)
+  (define (st:zscores-pop values)
     (let ((values (->values values)))
-      (let ((u (sc:mean values))
-            (s (sc:stddev-pop values)))
+      (let ((u (st:mean values))
+            (s (st:stddev-pop values)))
         (map (lambda (x) (/ (- x u) s))
              values))))
 
   (define (norm M S values)
-    (let ((values (sc:zscores (->values values))))
+    (let ((values (st:zscores (->values values))))
       (map (lambda (z) (+ (* z S) M))
            values)))
 
@@ -567,22 +572,22 @@
                      (factorial (- n k))))
         1))
 
-  (define (sc:bindist k n p)
+  (define (st:bindist k n p)
     (* (choose n k)
        (expt p k)
        (expt (- 1 p) (- n k))))
 
-  (define (sc:bindist* k n p)
-    (map (lambda (k) (sc:bindist k n p))
+  (define (st:bindist* k n p)
+    (map (lambda (k) (st:bindist k n p))
          (iota 0 k)))
 
-  (define (sc:bindist+ k n p)
-    (min 1.0 (apply + (map (lambda (k) (sc:bindist k n p))
+  (define (st:bindist+ k n p)
+    (min 1.0 (apply + (map (lambda (k) (st:bindist k n p))
                              (iota 0 k)))))
 
-  ; (define (sc:stddist x)
+  ; (define (st:stddist x)
   ;   (* (/ (sqrt (* 2 pi)))
-  ;      (exp (- (/ (sc:sqr x) 2)))))
+  ;      (exp (- (/ (st:sqr x) 2)))))
 
   (define pdf
     '#(0.00014 0.00014 0.00015 0.00016 0.00016 0.00017 0.00018 0.00018 
@@ -636,9 +641,9 @@
        0.39448 0.39505 0.39559 0.39608 0.39654 0.39695 0.39733 0.39767
        0.39797 0.39822 0.39844 0.39862 0.39876 0.39886 0.39892 0.39894))
 
-  (define (sc:stddist x)
+  (define (st:stddist x)
     (let ((pdf (lambda (x)
-                 (vector-ref pdf (sc:round-int (* x 100))))))
+                 (vector-ref pdf (st:round-int (* x 100))))))
       (cond ((zero? x)  0.4)
             ((<= x -4)  0)
             ((< x   0)  (pdf (+ x 4)))
@@ -693,68 +698,68 @@
        0.49996 0.49996 0.49997 0.49997 0.49997 0.49997 0.49997 0.49997 0.49997
        0.49997 0.49998 0.49998 0.49998 0.49998))
 
-  (define (sc:stddist+ x)
+  (define (st:stddist+ x)
     (let ((cdf (lambda (x)
-                 (vector-ref cdf (sc:round-int (* x 100))))))
+                 (vector-ref cdf (st:round-int (* x 100))))))
       (cond ((zero? x) 0.5)
             ((< x -4)  0)
             ((< x  0)  (- 0.5 (cdf (- x))))
             ((> x +4)  1)
             (else      (+ 0.5 (cdf x))))))
 
-  ; (define (sc:normdist x m sd)
+  ; (define (st:normdist x m sd)
   ;   (* (/ (* sd (sqrt (* 2 pi))))
-  ;      (exp (- (/ (sc:sqr (- x m))
-  ;                 (* 2 (sc:sqr sd)))))))
+  ;      (exp (- (/ (st:sqr (- x m))
+  ;                 (* 2 (st:sqr sd)))))))
 
-  (define (sc:normdist x m sd)
-    (/ (sc:stddist (/ (- x m) sd)) sd))
+  (define (st:normdist x m sd)
+    (/ (st:stddist (/ (- x m) sd)) sd))
 
-  (define (sc:normdist+ x m sd)
-    (/ (sc:stddist+ (/ (- x m) sd)) sd))
+  (define (st:normdist+ x m sd)
+    (/ (st:stddist+ (/ (- x m) sd)) sd))
 
   (set! *pi*         pi)
   (set! *e*          e)
-  (set! id           sc:id)
-  (set! floor-int    sc:floor-int)
-  (set! round-int    sc:round-int)
-  (set! round-at     sc:round-at)
-  (set! size         sc:size)
-  (set! nth          sc:nth)
-  (set! sort         sc:sort)
-  (set! sqr          sc:sqr)
-  (set! sign         sc:sign)
-  (set! mean         sc:mean)
-  (set! maxval       sc:maxval)
-  (set! minval       sc:minval)
-  (set! range        sc:range)
-  (set! pctile       sc:pctile)
-  (set! qtile        sc:qtile)
-  (set! median       sc:median)
-  (set! freq         sc:freq)
-  (set! modes        sc:modes)
-  (set! sum          sc:sum)
-  (set! sum*         sc:sum*)
-  (set! prod         sc:prod)
-  (set! prod*        sc:prod*)
-  (set! slope        sc:slope)
-  (set! y-int        sc:y-int)
-  (set! stddev-slope sc:stddev-slope)
-  (set! stderr-slope sc:stderr-slope)
-  (set! var          sc:var)
-  (set! var-pop      sc:var-pop)
-  (set! stddev       sc:stddev)
-  (set! stddev-pop   sc:stddev-pop)
-  (set! corr         sc:corr)
-  (set! zscores      sc:zscores)
-  (set! zscores-pop  sc:zscores-pop)
-  (set! bindist      sc:bindist)
-  (set! bindist*     sc:bindist*)
-  (set! bindist+     sc:bindist+)
-  (set! stddist      sc:stddist)
-  (set! stddist+     sc:stddist+)
-  (set! normdist     sc:normdist)
-  (set! normdist+    sc:normdist+)
+  (set! id           st:id)
+  (set! floor-int    st:floor-int)
+  (set! round-int    st:round-int)
+  (set! round-at     st:round-at)
+  (set! size         st:size)
+  (set! nth          st:nth)
+  (set! sort         st:sort)
+  (set! sqr          st:sqr)
+  (set! sign         st:sign)
+  (set! mean         st:mean)
+  (set! maxval       st:maxval)
+  (set! minval       st:minval)
+  (set! range        st:range)
+  (set! pctile       st:pctile)
+  (set! qtile        st:qtile)
+  (set! median       st:median)
+  (set! freq         st:freq)
+  (set! modes        st:modes)
+  (set! sum          st:sum)
+  (set! sum*         st:sum*)
+  (set! prod         st:prod)
+  (set! prod*        st:prod*)
+  (set! slope        st:slope)
+  (set! y-int        st:y-int)
+  (set! stddev-slope st:stddev-slope)
+  (set! stderr-slope st:stderr-slope)
+  (set! var          st:var)
+  (set! var-pop      st:var-pop)
+  (set! stddev       st:stddev)
+  (set! stddev-pop   st:stddev-pop)
+  (set! corr         st:corr)
+  (set! zscores      st:zscores)
+  (set! zscores-pop  st:zscores-pop)
+  (set! bindist      st:bindist)
+  (set! bindist*     st:bindist*)
+  (set! bindist+     st:bindist+)
+  (set! stddist      st:stddist)
+  (set! stddist+     st:stddist+)
+  (set! normdist     st:normdist)
+  (set! normdist+    st:normdist+)
   (set! !            factorial))
 
 (init-stat)

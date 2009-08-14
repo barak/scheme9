@@ -8,7 +8,7 @@
  * Use -DBITS_PER_WORD_64 on 64-bit systems.
  */
 
-#define VERSION "2009-07-25"
+#define VERSION "2009-08-11"
 
 #define EXTERN
 #include "s9.h"
@@ -4775,7 +4775,7 @@ void add_primitives(char *name, PRIM *p) {
 }
 
 /* Extension prototypes */
-void gfx_init(void);
+void sc_init(void);
 void unix_init(void);
 
 void make_initial_env(void) {
@@ -4863,6 +4863,26 @@ void init(void) {
 	reset_calltrace();
 }
 
+void init_extensions(void) {
+	cell	e, n;
+	char	initproc[TOKEN_LENGTH+2];
+	char	*s;
+
+	e = car(S_extensions);
+	while (e != NIL) {
+		s = string(car(e));
+		if (strlen(s)*2+1 >= TOKEN_LENGTH)
+			fatal("init_extension(): procedure name too long");
+		sprintf(initproc, "%s:%s", s, s);
+		n = find_symbol(initproc);
+		if (n != NIL) {
+			n = alloc(n, NIL);
+			eval(n);
+		}
+		e = cdr(e);
+	}
+}
+
 void usage(char *name, int quit) {
 	pr("Usage: ");
 	pr(name);
@@ -4939,6 +4959,7 @@ int main(int argc, char **argv) {
 	init();
 	argv++;
 	load_library();
+	init_extensions();
 	while (*argv != NULL) {
 		if (**argv != '-') break;
 		(*argv)++;
