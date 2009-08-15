@@ -42,7 +42,7 @@ OSDEF=	-Dunix
 X11BASE=	/usr/X11R6
 
 DEFS=	$(OSDEF) \
-	-DDEFAULT_LIBRARY_PATH="\".:~/s9fes:$(LIBDIR):$(LIBDIR)/contrib\""
+	-DDEFAULT_LIBRARY_PATH="\"$(LIBDIR):$(LIBDIR)/contrib:$(DATADIR):~/s9fes\""
 
 EXTINI=	unix_init()
 EXTOBJ=	unix.o
