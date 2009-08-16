@@ -16,10 +16,10 @@
   (lambda (s)
     (let* ((k (string-length s))
            (new (make-string k)))
-      (let upcase-chars ((i 0))
+      (let convert-chars ((i 0))
         (if (< i k)
             (begin (string-set! new i (convert (string-ref s i)))
-                   (upcase-chars (+ 1 i)))
+                   (convert-chars (+ 1 i)))
             new)))))
 
 (define string-upcase   (make-case-converter char-upcase))

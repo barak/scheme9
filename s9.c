@@ -8,7 +8,7 @@
  * Use -DBITS_PER_WORD_64 on 64-bit systems.
  */
 
-#define VERSION "2009-08-11"
+#define VERSION "2009-08-14"
 
 #define EXTERN
 #include "s9.h"
@@ -1296,7 +1296,7 @@ void print_form(cell n) {
 	if (n == NIL) {
 		pr("()");
 	}
-	if (n == NAN) {
+	else if (n == NAN) {
 		pr("#<NaN>");
 	}
 	else if (eof_p(n)) {
