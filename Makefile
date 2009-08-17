@@ -94,7 +94,7 @@ s9e.image:	s9e s9e.scm ext/unix.scm
 	gzip -9 < $* > $@
 
 s9sc:	s9sc.o sc.o
-	$(CC) $(CFLAGS) -o s9sc s9sc.o sc.o -L $(X11BASE)/lib -lX11
+	$(CC) $(CFLAGS) $(OSDEF) -o s9sc s9sc.o sc.o -L $(X11BASE)/lib -lX11
 
 s9sc.scm:	s9.scm
 	ln -s s9.scm s9sc.scm
