@@ -1,8 +1,9 @@
 scheme9 (2009.08.14-1) unstable; urgency=low
 
   * New Upstream Version
+  * fix missing -Dunix in Makefile for sc.o
 
- -- Barak A. Pearlmutter <bap@debian.org>  Sun, 16 Aug 2009 14:22:06 +0200
+ -- Barak A. Pearlmutter <bap@debian.org>  Tue, 18 Aug 2009 08:52:45 +0200
 
 scheme9 (2009.08.11-2) unstable; urgency=low
 
