@@ -94,7 +94,7 @@ s9e.image:	s9e s9e.scm ext/unix.scm
 	gzip -9 < $* > $@
 
 s9sc:	s9sc.o sc.o
-	$(CC) $(CFLAGS) $(OSDEF) -o s9sc s9sc.o sc.o -L $(X11BASE)/lib -lX11
+	$(CC) $(CFLAGS) -o s9sc s9sc.o sc.o -L $(X11BASE)/lib -lX11
 
 s9sc.scm:	s9.scm
 	ln -s s9.scm s9sc.scm
@@ -105,7 +105,7 @@ s9sc.o:	s9.c
 		-o s9sc.o -c s9.c
 
 sc.o:	ext/sc.c
-	$(CC) $(CFLAGS) -I $(X11BASE)/include -I . -o sc.o -c ext/sc.c
+	$(CC) $(CFLAGS) $(OSDEF) -I $(X11BASE)/include -I . -o sc.o -c ext/sc.c
 
 sys6x12.vf:	ext/sys6x12.vfd mkvfont
 	./mkvfont 6 12 ext/sys6x12.vfd sys6x12.vf
