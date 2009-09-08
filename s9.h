@@ -47,6 +47,12 @@
  #endif
 #endif
 
+#ifndef unix
+ #ifndef plan9
+  #error "Either 'unix' or 'plan9' must be #defined."
+ #endif
+#endif
+
 #ifdef unix
  #ifndef _BSD_SOURCE
   #define _BSD_SOURCE
@@ -54,12 +60,6 @@
  #ifndef _POSIX_SOURCE
   #define _POSIX_SOURCE
   #define _POSIX_C_SOURCE 200112L
- #endif
-#endif
-
-#ifndef unix
- #ifndef plan9
-  #error "Either 'unix' or 'plan9' must be #defined."
  #endif
 #endif
 
@@ -93,10 +93,12 @@
 
 #ifndef DEFAULT_LIBRARY_PATH
  #define DEFAULT_LIBRARY_PATH \
- 		".:" 				\
-		"~/.s9fes:" 			\
-		"/usr/local/share/s9fes:"	\
-		"/usr/local/share/s9fes/contrib"
+ 		"." 				\
+ 		":lib" 				\
+ 		":contrib" 			\
+		":~/.s9fes" 			\
+		":/usr/local/share/s9fes"	\
+		":/usr/local/share/s9fes/contrib"
 #endif
 
 #ifndef IMAGEFILE

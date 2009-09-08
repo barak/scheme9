@@ -4,7 +4,7 @@
 # Change at least this line:
 PREFIX= /u
 
-VERSION= 20090814
+VERSION= 20090903
 
 # Extras to be added to the heap image
 EXTRA_STUFF=	-f contrib/help.scm \
@@ -84,7 +84,7 @@ s9sc.o:	s9.c
 		-o s9sc.o -c s9.c
 
 sc.o:	ext/sc.c
-	$(CC) $(CFLAGS) -I $(X11BASE)/include -I . -o sc.o -c ext/sc.c
+	$(CC) $(CFLAGS) $(OSDEF) -I $(X11BASE)/include -I . -o sc.o -c ext/sc.c
 
 sys6x12.vf:	ext/sys6x12.vfd mkvfont
 	./mkvfont 6 12 ext/sys6x12.vfd sys6x12.vf

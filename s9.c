@@ -8,7 +8,7 @@
  * Use -DBITS_PER_WORD_64 on 64-bit systems.
  */
 
-#define VERSION "2009-08-14"
+#define VERSION "2009-09-03"
 
 #define EXTERN
 #include "s9.h"
@@ -2832,6 +2832,20 @@ cell pp_display(cell x) {
 	return UNSPECIFIC;
 }
 
+cell pp_dump_image(cell x) {
+	char	*path = copy_string(string(cadr(x)));
+	FILE	*f;
+
+	f = fopen(string(cadr(x)), "r");
+	if (f != NULL) {
+		fclose(f);
+		return error("dump-image: file exists", cadr(x));
+	}
+	dump_image(path);
+	free(path);
+	return UNSPECIFIC;
+}
+
 cell pp_divide(cell x) {
 	cell	a, expr;
 
@@ -3793,6 +3807,7 @@ PRIM Primitives[] = {
  { "current-output-port", pp_current_output_port, 0,  0, { ___,___,___ } },
  { "delete-file",         pp_delete_file,         1,  1, { STR,___,___ } },
  { "display",             pp_display,             1,  2, { ___,OUP,___ } },
+ { "dump-image",          pp_dump_image,          1,  1, { STR,___,___ } },
  { "/",                   pp_divide,              1, -1, { REA,___,___ } },
  { "eof-object?",         pp_eof_object_p,        1,  1, { ___,___,___ } },
  { "eq?",                 pp_eq_p,                2,  2, { ___,___,___ } },
@@ -4867,10 +4882,11 @@ void init_extensions(void) {
 	cell	e, n;
 	char	initproc[TOKEN_LENGTH+2];
 	char	*s;
+	char	*s9 = "s9";
 
 	e = car(S_extensions);
-	while (e != NIL) {
-		s = string(car(e));
+	while (s9 || e != NIL) {
+		s = s9? s9: string(car(e));
 		if (strlen(s)*2+1 >= TOKEN_LENGTH)
 			fatal("init_extension(): procedure name too long");
 		sprintf(initproc, "%s:%s", s, s);
@@ -4879,7 +4895,8 @@ void init_extensions(void) {
 			n = alloc(n, NIL);
 			eval(n);
 		}
-		e = cdr(e);
+		e = s9? e: cdr(e);
+		s9 = NULL;
 	}
 }
 

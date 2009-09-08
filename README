@@ -26,7 +26,7 @@
 	QUICK START
 
 	You can run the interpreter in its build directory without
-	installing it. Just run "make" and then "./s9".
+	installing it. Just run "cc -Dunix -o s9 s9.c" and then "./s9".
 
 	The S9 code is only loosely coupled to its Makefile, so in most
 	cases running "cc -Dunix -o s9 s9.c" or "8c -Dplan9 -o s9 s9.c"
@@ -35,7 +35,7 @@
 	On most systems of the Unix family (plus CygWin and MINGW),
 	you can compile and install S9fES by running "make install".
 
-	Once installed, typing "s9" starts the interpreter.
+	Once installed, typing "s9" will start the interpreter.
 
 	(help) explains the online help system.
 	(apropos) returns a list of all help topics.
@@ -65,6 +65,15 @@
 	Manual Installation
 
 	To install S9fES manually,
+
+	- Compile s9 with a proper default library path (the one
+	  hardwired in "s9.h" is probably not what you want). E.g.:
+
+	  cc -Dunix -o s9 -DDEFAULT_LIBRARY_PATH="\"your-path\"" s9.c
+
+	  A reasonable value for "your-path" would be, for example:
+
+	  ".:~/s9fes:/usr/local/share/s9fes:/usr/local/share/s9fes/contrib"
 
 	- Copy the "s9" binary to a location where it can be executed
 	  (e.g. /usr/local/bin).
@@ -107,6 +116,10 @@
 	searched in sequence for image files, library files and help
 	pages (in "help" subdirectories of the given paths).
 
+	S9FES_LIBRARY_PATH overrides DEFAULT_LIBRARY_PATH, so all
+	directories listed in the latter should also be presend in
+	the former.
+
 	If you set up an rc file in your home directory ($HOME/.s9fes/rc),
 	this file will be loaded after the library image file but before
 	running any programs. It is an ordinary Scheme source file.
@@ -131,7 +144,7 @@
 	If you installed the extension library functions in LIBDIR,
 	they can be loaded by the LOAD-FROM-LIBRARY procedure:
 
-	> (load-from-library "draw-tree")
+	> (load-from-library "draw-tree.scm")
 	; loading from /usr/local/share/s9fes/draw-tree.scm
 	> (draw-tree '(a b c))
 	[o|o]---[o|o]---[o|/]

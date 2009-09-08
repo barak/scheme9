@@ -1,0 +1,283 @@
+S9 LIB  S9fES Statistics Package.
+
+*pi*  ==>  3.1415...
+*e*   ==>  2.7182...
+
+The famous constants.
+
+(id form)  ==>  form
+
+Identity function. Useful in SUM and PROD.
+E.g.: (id 1)  ==>  1
+
+(floor-int real)  ==>  integer
+(round-int real)  ==>  integer
+
+Round a real number and return the closest exact integer.
+E.g.: (floor-int 3.5)  ==>  3
+      (round-int 3.5)  ==>  4
+
+(round-at integer real)  ==>  real
+
+Round REAL to INTEGER fractional digits.
+E.g.: (round-at 3 *pi*)  ==>  3.142
+
+(size set)  ==>  integer
+
+Return the size (number of items) of a data set.
+E.g.: (size '(1 5 19))  ==>  3
+
+(nth set integer)  ==>  item
+
+Return the INTEGER'th item of a data set.
+The first item is at position 0.
+E.g.: (nth '(1 2 3) 1)  ==>  2
+
+(sort set)  ==>  set
+
+Sort the items of a data set (numerically ascending).
+E.g.: (sort '(2 3 1))  ==>  (1 2 3)
+
+(iota integer1 integer2)  ==>  list
+
+Return a list containing the numbers from integer1 to integer2.
+E.g.: (iota 1 4)  ==>  (1 2 3 4)
+
+(sqr real)  ==>  real
+
+Square a number.
+E.g.: (sqr 5)  ==>  25
+
+(sign real)  ==>  -1 | 0 | +1
+
+Return the smallest integer with the same sign as REAL.
+E.g.: (sign -1.4142)  ==>  -1
+
+(! real)  ==>  real
+
+Compute real!.
+E.g.: (! 5)  ==>  120
+
+(sort list)  ==>  list
+
+Sort a list, result is in numerically ascending order.
+E.g.: (sort '(3 1 5 2 4))  ==>  (1 2 3 4 5)
+
+(mean set)  ==>  real
+
+Compute the arithmetic mean of a data set.
+E.g.: (mean '(1 2 3 4))  ==>  2.5
+
+(maxval set)  ==>  real
+(minval set)  ==>  real
+
+Return the maximum/minimum value of a set.
+E.g.: (maxval '(2 1 4 3))  ==>  4
+      (minval '(2 1 4 3))  ==>  1
+
+(range set)  ==>  real
+
+Compute the range of a data set (MAXVAL - MINVAL).
+E.g.: (range '(2 1 4 3))  ==>  3
+
+(pctile integer set)  ==>  real
+E.g.: (pctile 30 '(2 1 4 3))  ==>  2
+
+Return the INTEGER'th percentile of SET. Assert 0<=INTEGER<=100.
+When INTEGER falls between two values, return their MEAN.
+
+(qtile integer set)  ==>  real
+
+Return the INTEGER'th quartile of SET. Assert 0<=INTEGER<=4.
+The n'th QTILE is the 4n'th PCTILE.
+E.g.: (qtile 3 '(2 1 4 3))  ==>  3.5
+
+(median set)  ==>  real
+
+Return the median of SET. The median of a set is its 2nd QTILE.
+E.g.: (median '(1 2 3 4))  ==>  2.5
+
+(freq set)  ==>  ((item . integer) ...)
+
+Return the frequency of each item of SET.
+E.g.: (freq '(5 7 5 9 7 5))  ==>  ((7 . 2) (9 . 1) (5 . 3))
+
+(modes set)  ==>  list
+
+Return the modes (the most frequently occurring items) of SET.
+E.g.: (modes '(1 2 3 3 4 4))  ==>  (3 4)
+
+(sum procedure integer1 integer2)           ==>  real
+(sum procedure integer1 integer2 integer3)  ==>  real
+(sum* procedure set ...)                    ==>  real
+
+Compute the sum of PROCEDURE(i) over INTEGER1<=i<INTEGER2.
+When INTEGER3 is given, compute PROCEDURE(i*INTEGER3), i.e.
+increment i by INTEGER3 after each step.
+SUM* computes the sum over the elements of the given SETs,
+using PROCEDURE to combine members of sets.
+E.g.: (sum id 1 5)          ==>  10
+      (sum* id '(1 2 3 4))  ==>  10
+
+(prod procedure integer1 integer2)           ==>  real
+(prod procedure integer1 integer2 integer3)  ==>  real
+(prod* procedure set ...)                    ==>  real
+
+Compute the product of PROCEDURE(i) over INTEGER1<=i<INTEGER2.
+When INTEGER3 is given, compute PROCEDURE(i*INTEGER3), i.e.
+increment i by INTEGER3 after each step.
+PROD* computes the product over the elements of the given SETs
+and uses PROCEDURE to combine members of sets.
+E.g.: (prod id 1 5)          ==>  24
+      (prod* id '(1 2 3 4))  ==>  120
+
+(slope set)  ==>  real
+
+Compute the slope of the linear regression of SET. When the linear
+regression line is defined by the formula Y=XB+A, this function
+returns the coefficient B.
+E.g.: (slope '(1 3 5 7 9))  ==>  2.0
+
+(y-int set)  ==>  real
+
+Compute the y-intercept of the linear regression of SET. When the
+linear regression line is defined by the formula Y=XB+A, this
+function returns the coefficient A.
+E.g.: (y-int '(1 3 5 7 9))  ==>  -1.0
+
+(stddev-slope set)  ==>  real
+
+Compute the standard deviation of the points around the regression line.
+E.g.: (stddev-slope '(1 2 5 8 9))  ==>  0.632455532033675865
+
+(stderr-slope set)  ==>  real
+
+Compute the standard error of the points around the regression line.
+E.g.: (stderr-slope '(1 2 5 8 9))  ==>  0.199999999999999999
+
+(var set)      ==>  real
+(var-pop set)  ==>  real
+
+Compute the variance of SET. VAR calculates the variance of
+a sample and VAR-POP the variance of a population.
+E.g.: (var '(1 2 5 8 9))      ==>  12.5
+      (var-pop '(1 2 5 8 9))  ==>  10.0
+
+(stddev set)      ==>  real
+(stddev-pop set)  ==>  real
+
+Compute the standard deviation of SET. STDDEV calculates the standard
+deviation of a sample and STDDEV-POP the standard deviation of a
+population.
+E.g: (stddev '(1 2 5 8 9))      ==>  3.53553390593273762
+     (stddev-pop '(1 2 5 8 9))  ==>  3.16227766016837933
+
+(corr set)  ==>  real
+
+Compute the correlation of the data points in SET. The return value
+Y will be in the range -1..1, where Y>0 means the the the X and Y
+axis are correlated, Y<0 means that they are negatively correlated
+and Y=0 means that they are not correlated at all. Values closer to
+zero denote weaker correlation. When no X values are given,
+(iota 1 (size set)) is used.
+E.g.: (corr '((1 . 1) (2 . 2) (3 . 3)))  ==>  1.0
+      (corr '(9 8 5 2 1))                ==>  -0.983869910099907469
+
+(zscores set)      ==>  set
+(zscores-pop set)  ==>  set
+
+Convert a set of raw scores to a set of z-scores. Z-scores measure
+the distance from the mean of the set in standard deviations, so a
+value of -1 would indicate the the corresponding raw score is one
+standard deviation below the mean. ZSCORES-POP computes the z-scores
+of a population and ZSCORES the z-scores of a sample.
+E.g.: (zscores '(1 2 3))      ==>  (-1.0 0.0 1.0)
+E.g.: (zscores-pop '(1 2 3))  ==>  (-1.224... 0.0 1.224...)
+
+(bindist integer1 integer2 real)   ==>  real
+(bindist* integer1 integer2 real)  ==>  list
+(bindist+ integer1 integer2 real)  ==>  real
+
+LET k=INTEGER1 be the expected number of successful trials, n=INTEGER2
+be the number of total independent trials, and p=REAL the probability
+of a trial to succeed.
+BINDIST(k,n,p) computes the probability of K out of N trials to succeed.
+BINDIST*(k,n,p) computes the probablilities of 0..K out of N trials to
+succeed and returns them in a list.
+BINDIST+(k,n,p) returns the cumulative probability of 0..K out of N
+trials to succeed, i.e. it returns 1.0 if k=n.
+BINDIST(3,5,1/6) would compute the probability of getting three times
+the same face when tossing a dice five times (when the face is chosen
+beforehand).
+E.g.: (bindist 3 5 (/ 6))   ==>  0.0321502057613168719
+      (bindist* 3 5 (/ 6))  ==>  (0.401... 0.401... 0.160... 0.032...)
+      (bindist+ 3 5 (/ 6))  ==>  0.996656378600823041
+
+(stddist real)   ==>  real
+(stddist+ real)  ==>  real
+
+STDDIST implements the probability density function of the standard
+normal distribution, i.e. STDDIST(x) is the probability of a data
+point of a sample to be found at X. X is given in z-scores.
+STDDIST+ implements the cumulative distribution function of the
+standard normal distribution, i.e. STDDIST+(X) returns the area
+under the standard normal curve from -INF to X.
+NOTE: y=STDDIST(x) drops to zero at mean(x)-4 and mean(x)+4 and
+y=STDDIST+(x) drops to zero at mean(x)-4 and rises to 1 at mean(x)+4.
+This is because these function are implemented using lookup tables.
+E.g.: (stddist 0)   ==>  0.4
+      (stddist+ 0)  ==>  0.5
+
+(normdist real1 real2 real3)   ==>  real
+(normdist+ real1 real2 real3)  ==>  real
+
+NORMDIST implements the probability density function of a normal
+distribution with x=REAL1, mean=REAL2, and standard deviation=REAL3.
+NORMDIST+ implements the cumulative distribution function.
+NORMDIST(x,0,1) = STDDIST(x) and NORMDIST+(x,0,1) = STDDIST+(x).
+See also: STDDIST, STTDIST+.
+E.g.: (normdist 2 2 0.5)   ==>  0.8
+      (normdist+ 2 2 0.5)  ==>  1.0
+
+----------------------------------------------------------------
+
+Automatic testing
+
+id 1)                             ==>  1
+floor-int 3.5)                    ==>  3
+round-int 3.5)                    ==>  4
+round-at 3 *pi*)                  ==>  3.142
+size '(1 5 19))                   ==>  3
+nth '(1 2 3) 1)                   ==>  2
+sort '(2 3 1))                    ==>  (1 2 3)
+iota 1 4)                         ==>  (1 2 3 4)
+sqr 5)                            ==>  25
+sign -1.4142)                     ==>  -1
+! 5)                              ==>  120
+mean '(1 2 3 4))                  ==>  2.5
+maxval '(2 1 4 3))                ==>  4
+minval '(2 1 4 3))                ==>  1
+range '(2 1 4 3))                 ==>  3
+pctile 30 '(2 1 4 3))             ==>  2
+qtile 3 '(2 1 4 3))               ==>  3.5
+median '(1 2 3 4))                ==>  2.5
+freq '(5 7 5 9 7 5))              ==>  ((7 . 2) (9 . 1) (5 . 3))
+modes '(1 2 3 3 4 4))             ==>  (3 4)
+sum id 1 5)                       ==>  10
+sum* id '(1 2 3 4))               ==>  10
+prod id 1 5)                      ==>  24
+prod* id '(1 2 3 4))              ==>  24
+slope '(1 3 5 7 9))               ==>  2.0
+y-int '(1 3 5 7 9))               ==>  -1.0
+var '(1 2 5 8 9))                 ==>  12.5
+var-pop '(1 2 5 8 9))             ==>  10.0
+stddev-slope '(1 2 3 4 5))        ==>  0.0
+stderr-slope '(1 2 3 4 5))        ==>  0.0
+corr '((1 . 1) (2 . 2) (3 . 3)))  ==>  1.0
+zscores '(1 2 3))                 ==>  (-1.0 0.0 1.0)
+bindist 1 2 (/ 2))                ==>  0.5
+stddist 0)                        ==>  0.4
+stddist+ 0)                       ==>  0.5
+normdist 2 2 0.5)                 ==>  0.8
+normdist 2 2 0.5)                 ==>  0.8
+normdist+ 2 2 0.5)                ==>  1.0
