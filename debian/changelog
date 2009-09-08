@@ -1,8 +1,9 @@
 scheme9 (2009.09.06-1) unstable; urgency=low
 
   * New Upstream Version
+  * rev deb std
 
- -- Barak A. Pearlmutter <bap@debian.org>  Tue, 08 Sep 2009 13:58:43 -0400
+ -- Barak A. Pearlmutter <bap@debian.org>  Tue, 08 Sep 2009 14:02:52 -0400
 
 scheme9 (2009.08.14-2) unstable; urgency=low
 
