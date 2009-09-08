@@ -255,7 +255,7 @@
                  (fold (cdr-of a*)
                        (apply f r (car-of a*)))))))
         (if (null? a*)
-            (wrong "fold-left: too few arguments")
+            (error "fold-left: too few arguments")
             (fold a* b))))))
 
 (define fold-right
@@ -273,7 +273,7 @@
                         (apply f (append (car-of a*)
                                          (list r))))))))
         (if (null? a*)
-            (wrong "fold-right: too few arguments")
+            (error "fold-right: too few arguments")
             (foldr (map-car reverse a*) b))))))
 
 (define append
@@ -305,7 +305,7 @@
 
 (define (list-tail x n)
   (cond ((zero? n) x)
-        ((null? x) (wrong "list-tail: index out of range" n))
+        ((null? x) (error "list-tail: index out of range" n))
         (else (list-tail (cdr x) (- n 1)))))
 
 (define (list-ref x n)
@@ -325,12 +325,12 @@
                        (cons (apply f (car-of a*))
                              r))))))
         (if (null? a*)
-            (wrong "map: too few arguments")
+            (error "map: too few arguments")
             (map2 a* '()))))))
 
 (define (for-each f . a*)
   (if (null? a*)
-      (wrong "for-each: too few arguments")
+      (error "for-each: too few arguments")
       (apply map f a*))
   (void))
 
@@ -605,7 +605,7 @@
            (sqrt2 (/ (+ x (/ square x)) 2)
                   x)))))
     (if (negative? square)
-        (wrong "sqrt: negative argument" square)
+        (error "sqrt: negative argument" square)
         (let ((rt (sqrt2 square 0)))
           (if (= square (* rt rt))
               (inexact->exact rt)
@@ -691,11 +691,11 @@
            (lambda ()
              (cond ((null? radix) 10)
                    ((<= 2 (car radix) 36) (car radix))
-                   (else (wrong "number->string: invalid radix"
+                   (else (error "number->string: invalid radix"
                                 (car radix)))))))
         (let ((r (get-radix)))
           (cond ((not (or (integer? n) (= 10 r)))
-                  (wrong "number->string: real number needs a radix of 10" n))
+                  (error "number->string: real number needs a radix of 10" n))
                 ((integer? n)
                   (conv-int (inexact->exact n) r))
                 (else
@@ -792,7 +792,7 @@
              (if (not (= 10 rdx))
                  (if (null? radix)
                      #f
-                     (wrong "string->number: real number needs a radix of 10"))
+                     (error "string->number: real number needs a radix of 10"))
                  #t)))
          (mantissa-digits?
            (lambda (x)
@@ -836,7 +836,7 @@
            (lambda ()
              (cond ((null? radix) 10)
                    ((<= 2 (car radix) 36) (car radix))
-                   (else (wrong "string->number: invalid radix"
+                   (else (error "string->number: invalid radix"
                                 (car radix)))))))
         (set! inexact #f)
         (let ((radix   (get-radix))
@@ -915,64 +915,39 @@
 
 ;;----- Quasi-quote-expander -----
 
-(define (expand-quasiquote form)
-  (letrec
-    ((improper-or-splicing?
-       (lambda (form)
-         (cond ((null? form)
-                 #f)
-               ((not (pair? form))
-                 #t)
-               ((and (pair? (cdr form))
-                     (null? (cddr form))
-                     (eq? 'unquote (car form)))
-                 #t)
-               (else
-                 (or (and (pair? (car form))
-                          (eq? 'unquote-splicing (caar form))
-                          (pair? (cdar form)))
-                     (improper-or-splicing? (cdr form)))))))
-     (map-unquote
-       (lambda (x)
-         (cond ((null? x)
-                 '())
-               ((not (pair? x))
-                 (list (list 'quote x)))
-               ((and (pair? (cdr x))
-                     (null? (cddr x))
-                     (eq? 'unquote (car x)))
-                 (list (cadr x)))
-               ((and (pair? (car x))
-                     (eq? 'unquote-splicing (caar x))
-                     (pair? (cdar x)))
-                 (cons (cadar x)
-                       (map-unquote (cdr x))))
-               (else
-                 (cons (list 'list (expand-qq (car x)))
-                       (map-unquote (cdr x)))))))
-     (qq-list
-       (lambda (form)
-         (if (improper-or-splicing? form)
-             (cons 'append (map-unquote form))
-             (cons 'list (map expand-qq form)))))
-     (expand-qq
-       (lambda (form)
-         (cond ((vector? form)
-                 (list 'list->vector
-                       (qq-list (vector->list form))))
-               ((not (pair? form))
-                 (list 'quote form))
-               ((and (eq? 'quasiquote (car form))
-                     (pair? (cdr form)))
-                  (wrong "nested quasiquote is not supported" form))
-               ((and (eq? 'unquote (car form))
-                     (pair? (cdr form)))
-                 (cadr form))
-               (else
-                 (qq-list form))))))
-    (if (pair? (cdr form))
-        (expand-qq (cadr form))
-        form)))
+(define-macro quasiquote
+  (lambda (form)
+    (letrec
+      ((qq-cons
+         (lambda (a b)
+           (cond ((and (pair? a)
+                       (eq? 'unquote-splicing (car a)))
+                   (if (and (pair? b)
+                            (eq? 'quote (car b))
+                            (null? (cadr b)))
+                       (cadr a)
+                       (list 'append (cadr a) b)))
+                 (else 
+                   (list 'cons a b)))))
+       (qq-expand
+         (lambda (x)
+           (cond ((vector? x)
+                   (list 'list->vector (qq-expand (vector->list x))))
+                 ((not (pair? x))
+                   (list 'quote x))
+                 ((and (eq? 'unquote (car x))
+                       (pair? (cdr x)))
+                   (cadr x))
+                 ((and (eq? 'unquote-splicing (car x))
+                       (pair? (cdr x)))
+                   (list 'unquote-splicing (cadr x)))
+                 ((and (eq? 'quasiquote (car x))
+                       (pair? (cdr x)))
+                   (error "quasiquote: may not be nested"))
+                 (else
+                   (qq-cons (qq-expand (car x))
+                            (qq-expand (cdr x))))))))
+      (qq-expand form))))
 
 ;;----- Library -----
 
@@ -985,7 +960,7 @@
              (not (symbol? (caar b)))
              (not (pair? (cdar b)))
              (not (null? (cddar b))))
-          (wrong (string-append who ": invalid syntax") b))
+          (error (string-append who ": invalid syntax") b))
         (else
           (check-bindings (cdr b) who))))
 
@@ -1006,7 +981,7 @@
                         (cons (cadar bind*) args))))))
         (if (symbol? a1)
             (if (null? a3)
-                (wrong "named let: missing body"
+                (error "named let: missing body"
                        `(let ,a1 ,a2 ,@a3))
                 (begin (check-bindings a2 "let")
                        (let ((va (split a2 '() '())))
@@ -1074,7 +1049,7 @@
                ((or (not (pair? c*))
                     (not (pair? (car c*)))
                     (not (pair? (cdar c*))))
-                 (wrong "case: invalid syntax" c*))
+                 (error "case: invalid syntax" c*))
                ((null? (cdr c*))
                  (if (eq? 'else (caar c*))
                      `((else ,@(cdar c*)))
@@ -1096,7 +1071,7 @@
                     (not (pair? (car clauses)))
                     (not (symbol? (caar clauses)))
                     (not (pair? (cdar clauses))))
-                 (wrong "do: invalid syntax" clauses))
+                 (error "do: invalid syntax" clauses))
                (else
                  (split (cdr clauses)
                         (cons (caar clauses) vars)
@@ -1106,7 +1081,7 @@
                             (cons (caddar clauses) steps))))))))
     (if (or (not (pair? test))
             (not (list? (cdr test))))
-        (wrong "do: invalid syntax" test)
+        (error "do: invalid syntax" test)
         (let ((loop (gensym))
               (var+init+step (split var-clauses '() '() '())))
           (let ((v (car   var+init+step))
@@ -1151,7 +1126,7 @@
 ;              => (lambda (env)
 ;                   (syntax-expand '(_ p then c else a) '(if p c a) env)))
 ;            (else
-;              (wrong "invalid syntax" g283))))
+;              (error "invalid syntax" g283))))
 ;    #<PROCEDURE syntax-expand>
 ;    #<PROCEDURE syntax-match>
 ;    (cons 'iff g283)))
@@ -1276,7 +1251,7 @@
                    (eq? (cadr tmpl) '...))
                (let ((eenv (assq '... env)))
                  (if (not eenv)
-                     (wrong
+                     (error
                        "syntax-rules: template without matching ... in pattern"
                        tmpl)
                      (begin (set-car! eenv '(#f))
@@ -1336,20 +1311,20 @@
     (lambda (name rules)
       (cond
         ((not (symbol? name))
-          (wrong "define-syntax: expected symbol, got" name))
+          (error "define-syntax: expected symbol, got" name))
         ((or (not (pair? rules))
              (not (eq? 'syntax-rules (car rules))))
-          (wrong "define-syntax: expected syntax-rules, got" rules))
+          (error "define-syntax: expected syntax-rules, got" rules))
         ((or (not (pair? (cdr rules)))
              (not (pair? (cddr rules))))
-          (wrong "syntax-rules: too few arguments" rules))
+          (error "syntax-rules: too few arguments" rules))
         ((not (keywords-ok? (cadr rules)))
-          (wrong "syntax-rules: malformed keyword list" (cadr rules)))
+          (error "syntax-rules: malformed keyword list" (cadr rules)))
         ((not (rules-ok? (cddr rules)))
-          (wrong "syntax-rules: invalid clause in rules" (cddr rules)))
+          (error "syntax-rules: invalid clause in rules" (cddr rules)))
         (else
           (let* ((app (gensym))
-                 (default `((else (wrong "invalid syntax" ,app)))))
+                 (default `((else (error "invalid syntax" ,app)))))
             `(define-macro ,(cons name app)
                (let ((,app (cons ',name ,app))
                      (syntax-match ,syntax-match)
@@ -1414,4 +1389,4 @@
         (let ((full-path (locate-file (string-append file ".scm"))))
           (if full-path
               (do-load full-path)
-              (wrong "cannot locate file" file))))))
+              (error "cannot locate file" file))))))

@@ -139,14 +139,23 @@ Delete the file specifed in the
 argument. If the file does not exist
 or cannot be deleted, report an error.
 .in -4
+.ne 3
+.B "(dump-image string) ==> unspecific
+.in +4
+Write a heap image to the file given in the
+.I string
+argument. If the file already exists, report
+an error.
+.in -4
 .br
 .ne 3
-.B "(expand-quasiquote form) ==> expanded-form
+.B "(error string form) ==> bottom
 .in +4
-If
-.I form
-is a quasiquoted expression, rewrite it as an equivalent expression
-that does not use quasiquotation.
+Print an error message of the form
+.I "error: string: form
+and terminate program execution.
+.I Form
+may be omitted.
 .in -4
 .br
 .ne 3
@@ -305,16 +314,6 @@ returns the symbols that were being traced before its invocation.
 .in +4
 Return an unspecific value.
 .in -4
-.br
-.ne 3
-.B "(wrong string form) ==> bottom
-.in +4
-Print an error message of the form
-.I "error: string: form
-and terminate program execution.
-.I Form
-may be omitted.
-.in -4
 .sp
 Redefinition of these procedures is safe except for
 .BR expand-quasiquote
@@ -404,6 +403,63 @@ The following version
 work, though:
 .sp
 .B "(define-macro (d x) (and (pair? x) `(d ,(cdr x)))) ; OK"
+.SH "INTERPRETER START-UP
+When the
+.B s9
+interpreter is started, the following steps will be performed in this
+order:
+.sp
+Load library.
+.in +4
+The interpreter searches its library path (either built-in or specified
+in the
+.I S9FES_LIBRARY_PATH
+environment variable)
+for a heap image file or the library source code. The first directory
+containing either of them is used. When the directory contains both an
+image and the library sources, the image is loaded.
+.in -4
+.sp
+Initialize extensions.
+.in +4
+Any extensions compiled into the interpreter are initialized by calling
+the nullary procedure
+.B ext:ext
+(where
+.B ext
+is the name of the extension). The procedures are optional. The first
+`extension' being initialized is
+.B S9
+itself, so when a procedure named
+.B s9:s9
+exists, it will be called at this point.
+.in -4
+.sp
+Evaluate command line options.
+.in +4
+When a
+.I -f
+option is found, an rc file (see below) is loaded before running the
+specified program.
+.in -4
+.sp
+Load rc file.
+.in +4
+If an `rc file' (\fI$HOME/.s9fes/rc\fP) exists, it will be loaded
+at this point as if its name was passed to the
+.B load
+procedure.
+.in -4
+.sp
+Enter REPL.
+.in +4
+Interactive mode is entered if no
+.I -f
+options were given or
+.I -i
+followed the last
+.IR -f .
+.in -4
 .SH "ALLOCATION STRATEGY
 The S9fES memory pool grows exponentially until the memory limit
 its reached. When the limit is reached, the current computation
@@ -485,7 +541,7 @@ Scheme source code.
 .in +4
 A colon-separated list of directories which will be searched for
 the s9 library when the interpreter is launched. The same directories
-will be search by the
+will be searched by the
 .B locate-file
 procedure.
 .br

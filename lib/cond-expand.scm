@@ -19,10 +19,10 @@
     ((expand
        (lambda (c*)
          (cond ((null? c*)
-                 (wrong "cond-expand: unfulfilled"))
+                 (error "cond-expand: unfulfilled"))
                ((or (not (pair? c*))
                     (not (pair? (car c*))))
-                 (wrong "cond-expand: syntax error" c*))
+                 (error "cond-expand: syntax error" c*))
                ((or (eq? (caar c*) 's9fes)
                     (eq? (caar c*) 'scheme-9-from-empty-space)
                     (eq? (caar c*) 'else))

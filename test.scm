@@ -7,7 +7,7 @@
 (define testfile "__testfile__")
 
 (if (file-exists? testfile)
-    (wrong (string-append "Please delete the file \""
+    (error (string-append "Please delete the file \""
                           testfile
                           "\" before running this test.")))
 
@@ -2935,9 +2935,9 @@
 (test (iff #f then 'foo) #f)
 (test (iff #t then 'foo else 'bar) 'foo)
 (test (iff #f then 'foo else 'bar) 'bar)
-(test (iff #f then (wrong "wrong")) #f)
-(test (iff #t then 'foo else (wrong "wrong")) 'foo)
-(test (iff #f then (wrong "wrong") else 'bar) 'bar)
+(test (iff #f then (error "error")) #f)
+(test (iff #t then 'foo else (error "error")) 'foo)
+(test (iff #f then (error "error") else 'bar) 'bar)
 
 (define-syntax foo-syntax
   (syntax-rules ()

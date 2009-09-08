@@ -16,5 +16,5 @@
               (cons l r)
               (j (- x 1) (cons x r))))))
     (if (> l h)
-        (wrong "iota: bad range" (list l h)))
+        (error "iota: bad range" (list l h)))
         (j h '())))

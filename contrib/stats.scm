@@ -390,10 +390,10 @@
   (define (st:pctile n values)
     (let ((values (->values values)))
       (cond ((not (<= 1 n 100))
-              (wrong "pctile: first argument N must be 1 <= N <= 100"))
+              (error "pctile: first argument N must be 1 <= N <= 100"))
             ((or (null? values)
                  (null? (cdr values)))
-              (wrong "pctile: too few values" values))
+              (error "pctile: too few values" values))
             (else
               (let ((vs (st:sort values))
                     (i  (/ (* (st:size values) n) 100)))
@@ -406,7 +406,7 @@
 
   (define (st:qtile n values)
     (if (not (<= 1 n 4))
-        (wrong "qtile: first argument N must be 1 <= N <= 4")
+        (error "qtile: first argument N must be 1 <= N <= 4")
         (st:pctile (* n 25) values)))
 
   (define (st:median values)

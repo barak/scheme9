@@ -1,10 +1,19 @@
 Change Log
 
+2009-09-06
+	Removed EXPAND-QUASIQUOTE. It is no longer needed, because
+	EXPAND-MACRO can now be used to expand quasiquoted forms.
+	Documented the interpreter start-up process in the man page.
+	Renamed WRONG to ERROR to make it more compatible with
+	SRFI-23 error reporting.
+2009-09-05
+	Rewrote QUASIQUOTE as a macro and removed all quasiquotation
+	functionality from the C part.
 2009-09-03
 	Included "./lib" and "./contrib" in DEFAULT_LIBRARY_PATH, so
 	S9 can load libraries after just compiling it in its build
 	directory.
-	Added the S9:S9 startup hook. When a nullary procedure named
+	Added the S9:S9 start-up hook. When a nullary procedure named
 	S9:S9 exists, it will be called when S9 starts.
 	Added the DUMP-IMAGE primitive, which allows to write a new
 	heap image from the REPL.
@@ -798,7 +807,7 @@ Major change: switching from DEFINE-SYNTAX to DEFINE-MACRO
        Implemented local DEFINEs by rewriting them to LAMBDA and SET!
        (like LETREC).
        Added rc file support: if a ~/.s9fes/rc file exists, it is
-       loaded at startup time.
+       loaded at start-up time.
        Updated test suite.
        Updated man page.
 2007-04-13

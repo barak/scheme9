@@ -15,6 +15,6 @@
          (let ((str (symbol->string x)))
            (if (= (string-length str) 1)
                (string-ref str 0)
-               (wrong "bad symbol in implode" x))))))
+               (error "bad symbol in implode" x))))))
     (string->symbol
       (list->string (map sym->char x)))))

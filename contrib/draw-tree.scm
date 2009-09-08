@@ -65,7 +65,7 @@
           ((eq? n #f)
             (draw-fixed-string "#f"))
           (else
-            (wrong "draw-atom: unknown type" n))))
+            (error "draw-atom: unknown type" n))))
 
   (define (draw-conses n)
     (letrec

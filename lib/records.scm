@@ -99,19 +99,19 @@
                       (valid-fields? (cdr a)))))))
         (if (valid-fields? a)
             (list->vector (cons record-tag a))
-            (wrong "list->record: bad record structure" a))))))
+            (error "list->record: bad record structure" a))))))
 
 (define (record . x) (list->record x))
 
 (define (record->list r)
   (if (record? r)
       (cdr (vector->list r))
-      (wrong "record->list: expected record, got" r)))
+      (error "record->list: expected record, got" r)))
 
 (define (record-box x t)
   (cond ((assq t (record->list x))
           => (lambda (x) (cdr x)))
-        (else (wrong "record-box: no such tag"
+        (else (error "record-box: no such tag"
                      (list 'record: x 'tag: t)))))
 
 (define record-ref
@@ -131,7 +131,7 @@
         ((string? x)    'string)
         ((symbol? x)    'symbol)
         ((vector? x)    'vector)
-        (else           (wrong "type-of: unknown type" x))))
+        (else           (error "type-of: unknown type" x))))
 
 (define (record-equal? r1 r2)
   (letrec
@@ -200,9 +200,9 @@
                     (record-equal? (record-signature (car b))
                                    (record-signature v)))
                 (set-car! b v)
-                (wrong "record-set!: type mismatch"
+                (error "record-set!: type mismatch"
                        (list 'record: r 'tag: t 'value: v)))
-            (wrong "record-set!: type mismatch"
+            (error "record-set!: type mismatch"
                    (list 'record: r 'tag: t 'value: v)))))))
 
 (define (record-type-matches? sig r)
@@ -210,6 +210,6 @@
 
 (define (assert-record-type sig r)
   (if (not (record-type-matches? sig r))
-      (wrong "record type assertion failed"
+      (error "record type assertion failed"
              (list 'signature: sig 'record: r))
       r))

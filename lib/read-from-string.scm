@@ -215,8 +215,7 @@
               (read-pair s))
             ((char=? RPAREN (car s))
               "unexpected closing parenthesis")
-            (else (wrong "can't parse this"
-                         (list->string s))))))
+            (else (error "can't parse this" (list->string s))))))
 
   (define (string->datum s)
     (char-list->datum (string->list s)))

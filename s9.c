@@ -8,7 +8,7 @@
  * Use -DBITS_PER_WORD_64 on 64-bit systems.
  */
 
-#define VERSION "2009-09-03"
+#define VERSION "2009-09-06"
 
 #define EXTERN
 #include "s9.h"
@@ -2832,6 +2832,8 @@ cell pp_display(cell x) {
 	return UNSPECIFIC;
 }
 
+void dump_image(char *p);
+
 cell pp_dump_image(cell x) {
 	char	*path = copy_string(string(cadr(x)));
 	FILE	*f;
@@ -2918,17 +2920,18 @@ cell pp_exact_p(cell x) {
 	return real_inexact_flag(cadr(x))? FALSE: TRUE;
 }
 
-cell expand_quasiquote(cell x);
 cell expand_syntax(cell x);
 
 cell pp_expand_macro(cell x) {
 	x = cadr(x);
 	save(x);
-	x = expand_quasiquote(x);
-	car(Stack) = x;
 	x = expand_syntax(x);
 	unsave(1);
 	return x;
+}
+
+cell pp_error(cell x) {
+	return error(string(cadr(x)), length(x) > 2? caddr(x): NOEXPR);
 }
 
 cell pp_exponent(cell x) {
@@ -3770,10 +3773,6 @@ cell pp_write_char(cell x) {
 	return pp_display(x);
 }
 
-cell pp_wrong(cell x) {
-	return error(string(cadr(x)), length(x) > 2? caddr(x): NOEXPR);
-}
-
 /*----- Evaluator -----*/
 
 PRIM Primitives[] = {
@@ -3812,6 +3811,7 @@ PRIM Primitives[] = {
  { "eof-object?",         pp_eof_object_p,        1,  1, { ___,___,___ } },
  { "eq?",                 pp_eq_p,                2,  2, { ___,___,___ } },
  { "=",                   pp_equal,               2, -1, { REA,___,___ } },
+ { "error",               pp_error,               1,  2, { STR,___,___ } },
  { "exact->inexact",      pp_exact_to_inexact,    1,  1, { REA,___,___ } },
  { "exact?",              pp_exact_p,             1,  1, { REA,___,___ } },
  { "expand-macro",        pp_expand_macro,        1,  1, { ___,___,___ } },
@@ -3887,7 +3887,6 @@ PRIM Primitives[] = {
  { "vector?",             pp_vector_p,            1,  1, { ___,___,___ } },
  { "write",               pp_write,               1,  2, { ___,OUP,___ } },
  { "write-char",          pp_write_char,          1,  2, { CHR,OUP,___ } },
- { "wrong",               pp_wrong,               1,  2, { STR,___,___ } },
  { NULL }
 };
 
@@ -3988,81 +3987,20 @@ cell make_application(char *proc_name) {
 	return alloc(p, app);
 }
 
-int has_property_p(int (*p)(cell x), cell x) {
-	if (atom_p(x)) return 0;
-	if (car(x) == S_quote) return 0;
-	if (p(x)) return 1;
-	while (!atom_p(x)) {
-		if (has_property_p(p, car(x))) return 1;
-		x = cdr(x);
-	}
-	return 0;
-}
-
-int syntax_object_p(cell x) {
+int uses_transformer_p(cell x) {
 	cell	y;
 
+	if (atom_p(x)) return 0;
+	if (car(x) == S_quote) return 0;
 	if (pair_p(x) && symbol_p(car(x))) {
 		y = lookup(car(x), Environment);
 		if (y != NIL && syntax_p(cadr(y))) return 1;
 	}
-	return 0;
-}
-
-int quasiquotation_p(cell x) {
-	return pair_p(x) && car(x) == S_quasiquote;
-}
-
-int uses_transformer_p(cell x) {
-	return has_property_p(syntax_object_p, x);
-}
-
-int uses_quasiquote_p(cell x) {
-	return has_property_p(quasiquotation_p, x);
-}
-
-cell expand_qq(cell x, cell app) {
-	cell	n, a, new;
-
-	if (Error_flag) return x;
-	if (atom_p(x)) return x;
-	if (car(x) == S_quote) return x;
-	if (car(x) == S_quasiquote) {
-		cadadr(app) = x;
-		return _eval(app, 0);
-	}
-	n = a = NIL;
-	save(n);
 	while (!atom_p(x)) {
-		if (n == NIL) {
-			n = alloc(expand_qq(car(x), app), NIL);
-			car(Stack) = n;
-			a = n;
-		}
-		else {
-			new = alloc(expand_qq(car(x), app), NIL);
-			cdr(a) = new;
-			a = cdr(a);
-		}
+		if (uses_transformer_p(car(x))) return 1;
 		x = cdr(x);
 	}
-	cdr(a) = x;
-	unsave(1);
-	return n;
-}
-
-cell expand_quasiquote(cell x) {
-	cell	app;
-
-	if (Error_flag) return x;
-	if (atom_p(x)) return x;
-	if (!uses_quasiquote_p(x)) return x;
-	app = make_application("expand-quasiquote");
-	if (app == NIL) return x;
-	save(app);
-	x = expand_qq(x, app);
-	unsave(1);
-	return x;
+	return 0;
 }
 
 cell expand_all_syntax(cell x) {
@@ -4493,8 +4431,6 @@ void reset_calltrace(void) {
 cell eval(cell x) {
 	reset_calltrace();
 	save(x);
-	x = expand_quasiquote(x);
-	car(Stack) = x;
 	x = expand_syntax(x);
 	unsave(1);
 	x = _eval(x, 0);

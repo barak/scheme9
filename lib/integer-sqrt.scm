@@ -22,5 +22,5 @@
                          2)
                       x))))))
     (if (negative? square)
-        (wrong "integer-sqrt: negative argument" square)
+        (error "integer-sqrt: negative argument" square)
         (sqrt2 square 0))))

@@ -1,8 +1,0 @@
-S9fES  (expand-quasiquote list)  ==>  list
-
-If LIST represents a quasiquoted expression, re-write it to an
-equivalent expression that uses LIST and APPEND in the place of
-quasiquotation. Otherwise return the original list.
-
-(expand-quasiquote '`(a ,b ,@c))  ==>  (append (list 'a) (list b) c)
-(expand-quasiquote '(foo bar))    ==>  (foo bar)

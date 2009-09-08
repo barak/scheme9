@@ -33,7 +33,7 @@
                     (not (symbol? (caar bind*)))
                     (not (pair? (cdar bind*)))
                     (not (null? (cddar bind*))))
-                 (wrong "fluid-let: bad syntax" bind*))
+                 (error "fluid-let: bad syntax" bind*))
                (else (split (cdr bind*)
                             (cons (caar bind*) vars)
                             (cons (gensym) tmps)

@@ -4,7 +4,7 @@
 # Change at least this line:
 PREFIX= /u
 
-VERSION= 20090903
+VERSION= 20090906
 
 # Extras to be added to the heap image
 EXTRA_STUFF=	-f contrib/help.scm \
@@ -155,7 +155,7 @@ deinstall:
 clean:
 	rm -f s9 s9.image s9.1.gz s9.s.txt s9e s9e.scm s9e.image s9e.1.gz \
 		s9sc s9sc.scm s9sc.image s9sc.1.gz mkvfont sys6x12.vf \
-		*.o *.core core s9.B.tgz s9fes-$(VERSION).tar.gz __tmp[12]__ \
+		*.o *.core core s9.C.tgz s9fes-$(VERSION).tar.gz __tmp[12]__ \
 		__testfile__ rpp CHANGES.html LICENSE.html README.html \
 		s9.1.html s9.exe s9e.exe
 
