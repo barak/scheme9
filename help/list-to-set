@@ -1,5 +1,5 @@
 S9 LIB  (list->set list)  ==>  list
 
-Convert list to set. A set is a list of unique members.
+Convert list to set. A set is a list containing unique members.
 
 (list->set '(a b c b c))  ==>  (a b c)

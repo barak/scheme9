@@ -606,7 +606,10 @@
                   x)))))
     (if (negative? square)
         (wrong "sqrt: negative argument" square)
-        (sqrt2 square 0))))
+        (let ((rt (sqrt2 square 0)))
+          (if (= square (* rt rt))
+              (inexact->exact rt)
+              rt)))))
 
 (define (zero? x) (= 0 x))
 

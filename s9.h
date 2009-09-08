@@ -93,10 +93,12 @@
 
 #ifndef DEFAULT_LIBRARY_PATH
  #define DEFAULT_LIBRARY_PATH \
- 		".:" 				\
-		"~/.s9fes:" 			\
-		"/usr/local/share/s9fes:"	\
-		"/usr/local/share/s9fes/contrib"
+ 		"." 				\
+ 		":lib" 				\
+ 		":contrib" 			\
+		":~/.s9fes" 			\
+		":/usr/local/share/s9fes"	\
+		":/usr/local/share/s9fes/contrib"
 #endif
 
 #ifndef IMAGEFILE

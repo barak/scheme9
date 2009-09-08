@@ -1,7 +1,18 @@
 Change Log
 
+2009-09-03
+	Included "./lib" and "./contrib" in DEFAULT_LIBRARY_PATH, so
+	S9 can load libraries after just compiling it in its build
+	directory.
+	Added the S9:S9 startup hook. When a nullary procedure named
+	S9:S9 exists, it will be called when S9 starts.
+	Added the DUMP-IMAGE primitive, which allows to write a new
+	heap image from the REPL.
+	Updated the help pages.
+2009-09-02
+	Made SQRT return an exact value whenever possible.
 2009-08-14
-	Fix: '() printed two ()'s.
+	Fix: '() printed two ()'s (was introduced with #<NaN>).
 	Added the UNSORT procedure to LIB.
 2009-08-11
 	Fixes:
