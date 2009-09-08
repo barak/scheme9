@@ -4,7 +4,7 @@
 # Change at least this line:
 #PREFIX= /u
 
-VERSION= 20090903
+VERSION= 20090906
 
 # Extras to be added to the heap image
 EXTRA_STUFF=	-f contrib/help.scm \
@@ -177,12 +177,12 @@ clean:
 	rm -f s9.1     s9e.1     s9sc.1
 	rm -f s9.1.gz  s9e.1.gz  s9sc.1.gz
 	rm -f s9.1.txt s9e.1.txt s9sc.1.txt
-	rm -f s9 s9e s9sc
-	rm -f s9.image  s9e.image s9sc.image
+	rm -f s9       s9e       s9sc
+	rm -f s9.image s9e.image s9sc.image
+	rm -f          s9e.scm   s9sc.scm
 	rm -f s9.s.txt
-	rm -f s9e.scm s9sc.scm
 	rm -f mkvfont sys6x12.vf \
-		*.o *.core core s9.B.tgz s9fes-$(VERSION).tar.gz __tmp[12]__ \
+		*.o *.core core s9.C.tgz s9fes-$(VERSION).tar.gz __tmp[12]__ \
 		__testfile__ rpp CHANGES.html LICENSE.html README.html \
 		s9.1.html s9.exe s9e.exe s9sc.exe
 

@@ -165,7 +165,7 @@
                     (match-object 'string? 'string=? accessor pattern))
                   ((vector? pattern)
                     (match-object 'vector? 'equal? accessor pattern))
-                  (else (wrong "unknown object in pattern" pattern))))))
+                  (else (error "unknown object in pattern" pattern))))))
 
   (define (fetch-variables pattern accessor)
     (cond ((pair? pattern)
@@ -231,7 +231,7 @@
     `(lambda ,*args*
        (letrec (,@acc-defs)
          (cond ,@clauses
-               (else (wrong "unmatched pattern" (cons ',name ,*args*))))))))
+               (else (error "unmatched pattern" (cons ',name ,*args*))))))))
 
 (define-macro (let-matcher name clauses . body)
   `(letrec ((,name ,(apply make-matcher name clauses))) ,@body))
@@ -263,4 +263,4 @@
               (let ((next (body (cddr in))))
                 (loop (cadr next)
                       (cons `(,(car in) ,@(car next)) out))))
-              (else (wrong "ml-match: syntax error" in))))))
+              (else (error "ml-match: syntax error" in))))))

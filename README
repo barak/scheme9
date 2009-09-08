@@ -55,6 +55,8 @@
 	You can install S9fES (including the goodies) on a Unix system
 	by typing "make install" as root, but before doing so, please
 	edit at least the PREFIX variable at the beginning of Makefile.
+	(Make sure to re-compile S9fES (make clean; make) after changing
+	 PREFIX, because it is used to set up some internal paths).
 
 	Plan 9
 

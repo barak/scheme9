@@ -124,7 +124,7 @@
 
   (define (check-args g n)
     (if (not (= n (length g)))
-        (wrong "wrong number of arguments" g)))
+        (error "wrong number of arguments" g)))
 
   (define (goal-unify rules goals env id result)
     (check-args (car goals) 3)

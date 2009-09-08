@@ -103,13 +103,13 @@
                            (symbol->string (car sym)))
                          ((string? (car sym))
                            (car sym))
-                         (else (wrong "help: expected string or symbol, got"
+                         (else (error "help: expected string or symbol, got"
                                       (car sym)))))
              (name (procname->filename name)))
         (cond ((locate-file (string-append "help/" name))
                 => show-file)
               (else
-                (wrong "help: could not file help page" name)))))))
+                (error "help: could not file help page" name)))))))
 
 (define apropos
   (let ((procname->filename procname->filename))
@@ -120,7 +120,7 @@
                            (symbol->string (car sym)))
                          ((string? (car sym))
                            (car sym))
-                         (else (wrong
+                         (else (error
                                  "apropos: expected string or symbol, got"
                                  (car sym))))))
         (mergesort

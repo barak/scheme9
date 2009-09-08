@@ -39,7 +39,7 @@
 (define (format . args)
 
   (define (abort)
-    (wrong "FORMAT: aborting"))   ; S9fES-specific
+    (error "FORMAT: aborting"))   ; S9fES-specific
 
   (define destination #f)
   (define output-buffer "")

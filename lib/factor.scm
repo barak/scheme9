@@ -44,6 +44,6 @@
                                         (+ 2 d))
                                     (add-expt d e r)))))))))
                 (factorize3 n d r))))))
-    (cond ((< n 1) (wrong "factor: operand not positive" n))
+    (cond ((< n 1) (error "factor: operand not positive" n))
           ((= n 1) 1)
           (else (factorize n 2 '())))))

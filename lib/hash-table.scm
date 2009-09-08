@@ -32,7 +32,7 @@
 (define (make-hash-table . size)
   (if (and (pair? size)
            (not (null? (cdr size))))
-      (wrong "make-hash-table: too many arguments" size))
+      (error "make-hash-table: too many arguments" size))
   (let ((size (if (null? size)
                   997
                   (car size))))

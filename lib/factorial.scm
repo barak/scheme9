@@ -21,7 +21,7 @@
                r
                (f* (- x 1) (* x r))))))
     (cond ((negative? n)
-            (wrong "factorial: negative operand" n))
+            (error "factorial: negative operand" n))
           ((inexact? n)
             (f* n 1))
           (else

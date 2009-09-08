@@ -151,10 +151,10 @@
 
   (define (s9fes-procedure? s)
     (and (memq (string->symbol s)
-               '(delete-file expand-quasiquote expand-macro file-exists?
-                 fold-left fold-right gensym load-from-library locate-file
-                 print set-input-port! set-output-port! stats symbols
-                 trace void wrong))
+               '(delete-file error expand-macro file-exists? fold-left
+                 fold-right gensym load-from-library locate-file print
+                 set-input-port! set-output-port! stats symbols trace
+                 void))
          #t))
 
   (define (print-symbol-or-number c q)
@@ -266,7 +266,7 @@
         ((#\i) (cons p (print-const "#i")))
         ((#\\) (cons p (print-char (read-char))))
         ((#\() (cons p (print-const "#(")))
-        (else  (wrong "unknown # syntax" c)))))
+        (else  (error "unknown # syntax" c)))))
 
   (define (print-quoted c p q type)
     (with-bold-color
@@ -308,7 +308,7 @@
           ((char=? c #\') (print-quoted c p q 'quote))
           ((char=? c #\`) (print-quoted c p q 'quasiquote))
           ((char=? c #\,) (print-unquoted p q))
-          (else           (wrong "unknown character class" c))))
+          (else           (error "unknown character class" c))))
 
   (define (skip-whitespace c)
     (cond ((eof-object? c) c)

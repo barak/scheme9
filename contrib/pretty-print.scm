@@ -105,7 +105,7 @@
         ((procedure? x)
           (pp-simple-form (string->symbol "#<PROCEDURE>")))
         (else
-          (wrong "pp-datum: unknown type"))))
+          (error "pp-datum: unknown type"))))
 
 (define (pp-pair x)
   (pr LP)

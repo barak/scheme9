@@ -23,7 +23,7 @@
 ; (write-canvas string)                                   ==>  unspecific
 
 (if (not (memq 'sc *extensions*))
-    (wrong "The S9SC package requires the \"sc\" extension"))
+    (error "The S9SC package requires the \"sc\" extension"))
 
 (load-from-library "iota.scm")
 (load-from-library "mergesort.scm")
@@ -56,7 +56,7 @@
 
   (define (x-range x0 xN . s)
     (if (not (<= x0 0 xN))
-        (wrong "SC: range must be in range x0..xN")
+        (error "SC: range must be in range x0..xN")
         (let* ((width (if (negative? x0)
                           (if (negative? xN)
                               (- (abs x0) (abs xN))
@@ -75,7 +75,7 @@
 
   (define (y-range y0 yN . s)
     (if (not (<= y0 0 yN))
-        (wrong "SC: range must be in range y0..yN")
+        (error "SC: range must be in range y0..yN")
         (let* ((width (if (negative? y0)
                           (if (negative? yN)
                               (- (abs y0) (abs yN))
@@ -233,15 +233,15 @@
   (define (check-options opts types)
     (cond ((and (not (null? opts))
                 (null? (cdr opts)))
-            (wrong "missing options argument" (car opts)))
+            (error "missing options argument" (car opts)))
           ((not (null? opts))
             (cond ((assq (car opts) types)
                     => (lambda (type)
                          (if ((cadr type) (cadr opts))
                              (check-options (cddr opts) types)
-                             (wrong "type mismatch" `(,(car opts)
+                             (error "type mismatch" `(,(car opts)
                                                       ,(cadr opts))))))
-                  (else (wrong "unknown option" (car opts)))))))
+                  (else (error "unknown option" (car opts)))))))
 
   (define (sc:setup x0 xN y0 yN . opts)
     (check-options opts `((noplot:   ,boolean?)
@@ -348,7 +348,7 @@
       ((2)  scatter-2)
       ((3)  scatter-3)
       ((4)  scatter-4)
-      (else (wrong "scatter-mark: style: must be in range 0..4"
+      (else (error "scatter-mark: style: must be in range 0..4"
             style))))
 
   (define (scatter-plot-fn fn . opts)
