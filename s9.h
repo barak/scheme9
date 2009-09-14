@@ -91,6 +91,11 @@
  #endif
 #endif
 
+#ifndef MAXPATHLEN
+ /* MAXPATHLEN not defined on Hurd, as it is "bogus." */
+ #define MAXPATHLEN 4096
+#endif
+
 #ifndef DEFAULT_LIBRARY_PATH
  #define DEFAULT_LIBRARY_PATH \
  		"." 				\
