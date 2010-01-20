@@ -135,7 +135,7 @@ These S9fES procedures are not in R4RS:
 .ne 3
 .B "(delete\-file string) ==> unspecific
 .in +4
-Delete the file specifed in the
+Delete the file specified in the
 .I string
 argument. If the file does not exist
 or cannot be deleted, report an error.
@@ -182,7 +182,7 @@ is an integer, return 0.
 .in +4
 Return
 .B "#t
-if the file specifed in the
+if the file specified in the
 .I string
 argument exists and otherwise \fB#f\fP.
 .in -4
@@ -321,7 +321,7 @@ Redefinition of these procedures is safe except for
 and
 .BR wrong .
 .SH "VARIABLES
-These variables are pre-defined in the dynamic top-level scope of the
+These variables are predefined in the dynamic top-level scope of the
 interpreter.
 .sp
 .ne 2
