@@ -1,8 +1,9 @@
 scheme9 (2009.09.06-2) unstable; urgency=low
 
   * Default definition for MAXPATHLEN (needed by Hurd port)
+  * Tweak two tiny typos
 
- -- Barak A. Pearlmutter <bap@debian.org>  Mon, 14 Sep 2009 16:13:47 -0400
+ -- Barak A. Pearlmutter <bap@debian.org>  Wed, 20 Jan 2010 18:16:13 +0100
 
 scheme9 (2009.09.06-1) unstable; urgency=low
 
