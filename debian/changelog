@@ -1,8 +1,9 @@
-scheme9 (2009.09.06-3) UNRELEASED; urgency=low
+scheme9 (2009.09.06-3) unstable; urgency=low
 
   * bump deb standards
+  * Switch to dpkg-source 3.0 (git) format
 
- -- Barak A. Pearlmutter <bap@debian.org>  Fri, 19 Mar 2010 22:54:58 +0000
+ -- Barak A. Pearlmutter <bap@debian.org>  Thu, 25 Mar 2010 18:56:41 +0000
 
 scheme9 (2009.09.06-2) unstable; urgency=low
 
