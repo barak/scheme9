@@ -1,8 +1,10 @@
 scheme9 (2009.09.06-4) UNRELEASED; urgency=low
 
   * bump standards version (debian/control)
+  * dh --parallel (debian/rules)
+  * dh 8 (debian/compat, debian/control)
 
- -- Barak A. Pearlmutter <bap@debian.org>  Mon, 02 Aug 2010 14:37:32 +0200
+ -- Barak A. Pearlmutter <bap@debian.org>  Wed, 01 Dec 2010 12:51:07 +0000
 
 scheme9 (2009.09.06-3) unstable; urgency=low
 
