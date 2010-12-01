@@ -2,7 +2,7 @@
 
 # binary-arch binary-indep binary install build clean:
 %:
-	dh $@
+	dh $@ --parallel
 
 override_dh_auto_configure:
 	echo Calling ./configure unnecessary as ./Makefile already patched for debian.
