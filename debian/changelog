@@ -1,11 +1,17 @@
-scheme9 (2010.10.08-1) UNRELEASED; urgency=low
+scheme9 (2010.11.13-1) unstable; urgency=low
 
   * bump standards version (debian/control)
   * dh --parallel (debian/rules)
   * dh 8 (debian/compat, debian/control)
   * new upstream version
+  * tiny man page tweaks
+  * quilt patches:
+    - migrate some modifications (all but s9(1) man page)
+    - parallel safe tweaks to Makefile
+    - test script search path and parallelisation
+    - silence minor GCC warning
 
- -- Barak A. Pearlmutter <bap@debian.org>  Sat, 19 Feb 2011 15:26:37 +0000
+ -- Barak A. Pearlmutter <bap@debian.org>  Thu, 28 Jul 2011 15:23:07 +0100
 
 scheme9 (2009.09.06-3) unstable; urgency=low
 
