@@ -19,7 +19,8 @@ presume to specify the behavior of EQV? on implementation-dependent
 extensions.
 
 - OBJECT1 and OBJECT2 are both numbers, are numerically equal
-  (see =, section see section 6.5 Numbers).
+  (see =, section see section 6.5 Numbers), and are either both exact
+  or both inexact.
 - OBJECT1 and OBJECT2 are both characters and are the same
   character according to the char=? procedure (section see
   section 6.6 Characters).
@@ -32,6 +33,8 @@ extensions.
 
 The EQV? procedure returns #F if:
 
+- one of ONJECT1 and OBJECT2 is an exact number but the other is an
+  inexact number.
 - OBJECT1 and OBJECT2 are of different types (section see section
   3.4 Disjointness of types).
 - one of OBJECT1 and OBJECT2 is #T but the other is #F.

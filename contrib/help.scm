@@ -1,19 +1,25 @@
 ; Scheme 9 from Empty Space, Function Library
-; By Nils M Holm, 2009
-; See the LICENSE file of the S9fES package for terms of use
+; By Nils M Holm, 2009,2010
+; Placed in the Public Domain
 ;
 ; (help)                     ==>  unspecific
 ; (help symbol | string)     ==>  unspecific
 ; (apropos)                  ==>  list
 ; (apropos symbol | string)  ==>  list
 ;
-; Display the synopsis of the given procedure or keyword.
-; When SYMBOL is described in R4RS, produce its R4RS entry,
-; otherwise display a S9FES-specific summary. When no symbol
-; is passed to help, it explains itself.
+; (load-from-library "help.scm")
 ;
-; APROPOS returns a list of all procedure names for which
-; help pages exist.
+; Display the synopsis of the given procedure or keyword. When
+; SYMBOL is described in R4RS, produce its R4RS entry, otherwise
+; display a S9FES-specific summary. When no argument is passed
+; to HELP, it explains itself.
+;
+; APROPOS returns a list of all procedure names for which help
+; pages exist. When an argument is passed to APROPOS, its output
+; is limited to topics whose name contains the argument.
+;
+; The *LINES-PER-PAGE* variable controls the number of lines
+; to be printed by HELP before prompting.
 ;
 ; (Example): (help 'symbol?)  ==>  unspecific
 ;
@@ -28,55 +34,25 @@
 ;                    (symbol? '())           ==>  #f
 ;                    (symbol? #f)            ==>  #f
 
+(load-from-library "name-to-file-name.scm")
 (load-from-library "read-line.scm")
-(load-from-library "string-contains.scm")
+(load-from-library "string-find.scm")
 (load-from-library "remove.scm")
 (load-from-library "mergesort.scm")
 
 (define *lines-per-page* 20)
 
-(define (procname->filename name)
-  (let xlate ((in  (string->list name))
-        (out ()))
-    (cond ((null? in)
-            (if (string=? name "-")
-                "minus"
-                (apply string-append (reverse out))))
-          ((char=? #\+ (car in))
-            (xlate (cdr in) (cons "plus" out)))
-          ((char=? #\* (car in))
-            (xlate (cdr in) (cons "star" out)))
-          ((char=? #\? (car in))
-            (xlate (cdr in) (cons "p" out)))
-          ((char=? #\! (car in))
-            (xlate (cdr in) (cons "b" out)))
-          ((char=? #\: (car in))
-            (xlate (cdr in) (cons "_" out)))
-          ((char=? #\= (car in))
-            (xlate (cdr in) (cons "eq" out)))
-          ((and (char=? #\- (car in))
-                (pair? (cdr in))
-                (char=? #\> (cadr in)))
-            (xlate (cddr in) (cons "-to-" out)))
-          ((char=? #\< (car in))
-            (if (and (pair? (cdr in))
-                     (char=? #\= (cadr in)))
-                (xlate (cddr in) (cons "le" out))
-                (xlate (cdr in) (cons "lt" out))))
-          ((char=? #\> (car in))
-            (if (and (pair? (cdr in))
-                     (char=? #\= (cadr in)))
-                (xlate (cddr in) (cons "ge" out))
-                (xlate (cdr in) (cons "gt" out))))
-          (else (xlate (cdr in) (cons (string (car in)) out))))))
-
 (define help
-  (let ((procname->filename procname->filename))
+  (let ((name->file-name name->file-name))
     (lambda sym
 
       (define (more? tty)
-        (display "----- more (enter q to quit) -----")
-        (not (string-contains (read-line tty) "q")))
+        (display "; ----- more (enter q to quit) -----")
+        (let ((s (read-line tty)))
+          (if (eof-object? s)
+              (begin (newline)
+                     #t)
+              (not (string-find "q" s)))))
 
       (define (show-file file)
         (read-line)
@@ -87,8 +63,8 @@
               (let print ((line (read-line))
                           (lno  1))
                 (cond ((eof-object? line)
-                    (newline))
-                  ((and (not (zero? *lines-per-page*))
+                        (newline))
+                      ((and (not (zero? *lines-per-page*))
                             (= lno *lines-per-page*))
                         (if (more? tty)
                             (print line 0)))
@@ -103,16 +79,17 @@
                            (symbol->string (car sym)))
                          ((string? (car sym))
                            (car sym))
-                         (else (error "help: expected string or symbol, got"
-                                      (car sym)))))
-             (name (procname->filename name)))
+                         (else
+                           (error "help: expected string or symbol, got"
+                                  (car sym)))))
+             (name (name->file-name name)))
         (cond ((locate-file (string-append "help/" name))
                 => show-file)
               (else
-                (error "help: could not file help page" name)))))))
+                (error "help: could not find help page" name)))))))
 
 (define apropos
-  (let ((procname->filename procname->filename))
+  (let ((name->file-name name->file-name))
     (lambda sym
       (let* ((name (cond ((null? sym)
                            "")
@@ -120,21 +97,21 @@
                            (symbol->string (car sym)))
                          ((string? (car sym))
                            (car sym))
-                         (else (error
-                                 "apropos: expected string or symbol, got"
-                                 (car sym))))))
+                         (else
+                           (error "apropos: expected string or symbol, got"
+                                  (car sym))))))
         (mergesort
           (lambda (a b)
             (string<=? (symbol->string a)
                        (symbol->string b)))
-          (remove null?
+          (remp null?
                   (map (lambda (x)
                          (let ((s (symbol->string x)))
-                           (if (and (string-contains s name)
+                           (if (and (string-find name s)
                                     (locate-file
                                       (string-append
                                         "help/"
-                                        (procname->filename s))))
+                                        (name->file-name s))))
                                x
                                '())))
                        (symbols))))))))

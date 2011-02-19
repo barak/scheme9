@@ -14,7 +14,8 @@ S9FES_LIBRARY_PATH environment variable as initialized when the
 interpreter launches (or a reasonable default value).
 
 *LOADING* is set to #T when the interpreter loads a file and
-otherwise to #F.
+otherwise to #F. Altering the value of *LOADING* by a program
+will lead to undefined behavior of S9fES.
 
 (cons 1 2)      ==>  (1 . 2)
 (car **)        ==>  1

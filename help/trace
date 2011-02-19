@@ -1,0 +1,14 @@
+S9fES  (trace symbol ...)  ==>  list | #t
+       (trace #t)          ==>  list | #t
+       (trace)             ==>  list | #t
+
+Trace the procedures or syntax objects bound to the given
+symbols. When #T is passed to trace, trace all procedures
+and syntax objects (expect lots of output!). When no arguments
+are passed to it, disable tracing. TRACE returns the symbols
+that were being traced before its invocation.
+
+(trace 'foo)       ==>  ()
+(trace 'bar 'baz)  ==>  (foo)
+(trace #t)         ==>  (bar baz foo)
+(trace)            ==>  #t

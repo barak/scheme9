@@ -1,6 +1,6 @@
 ; Scheme 9 from Empty Space, Function Library
-; By Nils M Holm, 2009
-; See the LICENSE file of the S9fES package for terms of use
+; By Nils M Holm, 2009,2010
+; Placed in the Public Domain
 ;
 ; (draw-tree object)  ==>  unspecific
 ;
@@ -9,17 +9,17 @@
 ; and cdr parts. Conses with a cdr value of () are represented
 ; by [o|/].
 ;
-; (Example): (draw-tree '((a . b) (c d)))  ==>  unspecific
+; (Example): (draw-tree '((a) (b . c) (d e)))  ==>  unspecific
 ;
-;            Output:  [o|o]---[o|o]--- ()
-;                      |       |
-;                      |      [o|o]---[o|o]--- ()
+;            Output:  [o|o]---[o|o]---[o|/]
 ;                      |       |       |
-;                      |       c       d
-;                      |
-;                     [o|o]--- b
-;                      |
-;                      a
+;                     [o|/]    |      [o|o]---[o|/]
+;                      |       |       |       |
+;                      a       |       d       e
+;                              |
+;                             [o|o]--- c
+;                              |
+;                              b
 
 (define (draw-tree n)
 
@@ -36,7 +36,8 @@
   (define (members-of x) (cdr x))
 
   (define (done? x)
-    (and (visited? x)
+    (and (pair? x)
+         (visited? x)
          (null? (cdr x))))
 
   (define (void) (if #f #f))
@@ -103,8 +104,8 @@
     (letrec
       ((skip2
          (lambda (n)
-           (cond ((null? n)
-                   '())
+           (cond ((not (pair? n))
+                   n)
                  ((or (empty? (car n))
                       (done? (car n)))
                    (skip2 (cdr n)))
@@ -113,14 +114,19 @@
       (skip2 n)))
 
   (define (remove-trailing-nothing n)
-    (reverse (skip-empty (reverse n))))
+    (reverse! (skip-empty (reverse n))))
+
+  (define (all-vertical? n)
+    (or (not (pair? n))
+             (and (null? (cdr n))
+                  (all-vertical? (car n)))))
 
   (define (draw-members n)
     (letrec
       ((d-members
          (lambda (n r)
            (cond ((not (pair? n))
-                   (reverse r))
+                   (reverse! r))
                  ((empty? (car n))
                    (draw-fixed-string "")
                    (d-members (cdr n)
@@ -132,6 +138,10 @@
                  ((null? (cdr n))
                    (d-members (cdr n)
                               (cons (draw-final (car n)) r)))
+                 ((all-vertical? (car n))
+                   (draw-fixed-string "[o|/]")
+                   (d-members (cdr n)
+                              (cons (caar n) r)))
                  (else
                    (draw-fixed-string "|")
                    (d-members (cdr n)

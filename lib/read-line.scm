@@ -1,6 +1,6 @@
 ; Scheme 9 from Empty Space, Function Library
 ; By Nils M Holm, 2009
-; See the LICENSE file of the S9fES package for terms of use
+; Placed in the Public Domain
 ;
 ; (read-line)             ==>  string
 ; (read-line input-port)  ==>  string
@@ -18,9 +18,10 @@
          (cond ((eof-object? c)
                  (if (null? s)
                      c
-                     (list->string (reverse s))))
+                     (list->string (reverse! s))))
                ((char=? c #\newline)
-                 (list->string (reverse s)))
-               (else (collect-chars (apply read-char port)
+                 (list->string (reverse! s)))
+               (else
+                 (collect-chars (apply read-char port)
                                     (cons c s)))))))
     (collect-chars (apply read-char port) '())))

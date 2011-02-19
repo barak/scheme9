@@ -1,11 +1,1 @@
-R4RS 6.5.5  (= number1 number2 ...)   ==>  boolean
-            (< number1 number2 ...)   ==>  boolean
-            (> number1 number2 ...)   ==>  boolean
-            (<= number1 number2 ...)  ==>  boolean
-            (>= number1 number2 ...)  ==>  boolean
-
-These procedures return #T if their arguments are (respectively):
-equal, monotonically increasing, monotonically decreasing, monotonically
-nondecreasing, or monotonically nonincreasing.
-
-These predicates are required to be transitive.
+eq

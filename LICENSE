@@ -1,13 +1,15 @@
 
-Scheme 9 from Empty Space -- A Comprehensible Scheme Interpreter
-By Nils M Holm 2007,2008,2009
+Scheme 9 from Empty Space
+A Portable Scheme Interpreter with a Unix Interface
+By Nils M Holm, 2007-2010
 
-Don't worry, be happy.
+This code is free. FREE! What's so hard to understand about this?
+It is in public domain. Neither mine nor yours. Do whatever you
+want with it. Now go and hack it instead of brooding about some
+legal stuff.
 
-Frankly, life's too short to deal with legal stuff, so
-
-  * do whatever you want with my code;
-  * if the code doesn't work, don't blame me.
+The following section in short means: "If this code should break
+something, don't blame me." Just in case.
 
 Disclaimer:
 

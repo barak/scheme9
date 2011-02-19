@@ -1,8 +1,10 @@
 ; Scheme 9 from Empty Space, Function Library
 ; By Nils M Holm, 2009
-; See the LICENSE file of the S9fES package for terms of use
+; Placed in the Public Domain
 ;
 ; (program? object)  ==>  boolean
+;
+; (load-from-library "programp.scm")
 ;
 ; Return #T, if OBJECT is a syntactically correct Scheme program.
 ; This program does not implement all of R4RS. Caveat utilitor.
@@ -16,7 +18,7 @@
   (define INF #f)
 
   (define (list-of-programs? x)
-    (for-all program? (cdr x)))
+    (for-all program? x))
 
   (define (of-length? min max x)
     (let ((k (length x)))
@@ -70,39 +72,39 @@
          (valid-lambda? x)))
 
   ; Not in R4RS
-  (define (valid-define-macro? x)
+  (define (valid-alt-define-syntax? x)
     (and (of-length? 3 3 x)
          (or (and (pair? (cadr x))
                   (argument-list? (cadr x))
                   (program? (caddr x)))
              (and (symbol? (cadr x))
-                  (lambda-expression? (caddr x))))))
+                  (program? (caddr x))))))
 
   (define (valid-define-syntax? x)
-    (and (of-length? 3 3 x)
-         (symbol? (cadr x))
-         (list? (caddr x))
-         (let ((x (caddr x)))
-           (and (not (null? x))
-                (eq? 'syntax-rules (car x))
-                (list? (cadr x))
-                (for-all symbol? (cadr x))
-                (let ((clauses (cddr x)))
-                  (for-all (lambda (x)
-                             (and (list? x)
-                                  (of-length? 2 2 x)
-                                  (pair? (car x))
-                                  (symbol? (caar x))
-                                  (pair? (cdr x))))
-                           clauses))))))
-
+    (or (valid-alt-define-syntax? x)
+        (and (of-length? 3 3 x)
+             (symbol? (cadr x))
+             (list? (caddr x))
+             (let ((x (caddr x)))
+               (and (not (null? x))
+                    (eq? 'syntax-rules (car x))
+                    (list? (cadr x))
+                    (for-all symbol? (cadr x))
+                    (let ((clauses (cddr x)))
+                      (for-all (lambda (x)
+                                 (and (list? x)
+                                      (of-length? 2 2 x)
+                                      (pair? (car x))
+                                      (symbol? (caar x))
+                                      (pair? (cdr x))))
+                               clauses)))))))
 
   (define (valid-delay? x)
     (and (of-length? 1 1 (cdr x))
          (program? (cadr x))))
 
   (define (valid-do? x)
-    (and (of-length? 2 3 (cdr x))
+    (and (of-length? 2 INF (cdr x))
          (list? (cadr x))
          (for-all (lambda (x)
                     (and (list? x)
@@ -111,7 +113,7 @@
                          (for-all program? (cdr x))))
                   (cadr x))
          (list? (caddr x))
-         (of-length? 2 INF (caddr x))
+         (of-length? 1 INF (caddr x))
          (for-all program? (caddr x))
          (for-all program? (cdddr x))))
 
@@ -163,7 +165,6 @@
                ((case)          (valid-case? x))
                ((cond)          (valid-cond? x))
                ((define)        (valid-define? x))
-               ((define-macro)  (valid-define-macro? x))  ; S9fES extension
                ((define-syntax) (valid-define-syntax? x))
                ((delay)         (valid-delay? x))
                ((do)            (valid-do? x))

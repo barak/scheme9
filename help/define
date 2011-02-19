@@ -1,4 +1,6 @@
-R4RS 5.2 Definitions
+R4RS 5.2  (define <variable> <expression>)         ==>  unspecific
+          (define (<variable> <formals>) <body>)   ==>  unspecific
+          (define (<variable> . <formal>) <body>)  ==>  unspecific
 
 Definitions are valid in some, but not all, contexts where expressions
 are allowed. They are valid only at the top level of a <program>

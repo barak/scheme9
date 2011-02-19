@@ -1,6 +1,6 @@
 ; Scheme 9 from Empty Space, Function Library
 ; By Nils M Holm, 2009
-; See the LICENSE file of the S9fES package for terms of use
+; Placed in the Public Domain
 ;
 ; (make-partitions integer)  ==>  list
 ;
@@ -18,13 +18,13 @@
     ((partition
        (lambda (n)
          (cond ((zero? n) '(()))
-               ((= n 1) '((1)))
-               (else (apply append
-                            (map (lambda (x)
-                                   (map (lambda (p)
-                                          (cons x p))
-                                        (partition (- n x))))
-                                 (iota 1 n)))))))
+               ((= n 1)   '((1)))
+               (else      (apply append
+                                 (map (lambda (x)
+                                        (map (lambda (p)
+                                               (cons x p))
+                                             (partition (- n x))))
+                                      (iota 1 n)))))))
      (filter-descending
        (lambda (x)
          (filter (lambda (p)
@@ -32,4 +32,4 @@
                        (null? (cdr p))
                        (apply >= p)))
                  x))))
-    (reverse (filter-descending (partition n)))))
+    (reverse! (filter-descending (partition n)))))

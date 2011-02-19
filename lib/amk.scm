@@ -1,18 +1,23 @@
 ; Scheme 9 from Empty Space, Function Library
 ; By Nils M Holm, 2009
-; See the LICENSE file of the S9fES package for terms of use
+; Placed in the Public Domain
 ;
 ; (run* (variable) query)  ==>  list
 ; (run* () query)          ==>  list
 ;
+; (load-from-library "amk.scm")
+;
 ; Run the given AMK (Another Micro Kanren) query and return its
-; result, if any. See the book "Logic Programming in Scheme"
-; (http://www.t3x.org/nmh/book-pdfs/) for an introduction to AMK.
-; If a variable is given, return all values for that variable
-; that satisfy the query.
+; result, if any. See the book "Logic Programming in Scheme"[1]
+; for an introduction to AMK. If a variable is given, return all
+; values for that variable that satisfy the query.
+; 
+; [1] The book is now out of print.
 ;
 ; Example:   (run* (vq) (appendo vq (_) '(a b c)))
 ;              ==>  (() (a) (a b) (a b c))
+
+(load-from-library "syntax-rules.scm")
 
 ; ----- Core -----
 
@@ -52,9 +57,11 @@
     (cond ((eqv? x y) s)
           ((var? x) (ext-s x y s))
           ((var? y) (ext-s y x s))
-          ((or (atom? x) (atom? y)) #f)
-          (else (let ((s (unify (car x) (car y) s)))
-                  (and s (unify (cdr x) (cdr y) s)))))))
+          ((or (atom? x) (atom? y))
+            #f)
+          (else
+            (let ((s (unify (car x) (car y) s)))
+              (and s (unify (cdr x) (cdr y) s)))))))
 
 (define (== x y)
   (lambda (s)
@@ -141,9 +148,8 @@
 
 (define (circular? x s)
   (let ((v (walk x s)))
-    (if (eq? x v)
-        #f
-        (occurs? x (walk x s) s))))
+    (and (not (eq? x v))
+         (occurs? x (walk x s) s))))
 
 (define (walk* x s)
   (letrec
@@ -173,9 +179,11 @@
          (let ((v (walk v s)))
            (cond ((var? v)
                    (ext-s v (reify-name (length s)) s))
-                 ((atom? v) s)
-                 (else (reify-s (cdr v)
-                                (reify-s (car v) s))))))))
+                 ((atom? v)
+                   s)
+                 (else
+                   (reify-s (cdr v)
+                            (reify-s (car v) s))))))))
     (reify-s v empty-s)))
 
 (define (run x g)

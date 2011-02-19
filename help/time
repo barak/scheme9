@@ -1,0 +1,15 @@
+S9 LIB  (time form)  ==>  object
+
+The TIME procedures evaluates FORM, measuring the number of
+allocation, reductions, etc with the STATS procedure. It also
+measures the time spent reducing FORM. When finished, it prints
+some interesting data and returns the normal form of FORM.
+The FORM must be quoted or it will be reduced *before* running
+TIME.
+
+(time '(begin (expt 2 10000) #t))  ==>  #t
+;               1.8990 seconds
+;                  350 reduction steps
+;            8,327,846 conses allocated
+;            8,329,127 total nodes allocated
+;                   73 garbage collections

@@ -1,6 +1,6 @@
 ; Scheme 9 from Empty Space, Function Library
 ; By Nils M Holm, 2009
-; See the LICENSE file of the S9fES package for terms of use
+; Placed in the Public Domain
 ;
 ; (read-file)             ==>  list
 ; (read-file input-port)  ==>  list
@@ -19,7 +19,8 @@
     ((collect-lines
        (lambda (ln lines)
          (cond ((eof-object? ln)
-                 (reverse lines))
-               (else (collect-lines (apply read-line port)
-                                    (cons ln lines)))))))
+                 (reverse! lines))
+               (else
+                 (collect-lines (apply read-line port)
+                                (cons ln lines)))))))
     (collect-lines (apply read-line port) '())))

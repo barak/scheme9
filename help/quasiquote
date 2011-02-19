@@ -1,4 +1,6 @@
-R4RS 4.2.6 Quasiquotation
+R4RS 4.2.6  (quasiquote <template>)          ==>  object
+            (unquote <expression>)           ==>  object
+            (unquote-splicing <expression>)  ==>  list
 
 (quasiquote <template>) ==> datum
 `<template> ==> datum
@@ -51,3 +53,16 @@ lists whose car is one of these symbols may vary between implementations.
 Unpredictable behavior can result if any of the symbols QUASIQUOTE,
 UNQUOTE, or UNQUOTE-SPLICING appear in positions within a <template>
 otherwise than as described above.
+
+NOTE: S9fES supports only that subset of quasiquote templates that
+can be resolved completely at expansion time, without leaving any
+instances of QUASIQUOTE, UNQUOTE, or UNQUOTE-SPLICING in the resulting
+form. E.g.
+
+`(+ 1 ,(* 2 `,(+ 3 4)))
+
+works, but
+
+`(+ 1 `,(* 2 ,(+ 3 4)))
+
+does not, because it attempts to quasiquote QUASIQUOTE.

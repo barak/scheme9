@@ -1,0 +1,23 @@
+S9 LIB  (and-let* <binding> ... <body>)  ==>  object
+
+        (load-from-library "and-letstar.scm")
+
+Each <binding> has the form (<variable> <expression>) and binds
+the given <variable> to the normal form of <expression>.
+
+Like LET* AND-LET* evaluates its <bindings>s in sequence, so each
+<expression> is evaluated in an environment that includes all previous
+<binding>s of the same AND-LET*. Unlike LET*, though, AND-LET* returns
+#F immediately as soon as one of its <expression>s evaluates to #F.
+Only when all <expression>s evaluate to non-#F values, it evaluates
+<body> and returns its value.
+
+This is only a subset of SRFI-2 AND-LET*.
+
+(and-let* ((a '((x . 1)))
+           (a (assq 'x a)))
+  (cdr a))                   ==>  1
+
+(and-let* ((a '((x . 1)))
+           (a (assq 'z a)))
+  (cdr a))                   ==>  #f

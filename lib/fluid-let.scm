@@ -1,6 +1,6 @@
 ; Scheme 9 from Empty Space, Function Library
 ; By Nils M Holm, 2009
-; See the LICENSE file of the S9fES package for terms of use
+; Placed in the Public Domain
 ;
 ; (fluid-let ((variable expression) ...) expression ...)  ==>  object
 ;
@@ -19,10 +19,10 @@
 ;                (fluid-let ((a 1))
 ;                  (f))))                ==>  1
 
-; In case your Scheme does not support DEFINE-MACRO,
+; In case your Scheme does not support low-level macros,
 ; try "fluid-let-sr.scm", which uses SYNTAX-RULES.
 
-(define-macro (fluid-let bind* . body)
+(define-syntax (fluid-let bind* . body)
   (letrec
     ((split
        (lambda (bind* vars tmps args)
@@ -34,10 +34,11 @@
                     (not (pair? (cdar bind*)))
                     (not (null? (cddar bind*))))
                  (error "fluid-let: bad syntax" bind*))
-               (else (split (cdr bind*)
-                            (cons (caar bind*) vars)
-                            (cons (gensym) tmps)
-                            (cons (cadar bind*) args)))))))
+               (else
+                 (split (cdr bind*)
+                        (cons (caar bind*) vars)
+                        (cons (gensym) tmps)
+                        (cons (cadar bind*) args)))))))
       (let* ((var-tmp-arg* (split bind* '() '() '()))
              (var* (car var-tmp-arg*))
              (tmp* (cadr var-tmp-arg*))

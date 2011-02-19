@@ -1,6 +1,6 @@
 ; Scheme 9 from Empty Space, Function Library
 ; By Nils M Holm, 2009
-; See the LICENSE file of the S9fES package for terms of use
+; Placed in the Public Domain
 ;
 ; (exists procedure list ...)  ==>  boolean
 ;
@@ -24,13 +24,12 @@
      (cdr-of
        (lambda (a)
          (map cdr a)))
-     (any-null?
+     (any-null
        (lambda (a)
-         (and (memq #t (map null? a)) #t)))
+         (memq '() a)))
      (exists*
        (lambda (a*)
-         (if (any-null? a*)
-             #f
-             (or (apply p (car-of a*))
-                 (exists* (cdr-of a*)))))))
+         (and (not (any-null a*))
+              (or (apply p (car-of a*))
+                  (exists* (cdr-of a*)))))))
     (exists* a*)))

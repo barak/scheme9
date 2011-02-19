@@ -1,8 +1,8 @@
 ; Common LISP-style text output formatter for R4RS Scheme
-; Copyright (C) 1992, 1993 by Dirk Lutzebaeck.
+; By Dirk Lutzebaeck, 1992, 1993
 ; With some additional hacking by Nils M Holm in 2009.
 ; Authors of the original version (< 1.4) were Ken Dickey and Aubrey Jaffer.
-; See the LICENSE file of the S9fES package for terms of use.
+; Placed in the Public Domain by the authors.
 ;
 ; (format #t string-f object ...)           ==>  string | #t | #f
 ; (format #f string-f object ...)           ==>  string | #t | #f
@@ -66,9 +66,12 @@
         (cond ((char=? ch #\newline) "newline")
                 ((<= 0 int-rep 32)
                   (vector-ref ascii-non-printable-charnames int-rep))
-                ((= int-rep 127) "del")
-                ((>= int-rep 128) (number->string int-rep 8))
-                (else (string ch))))))
+                ((= int-rep 127)
+                  "del")
+                ((>= int-rep 128)
+                  (number->string int-rep 8))
+                (else
+                  (string ch))))))
 
   (define (obj->str-padded pad-left obj options params)
     (let ((mincol 0)
@@ -89,7 +92,7 @@
                             (abs mincol) minpad padchar)))))
 
   (define (num->str-padded modifier number params radix-num radix-prefix)
-    (if (not (number? number)) (error "argument not a number"))
+    (if (not (number? number)) (format-error "argument not a number"))
     (let ((mincol 0)
           (padchar #\space)
           (commachar #\,)
@@ -208,9 +211,10 @@
                                     (loop (cdr a) #f)))
                    ((null? a)
                      "")
-                   (else (string-append
-                           " . "
-                           (to-str a slashify readproof)))))
+                   (else
+                     (string-append
+                       " . "
+                       (to-str a slashify readproof)))))
            ")"))
        ((eof-object? obj)
          (if readproof "\"#<eof-object>\"" "#<eof-object>"))
@@ -269,7 +273,7 @@
   (define (out-char ch)
     (out-str (string ch)))
 
-  (define (error . args*)
+  (define (format-error . args*)
     (let ((format-args args))
       (format #t "FORMAT: ")
       (apply format `(#t ,@args*))
@@ -312,7 +316,7 @@
        (peek-next-char
          (lambda ()
            (if (>= pos format-string-len)
-               (error "illegal format string")
+               (format-error "illegal format string")
                (string-ref format-string pos))))
 
        (one-positive-integer?
@@ -332,7 +336,7 @@
        (next-arg
          (lambda ()
            (if (>= arg-pos arg-len)
-               (error "missing argument(s)"))
+               (format-error "missing argument(s)"))
            (add-arg-pos 1)
            (list-ref arg-list (- arg-pos 1))))
 
@@ -340,7 +344,7 @@
          (lambda ()
            (add-arg-pos -1)
            (if (negative? arg-pos)
-               (error "missing backward argument(s)"))
+               (format-error "missing backward argument(s)"))
            (list-ref arg-list arg-pos)))
 
        (rest-args
@@ -349,7 +353,7 @@
 
        (fail
          (lambda (fmt . args)
-           (apply error
+           (apply format-error
                   `(,(string-append fmt ", POS: \"~a\"")
                     ,@args
                     ,(string-append
@@ -790,7 +794,7 @@
     arg-pos))                        ; return position in arg. list
 
   (if (< (length args) 2)
-      (error "not enough arguments"))
+      (format-error "not enough arguments"))
   (let ((destination (car args))
         (format-string (cadr args))
         (arg-list (cddr args)))
@@ -800,18 +804,18 @@
               (if destination (current-output-port) #f))
             ((output-port? destination) destination)
             ((string? destination) destination)
-            (else (error "illegal destination `~a'" output-port))))
+            (else (format-error "illegal destination `~a'" output-port))))
     (if (not (string? format-string))
-        (error "illegal format string `~a'" format-string))
+        (format-error "illegal format string `~a'" format-string))
     (set! output-buffer "")
     (set! case-conversion #f) ; modifier case conversion procedure
     (let ((arg-pos (format-work format-string arg-list))
           (arg-len (length arg-list)))
       (cond
         ((< arg-pos arg-len)
-          (error "~a superfluous argument~:p" (- arg-len arg-pos)))
+          (format-error "~a superfluous argument~:p" (- arg-len arg-pos)))
         ((> arg-pos arg-len)
-          (error "~a missing argument~:p" (- arg-pos arg-len)))
+          (format-error "~a missing argument~:p" (- arg-pos arg-len)))
         ((output-port? destination)
           (display output-buffer destination)
           #t)

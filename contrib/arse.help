@@ -1,0 +1,691 @@
+ ==== SURVIVAL GUIDE ==========================================================
+ [x] denotes pressing the key labeled 'x'   [^X] denotes pressing [control]+[x]
+ Quick lookup with [^A]:  MOTION EDITING MISC BLOCK BUFFER COLON OPTIONS SCHEME
+
+ Many commands can be prefixed with a    ----- Edit Text ----------------------
+ count, e.g.: 2[d][w] deletes two words  [i]text[ESC]  insert before cursor
+                                         [a]text[ESC]  append after cursor
+ ----- Move the Cursor ----------------- [I]text[ESC]  ins. at first non-blank
+ [h] [j] [k] [l]  move the cursor        [A]text[ESC]  append to end of line
+ [^F] [^B]    move to next/prev. page    [o]text[ESC]  open new line below
+ [G]          go to end of buffer        [O]text[ESC]  open new line above
+ 1[G]         go to top of buffer        [R]text[ESC]  replace text
+ [w] [b]      go to next/prev. word      [r]c [r][CR]  repl. char / break line
+ [0] [^]      first (non-blank) column   [J]           join lines
+ [$]          go to end of line          
+ [/]text[CR]  search text                ----- Delete/Copy/Paste Text ---------
+                                         [x] [X]   delete char / backspace
+ ----- Buffer Commands ----------------- [d][d]    delete line
+ [Z][Z]      save and exit               [y][y]    yank (copy) line
+ :w          save text                   ['][m]    set marker
+ :w name     save to named file          [d]['][m] delete up to marker
+ :q!         abandon changes and exit    [y]['][m] yank (copy) up to marker
+                                         [p] [P]   paste below / above
+ ----- [TAB] returns to the text ------- [u] [.]   undo / repeat, redo
+
+ ==== MOTION COMMANDS =========================================================
+
+  [^A]     Move to current identifier.
+           Extract the symbol right from the cursor, copy it to the search
+           buffer and search its next occurrence.
+
+ #[^H]     Move the cursor to the left.
+
+ #[^J]     Move the cursor down in the same column.
+
+ #[CR]     Move the cursor down and go to first non-blank column.
+
+ #[^N]     Move the cursor down in the same column.
+
+ #[space]  Move the cursor to the right.
+
+  [0]      Move the cursor to the first column.
+
+  [$]      Move the cursor to the end of the line.
+           When the line is longer than the screen is wide, move to the
+           rightmost screen column.
+
+ #[b]      Move the cursor to the previous word.
+ #[B]      Move the cursor to the previous bigword.
+           For definitions of "word" and "bigword", see the "wordset" option.
+
+ #[e]      Move the cursor to the end of the next word.
+ #[E]      Move the cursor to the end of the next bigword.
+           For definitions of "word" and "bigword", see the "wordset" option.
+
+ #[f]c     Move to the next occurence of the character c.
+ #[F]c     Move to the previous occurrence of the character c.
+
+ #[G]      Go to the specified line number.
+           When no line number is given, go to the last line of the buffer.
+
+ #[h]      Move the cursor to the left.
+
+ #[H]      Move to the top of the screen.
+           When a count is given, move to the n'th line of the screen.
+
+ #[j]      Move the cursor down in the same column.
+
+ #[k]      Move the cursor up in the same column.
+
+ #[l]      Move the cursor to the right.
+
+ #[L]      Move the cursor to the bottom of the screen.
+           When a count is given, move to the n'th line from the bottom of
+           the screen.
+
+  [M]      Move the cursor to the middle of the screen.
+
+  [n]      Search next occurrence.
+  [N]      Search previous occurence.
+           Both of these commands search for the text currently stored in the
+           the search buffer. [n] searches in the same direction as the search
+           command used to store text in the buffer, i.e. it searches forward
+           when the original search was initiated with the [/] command and
+           backwards when the search was done with the [?] command.
+           [N] reverses the direction of the original search.
+
+ #[t]c     Move up to the next occurence of the character c.
+ #[T]c     Move up to the previous occurence of the character c.
+           Unlike [f] and [F] these commands move the cursor to the position
+           right before the specified character, but not onto the character.
+
+ #[w]      Move the cursor to the next word.
+ #[W]      Move the cursor to the next bigword.
+           For definitions of "word" and "bigword", see the "wordset" option.
+
+  [%]      Move matching parenthesis.
+
+  ['][m]   Move to line containing the marker.
+  [`][m]   Move to the line and column containing the marker.
+           When a command can be applied to individual columns, like [y]ank
+           and [d]elete, [`] will operate on columns, while ['] will operate
+           on lines.
+
+ #[(]      Move to beginning of expression.
+ #[)]      Move to end of expression.
+           An "expression" is a sequence of characters beginning with an
+           opening parenthesis and ending with a closing parenthesis.
+
+ #[+]      Move the cursor down and go to first non-blank column.
+
+ #[;]      Repeat find character.
+ #[,]      Reverse find character.
+           Repeat the most recent [f],[t],[F], or [T] command. [,] reverses the
+           direction of the find character command.
+
+  [/]text[CR]      Search forward.
+  [?]text[CR]      Search backward.
+           Both of these commands prompt for text to search and store it in
+           the search buffer. [/] searches toward the end of the buffer and
+           [?] toward the top of the buffer.
+           When the "regex" option is set, these command search for regular
+           expressions, otherwise they search for literal text.
+
+  [^]      Go to the first non-blank column of the current line.
+
+ #[{]      Go to beginning of paragraph.
+ #[}]      Go to end of paragraph.
+           A "paragraph" is a sequence of lines delimited by blank lines (of
+           the top or bottom of the buffer).
+
+ #[|]      Go to column.
+           Go to the specified column. When no count is given, go to the
+           first column.
+
+ ==== EDITING COMMANDS ========================================================
+
+ #[a]text[ESC]  Append text at cursor position.
+                Unlike the [i] command, [a] inserts text *after* the current
+                character.
+
+ #[A]text[ESC]  Append text to the end of the line.
+
+ #[d][d]        Delete current line.
+
+ #[d][w]        Delete current word.
+    
+ #[d]<motion>   Delete region.
+                When [d] is followed by a cursor motion command, it deletes
+                all characters between the current cursor position and the
+                destination of that motion command. E.g.:
+                [d][}]     delete to the end of the paragraph;
+                [d][%]     delete to matching parenthesis;
+                [d]['][m]  delete to line containing the marker;
+                [d][t][x]  delete up to next 'x' character.
+
+  [D]           Delete to end of line.
+
+ #[i]text[ESC]  Insert text at cursor position.
+
+ #[I]text[ESC]  Insert text at the beginning of the line.
+                Note that this command actually inserts at the
+                first *non-blank* position of the line.
+
+ #[J]           Join the current line with the next one.
+                Use [r][CR] to break up a line.
+
+ #[o]text[ESC]  Open a new line below the current one.
+
+ #[O]text[ESC]  Open a new line above the current one.
+
+ #[p]           Paste deleted or yanked text after cursor.
+ #[P]           Paste deleted or yanked text before cursor.
+                When deleting or yanking columns of a single line, these
+                commands will insert columns of text, otherwise they will
+                insert lines. When inserting lines, [p] will paste below
+                the current line and [P] will paste above.
+
+ #[r]c          Replace the current character with c.
+                When c is [CR], the current line is broken up into two
+                separate lines at the cursor position. When breaking up a
+                line the count is ignored.
+
+  [R]text[ESC]  Replace characters.
+
+ #[x]           Delete character right from cursor.
+ #[X]           Delete character left from the cursor.
+
+ #[y][y]        Yank (copy) current line.
+
+ #[y][w]        Yank (copy) current word.
+    
+ #[y]<motion>   Yank (copy) region.
+                When [y] is followed by a cursor motion command, it yanks
+                all characters between the current cursor position and the
+                destination of that motion command.
+                E.g.:
+                [y][}]     yank to the end of the paragraph;
+                [y][%]     yank to matching parenthesis;
+                [y]['][m]  yank to line containing the marker;
+                [y][t][x]  yank up to next "x" character.
+
+  [Y]           Yank (copy) to end of line.
+
+ ==== MISCELLANEOUS COMMANDS ==================================================
+
+ #[^B]      Move to previous page.
+
+ #[^D]      Scroll down half a screenful.
+    
+ #[^F]      Move to next page.
+
+  [^G]      Print buffer status.
+
+  [^L]      Repaint screen.
+  [^R]      Repaint screen.
+
+  [.]       Repeat last insert/delete command.
+
+  ['][m]    Set marker at current cursor position.
+
+  [u]       Undo insert/delete commands.
+            [u][u] will undo undo, i.e.: restore the state before undoing
+            the command. Repeating undo will undo multiple changes, e.g:
+            [u][.][.][.] will go back four steps in the undo history. While
+            undoing multiple changes, pressing [u] again will change the
+            direction of undo/redo history traversal. Here is an example:
+
+             +-------------------- undo four commands
+             |           +-------- redo two of the undone commands
+             |           |     +-- undo one of the redone commands
+             |           |     |
+            [u][.][.][.][u][.][u]
+
+ #[z]c      Zero (re-position) line.
+            [z][CR]  move current line to top of the screen;
+            [z][.]   move current line to middle of the screen;
+            [z][-]   move current line to bottom of the screen.
+            When a count is given, the command will move to the
+            specified line. The default is the current line.
+
+ ==== BLOCK COMMANDS ==========================================================
+
+  [!][!]<command>[CR]        Send current line through filter
+  [!]<motion><command>[CR]   Send region through filter
+
+ #[<][<]        Outdent current line
+ #[<]<motion>   Outdent region
+                See [>].
+
+ #[>][>]        Indent current line
+ #[>]<motion>   Indent region
+                The [<] and [>] commands change the indentation of the affected
+                region by an amount of blanks that is specified by the INDENT
+                option. This number can be changed by specifying a count.
+                NOTE: When the cursor is on a '(' or ')' character, [>][>]
+                and [<][<] will change the indentation of the corresponding
+                *expression*.
+
+  [~][~]        Change case of current line
+  [~]<motion>   Change case of region
+
+ ==== BUFFER COMMANDS =========================================================
+
+  [^^]      Edit the previously visited buffer.
+            (Yes, this is [control]-[^].)
+
+  [TAB]     Edit the next buffer in the buffer list.
+            (Rotate buffers.)
+
+  [Z][Z]    Save buffer and exit.
+
+ See below for more buffer commands.
+
+ ==== COLON COMMANDS ==========================================================
+
+ Colon mode is entered by pressing [:] -- hence its name.
+
+ Colon commands are entered at the bottom of the window. The following editing
+ commands can be used in the colon buffer:
+
+     [^A]    Move to the beginning of the buffer.
+     [^E]    Move to the end of the buffer.
+     [^B]    Move to previous character.           (also [left])
+     [^F]    Move to next character.               (also [right])
+     [^U]    Delete buffer.
+     [ESC]   Abort command.
+     [CR]    Run command.
+
+ All colon commands have the following general form:
+
+     [<from>[,<to>]]<command>[!] [<argument> ...]
+
+ The <from> and <to> parts specify the region (in lines) on which the command
+ will operate:
+
+     #   a series of digits indicates a line number;
+     .   indicates the current line;
+     $   indicates the last line in the buffer;
+     'm  indicates the line containing the marker;
+     %   is an abbreviation for 1,$.
+
+ When only <from> is specified, <to> is set to <from>.
+
+ Not all commands expect a region. When none is given, a default is
+ used. Most commands operate on the entire buffer by default, some
+ on the current line. This will be indicated on a per-command basis
+ below.
+
+ :!<command>                 Run shell command              (no lines affected)
+
+     This command passes the given command to a subshell for execution. The
+     editing session is suspended until the command returns. The buffer will
+     not be altered.
+
+
+ :buffer close[!]         Close the current buffer      (whole buffer affected)
+ :bc[!]
+
+     Close the current buffer and start editing the previously selected
+     buffer. This command will fail if there is only one buffer or the
+     current buffer is modified. Attaching a "!" to the command will close
+     the current buffer even if it is modified.
+
+ :buffer list                 List buffers                  (no lines affected)
+ :bl
+
+     List all buffers with buffer number, lines in the buffer, flags and file
+     name. Note that the buffer number may change! Flags include M=modified
+     and T=transient.
+
+ :buffer open #                Open buffer                  (no lines affected)
+ :bo #
+
+     Start editing the buffer with the number # in the buffer list. Note that
+     buffer numbers may change!
+
+ :buffer rotate              Rotate buffers                 (no lines affected)
+ :br
+
+     Start editing the next buffer in the list of buffers.
+
+ :buffer swap                 Swap buffers                  (no lines affected)
+ :bs
+
+     Start editing the previously visited buffer.
+
+ :edit[!] file            Load file into buffer         (whole buffer affected)
+ :e[!] file
+
+     Load the specified file into the current buffer. This command will fail
+     if the text in the buffer is modified. Attaching a "!" to the command
+     will discard the current contents and load the new file anyway.
+
+ :help                      Open help buffer                (no lines affected)
+ :h
+     Display this help file.
+
+ :quit[!]                         Quit                   (all buffers affected)
+ :q[!]
+
+     Quit ARSE. This command will fail if the text in the buffer is modified
+     or if any modified buffers exist. Attaching a "!" to the command will
+     discard all buffers and quit anyway.
+
+ :read                      Read and insert file                  (lines added)
+ :r
+
+     Read the content of the given file and insert it below the current line.
+    
+ :rehash                 Rehash completion symbols          (no lines affected)
+
+     Extract all symbols from the help database and store them in the
+     completion table that is used to auto-complete symbols when pressing
+     [TAB] in insert mode. The table is stored in the ~/.arse.symbols file.
+
+ :<range>s/<old>/<new>/[g]    Substitute text.          (default: current line)
+ :s|...|
+ :s,...,
+
+     Substitute each occurence of the text <old> in the specified range by
+     <new>. Unless the 'g' flag is attached replace only the first occurrence
+     in each line. When 'g' is attached, replace all occurences.
+     s|<old>|<new>| or s,<old>,<new>, may be used when the old or new text
+     contains any '/' characters.
+     When the "regex" option is set, perform regular expression substitution,
+     otherwise operate on literal text.
+    
+ :set option [...]             Set options                  (no lines affected)
+ :set all                    Display options                (no lines affected)
+
+     List of set editor options. See next section.
+
+ :version                    Display version                (no lines affected)
+ :ver
+
+     Display ARSE version.
+
+ :<range>write[!] file         Write lines                 (default: all lines)
+ :<range>w[!] file
+
+     Write the specified range to the given file. When the file exists, do not
+     overwrite it. Attach a '!' to the command to overwrite an existing file.
+     When the current buffer has no name, this command will give it one.
+
+ :<range>write[!]              Write buffer             (whole buffer affected)
+ :<range>w[!]
+
+     Write the current buffer to its associated file. When the buffer is
+     read-only, transient or not modified, do not write the file. Attach a
+     '!' to the command to write a read-only buffer.
+
+ :write-all[!]               Write all buffers           (all buffers affected)
+ :wall[!]
+
+     Attempt to write all modified buffers to their associated files. Writing
+     a buffer fails when the buffer is read-only or has no name. Read-only
+     buffers are written when a '!' is attached to the command.
+
+ :xit[!]                      Save and exit             (whole buffer affected)
+ :x[!]
+
+     Write the current buffer and exit. This is equal to running :w and then
+     :q. (Q.v.)
+
+ ==== OPTIONS =================================================================
+
+ Boolean options are set with  :set option
+               and reset with  :set nooption
+
+ Multiple options may be specified on a single line unless one of them is a
+ string option, e.g.:
+
+     :set noshowmode scroll=10
+
+ but
+
+     :set scheme-repl="s9 -q"
+     :set scroll=10
+
+ The double quotes around string options are optional, but if one is specified,
+ both must be present. (A single quote character will be considered to be part
+ of the option.)
+
+ Options placed in the file $HOME/.arserc will be read at startup time. All
+ options are set on a per-buffer basis. The current set of options is copied
+ to fresh buffers when they are created. The following options exist:
+
+ autocenter   (ac)    boolean    default: noautocenter
+
+     When searching text, automatically center matching lines (as if pressing
+     [z][.]). When the option is off, scroll as little as possible.
+
+ autoindent   (ai)    boolean    default: autoindent
+
+     In insert mode automatically indent each line with the same number of
+     leading blanks as used in the previous line.
+
+ crlfmode     (cr)    boolean    default: automatic
+
+     When writing a file, insert a CR character before each LF marking the
+     end of a line. This option is set when loading a file that contains
+     such CR characters.
+
+ errorbells   (eb)    boolean    default: errorbells
+
+     Sound an audible bell in case of an error.
+
+ ignorecase   (ic)    boolean    default: noignorecase
+
+     When searching and replacing text, do no distinguish between upper and
+     lower case characters.
+
+ indent       (in)    integer    default: 2
+     The number of spaces by which the indent ([>]) and outdent ([<]) commands
+     will change the indentation of a region by default.
+
+ readonly     (ro)    boolean    default: automatic
+
+     When this option is set in a buffer, that buffer cannot be written to
+     disk. It can still be modified, though.
+
+ regex        (re)    boolean    default: regex
+
+     When this option is set, the [/], [?], and :s commands operate on regular
+     expressions rather than on literal text. ARSE supports basic regular
+     expressions and back references. See the documentation of the RE-SUBST
+     procedure for details.
+
+ sharebuffers (sb)    boolean    default: sharebuffers
+
+     When this option is set the yank buffer and the search buffer are shared
+     among editing buffers, so you can yank or delete text in one buffer and
+     paste it to another. The sharebuffers option itself is shared between
+     all buffers, so setting it once modifies it in all buffers.
+
+ scroll       (sc)    integer    default: text-lines/2
+
+    The number of lines by which the [^U] and [^D] commands will scroll the
+    screen by default.
+
+ showmatch    (sm)    boolean    default: showmatch
+
+    Show matching parentheses when they are in the same screenful of text as
+    the one right from the cursor. Slow, but nice.
+
+ showmode     (smd)   boolean    default: showmode
+
+    Show a status line with various intersting information at the bottom of
+    the screen.
+
+ standout     (so)    boolean    default: standout
+
+    Display the status line (if showmode is set) and error message in a
+    standout display mode (e.g.: in inverse mode).
+
+ unexpand     (ue)    boolean    default: nounexpand
+
+    Unexpand leading blank characters to TABs. ARSE never preserves TABS, but
+    always expands them when loading a file. When this option is set, it at
+    least unexpands leading ones when saving. TAB size is eight columns.
+
+ wordset      (ws)    integer    default: 2
+
+    The character sets that constitute "words" and "bigwords". Basically a word
+    is a coherent sequence of characters that belong to one out of these sets:
+
+    (a) alphanumeric characters
+    (b) R4RS symbol characters (above plus "!@$%^&*-/_+=~.?<>:")
+    (c) non-whitespace characters
+
+    The "wordset" option may be set to the values 1, 2, or 3, which defines
+    "words" and "bigwords" as used in the [w],[W],[b],[B],[e], and [E] commands
+    as follows:
+
+     wordset  words  bigwords
+        1      (a)     (b)
+        2      (a)     (c)
+        3      (b)     (c)
+
+ ==== SCHEME PROGRAMMING SUPPORT ==============================================
+
+ ---- Options -----------------------------------------------------------------
+
+ autoload     (al)    boolean    default: noautoload
+
+     Each buffer with this option set will be LOADed automatically when a new
+     Scheme process is created, for example after recovering from an error.
+     Note that the first buffer opened by ARSE will always have the autoload
+     flag set.
+
+ code-marker  (cm)    string     default: ""
+
+     When this option is set to a non-empty string, ARSE will operate in
+     "document mode". In document mode, reloading a file (with the [=][r]
+     command or by auto-loading) will not pass any lines to the REPL until a
+     "code-marker" is found in a line. The next code-marker turns off loading
+     again. This mode allows to load documents that contain Scheme code in one
+     piece. The code-marker value is a regular expression. In HTML text, for
+     example, you might set it to "</*PRE>".
+
+ repl-timeout (rt)    integer    default: 2
+
+     The time to wait for a response from the REPL (see scheme-repl option).
+     When no response is received in the given amount of time assume that the
+     REPL process stalled and disconnect it.
+
+ saveintbuf   (sib)   boolean    default: saveintbuf
+
+     When this option is set, the Scheme interaction buffer will be saved
+     automatically when ARSE is exited and reloaded when the interaction buffer
+     is opened again.
+
+ scheme-init  (si)    string     default: ""
+
+    A system-specific init string to be sent to the Scheme REPL immediately
+    after connecting to the interpreter.
+
+ scheme-repl  (sr)    string     default: "s9 -q"
+
+    The command for invoking a Scheme system that provides a REPL
+    (read-eval-print loop). The interactive session should not issue any
+    prompts, but just swallow forms and spit out normal forms.
+
+ ---- Commands ----------------------------------------------------------------
+
+  [^C]       Interrupt.
+             Interrupt the Scheme interpreter while receiving output from
+             the REPL. Programs that hang without sending any output will
+             be stopped automatically after the amount of time specified
+             in the "repl-timeout" option.
+
+  [TAB]      Auto-complete.
+             When in insert mode, auto-complete the current identifier.
+             Identifiers suitable for auto-completion are extracted from the
+             help database. Use the :rehash command to update the completion
+             table. When there is no partial indentifier to the left of the
+             cursor, insert an expanded TAB character.
+
+  [=][b]     Back to previous help topic.
+             Go back to the previously visited help topic. Works only in the
+             Scheme help buffer.
+
+  [=][c]     Compile.
+             Send the definition currently containing the cursor to the
+             Scheme REPL, effectively recompiling the definition.
+
+  [=][e]     Evaluate.
+             When the cursor is on a '(' or ')' character, pass all characters
+             up to the matching parenthesis to the Scheme REPL for evaluation.
+             REPL output will be appended to the Scheme interaction buffer.
+
+  [=][f]     Format.
+             When the cursor is on a '(' or ')' character, pass all characters
+             up to the matching parenthesis through the S9 pretty printer in
+             data mode.
+
+  [=][h]     Help.
+             Extract the Scheme symbol under the cursor and look it up in the
+             S9fES online help database. When a matching page is found, load
+             it into the Scheme Help buffer and switch to that buffer.
+
+  [=][i]     Interaction buffer.
+             Switch to the Scheme interaction buffer.
+
+  [=][n]     New REPL.
+             Disconnect any active REPL and start a fresh one.
+
+  [=][o]     Add auto-completion symbol
+             Temporarily add the symbol under the cursor to the auto-completion
+             list, so it can be expanded by pressing [TAB].
+
+  [=][p]     Pretty-print.
+             When the cursor is on a '(' or ')' character, pass all characters
+             up to the matching parenthesis through the S9 pretty printer.
+
+  [=][r]     Reload.
+             Send the entire buffer to the connected Scheme process.
+
+  [v]        View expression.
+             Highlight the innermost expression around the cursor.
+
+ ==== Differences to VI =======================================================
+
+ ARSE is an extended subset of the real VI editor. I have attempted to make
+ ARSE feel like VI as much as possible, except for the following points. When
+ ARSE differs from VI in other points, you may consider this to be a bug.
+
+ Omissions
+
+ - tons of commands and options are unimplemented.
+
+ Differences
+
+ - ARSE expands all tabs to spaces; I consider this to be a feature.
+
+ - trailing blanks are trimmed when leaving input mode;
+
+ - [<] and [>] outdent and indent expressions rather than regions when the
+   cursor is on a '(' or ')' character;
+
+ - [<] and [>] indent by two characters by default; an explicit count
+   specifies spaces rather than TABs;
+
+ - [~] works on regions rather than individual characters;
+
+ - [u] can be undone and redone (like in nvi);
+
+ - [(] and [)] move the cursor to the beginning and end of an expression
+   rather than sentence;
+
+ - [w], [b], and friends can be configured to operate on Scheme symbols;
+
+ - [^A] locates the Scheme identifier under the cursor;
+
+ - When 'showmatch' is set, ARSE highlights matching parens in command mode
+   rather than in input mode. It highlights only parentheses and no other
+   kinds of brackets.
+
+ Additions
+
+ - there are various options that cannot be found in vi; many of them are
+   related to Scheme programming;
+
+ - When no argument is passed to :e, the interactive directory browser is
+   started;
+
+ - ARSE is a multi-buffer editor, so there are various colon commands for
+   manipulating buffers (:buffer, etc).
+
+ ==============================================================================

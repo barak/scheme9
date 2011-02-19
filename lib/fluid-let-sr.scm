@@ -1,6 +1,6 @@
 ; Scheme 9 from Empty Space, Function Library
 ; By Nils M Holm, 2009
-; See the LICENSE file of the S9fES package for terms of use
+; Placed in the Public Domain
 ;
 ; (fluid-let ((variable expression) ...) expression ...)  ==>  object
 ;
@@ -20,6 +20,8 @@
 ;                  (f))))                ==>  1
 
 ; This implementation is inefficient, use "fluid-let.scm" instead.
+
+(load-from-library "syntax-rules.scm")
 
 (define-syntax fluid-let
   (syntax-rules ()

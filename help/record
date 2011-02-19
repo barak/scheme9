@@ -10,6 +10,8 @@ S9 LIB  (record pair ...)                   ==>  record
         (record-type-matches? list record)  ==>  boolean
         (assert-record-type list record)    ==>  record
 
+        (load-from-library "records.scm")
+
 These procedures implement ML-style records.
 
 RECORD creates a new record from the given (TAG . OBJECT) PAIRs,

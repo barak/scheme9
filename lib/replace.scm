@@ -1,6 +1,6 @@
 ; Scheme 9 from Empty Space, Function Library
 ; By Nils M Holm, 2009
-; See the LICENSE file of the S9fES package for terms of use
+; Placed in the Public Domain
 ;
 ; (replace object-old object-new pair)  ==>  pair
 ;
@@ -10,8 +10,10 @@
 ; Example:   (replace '(x) '(y) '(lambda (x) y))  ==>  (lambda (y) y)
 
 (define (replace old new obj)
-  (cond ((equal? obj old) new)
+  (cond ((equal? obj old)
+          new)
         ((pair? obj)
           (cons (replace old new (car obj))
                 (replace old new (cdr obj))))
-        (else obj)))
+        (else
+          obj)))

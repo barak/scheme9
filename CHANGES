@@ -1,4 +1,638 @@
+
 Change Log
+
+2010-11-13
+	Fix: sudden allocation of large vector failed, even if enough
+	vector space was present (this did not happen when allocating
+	lots of small vectors, releasing them, and then allocating a
+	large vector). (s9.c)
+2010-10-29
+	Fix: missing hash-table reference in memoize.scm. (lib/)
+2010-10-11
+	Added GET-PROP, PUT-PROP, etc. (lib/)
+2010-10-08
+	Added STRING-PREFIX=? and STRING-PREFIX-CI=? procedures. (lib/)
+2010-10-07
+	Fix: MAKE-STRING and MAKE-VECTOR did not check for negative
+	arguments. (s9.c)
+2010-10-06
+	Added TIME-ADD, TIME-SUBTRACT, TIME-DIFFERENCE, TIME-BEFORE?,
+	and TIME-AFTER? procedures. (lib/)
+	Moved SWAP! to "setters.scm"; removed "swapb.scm". (lib/)
+2010-10-05
+	Added small-magnitude bit operators (bitops). (lib/)
+2010-10-04
+	Renamed BITWISE-AND-NOT --> BITWISE-NOT-AND,
+	        BITWISE-OR-NOT  --> BITWISE-NOT-OR,
+	        BITWISE-XOR-NOT --> BITWISE-NOT-XOR. (lib/)
+	Added fast bit operations (BIT-OP). (s9.c)
+2010-10-03
+	Misc. minor changes. This is the book version.
+2010-09-29
+	Applied minor change ro RIB internal structure. (s9.c)
+2010-09-27
+	Added \i (image) mode to EDOC. (prog/)
+2010-09-23
+	Added "NIL" and "@ rest" syntax to MAKE-MATCHER. (lib/)
+2010-09-22
+	Added line concatenation via \\ to EDOC, made EDOC's -b
+	option link to a file given on the command line instead of
+	hardwiring "index.html". (prog/)
+2010-09-21
+	Changed MAKE-MATCHER semantics. Once again. :-/ But this
+	time it will be final! (lib/)
+	Moved the MAKE-MATCHER code to the EDOC section. (lib/, edoc/)
+2010-09-19
+	Re-organized the "primitives" section. (s9.c)
+2010-09-16
+	Moved SYNTAX-RULES to EDOC section. (lib/, edoc/)
+2010-09-13
+	EDOC: Improved layout of Lout output; still experimental,
+	though! (prog/)
+2010-09-11
+	Fixed some minor 64-bit/prototyping glitches. (s9*.c)
+2010-09-10
+	Added HTMLIFY-CHAR and LOUTIFY-CHAR to library. (lib/)
+	Started Lout backend in EDOC. (prog/)
+2010-09-09
+	EDOC: improved error messages, implemented strict mode
+	(being picky about matching braces). (prog/)
+2010-09-07
+	Fixed botched optimization in EXP function. (s9-real.scm)
+2010-09-06
+	Cleaned up real number primitives. (s9-real.c)
+2010-09-05
+	DISPLAY/WRITE now round the last digit of real numbers with
+	large mantissas, so 1.99999999999999997 actually prints as
+	2.0 on 32-bit systems. (s9-real.scm)
+	Added INC!, DEC!, and SET-VARS! syntax. (lib/)
+2010-09-04
+	Factored out CHECK-BINDINGS and SPLIT-BINDINGS in the Scheme
+	core. (s9.scm)
+	Fix: a quotation char ('`,) followed by a closing paren swallowed
+	that closing paren. (s9.c)
+2010-09-03
+	Fix: APPEND accepted atoms in positions other than the last. (s9.scm)
+	PRETTY-PRINT now prints (and), (or), and (begin) more nicely.
+	(contrib/)
+2010-09-02
+	Allowed nested quasiquotation as long as an embedded QUASIQUOTE
+	is inside of UNQUOTE or UNQUOTE-SPLICING. (s9.scm)
+	Applied more optimizations to MAKE-MATCHER. (lib/)
+	Added GROUP-LIST procedure to library. (lib/)
+	Fix: WITH-OUTPUT-TO-FILE always returned #<unspecific>. (s9.scm)
+2010-09-01
+	Made STRING and VECTOR primitives. (s9.c)
+	Fix: SYS:READLINK did not NUL-terminate its return string. (ext/)
+	Optimized internal accessors of MAKE-MATCHER. (lib/)
+2010-08-31
+	Changed PACKAGE syntax and semantics. (lib/)
+	Added Red-Black Trees. (lib/)
+	Various small changes. (s9.c)
+2010-08-29
+	Changed MAKE-MATCHER syntax. (lib/)
+	Retired ML-MATCH syntax. (lib/)
+2010-08-26
+	Applied various cosmetics and micro-optimizations. (s9.c)
+2010-08-25
+	Changed environment box model from (name . (value)) to
+	(name . value), (ab?)using the CDR field as a box. This
+	saves quite a few conses during evaluation. (s9.c)
+	Improved syntax checking in local DEFINEs. (s9.c)
+	Added detection of improper lists (syntax errors) in
+	special forms. (s9.c)
+2010-08-24
+	Made STATS primitive expand macros before evaluation. (s9.c)
+2010-08-22
+	Fix: Made EXPT return an inexact number when passed an inexact
+	argument, because conversion lost digits. Also made SQRT return
+	an inexact result. (s9-real.scm)
+2010-08-20
+	Documented EDOC using EDOC. (prog/)
+	Fix: counting newlines in block comments. (s9.c)
+2010-08-19
+	SCM2HTML: added support for block comments. (s9.c)
+2010-08-15
+	Fix: all real numbers must be inexact according to R4RS. (s9.c)
+	Fixed a precision bug in mixed bignum/real operations. (s9-real.c)
+	Fixed missing trailing zero in (number->string 1.0). (s9-real.scm)
+2010-08-14
+	Cleaned up SCM2HTML program. (contrib/)
+	Added C2HTML program. (contrib/)
+2010-08-13
+	Changed interface of SCM2HTML and moved it to contrib/.
+	Added SCM2HTML1 program (SCM2HTML wrapper). (prog/)
+	Fix: (+ 0.0 -1.0e-999999999) gave 0.0. (s9-real.c)
+	Fix: (+ #e0.0 #e1.0e-999999999) gave an inexact result. (s9-real.c)
+2010-08-12
+	ARSE: made [d][/]x and [d][?]x repeatable. (contrib/)
+	Added ,q (sys:exit) meta command. (s9.c)
+	Added #| ... |# comments. (s9.c)
+2010-08-10
+	Tweaked real number interface (internal). (s9*.[ch])
+	Updated the man page. (s9.1)
+2010-08-09
+	Finished integration of big real number support. (*.c, *.scm)
+2010-08-08
+	Re-integrated big real arithmetics. (*.[ch], *.scm)
+	Added real number test suite. (util/)
+2010-08-07
+	Added make-cats.scm program and CATEGORIES.html file. (util/)
+2010-08-06
+	ARSE: fix: clear undo log when loading a different file
+	into an edit buffer. (contrib/)
+2010-08-03
+	Fix: (,x) was interpreted as a meta command. (s9.c)
+	Fix: SYNTAX-RULES failed to detect some syntax errors
+	before ellipses. (lib/)
+	S9 SOS: make <built-in> instantiation invalid. (contrib/)
+	Added 'COMPRESS: option to RUNTIME-STATS. (ext/)
+2010-08-02
+	Applied some cosmetics to SYNTAX-RULES. (lib/)
+	Added LISTQ syntax. (lib/)
+	Made APPEND fold to the right (O(n) instead of (O(n^c)
+	when appending multiple lists). (s9.scm)
+	Added COLS program. (prog/)
+2010-08-01
+	CHAR-CANVAS: auto-clipping out-of-range coordinates. (lib/)
+	RUNTIME-STATS: misc. small fixes. (ext/)
+2010-07-31
+	Added plotter and table formatter to RUNTIME-STATS. (ext/)
+	Fixed CANVAS-PLOT-LINE. (lib/)
+2010-07-30
+	Added the RUNTIME-STATS procedure to library. (ext/)
+	Added SWAP! syntax to library. (lib/)
+	Added character-based canvas to library. (lib/)
+2010-07-29
+	Made STATS return a list instead of printing its data. (s9.c)
+	Added SYS:GETTIMEOFDAY extension procedure. (ext/)
+	Added TIME procedure to library. (/ext)
+	Fixed S9 SOS built-in hierarchy. (contrib/)
+2010-07-28
+	Added meta commands, which are entered by typing a #\,
+	at the top level and without any enclosing parens. See
+	S9(1) for details. (s9.c)
+2010-07-27
+	Added PUSH! and POP! macros. (lib/)
+	Added PACKAGE macro. (lib/)
+2010-07-26
+	Removed UNDEFINED primitive; causes only trouble. (s9.c)
+	Added minor optimizations to MAKE-MATCHER. (lib/)
+	Made MAKE-MATCHER and ML-MATCH two separate packages. (lib/)
+2010-07-25
+	Made S9 not count initial GC in STATS. (s9.c)
+	Added cons cell statistics to interpreter. (s9.c)
+	Fix: SYNTAX-RULES failed to expand stuff following "...". (lib/)
+2010-07-24
+	Added TREE-MAP procedure. (lib/)
+	Fix: RE-MATCH returned wrong format when processing
+	REs beginning with "^" in combination with 'ALL. (lib/)
+2010-07-23
+	Finished the S9 SOS and its documentation. (contrib/)
+2010-07-21
+	Made ":set regex" default in ARSE. (contrib/)
+2010-07-20
+	Bootstrapped SOS. (contrib/)
+2010-07-19
+	ARSE: removing output that begins with ";" when reloading
+	a buffer. (lib/)
+2010-07-18
+	Added first sketch of SOS (Scheme Object System). (contrib/)
+	Added 'REVERSE keyword to T-SORT; added T-SORT-NET. (lib/)
+	Added 'TOP-DOWN option to T-SORT. (lib/)
+	ARSE: added "scheme-init" option. (contrib/)
+2010-07-17
+	Added 'CONVERT-UNREADABLE option to READ-FROM-STRING. (lib/)
+	Added help pages for the REVERSE!, STATS, SYNTAX?, TRACE, VOID,
+	and UNDEFINED procedures. (help/)
+2010-07-16
+	Added UNDEFINED procedure; see s9(1). (s9.c)
+2010-07-15
+	Added KEYWORD-VALUE procedure. (lib/)
+	Rewrote HASH-TABLE, added support for 'SIZE and 'TEST keywords.
+	(lib/)
+	Added WHEN, UNLESS, WHILE, and UNTIL syntax. (lib/)
+	ARSE: made [TAB] insert blanks when not typing a symbol. (contrib/)
+2010-07-14
+	Added DUPLICATES procedure and friends. (lib/)
+	DEFINE-STRUCTURE not reports duplicate slot names. (lib/)
+2010-07-13
+	Added queue data type. (lib/)
+2010-07-12
+	Added MEMOIZE procedure and DEFINE-MEMOIZED syntax. (lib/)
+2010-07-11
+	Added ID (identity) procedure. (lib/)
+	ARSE: added regex support to [/] and [?] commands. (contrib/)
+	Re-organized library. (lib/)
+	Added check-descr.scm to check descriptions for web dump. (util/)
+2010-07-10
+	Added SPLIT and MERGE procedures, rewrote MERGESORT. (lib/)
+	Fixed stuck state (0) in RANDOM-STATE. (lib/)
+	Fix: SYS:MAKE-INPUT-PORT and SYS:MAKE-OUTPUT-PORT
+	could return a closed port due to GC. (ext/)
+	Rewrote BITWISE-... operators. (lib/)
+	Added INTEGER->BINARY-STRING and BINARY-STRING->INTEGER. (lib/)
+	Fix: RE-SUBST generated wrong matches with trailing "\\)". (lib/)
+2010-07-09
+	ARSE: fixed spurious trailing lines after undo. (contrib/)
+	ARSE: added regular expression support (:s). (contrib/)
+	Added COMPOSE, COMPLEMENT, TRUE, and FALSE procedures. (lib/)
+	Added RANDOM and RANDOM-STATE procedures. (lib/)
+2010-07-08
+	Added SYNTAX? primitive. (s9.c)
+	Added T-SORT (topological sort) procedure. (lib/)
+	Added EQUAL-CI? procedure. (lib/)
+	Added TYPE-OF procedure and TYPE-CASE syntax. (lib/)
+	Added ASSP and MEMP procedures. (lib/)
+	Applied various small fixes to PRETTY-PRINT. (contrib/)
+	Updated man page. (s9.1)
+2010-07-07
+	Added RE-SUBST procedure to REGEX package. (lib/)
+	Added TREE-COPY procedure. (lib/)
+2010-07-06
+	Added auto-completion to ARSE. (contrib/)
+	Added ADJOIN, SET-DIFFERENCE, and SUBSET? procedures. (contrib/)
+	Added <TYPE>-COPY procedure to DEFINE-STRUCTURE. (lib/)
+	Replaced lots of REVERSEs with REVERSE!. (*)
+2010-07-05
+	Added POSITION and friends to library. (lib/)
+	ARSE: fixed tab expansion; added "unexpand" option. (contrib/)
+2010-07-04
+	Added the AMB (backtracking) operator. (lib/)
+	Added HASH-TABLE-REMOVE! and ALIST->HASH-TABLE; renamed
+	HASH-TABLE->LIST to HASH-TABLE->ALIST. (lib/)
+	Fix: (cond ('(()))) was an error. (s9.c)
+2010-07-03
+	Fix: FOR-ALL sometimes returned #T unexpectedly. (lib/)
+	Fix: CALL/CC could crash AND, BEGIN, COND, and OR. :-/ (s9.c)
+	Added ARRAY-MAP procedure. (lib/)
+2010-07-02
+	Added more array operations. (lib/)
+2010-07-01
+	Added Common LISP-style CATCH/THROW. (lib/)
+	Added ARRAYs and array operations. (lib/)
+2010-06-30
+	Renamed DEFINE-RECORD to DEFINE-STRUCTURE, allowed simpler
+	slot syntax. (lib/)
+2010-06-29
+	ARSE: reload main buffer automatically when recovering from
+	a REPL error. (s9.c)
+	ARSE: fix: undo delete lines at end of buffer. (contrib/)
+2010-06-28
+	Renamed EXPAND-MACRO to MACRO-EXPAND (more CL'ish). (s9.c)
+	Added MACRO-EXPAND-1 procedure. (s9.c)
+	Added Common LISP TAGBODY to library. (lib/)
+2010-06-27
+	Added CALL-WITH-CURRENT-CONTINUATION (CALL/CC). (s9.c)
+	Related critical change in s9.c:_eval():
+		  name = car(rib_source(rib));
+		- /* Save result */
+		- car(Stack) = Acc;
+		  if (Trace_list != NIL)
+	Imported CALL/CC description from R4RS. (help/)
+	Added LET/CC to library. (lib/)
+	Added cooperative thread functions. (lib/)
+	Removed CALL-WITH-ESCAPE-CONTINUATION.
+2010-06-26
+	Added REVERSE! primitive and used in some places. (s9.c, s9.scm)
+	Made (re-match (re-comp "^") "foo") ==> ((0 0))
+	 and (re-match (re-comp "$") "foo") ==> ((3 3)). (lib/)
+	Added 'ALL option to RE-MATCH. (lib/)
+	Added VECTOR-MAP, made VECTOR-MAP! variadic. (lib/)
+	Added STRING-MAP and STRING-MAP!. (lib/)
+2010-06-25
+	Made S9 ignore SIGPIPE, so the SYS: procedures can catch broken pipe
+	conditions themselves. (ext/)
+	ARSE: ignore broken pipe condition when writing to REPL. (contrib/)
+	ARSE: added autocenter option. (contrib/)
+	Cleaned up the REGEX procedures and added submatches. (lib/)
+	Made RE-MATCH return ranges rather than strings. (lib/)
+2010-06-24
+	Misc. clean-up.
+2010-06-23
+	Factored out all the S9fES stuff in ARSE, so it can be ported to
+	other Schemes more easily. (contrib/)
+	ARSE: [r] did not check autoindent option. (contrib/)
+	Added ARSE porting instructions. (contrib/)
+	Added VECTOR-MAP! and STRING-SCAN procedures. (lib/)
+	ARSE: expanding tabs to spaces when reading filters, etc. (contrib/)
+2010-06-22
+	Added DEFINE-RECORD syntax. (lib/)
+	(DEFINE-SYNTAX (F ...) <BODY>) accepted only a single-expression
+	body. Fixed that. (s9.c)
+	ARSE: no longer displaying the REPL buffer when reloading or
+	recompiling. (contrib/)
+	ARSE: some general clean-up. (contrib/)
+2010-06-21
+	Finished Unix extension test suite. (util/)
+	Documented SYS:SLEEP, SYS:USLEEP. (help/)
+2010-06-20
+	SYS:CHOWN did not work. (ext/)
+	ARSE: :s/<old>/... did not allow leading blanks in <old>. (contrib/)
+	ARSE: missing REAL-POS! in SUBSTITUTE and COLON-READ. (contrib/)
+	Added SYS:SLEEP, SYS:USLEEP procedures. (ext/)
+2010-06-19
+	Removed SYS:LCHMOD; not portable. (ext/)
+	Cleaned up symlinks in help directory. (help/)
+2010-06-18
+	Fix: hash tables did not allow negative numeric keys. (lib/)
+2010-06-17
+	Added a quick and dirty dependency checking mode to S9RESOLVE.
+	(prog/)
+	Fixed some unresolved library dependencies. ;-)
+	* Explanation:
+	* The default image file contains most of the S9fES library
+	* functions, so it does not really need all those LOAD-FROM-LIBRARY
+	* calls. However, I consider it to be good style to make library
+	* dependencies explicit by adding them anyway. S9RESOLVE -d detects
+	* missing LOAD-FROM-LIBRARYs.
+2010-06-16
+	Factored out FIND-HELP-PATH procedure. (ext/)
+	Added SPAWN-SHELL-COMMAND procedure. (ext/)
+	SPAWN-COMMAND has new semantics, SPAWN-SHELL-COMMAND implements
+	the old behavior. (ext/)
+	Added more missing symlinks to help directory. (help/)
+2010-06-14
+	Added the SYS:FILENO procedure. (ext/)
+	Fix: SYS:SELECT sometimes returned #F even when some
+	descriptors were ready. (ext/)
+	Fix: PP-FILE could not find LINEFEED procedure. (contrib/)
+	Made the pretty-printer indent embedded IF, COND, etc in
+	code mode rather than data mode. (contrib/)
+2010-06-13
+	Removed CURS:KEY-EOL from curses, because it is not the key
+	labeled "END" on a PC keyboard. Which KEY_ constant is used
+	for this key? My /usr/include/curses.h says KEY_SELECT, but
+	this does not appear to make sense. (ext/)
+2010-06-12
+	Made READ-FROM-STRING skip over comments in multi-line input.
+	(contrib/)
+	Added SYS:CATCH-ERRORS and SYS:STRERROR primitives. (ext/)
+	Made SPAWN-COMMAND redirect stderr of the spawned command to
+	stdout so it can be read by the parent. (ext/)
+	Added URL-DECODE procedure to library. (lib/)
+2010-06-11
+	Added the PP-STRING procedure to the pretty-printer. (contrib/)
+2010-06-10
+	Added the INET-SERVER procedure to the extension library. (ext/)
+	Rewrote S9HTS using INET-SERVER. (prog/)
+	Reinstalled and fixed a load of wrong or missing symlinks in
+	help directory. (help/)
+2010-06-09
+	Added the SPLIT-URL procedure to the library. (lib/)
+2010-06-08
+	Added SYS:INET-GETPEERNAME primitive to Unix extension. (ext/)
+	Implemented S9HTS, a simple HTTP server. (prog/)
+	Added STRING-POSITION and friends to library. (lib/)
+	Added STRING-LAST-POSITION and friends to library. (lib/)
+2010-06-06
+	Added the CURSES_RESET compile time option, which will
+	run CURS:ENDWIN automatically in the REPL, so Curses
+	cannot hose the interface in interactive sessions.
+	Of course, when using this option, (CURS:INITSCR) will
+	not have any effect when entered at the REPL. (s9.c)
+	Moved ARSE (was: SCHED) to contrib/, kept only the
+	command line interface in prog/.
+	Added ARSE installation procedure to Makefile.
+	Documented ! option. (s9.1)
+	Fix: not all globals were initialized in PRETTY-PRINT. (contrib/)
+	Fix: PP printed a lonely closing paren in intended applications
+	with no arguments. (contrib/)
+2010-06-05
+	Added !image option to change the heap image name ad hoc. (s9.c)
+2010-06-02
+	Fixed a few bugs in ADVGEN; it only worked due to the below
+	bug in S9. :-/
+2010-06-01
+	Fix: Local environments of *dynamically* scoped (a.k.a. top-level)
+	procedures were still being propagated to functions called *iff*
+	there were multiple levels of local definitions in the top-level
+	procedure, e.g.:
+	(define (g) x)
+	(define (f) (let ((x 0))
+    	              (let () ; <-- this triggered the bug
+      	                (g)
+      	                #f)))
+	(f) ==> 0 ; should be an error (x undefined)
+	This is definitely fixed now. Regression test added. (s9.c)
+2010-05-31
+	Intercepted more funny characters. (s9.c)
+2010-05-30
+	Made STRING->NUMBER accept base prefixes. (s9.scm)
+	Replaced some applications of the obsolete WRONG procedure
+	with applications of ERROR. (s9.scm)
+	Made the interpreter identify funny input characters. (s9.c)
+2010-05-28
+	Fixed a GC bug introduced by growing the pools independently.
+	This bug was triggered by using more vector space than node
+	space. (s9.c)
+	Improved the stress test suite. (util/)
+2010-05-27
+	ADVGEN: renamed GO/RET to GO/SEL. (prog/)
+	Tweaked the sample adventure. (prog/)
+2010-05-26
+	S9 now takes its image name from argv[0] instead of
+	hardwiring it. (s9.[ch])
+	Added new FORMAT help page with better explanations and
+	lots of examples; try (help 'format). (help/)
+2010-05-25
+	Fix: FORMAT recursed indefinitely in case of an error
+	due to re-use of the name ERROR. (contrib/)
+2010-05-24
+	Added expansion template to AND-LET* description. (lib/)
+	Added Curses interface help pages. (help/)
+	Added CURS:LINES and CURS:COLS procedures. (ext/)
+	Fix: MAKE-STRING did not type-check second argument. (s9.c)
+2010-05-23
+	Added first version of a CURSES(3) interface. (ext/)
+	Fixed GC bug in APPEND2.
+	Made cons and vector pools grow independently. (s9.c)
+2010-05-22
+	Stopped interpreter from reporting infinite sequences of '('
+	in error messages, even if the reported structure is cyclic.
+	Added AND-LET*. (lib/)
+	Minor cosmetics.
+2010-05-21
+	Improved limited output in error messages. (s9.c)
+	Running "make tests" will now use a minimum heap image,
+	so unresolved references in the library will be detected.
+	(Makefile)
+	Improved ADVGEN error messages. (prog/)
+	Added COPY-FROM special description to ADVGEN. (prog/)
+2010-05-20
+	Made DEFINE-SYNTAX an alias for DEFINE-MACRO; removed
+	DEFINE-MACRO. (s9.c)
+	Moved SYNTAX-RULES to the extension library. (lib/)
+	Added the STANDARD-ERROR-PORT, WITH-OUTPUT-TO-STDERR,
+	and CALL-WITH-STDERR procedures. (ext/)
+	Limited size of Scheme objects in error messages. (s9.c)
+	Updated S9(1) man page and help pages. (help/)
+	Various small fixes and cosmetics.
+2010-05-19
+	Added GO/RET operator to ADVGEN. (prog/)
+	Applied various minor improvements to the pretty-printer.
+	(contrib/)
+	Added default values to PARSE-OPTIONS!. (ext/)
+	Added SCMPP pretty-print utility. (prog/)
+	Added more features to ADVGEN; see prog/advgen.txt.
+2010-05-18
+	Fixed a long-standing bug that caused the following program
+	to evaluate to 1:
+	(define (g) x)
+	(define (f)
+	  (let ((x 1))
+	    (g)
+	    #f))
+	(f)
+	This happened only if (g) was *not* a tail call. The critical
+	part of the fix is:
+	+       if (!tail && cdr(Environment) != NIL)
+	+               Environment = cdr(Environment);
+	in s9.c:bind_arguments().
+2010-05-17
+	Added ADVGEN documentation, fixed some minor bugs. (prog/)
+2010-05-16
+	Added GO/CUT operator to ADVGEN. (prog/)
+	Added STRING-FIND-LAST, STRING-FIND-LAST-WORD,
+	STRING-CI-FIND-LAST, STRING-CI-FIND-LAST-WORD. (lib/)
+	Fix: SCM2HTML did no longer accept input from stdin. (prog/)
+	Fix: SCM2HTML rendered #[bdox] literals in wrong color. (prog/)
+	Fix: ADVGEN: stupid bug in HTML postlude. (prog/)
+	Fix: SCM2HTML: #\$ is a valid symbol character. (prog/)
+	Added missing symlinks to help database. (help/)
+2010-05-15
+	Documented NAME->FILE-NAME. (contrib/)
+	Added code to install utility programs. (Makefile)
+	Added COUNTER option type and "--" special argument
+	to PARSE-OPTIONS!. (ext/)
+	Added ADD/GO and REM/GO actions to ADVGEN. (prog/)
+2010-05-14
+	Added new option types to PARSE-OPTIONS!. (ext/)
+2010-05-13
+	Added STRING-TRANSLATE procedure to library. (lib/)
+	Finished sample ADVGEN adventure. (prog/)
+	Fixed a bug in PARSE-OPTIONS!: option args were always
+	taken from first option. Oops. (lib/)
+2010-05-12
+	Fixed names in error messages of CAAR..CDDDDR. (s9.c)
+	Implemented first version of ADVGEN, an HTML adventure
+	generator. (prog/)
+2010-05-11
+	Made email addresses in the code harder to harvest.
+2010-05-10
+	Added HTMLIFY utility. (prog/)
+	Added stuff for automatic web site creation. (util/)
+2010-05-09
+	Renamed all UNIX:... symbols to SYS:... and made naming
+	more consistent. All names in the SYS-UNIX extension now
+	begin with SYS:. (ext/)
+	Moved SYS:FLUSH with no args to library (FLUSH-OUTPUT-PORT). (ext/)
+	Added LETREC* syntax. (lib/)
+2010-05-08
+	While I am at it: made these procedures primitives:
+	APPEND, LIST-TAIL, MIN, MAX. (s9.c, s9.scm)
+	Fixed READ-FROM-STRING (mixed up some numbers and
+	symbols). (lib/)
+	Added #B, #D, #O, #X prefixes to READ-FROM-STRING. (lib/)
+	Renamed STRING-FIND to STRING-LOCATE and STRING-CONTAINS
+	to STRING-FIND. Also swapped the arguments of STRING-FIND
+	so that STRING-FIND and STRING-LOCATE are more consistent
+	now. (lib/, contrib/)
+	Added [+-][st] modifiers to CHANGE-MODE. (ext/unix.scm)
+2010-05-07
+	Made these procedures primitives: ABS, ASSQ, ASSV,
+	CAAR..CDDDDR, EQV?, EVEN?, LENGTH, LIST, MEMQ, MEMV,
+	NEGATIVE?, NOT, NULL?, ODD?, POSITIVE?, REVERSE, ZERO?.
+	Resulting speed increase is between 30% (libtest) and
+	70% (htmlize library). (s9.c, s9.scm)
+	Added -9 (highlight non-R4RS symbols) and -x (highlight
+	extensions) arguments to SCM2HTML utility. (prog/)
+	Added indentation of DO. (contrib/pretty-print.scm)
+	Fixed evluation of DO in PROGRAM?: allowed more than
+	one statement in body, made statement in termination
+	clause optional. (lib/programp.scm)
+2010-05-06
+	Made DRAW-TREE print more compact trees by emitting the
+	conses of (...(x)...) as soon as possible. (contrib/draw-tree.scm)
+	Added interactive mode to SOCCAT program. (prog/)
+	Added UNIX:ACCESS help page.
+2010-05-05
+	Added purely functional streams to library. (lib/streams.scm)
+	Added UNIX:WAITPID procedure.
+	Fixed type checking in UNIX:KILL (accepted single argument).
+	Added the SOCCAT utility. (prog/soccat)
+2010-05-04
+	Added UNIX:SELECT procedure.
+2010-05-03
+	Made argument of FLUSH optional (defaults to current output port).
+	Added UNIX:INET-CONNECT, UNIX:INET-LISTEN, and UNIX:INET-ACCEPT
+	procedures.
+	Made UNIX:* procedures print more informative error messages.
+	Added mode argument to UNIX:MKDIR, made it optional in MKDIR.
+2010-05-02
+	Made UNIX:STAT not follow symlinks.
+	Added STRING-CONTAINS-WORD and STRING-CI-CONTAINS-WORD. (lib/)
+	Added FIND-HELP procedure. (ext/)
+	Made PARSE-OPTIONS! accept symbolic options (instead of strings).
+2010-05-01
+	Added UNIX:SETUID, UNIX:SETGID. UNIX:GETPGID, UNIX:SETPGID.
+	Added DISPLAY*. (lib/)
+2010-04-30
+	Added the UNIX:FORK, UNIX:WAIT, and UNIX:EXECV procedures.
+	Added the UNIX:ACCESS and SEARCH-PATH procedures. (ext/)
+	Replaced the primitive UNIX:SPAWN and SPAWN procedures with
+	the high-level SPAWN-COMMAND procedure. (ext/spawn-command.scm)
+	Added S9RESOLVE program, which resolves S9fES library
+	dependencies. (prog/)
+	Hash tables sizes now adapt automatically. (lib/hash-table.scm)
+2010-04-29
+	Added more Unix procedures: UNIX:CLOSE, UNIX:CREAT, UNIX:DUP,
+	UNIX:DUP2, UNIX:LSEEK, UNIX:MAKE-INPUT-PORT, UNIX:MAKE-OUTPUT-PORT,
+	UNIX:OPEN, UNIX:PIPE, UNIX:READ, UNIX:WRITE, UNIX:UMASK.
+	Also added the APPEND-TO-OUTPUT-FILE procedure. (ext/)
+2010-04-28
+	Added PARSE-OPTIONS! and friends. (ext/parse-options.scm)
+	Installing contribs directly in @LIBDIR@ now.
+	Made UNIX:READDIR skip the "." and ".." entries.
+	Added UNIX:RENAME procedure.
+2010-04-27
+	Added the STRING-UNSPLIT procedure (lib/).
+	Made HASH-TABLE-REF return just a value (lib/hash-table.scm).
+	Error messages are now printed on stderr when the interpreter
+	runs in quiet mode (-q).
+	Added DIRNAME procedure.
+	Moved contrib/pretty-print.scm to prog/scm2html.scm and made
+	it a stand-alone program.
+	Moved S9 configuration from Makefile to config.scm.
+2010-04-26
+	Added help pages for all remaining UNIX: procedures.
+	Added the STAT-type? predicates for finding out the
+	type of a directory entry.
+	Added the BASENAME procedure.
+	Removed the S9U(1) man page, because it basically duplicates
+	the help pages.
+	Added "programs" section (prog/) and dupes program.
+2010-04-25
+	Added "pattern=mode" to UNIX:CHMOD.
+	Added some UNIX: procecures to the help database.
+	Added STRING-PARSE procedure.
+	Made STRING-SPLIT generate empty strings when multiple
+	subsequent separators are found.
+	Updated S9U(1) man page (was S9E(1) man page).
+	Updated help pages.
+2010-04-24
+	Merged S9 and S9E interpreters; configure in Makefile.
+	Added third return value (PID) to UNIX:SPAWN.
+	Added UNIX:KILL and KILL procedures.
+	Added R4RS test cases to test suite.
+2010-04-23
+	Removed real number stuff.
+	Removed Scientific Calculator stuff.
+	Removed statistics package.
+
+------------------------------------------------------------------------
+Forked this version.
+------------------------------------------------------------------------
 
 2009-09-06
 	Removed EXPAND-QUASIQUOTE. It is no longer needed, because
@@ -651,7 +1285,9 @@ Change Log
        Removed redundant clauses from FOLD-LEFT and FOLD-RIGHT.
        Fixed a bug in the syntax checker of SYNTAX-RULES.
 
+------------------------------------------------------------------------
 Major change: re-implemented DEFINE-SYNTAX/SYNTAX-RULES
+------------------------------------------------------------------------
 
 2007-09-23
        Applied some cosmetical changes to DEFINE-SYNTAX.
@@ -711,7 +1347,9 @@ Major change: re-implemented DEFINE-SYNTAX/SYNTAX-RULES
        macros.
        Rewrote LET, LETREC, LET*, CASE, DELAY using DEFINE-MACRO.
 
+------------------------------------------------------------------------
 Major change: switching from DEFINE-SYNTAX to DEFINE-MACRO
+------------------------------------------------------------------------
 
 2007-08-29
        Misc. small, cosmetical changes.

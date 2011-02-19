@@ -1,9 +1,11 @@
 ; Scheme 9 from Empty Space, Function Library
-; By Nils M Holm, 2009
-; See the LICENSE file of the S9fES package for terms of use
+; By Nils M Holm, 2009,2010
+; Placed in the Public Domain
 ;
 ; (string-upcase string)    ==>  string
 ; (string-downcase string)  ==>  string
+;
+; (load-from-library "string-case.scm")
 ;
 ; Return a fresh string containing the characters of STRING, but
 ; with the case of alphabetic characters converted. STRING-UPCASE
@@ -12,15 +14,10 @@
 ; Example:   (string-upcase "Hello, World!")    ==>  "HELLO, WORLD!"
 ;            (string-downcase "Hello, World!")  ==>  "hello, world!"
 
-(define (make-case-converter convert)
-  (lambda (s)
-    (let* ((k (string-length s))
-           (new (make-string k)))
-      (let convert-chars ((i 0))
-        (if (< i k)
-            (begin (string-set! new i (convert (string-ref s i)))
-                   (convert-chars (+ 1 i)))
-            new)))))
+(load-from-library "string-map.scm")
 
-(define string-upcase   (make-case-converter char-upcase))
-(define string-downcase (make-case-converter char-downcase))
+(define (string-downcase s)
+  (string-map char-downcase s))
+
+(define (string-upcase s)
+  (string-map char-upcase s))

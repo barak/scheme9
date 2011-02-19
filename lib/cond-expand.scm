@@ -1,6 +1,6 @@
 ; Scheme 9 from Empty Space, Function Library
 ; By Nils M Holm, 2009
-; See the LICENSE file of the S9fES package for terms of use
+; Placed in the Public Domain
 ;
 ; (cond-expand (symbol expression ...))  ==>  object
 ;
@@ -14,7 +14,7 @@
 ; Example:   (cond-expand (s9fes (cons 1 2)))               ==>  (1 . 2)
 ;            (cond-expand (foo (cons 1 2)) (else (+ 1 2)))  ==>  3
 
-(define-macro (cond-expand . c*)
+(define-syntax (cond-expand . c*)
   (letrec
     ((expand
        (lambda (c*)
@@ -27,5 +27,6 @@
                     (eq? (caar c*) 'scheme-9-from-empty-space)
                     (eq? (caar c*) 'else))
                  `(begin ,@(cdar c*)))
-               (else (expand (cdr c*)))))))
+               (else
+                 (expand (cdr c*)))))))
     (expand c*)))

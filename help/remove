@@ -1,6 +1,16 @@
-S9 LIB  (remove procedure^1 list)  ==>  list
+S9 LIB  (remove obj list)        ==>  list
+        (remp procedure^1 list)  ==>  list
+        (remq obj list)          ==>  list
+        (remv obj list)          ==>  list
 
-Remove elements from a list. The unary predicate PROCEDURE^1
-describes the property of the elements to be removed.
+        (load-from-library "remove.scm")
 
-(remove number? '(a 1 b 2 c 3))  ==>  (a b c)
+Remove elements from a list. REMP uses the unary predicate
+PROCEDURE^1 to describe the property of the elements to be
+removed. REMOVE uses EQUAL?, REMV uses EQV?, and REMQ uses
+EQ? to compare each element of LIST to OBJ.
+
+(remp number? '(a 1 b 2 c 3))   ==>  (a b c)
+(remove '(b) '(a (b) (c) (b)))  ==>  (a (c))
+(remq 'b     '(a b c b d))      ==>  (a c d)
+(remv 3      '(3 1 2 3 1))      ==>  (1 2 1)

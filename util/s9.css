@@ -1,0 +1,96 @@
+BODY { background: #000000;
+       color: #c0c0c0; }
+
+A { color: #60c0e0;
+    text-decoration: none; }
+
+A:hover { color: #000000;
+          background: #60c0e0;
+          text-decoration: none; }
+
+IMG { float: right; 
+      margin-left: 0.5cm;
+      margin-right: 0;
+      margin-top: 0;
+      margin-bottom: 0.2cm; }
+
+HR { clear: both; }
+
+PRE.man { }
+
+PRE.man B { color: #e0e0e0; }
+PRE.man I { color: #a0a0a0; }
+PRE.man U { color: #c0c0c0; }
+
+PRE.scheme { background: #000000;
+             line-height: 130%;
+	     border-style: solid;
+	     border-color: #808080;
+	     border-width: 1px;
+             padding: 0.5em; }
+
+PRE.scheme SPAN.o { color: #a0a0a0; } /* comment */
+PRE.scheme SPAN.p { color: #808080; } /* parenthesis */
+PRE.scheme SPAN.s { color: #c0c0c0; } /* symbol */
+PRE.scheme SPAN.c { color: #80c0ff; } /* constant */
+PRE.scheme SPAN.r { color: #c080ff; } /* r5rs procedure */
+PRE.scheme SPAN.y { color: #e040e0; } /* r5rs syntax */
+PRE.scheme SPAN.x { color: #ffc080; } /* s9fes procedure */
+PRE.scheme SPAN.z { color: #ffc080; } /* s9fes syntax */
+
+PRE.ccode { background: #000000;
+             line-height: 130%;
+	     border-style: solid;
+	     border-color: #808080;
+	     border-width: 1px;
+             padding: 0.5em; }
+
+PRE.ccode SPAN.co { color: #a0a0a0; } /* comment */
+PRE.ccode SPAN.cp { color: #808080; } /* punctuation */
+PRE.ccode SPAN.cs { color: #c0c0c0; } /* symbol */
+PRE.ccode SPAN.cc { color: #80c0ff; } /* constant */
+PRE.ccode SPAN.cr { color: #e040e0; } /* reserved word */
+PRE.ccode SPAN.cl { color: #c080ff; } /* stdlib symbol */
+PRE.ccode SPAN.cx { color: #ffc080; } /* extension */
+
+PRE.scheme-hl { background: #000000;
+                line-height: 110%;
+	        border-style: solid;
+	        border-color: #808080;
+	        border-width: 1px;
+                padding: 0.5em; }
+
+PRE.scheme-hl SPAN.o { color: #404040; } /* comment */
+PRE.scheme-hl SPAN.p { color: #808080; } /* parenthesis */
+PRE.scheme-hl SPAN.s { color: #000000; } /* symbol */
+PRE.scheme-hl SPAN.c { color: #0060c0; } /* constant */
+PRE.scheme-hl SPAN.r { color: #6000c0; } /* r5rs procedure */
+PRE.scheme-hl SPAN.y { color: #6000c0; } /* r5rs syntax */
+PRE.scheme-hl SPAN.x { color: #c06000; } /* s9fes procedure */
+PRE.scheme-hl SPAN.z { color: #c06000; } /* s9fes syntax */
+
+PRE.scheme-hl SPAN.n:hover { background: #ffffb8; }
+PRE.scheme-hl SPAN.n SPAN.n:hover { background: #ffdcba; }
+PRE.scheme-hl SPAN.n SPAN.n SPAN.n:hover { background: #eacbff; }
+PRE.scheme-hl SPAN.n SPAN.n SPAN.n SPAN.n:hover { background: #c5ffe5; }
+PRE.scheme-hl SPAN.n SPAN.n SPAN.n SPAN.n SPAN.n:hover { background: #ffffb8; }
+PRE.scheme-hl SPAN.n SPAN.n SPAN.n SPAN.n SPAN.n SPAN.n:hover { background: #ffdcba; }
+PRE.scheme-hl SPAN.n SPAN.n SPAN.n SPAN.n SPAN.n SPAN.n SPAN.n:hover { background: #eacbff; }
+PRE.scheme-hl SPAN.n SPAN.n SPAN.n SPAN.n SPAN.n SPAN.n SPAN.n SPAN.n:hover
+        { background: #c5ffe5; }
+PRE.scheme-hl SPAN.n SPAN.n SPAN.n SPAN.n SPAN.n SPAN.n SPAN.n SPAN.n SPAN.n:hover
+        { background: #ffffb8; }
+PRE.scheme-hl SPAN.n SPAN.n SPAN.n SPAN.n SPAN.n SPAN.n SPAN.n SPAN.n SPAN.n SPAN.n:hover
+        { background: #ffdcba; }
+PRE.scheme-hl SPAN.n SPAN.n SPAN.n SPAN.n SPAN.n SPAN.n SPAN.n SPAN.n SPAN.n SPAN.n SPAN.n:hover
+        { background: #eacbff; }
+PRE.scheme-hl SPAN.n SPAN.n SPAN.n SPAN.n SPAN.n SPAN.n SPAN.n SPAN.n SPAN.n SPAN.n SPAN.n SPAN.n:hover
+        { background: #c5ffe5; }
+PRE.scheme-hl SPAN.n SPAN.n SPAN.n SPAN.n SPAN.n SPAN.n SPAN.n SPAN.n SPAN.n SPAN.n SPAN.n SPAN.n SPAN.n:hover
+        { background: #ffffb8; }
+PRE.scheme-hl SPAN.n SPAN.n SPAN.n SPAN.n SPAN.n SPAN.n SPAN.n SPAN.n SPAN.n SPAN.n SPAN.n SPAN.n SPAN.n SPAN.n:hover
+        { background: #ffdcba; }
+PRE.scheme-hl SPAN.n SPAN.n SPAN.n SPAN.n SPAN.n SPAN.n SPAN.n SPAN.n SPAN.n SPAN.n SPAN.n SPAN.n SPAN.n SPAN.n SPAN.n:hover
+        { background: #eacbff; }
+PRE.scheme-hl SPAN.n SPAN.n SPAN.n SPAN.n SPAN.n SPAN.n SPAN.n SPAN.n SPAN.n SPAN.n SPAN.n SPAN.n SPAN.n SPAN.n SPAN.n SPAN.n:hover
+        { background: #c5ffe5; }

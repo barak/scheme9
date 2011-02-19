@@ -1,6 +1,6 @@
 ; Scheme 9 from Empty Space, Function Library
 ; By Nils M Holm, 2009
-; See the LICENSE file of the S9fES package for terms of use
+; Placed in the Public Domain
 ;
 ; (factorial integer)  ==>  integer
 ;
@@ -15,14 +15,8 @@
                n
                (let ((k (quotient m 2)))
                  (* (r* n k)
-                    (r* (+ n k) (- m k)))))))
-     (f* (lambda (x r)
-           (if (< x 2)
-               r
-               (f* (- x 1) (* x r))))))
+                    (r* (+ n k) (- m k))))))))
     (cond ((negative? n)
             (error "factorial: negative operand" n))
-          ((inexact? n)
-            (f* n 1))
           (else
             (r* 1 n)))))
