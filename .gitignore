@@ -1,4 +1,6 @@
 *.o
+/arse
+/arse-core.image
 /debian/*.debhelper
 /debian/*.log
 /debian/*.substvars
@@ -9,14 +11,5 @@
 /s9.1
 /s9.1.gz
 /s9.image
-/s9e
-/s9e.1
-/s9e.1.gz
-/s9e.image
-/s9e.scm
-/s9sc
-/s9sc.1
-/s9sc.1.gz
-/s9sc.image
-/s9sc.scm
 /sys6x12.vf
+/test.image
