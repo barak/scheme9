@@ -79,8 +79,10 @@ s9.image:	s9 s9.scm s9-real.scm ext/unix.scm ext/curses.scm config.scm
 		$(BUILD_ENV) ./s9 -n $(EXTRA_SCM) -l config.scm -d s9.image
 
 %.1: %.1.in
-	sed -e "s,@LIBDIR@,$(LIBDIR),g" < $@.in \
-	 | sed -e "s,@DATADIR@,$(DATADIR),g" > $@
+	sed \
+	 -e "s,@LIBDIR@,$(LIBDIR),g" \
+	 -e "s,@DATADIR@,$(DATADIR),g" \
+	 < $@.in > $@
 
 %.gz: %
 	gzip -9 < $* > $@
@@ -160,7 +162,7 @@ arse-core.image: contrib/arse.scm ext/unix.scm ext/curses.scm
 install-arse: arse-core.image
 	cp arse-core.image $(DESTDIR)$(LIBDIR)
 	cp contrib/arse.help $(DESTDIR)$(LIBDIR)
-	sed -e "s|^#! /usr/local|#! $(PREFIX)|"	\
+	sed -e "s|^#! /usr/local|#! $(prefix)|"	\
 	    -e "s|^#! \(.*\)/s9|#! \1/arse-core|"	\
 	    -e '/arse.scm"/d' \
 		<prog/arse1.scm >$(DESTDIR)$(BINDIR)/arse
