@@ -1,6 +1,6 @@
 ; Scheme 9 from Empty Space, Function Library
 ; By Nils M Holm, 2010
-; Placed in the Public Domain
+; See the LICENSE file of the S9fES package for terms of use
 ;
 ; (t-sort procedure1 object procedure2 <option> ...)  ==>  list
 ; (t-sort-net procedure^2 list <option> ...)          ==>  list

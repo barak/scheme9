@@ -2,7 +2,7 @@
 
 ; Scheme 9 from Empty Space, Function Library
 ; By Nils M Holm, 2009,2010
-; Placed in the Public Domain
+; See the LICENSE file of the S9fES package for terms of use
 ;
 ; (define make-matcher symbol list ...)           ==>  list
 ; (define-matcher symbol <clause> ...)            ==>  unspecific

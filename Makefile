@@ -1,7 +1,6 @@
 # Scheme 9 from Empty Space
 # Makefile (obviously)
 # By Nils M Holm, 2007-2010
-# Placed in the Public Domain.
 
 # Change at least this line:
 PREFIX= /u

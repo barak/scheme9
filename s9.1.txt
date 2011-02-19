@@ -422,7 +422,7 @@ REFERENCES
               http://www.lulu.com/content/9378374
 
 AUTHOR
-          Nils M Holm
+          Nils M Holm < n m h  at  t 3 x . o r g >
 
 
 

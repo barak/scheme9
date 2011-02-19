@@ -2,7 +2,7 @@
 
 ; s9resolve -- resolve S9fES library dependencies
 ; By Nils M Holm, 2010
-; Placed in the Public Domain
+; See the LICENSE file of the S9fES package for terms of use
 ;
 ; Usage: s9resolve [-dsv] [file]
 ;

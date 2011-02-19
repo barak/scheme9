@@ -2,7 +2,7 @@
 
 ; c2html -- print C code to HTML
 ; By Nils M Holm, 2009,2010
-; Placed in the Public Domain
+; See the LICENSE file of the S9fES package for terms of use
 ;
 ; Usage: c2html [-dL] [file ...]
 ;

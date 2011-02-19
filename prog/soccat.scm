@@ -2,7 +2,7 @@
 
 ; soccat -- connect to remote hosts
 ; By Nils M Holm, 2010
-; Placed in the Public Domain
+; See the LICENSE file of the S9fES package for terms of use
 ;
 ; Usage: soccat [-i] host port/service
 ;

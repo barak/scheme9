@@ -1,6 +1,6 @@
 ; Scheme 9 from Empty Space, Function Library
 ; By Nils M Holm, 2009
-; Placed in the Public Domain
+; See the LICENSE file of the S9fES package for terms of use
 ;
 ; (run* (variable) query)  ==>  list
 ; (run* () query)          ==>  list
@@ -12,7 +12,8 @@
 ; for an introduction to AMK. If a variable is given, return all
 ; values for that variable that satisfy the query.
 ; 
-; [1] The book is now out of print.
+; [1] The book is now out of print, but a copy may be retrieved
+;     at http://www.bcl.hamilton.ie/~nmh/t3x.org/zzz/.
 ;
 ; Example:   (run* (vq) (appendo vq (_) '(a b c)))
 ;              ==>  (() (a) (a b) (a b c))

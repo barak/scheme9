@@ -1,6 +1,6 @@
 ; Scheme 9 from Empty Space, Function Library
 ; By Nils M Holm, 2010
-; Placed in the Public Domain
+; See the LICENSE file of the S9fES package for terms of use
 ;
 ; (accept-keywords string list1 list2)  ==>  #t | undefined
 ; (keyword-value list symbol)           ==>  object | undefined

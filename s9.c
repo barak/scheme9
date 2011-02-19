@@ -3,7 +3,8 @@
 /*
  * Scheme 9 from Empty Space
  * By Nils M Holm, 2007-2010
- * Placed in the Public Domain
+ * < n m h  at  t 3 x . o r g >
+ * See the LICENSE file of the S9fES package for terms of use
  */
 
 /*
@@ -13,7 +14,7 @@
  *     (also add "s9-real.scm" to the heap image).
  */
 
-#define VERSION "2010-10-08"
+#define VERSION "2010-11-13"
 
 #define EXTERN
  #include "s9.h"
