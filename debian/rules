@@ -4,11 +4,8 @@
 %:
 	dh $@ --parallel
 
-override_dh_auto_configure:
-	echo Calling ./configure unnecessary as ./Makefile already patched for debian.
-
 override_dh_auto_build:
-	dh_auto_build -- prefix=/usr
+	dh_auto_build -- prefix=/usr mandir=/usr/share/man
 
 override_dh_auto_install:
-	dh_auto_install -- prefix=/usr
+	dh_auto_install -- prefix=/usr mandir=/usr/share/man
