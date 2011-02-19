@@ -1,12 +1,14 @@
 ; Scheme 9 from Empty Space, Function Library
 ; By Nils M Holm, 1998-2009
-; See the LICENSE file of the S9fES package for terms of use
+; Placed in the Public Domain
 ;
 ; (prolog list1 list2)          ==>  list
 ; (new-database!)               ==>  unspecific
 ; (fact! list)                  ==>  unspecific
 ; (predicate! list1 list2 ...)  ==>  unspecific
 ; (query list)                  ==>  list
+;
+; (load-from-library "prolog.scm")
 ;
 ; This is a tiny PROLOG interpreter that is based on an even
 ; tinier PROLOG interpreter written in MACLISP by Ken Kahn.
@@ -46,6 +48,7 @@
 ;                       (man ?x))
 ;                   (query '(mortal ?who)))  ==>  (((who . socrates)))
 
+(load-from-library "syntax-rules.scm")
 (load-from-library "hash-table.scm")
 
 (define *prolog-database* '())
@@ -65,7 +68,7 @@
       ((unique2
          (lambda (a r)
            (cond ((null? a)
-                   (reverse r))
+                   (reverse! r))
                  ((member (car a) r)
                    (unique2 (cdr a) r))
                  (else
@@ -94,7 +97,8 @@
           ((pair? env)
             (cons (new-scope (car env) id)
                   (new-scope (cdr env) id)))
-          (else env)))
+          (else
+            env)))
 
   (define (new-env-id x)
     (string-append ";" x))
@@ -117,8 +121,8 @@
               env)
             ((and (pair? x)
                   (pair? y))
-                (let ((new (unify (car x) (car y) env)))
-                  (and new (unify (cdr x) (cdr y) new))))
+              (let ((new (unify (car x) (car y) env)))
+                (and new (unify (cdr x) (cdr y) new))))
             ((eq? x y) env)
             (else      #f))))
 
@@ -162,9 +166,9 @@
     (if (null? rules)
         result
         (case (caar goals)
-          ((==)  (goal-unify rules goals env id result))
-          ((dif) (goal-dif   rules goals env id result))
-          (else  (goal*      rules goals env id result)))))
+              ((==)  (goal-unify rules goals env id result))
+              ((dif) (goal-dif   rules goals env id result))
+              (else  (goal*      rules goals env id result)))))
 
   (define (list-env env)
     (letrec
@@ -191,7 +195,8 @@
                               (extend (var-name (this-id e))
                                       (value-of (this-id e) env)
                                       r)))
-                 (else (list-env2 (cdr e) r))))))
+                 (else
+                   (list-env2 (cdr e) r))))))
       (list-env2 env '())))
 
   ; version without memoization
@@ -208,7 +213,7 @@
         (let* ((k (append goals env))
                (v (hash-table-ref proven k)))
           (if v
-              v
+              (car v)
               (let ((v (try-rules db goals env id '())))
                 (hash-table-set! proven k v)
                 v)))))

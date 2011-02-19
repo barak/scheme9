@@ -17,6 +17,8 @@ S9 LIB  (bitwise-clear integer1 integer2 ...)        ==>  integer
         (bitwise-shift-left integer1 integer2 ...)   ==>  integer
         (bitwise-shift-right integer1 integer2 ...)  ==>  integer
 
+        (load-from-library "bitwise-ops.scm")
+
 Bitwise logic operations. These operations are defined as follows:
 
 INT1             0   0   1   1

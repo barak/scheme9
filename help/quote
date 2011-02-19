@@ -1,4 +1,4 @@
-4.1.2 Literal expressions
+R4RS 4.1.2  (quote <datum>)  ==>  object
 
 (quote <datum>)  ==>  <datum>
 '<datum>         ==>  <datum>

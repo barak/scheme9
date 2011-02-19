@@ -4,6 +4,8 @@ S9 LIB  (prolog list1 list2)          ==>  list
         (predicate! list1 list2 ...)  ==>  unspecific
         (query list)                  ==>  list
 
+        (load-from-library "prolog.scm")
+
 This is a tiny PROLOG interpreter that is based on an even
 tinier PROLOG interpreter written in MACLISP by Ken Kahn.
 

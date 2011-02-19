@@ -1,6 +1,8 @@
 S9 LIB  (write-to-string object)    ==>  string
         (display-to-string object)  ==>  string
 
+        (load-from-library "write-to-string.scm")
+
 Write the external representation of the given OBJECT to a fresh
 string. WRITE-TO-STRING is like WRITE but writes its output to a
 string instead of an output port. DISPLAY-TO-STRING is like

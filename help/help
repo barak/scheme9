@@ -6,6 +6,8 @@ S9fES  (help "procedure-name")  ==>  unspecific
        (apropos 'string)        ==>  list
        (apropos)                ==>  list
 
+       (load-from-library "help.scm")
+
 The HELP procedure displays the synopsis of the given procedure or
 keyword. When the given object is described in R4RS, its R4RS entry
 is printed, otherwise a S9fES-specific summary is displayed.

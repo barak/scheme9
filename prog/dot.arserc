@@ -1,0 +1,24 @@
+; $HOME/.arserc -- ARSE config file
+; Commented out options are set automatically
+
+    autocenter
+    autoindent
+    autoload
+; nocrlfmode
+    errorbells
+  noignorecase
+; noreadonly
+    regex
+    saveintbuf
+    sharebuffers
+    showmatch
+    showmode
+    standout
+  nounexpand
+
+  indent=2
+  repl-timeout=2
+  scheme-init=""
+  scheme-repl="s9 -q"
+; scroll=12
+  wordset=2

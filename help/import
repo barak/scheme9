@@ -1,16 +1,1 @@
-S9 LIB  (module symbol definition ...)                 ==>  unspecific
-        (import symbol (symbol-i ...) expression ...)  ==>  object
-
-Simple modules. Inside of a MODULE expression, DEFINE defines
-a local object and DEFINE* defines a public object. SYMBOL names
-the module itself.
-
-Expressions inside of IMPORT may use all SYMBOL-I's that are
-being imported from the module SYMBOL.
-
-(begin ; Note: BEGIN is only needed for automatic testing
-  (module math
-    (define* (fact x)
-      (if (= 0 x) 1 (* x (fact (- x 1))))))
-  (import math (fact)
-    (fact 5)))                               ==> 120
+module

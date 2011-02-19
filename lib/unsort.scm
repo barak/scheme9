@@ -1,11 +1,11 @@
 ; Scheme 9 from Empty Space, Function Library
 ; By Nils M Holm, 2009
-; See the LICENSE file of the S9fES package for terms of use
+; Placed in the Public Domain
 ;
 ; (unsort list seed)  ==>  list
 ;
 ; Unsort a list of integers. SEED must be a number in the range
-; 0..(- (length LIST) 1).
+; 0..(- (length LIST) 1). The original list is not changed.
 ;
 ; Example:   (unsort '(1 2 3 4 5) 1)  ==>  (1 3 5 4 2)
 
@@ -15,8 +15,8 @@
        (lambda (a n r)
          (if (zero? n) 
              (if (null? a)
-                 (reverse r)
-                 (append (cdr a) (reverse r)))
+                 (reverse! r)
+                 (append (cdr a) (reverse! r)))
              (remove-nth (cdr a) (- n 1) (cons (car a) r)))))
      (unsort4
        (lambda (a n k r)

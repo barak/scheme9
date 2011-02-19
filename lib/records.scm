@@ -1,6 +1,6 @@
 ; Scheme 9 from Empty Space, Function Library
 ; By Nils M Holm, 2009
-; See the LICENSE file of the S9fES package for terms of use
+; Placed in the Public Domain
 ;
 ; (record pair ...)                   ==>  record
 ; (record? object)                    ==>  boolean
@@ -13,6 +13,8 @@
 ; (record-signature record)           ==>  list
 ; (record-type-matches? list record)  ==>  boolean
 ; (assert-record-type list record)    ==>  record
+;
+; (load-from-library "records.scm")
 ;
 ; These procedures implement ML-style records.
 ;
@@ -111,8 +113,9 @@
 (define (record-box x t)
   (cond ((assq t (record->list x))
           => (lambda (x) (cdr x)))
-        (else (error "record-box: no such tag"
-                     (list 'record: x 'tag: t)))))
+        (else
+          (error "record-box: no such tag"
+                 (list 'record: x 'tag: t)))))
 
 (define record-ref
   (let ((record-box record-box))
@@ -137,12 +140,14 @@
   (letrec
     ((equal-fields?
        (lambda (r1 r2)
-         (cond ((null? r1) #t)
+         (cond ((null? r1)
+                 #t)
                ((assq (caar r1) r2)
                  => (lambda (x)
                       (and (equal? (cadar r1) (cadr x))
                            (equal-fields? (cdr r1) r2))))
-               (else #f)))))
+               (else
+                 #f)))))
     (let ((lr1 (record->list r1))
           (lr2 (record->list r2)))
       (and (= (length lr1) (length lr2))

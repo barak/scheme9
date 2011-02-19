@@ -1,9 +1,11 @@
 ; Scheme 9 from Empty Space, Function Library
 ; By Nils M Holm, 2009
-; See the LICENSE file of the S9fES package for terms of use
+; Placed in the Public Domain
 ;
 ; (write-to-string object)    ==>  string
 ; (display-to-string object)  ==>  string
+;
+; (load-from-library "write-to-string.scm")
 ;
 ; Write the external representation of the given OBJECT to a fresh
 ; string. WRITE-TO-STRING is like WRITE but writes its output to a
@@ -27,19 +29,23 @@
                          (stringify-improper-list (cdr a) #f)))
         ((null? a)
           "")
-        (else (string-append " . " (to-string a)))))
+        (else
+          (string-append " . " (to-string a)))))
 
     (define (char->string c)
       (if readable
           (let ((v (char->integer c)))
-            (cond ((= v 10) "#\\newline")
-                  ((= v 32) "#\\space")
+            (cond ((= v 10)
+                    "#\\newline")
+                  ((= v 32)
+                    "#\\space")
                   ((or (<= 0 v 31)
                        (> v 126))
                     (string-append "#<unrepresentable character, code="
                                    (number->string v)
                                    ">"))
-                  (else (string-append "#\\" (string c)))))
+                  (else
+                    (string-append "#\\" (string c)))))
           (string c)))
 
     (define (quote-string s)
@@ -47,11 +53,11 @@
         (let q ((si (string->list s))
                 (so '()))
           (cond ((null? si)
-                  (reverse so))
+                  (reverse! so))
                 ((char=? #\\ (car si))
-                  (q (cdr si) (append '(#\\ #\\) so)))
+                  (q (cdr si) (append (list #\\ #\\) so)))
                 ((char=? #\" (car si))
-                  (q (cdr si) (append '(#\" #\\) so)))
+                  (q (cdr si) (append (list #\" #\\) so)))
                 (else
                   (q (cdr si) (cons (car si) so)))))))
 

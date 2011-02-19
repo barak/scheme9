@@ -5,14 +5,14 @@ cell is represented by [o|o] with lines leading to their car
 and cdr parts. Conses with a cdr value of () are represented
 by [o|/].
 
-(draw-tree '((a . b) (c d)))  ==>  unspecific
+(draw-tree '((a) (b . c) (d e)))  ==>  unspecific
 
-Output:  [o|o]---[o|o]--- ()
-          |       |
-          |      [o|o]---[o|o]--- ()
+Output:  [o|o]---[o|o]---[o|/]
           |       |       |
-          |       c       d
-          |
-         [o|o]--- b
-          |
-          a
+         [o|/]    |      [o|o]---[o|/]
+          |       |       |       |
+          a       |       d       e
+                  |
+                 [o|o]--- c
+                  |
+                  b

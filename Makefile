@@ -1,119 +1,117 @@
-# Scheme 9 from Empty Space Makefile.
-# Nils M Holm, 2007,2008,2009
+# Scheme 9 from Empty Space
+# Makefile (obviously)
+# By Nils M Holm, 2007-2010
+# Placed in the Public Domain.
 
 # Change at least this line:
 PREFIX= /u
 
-VERSION= 20090906
+# Uncomment these to include the Unix extensions
+EXTRA_SCM+=	-l ext/unix.scm
+EXTRA_OBJS+=	unix.o
+EXTRA_INIT+=	sys_init();
+EXTRA_LIBS+=
 
-# Extras to be added to the heap image
-EXTRA_STUFF=	-f contrib/help.scm \
-		-f contrib/pretty-print.scm
+# Uncomment these to include the Curses extensions
+EXTRA_SCM+=	-l ext/curses.scm
+EXTRA_OBJS+=	curses.o
+EXTRA_INIT+=	curs_init();
+EXTRA_LIBS+=	-lcurses
+
+# Uncomment this and define BIG_REAL below to include
+# real number arithmetics
+EXTRA_SCM+=	-l s9-real.scm
 
 # Set up environment to be used during the build process
-BUILD_ENV=	env S9FES_LIBRARY_PATH=.:lib:contrib
+BUILD_ENV=	env S9FES_LIBRARY_PATH=.:lib:ext:contrib
 
 # Override default compiler and flags
-#CC=	gcc
-#CFLAGS=	-g -Wall -ansi -pedantic -O
+CC=	gcc
+CFLAGS=	-g -Wall -ansi -pedantic -O2
 
+# Where to install the stuff
 BINDIR=	$(PREFIX)/bin
 LIBDIR=	$(PREFIX)/share/s9fes
 MANDIR=	$(PREFIX)/man/man1
 
-# BITS_PER_WORD_64	use 64-bit bignum arithmetics
-# NO_SIGNALS		disable POSIX signal handlers
-# IMAGEFILE		default image file name
-# LIBRARY		default library source file
-# DEFAULT_LIBRARY_PATH	default search path for LOCATE-FILE
-
 # Which OS are we using (unix or plan9)?
 OSDEF=	-Dunix
 
-# For the S9fES Scientific Calculator; uncomment, if needed
-X11BASE=	/usr/X11R6
+# Options to be added to $(DEFS)
+#	-DBITS_PER_WORD_64	# use 64-bit bignum arithmetics
+#	-DNO_SIGNALS		# disable POSIX signal handlers
+#	-DLIBRARY="\"file\""	# default library source file
+#	-DDEFAULT_LIBRARY_PATH="\"dir:...\""
+#				# default search path for LOCATE-FILE
+#	-DNETWORK		# include socket code in the Unix extension
+#	-DCURSES_RESET		# automatically run CURS:ENDWIN on the REPL
+#				# (*requires* the Curses extension)
+#	-DBIG_REAL		# Enable big real arithmetics
+#				# (requires "s9-real.scm" EXTRA_SCM, above)
 
 DEFS=	$(OSDEF) \
-	-DDEFAULT_LIBRARY_PATH="\".:~/s9fes:$(LIBDIR):$(LIBDIR)/contrib\""
+	-DDEFAULT_LIBRARY_PATH="\".:~/s9fes:$(LIBDIR)\"" \
+	-DEXTENSIONS="$(EXTRA_INIT)" \
+	-DNETWORK -DCURSES_RESET \
+	-DBIG_REAL
 
-all:	s9 s9.image s9.1.gz # all-s9e
+all:	s9 s9.image s9.1.gz arse-core.image s9.1.txt lib/syntax-rules.scm \
+		lib/matcher.scm
 
-all-s9e:	s9e s9e.image s9e.1.gz
+s9:	s9.o s9.h $(EXTRA_OBJS)
+	$(CC) -o s9 s9.o $(EXTRA_OBJS) $(EXTRA_LIBS)
 
-all-s9sc:	s9sc s9sc.image sys6x12.vf s9sc.1.gz
+s9.o:	s9.c s9-real.c s9.h
+	$(CC) -o s9.o $(CFLAGS) $(DEFS) -c s9.c
 
-s9:	s9.c s9.h
-	$(CC) $(CFLAGS) $(DEFS) -o s9 s9.c
 
-s9.image:	s9 s9.scm
-	rm -f s9.image && $(BUILD_ENV) ./s9 -n $(EXTRA_STUFF) -d s9.image
+s9.image:	s9 s9.scm s9-real.scm ext/unix.scm ext/curses.scm config.scm
+	rm -f s9.image && \
+		$(BUILD_ENV) ./s9 -n $(EXTRA_SCM) -l config.scm -d s9.image
 
 s9.1.gz:	s9.1
 	sed -e "s,@LIBDIR@,$(LIBDIR)," <s9.1 |gzip -9 >s9.1.gz
 
-s9e:	s9e.o unix.o
-	$(CC) $(CFLAGS) -o s9e s9e.o unix.o
+unix.o:	ext/unix.c s9.h
+	$(CC) $(CFLAGS) $(DEFS) -I . -o unix.o -c ext/unix.c
 
-s9e.scm:	s9.scm
-	ln -s s9.scm s9e.scm
-
-s9e.o:	s9.c
-	$(CC) $(CFLAGS) $(DEFS) -I . -DEXTENSIONS="unix_init()" \
-		-DIMAGEFILE="\"s9e.image\"" -DLIBRARY="\"s9e.scm\"" \
-		-o s9e.o -c s9.c
-
-unix.o:	ext/unix.c
-	$(CC) $(CFLAGS) $(OSDEF) -I . -o unix.o -c ext/unix.c
-
-s9e.image:	s9e s9e.scm ext/unix.scm
-	rm -f s9e.image && \
-	$(BUILD_ENV) ./s9e -n -f ext/unix.scm $(EXTRA_STUFF) -d s9e.image
-
-s9e.1.gz:	s9e.1
-	sed -e "s,@LIBDIR@,$(LIBDIR)," <s9e.1 |gzip -9 >s9e.1.gz
-
-s9sc:	s9sc.o sc.o
-	$(CC) $(CFLAGS) -o s9sc s9sc.o sc.o -L $(X11BASE)/lib -lX11
-
-s9sc.scm:	s9.scm
-	ln -s s9.scm s9sc.scm
-
-s9sc.o:	s9.c
-	$(CC) $(CFLAGS) $(DEFS) -I . -DEXTENSIONS="sc_init()" \
-		-DIMAGEFILE="\"s9sc.image\"" -DLIBRARY="\"s9sc.scm\"" \
-		-o s9sc.o -c s9.c
-
-sc.o:	ext/sc.c
-	$(CC) $(CFLAGS) $(OSDEF) -I $(X11BASE)/include -I . -o sc.o -c ext/sc.c
-
-sys6x12.vf:	ext/sys6x12.vfd mkvfont
-	./mkvfont 6 12 ext/sys6x12.vfd sys6x12.vf
-
-mkvfont:	ext/mkvfont.c
-	$(CC) $(CFLAGS) -o mkvfont ext/mkvfont.c
-
-s9sc.image:	s9sc s9sc.scm ext/sc.scm
-	rm -f s9sc.image && \
-	$(BUILD_ENV) ./s9sc -n -f ext/sc.scm $(EXTRA_STUFF) -d s9sc.image
-
-s9sc.1.gz:	s9sc.1
-	gzip -9c <s9sc.1 >s9sc.1.gz
+curses.o:	ext/curses.c s9.h
+	$(CC) $(CFLAGS) $(DEFS) -I . -o curses.o -c ext/curses.c
 
 lint:
 	gcc -g -Wall -ansi -pedantic s9.c && rm a.out
 
-test:	s9 s9.image
-	$(BUILD_ENV) ./s9 -nf test.scm
+test:	s9 test.image
+	$(BUILD_ENV) ./s9 !test -f util/test.scm
 
-libtest:	s9 s9.image
-	$(BUILD_ENV) sh libtest.sh
+libtest:	s9 test.image
+	$(BUILD_ENV) sh util/libtest.sh
+
+systest:	s9 s9.image
+	$(BUILD_ENV) ./s9 -f util/systest.scm
+
+srtest:	s9 test.image
+	$(BUILD_ENV) ./s9 !test -f util/srtest.scm
+
+realtest:	s9 test.image
+	$(BUILD_ENV) ./s9 !test -f util/realtest.scm
+
+test.image:	s9 s9.scm s9-real.scm
+	$(BUILD_ENV) ./s9 !test -n $(EXTRA_SCM) -d test.image
+
+tests:
+	make test
+	make srtest
+	make libtest
+	make systest
+
+install:	install-s9 install-util
 
 # old version of install(1) may need -c
 #C=-c
-install:	s9 s9.scm s9.image s9.1.gz
+install-s9:	s9 s9.scm s9.image s9.1.gz
 	install -d -m 0755 $(BINDIR)
 	install -d -m 0755 $(LIBDIR)
-	install -d -m 0755 $(LIBDIR)/contrib
 	install -d -m 0755 $(LIBDIR)/help
 	install -d -m 0755 $(MANDIR)
 	install $C -m 0755 s9 $(BINDIR)
@@ -121,42 +119,140 @@ install:	s9 s9.scm s9.image s9.1.gz
 	install $C -m 0644 s9.scm $(LIBDIR)
 	install $C -m 0644 s9.image $(LIBDIR)
 	install $C -m 0644 lib/* $(LIBDIR)
-	install $C -m 0644 contrib/* $(LIBDIR)/contrib
+	install $C -m 0644 ext/*.scm $(LIBDIR)
+	install $C -m 0644 contrib/* $(LIBDIR)
 	install $C -m 0644 s9.1.gz $(MANDIR)
 	install $C -m 0644 help/* $(LIBDIR)/help
+	install $C -m 0755 util/make-help-links $(LIBDIR)/help
+	(cd $(LIBDIR)/help && ./make-help-links && rm make-help-links)
 
-install-s9e:	install s9e s9e.scm s9e.image s9e.1.gz
-	install $C -m 0755 s9e $(BINDIR)
-	strip $(BINDIR)/s9e
-	install $C -m 0644 s9e.scm $(LIBDIR)
-	install $C -m 0644 s9e.image $(LIBDIR)
-	install $C -m 0644 ext/unix.scm $(LIBDIR)
-	install $C -m 0644 s9e.1.gz $(MANDIR)
+install-util:	install-arse
+	sed -e "s|^#! /usr/local|#! $(PREFIX)|"	\
+		<prog/s9help.scm >$(BINDIR)/s9help
+	sed -e "s|^#! /usr/local|#! $(PREFIX)|"	\
+		<prog/s9resolve.scm >$(BINDIR)/s9resolve
+	sed -e "s|^#! /usr/local|#! $(PREFIX)|"	\
+		<prog/scm2html1.scm >$(BINDIR)/scm2html
+	sed -e "s|^#! /usr/local|#! $(PREFIX)|"	\
+		<prog/scmpp.scm >$(BINDIR)/scmpp
+	-chmod +x $(BINDIR)/s9help	\
+		  $(BINDIR)/s9resolve	\
+		  $(BINDIR)/scm2html	\
+		  $(BINDIR)/scmpp
 
-install-s9sc:	install s9sc s9sc.scm s9sc.image sys6x12.vf s9sc.1.gz
-	install $C -m 0755 s9sc $(BINDIR)
-	strip $(BINDIR)/s9sc
-	install $C -m 0644 s9sc.scm $(LIBDIR)
-	install $C -m 0644 sys6x12.vf $(LIBDIR)
-	install $C -m 0644 s9sc.image $(LIBDIR)
-	install $C -m 0644 ext/sc.scm $(LIBDIR)
-	install $C -m 0644 s9sc.1.gz $(MANDIR)
+arse-core.image: contrib/arse.scm ext/unix.scm ext/curses.scm
+	rm -f arse-core.image
+	$(BUILD_ENV) ./s9 !arse-core -n -l ext/unix.scm -l ext/curses.scm \
+		-l contrib/arse.scm -d arse-core.image
+
+install-arse: arse-core.image
+	cp arse-core.image $(LIBDIR)
+	cp contrib/arse.help $(LIBDIR)
+	sed -e "s|^#! /usr/local|#! $(PREFIX)|"	\
+	    -e "s|^#! \(.*\)/s9|#! \1/arse-core|"	\
+	    -e '/arse.scm"/d' \
+		<prog/arse1.scm >$(BINDIR)/arse
+	ln -fs $(BINDIR)/s9 $(BINDIR)/arse-core
+	-chmod +x $(BINDIR)/arse
+
+install-programs:
+	sed -e "s|^#! /usr/local|#! $(PREFIX)|"	\
+		<prog/advgen.scm >$(BINDIR)/advgen
+	sed -e "s|^#! /usr/local|#! $(PREFIX)|"	\
+		<prog/c2html1.scm >$(BINDIR)/c2html
+	sed -e "s|^#! /usr/local|#! $(PREFIX)|"	\
+		<prog/cols.scm >$(BINDIR)/cols
+	sed -e "s|^#! /usr/local|#! $(PREFIX)|"	\
+		<prog/dupes.scm >$(BINDIR)/dupes
+	sed -e "s|^#! /usr/local|#! $(PREFIX)|"	\
+		<prog/edoc.scm >$(BINDIR)/edoc
+	sed -e "s|^#! /usr/local|#! $(PREFIX)|"	\
+		<prog/htmlify.scm >$(BINDIR)/htmlify
+	sed -e "s|^#! /usr/local|#! $(PREFIX)|"	\
+		<prog/s9hts.scm >$(BINDIR)/s9hts
+	sed -e "s|^#! /usr/local|#! $(PREFIX)|"	\
+		<prog/soccat.scm >$(BINDIR)/soccat
+	-chmod +x $(BINDIR)/advgen	\
+		  $(BINDIR)/c2html	\
+		  $(BINDIR)/cols	\
+		  $(BINDIR)/dupes	\
+		  $(BINDIR)/edoc	\
+		  $(BINDIR)/htmlify	\
+		  $(BINDIR)/s9hts	\
+		  $(BINDIR)/soccat
 
 deinstall:
-	rm $(LIBDIR)/contrib/* && rmdir $(LIBDIR)/contrib
-	rm $(LIBDIR)/help/* && rmdir $(LIBDIR)/help
-	rm $(LIBDIR)/* && rmdir $(LIBDIR)
-	rm $(BINDIR)/s9
-	rm $(BINDIR)/s9e
+	rm -f $(LIBDIR)/help/* && rmdir $(LIBDIR)/help
+	rm -f $(LIBDIR)/* && rmdir $(LIBDIR)
+	rm -f $(BINDIR)/s9
 	-rmdir $(BINDIR)
-	rm $(MANDIR)/s9.1.gz
 	-rmdir $(MANDIR)
 
-clean:
-	rm -f s9 s9.image s9.1.gz s9.s.txt s9e s9e.scm s9e.image s9e.1.gz \
-		s9sc s9sc.scm s9sc.image s9sc.1.gz mkvfont sys6x12.vf \
-		*.o *.core core s9.C.tgz s9fes-$(VERSION).tar.gz __tmp[12]__ \
-		__testfile__ rpp CHANGES.html LICENSE.html README.html \
-		s9.1.html s9.exe s9e.exe
+deinstall-util:
+	rm -f $(BINDIR)/arse		\
+	      $(BINDIR)/s9help		\
+	      $(BINDIR)/s9resolve	\
+	      $(BINDIR)/scm2html	\
+	      $(BINDIR)/scmpp
 
-# --- end of distribution Makefile ---
+deinstall-programs:
+	rm -f $(BINDIR)/advgen		\
+	      $(BINDIR)/dupes		\
+	      $(BINDIR)/htmlify		\
+	      $(BINDIR)/soccat
+
+tabs:
+	@find . -name \*.scm -exec grep -l "	" {} \;
+
+cd:
+	s9 -f util/check-descr.scm
+
+clean:
+	rm -f s9 s9.image test.image arse-core.image s9.1.gz *.o *.core \
+		CATEGORIES.html core s9fes.tgz __testfile__ 
+
+new-version:
+	vi edoc/s9.c.edoc CHANGES
+	make s9.c
+
+update-library:
+	vi util/make-docs
+	util/make-docs
+	vi util/make-help-links \
+		util/descriptions \
+		util/categories.html
+	clear
+	@echo "Now copy the new help pages from help-new to help"
+	@echo "and run (cd help; ../util/make-help-links)."
+
+s9.1.txt:	s9.1
+	cc -o rpp util/rpp.c
+	nroff s9.1 | ./rpp -a >s9.1.txt
+	rm -f rpp
+
+docs:	lib ext contrib
+	util/make-docs
+
+webdump:
+	util/make-html
+
+advdump:	prog/advgen.scm prog/adventure.adv prog/adventure.intro \
+		prog/adventure.imprint
+	 prog/advgen.scm -rv \
+		-P terminal:session \
+		-e prog/adventure.imprint \
+		-i prog/adventure.intro \
+		-t "The Quest for S9fES" \
+		-y s9.css \
+		prog/adventure.adv
+	cp MASCOT.jpg util/s9.css advdump
+
+csums:
+	txsum -u <_checksums >_checksums.new
+	mv _checksums.new _checksums
+
+mksums:	clean
+	find . -type f | grep -v _checksums | txsum -m >_checksums
+
+stripped-arc:	clean s9.1.txt
+	mv Makefile Makefile.ORIG

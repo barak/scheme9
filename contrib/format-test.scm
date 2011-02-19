@@ -1,29 +1,8 @@
-;
 ; FORMAT Version 2.2 conformance test
 ;
-; Test run: (load "format.scm") (load "formatst.scm")
+; Apparently by Dirk Lutzebaeck, Ken Dickey, and Aubrey Jaffer.
 ;
-; Failure reports for various scheme interpreters:
-;
-; scm4a/SLIB:
-;   none.
-; Elk 2.0:
-;   7 inconsistencies due to the use of the internal representations of
-;   procedures and ports (so these are no errors).
-;
-; These are only tested with format version 2.1:
-;
-; scheme->C 01nov91:
-;   symbols are generally converted to uppercase strings.
-;   number to string conversions have always a number prefix.
-; MIT C-Scheme 7.1:
-;   the empty list is evaluated always as a boolean and consequently
-;   represented as `#f'.
-; UMB Scheme 2.5:
-;   a `\' is missing in slashified 8bit characters.
-; T 3.1:
-;   does not run due to missing R4RS essential procedures (e.g. string).
-;
+; Test run: (load "format.scm") (load "format-test.scm")
 
 (define fails 0)
 (define total 0)

@@ -1,4 +1,4 @@
-R4RS 6.5.5 (sqrt number)  ==>  number
+R4RS 6.5.5  (sqrt number)  ==>  number
 
 Returns the principal square root of NUMBER.
 

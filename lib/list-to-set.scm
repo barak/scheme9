@@ -1,8 +1,10 @@
 ; Scheme 9 from Empty Space, Function Library
 ; By Nils M Holm, 2009
-; See the LICENSE file of the S9fES package for terms of use
+; Placed in the Public Domain
 ;
 ; (list->set list)  ==>  list
+;
+; (load-from-library "list-to-set.scm")
 ;
 ; Convert list to set. A set is a list containing unique members.
 ;
@@ -13,7 +15,7 @@
     ((list->set2
        (lambda (a r)
          (cond ((null? a)
-                 (reverse r))
+                 (reverse! r))
                ((member (car a) r)
                  (list->set2 (cdr a) r))
                (else

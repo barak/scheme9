@@ -1,0 +1,9 @@
+S9fES  (syntax? object)  ==>  boolean
+
+Return #T if OBJECT is a syntax object (i.e. a macro),
+otherwise return #F.
+
+(define-syntax (foo) 0)
+
+(syntax? syntax?)  ==>  #f
+(syntax? foo)      ==>  #t

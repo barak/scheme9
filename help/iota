@@ -1,6 +1,16 @@
-S9 LIB  (iota integer1 integer2)  ==>  list
+S9 LIB  (iota integer1 integer2)   ==>  list
+        (iota* integer1 integer2)  ==>  list
+
+        (load-from-library "iota.scm")
 
 Create a range of integers starting at INTEGER1 and ending at
 INTEGER2 (including both). Assume INTEGER1 <= INTEGER2.
 
-(iota 17 21)  ==>  (17 18 19 20 21)
+IOTA* differs from IOTA in that it exludes INTEGER2 from the
+generated range. Hence IOTA* can be used to create an empty
+range, which IOTA cannot do.
+
+(iota 17 21)   ==>  (17 18 19 20 21)
+(iota 1 1)     ==>  (1)
+(iota* 17 21)  ==>  (17 18 19 20)
+(iota* 1 1)    ==>  ()

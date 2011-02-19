@@ -1,12 +1,14 @@
-S9 LIB  (module symbol definition ...)                 ==>  unspecific
-        (import symbol (symbol-i ...) expression ...)  ==>  object
+S9 LIB  (module <name> <definition> ...)                 ==>  unspecific
+        (import <name> (<name_i> ...) <expression> ...)  ==>  object
+
+        (load-from-library "module.scm")
 
 Simple modules. Inside of a MODULE expression, DEFINE defines
-a local object and DEFINE* defines a public object. SYMBOL names
+a local object and DEFINE* defines a public object. <Name> names
 the module itself.
 
-Expressions inside of IMPORT may use all SYMBOL-I's that are
-being imported from the module SYMBOL.
+Expressions inside of IMPORT may use all <name_i>'s that are
+being imported from the module <name>.
 
 (begin ; Note: BEGIN is only needed for automatic testing
   (module math
