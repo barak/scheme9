@@ -3,7 +3,7 @@
 # By Nils M Holm, 2007-2010
 
 # Change at least this line:
-#PREFIX= /u
+PREFIX= /u
 
 # Uncomment these to include the Unix extensions
 EXTRA_SCM+=	-l ext/unix.scm
@@ -28,18 +28,10 @@ BUILD_ENV=	env S9FES_LIBRARY_PATH=.:lib:ext:contrib
 CC=	gcc
 CFLAGS=	-g -Wall -ansi -pedantic -O2
 
-prefix=/usr/local
-exec_prefix=$(prefix)
-bindir=$(exec_prefix)/bin
-datadir=$(prefix)/share
-libdir=$(exec_prefix)/lib
-mandir=$(prefix)/man
-
 # Where to install the stuff
-BINDIR=$(bindir)
-LIBDIR=$(libdir)/s9fes
-DATADIR=$(datadir)/s9fes
-MANDIR=$(mandir)/man1
+BINDIR=	$(PREFIX)/bin
+LIBDIR=	$(PREFIX)/share/s9fes
+MANDIR=	$(PREFIX)/man/man1
 
 # Which OS are we using (unix or plan9)?
 OSDEF=	-Dunix
@@ -62,10 +54,8 @@ DEFS=	$(OSDEF) \
 	-DNETWORK -DCURSES_RESET \
 	-DBIG_REAL
 
-all:	s9 s9.image arse-core.image lib/syntax-rules.scm \
+all:	s9 s9.image s9.1.gz arse-core.image s9.1.txt lib/syntax-rules.scm \
 		lib/matcher.scm
-
-all:	s9.1
 
 s9:	s9.o s9.h $(EXTRA_OBJS)
 	$(CC) -o s9 s9.o $(EXTRA_OBJS) $(EXTRA_LIBS)
@@ -78,14 +68,8 @@ s9.image:	s9 s9.scm s9-real.scm ext/unix.scm ext/curses.scm config.scm
 	rm -f s9.image && \
 		$(BUILD_ENV) ./s9 -n $(EXTRA_SCM) -l config.scm -d s9.image
 
-%.1: %.1.in
-	sed \
-	 -e "s,@LIBDIR@,$(LIBDIR),g" \
-	 -e "s,@DATADIR@,$(DATADIR),g" \
-	 < $@.in > $@
-
-%.gz: %
-	gzip -9 < $* > $@
+s9.1.gz:	s9.1
+	sed -e "s,@LIBDIR@,$(LIBDIR)," <s9.1 |gzip -9 >s9.1.gz
 
 unix.o:	ext/unix.c s9.h
 	$(CC) $(CFLAGS) $(DEFS) -I . -o unix.o -c ext/unix.c
@@ -125,34 +109,35 @@ install:	install-s9 install-util
 # old version of install(1) may need -c
 #C=-c
 install-s9:	s9 s9.scm s9.image s9.1.gz
-	install -d -m 0755 $(DESTDIR)$(BINDIR)
-	install -d -m 0755 $(DESTDIR)$(LIBDIR)
-	install -d -m 0755 $(DESTDIR)$(LIBDIR)/help
-	install -d -m 0755 $(DESTDIR)$(MANDIR)
-	install $C -m 0755 s9 $(DESTDIR)$(BINDIR)
-	install $C -m 0644 s9.scm $(DESTDIR)$(LIBDIR)
-	install $C -m 0644 s9.image $(DESTDIR)$(LIBDIR)
-	install $C -m 0644 lib/* $(DESTDIR)$(LIBDIR)
-	install $C -m 0644 ext/*.scm $(DESTDIR)$(LIBDIR)
-	install $C -m 0644 contrib/* $(DESTDIR)$(LIBDIR)
-	install $C -m 0644 s9.1.gz $(DESTDIR)$(MANDIR)
-	install $C -m 0644 help/* $(DESTDIR)$(LIBDIR)/help
-	install $C -m 0755 util/make-help-links $(DESTDIR)$(LIBDIR)/help
-	(cd $(DESTDIR)$(LIBDIR)/help && ./make-help-links && rm make-help-links)
+	install -d -m 0755 $(BINDIR)
+	install -d -m 0755 $(LIBDIR)
+	install -d -m 0755 $(LIBDIR)/help
+	install -d -m 0755 $(MANDIR)
+	install $C -m 0755 s9 $(BINDIR)
+	strip $(BINDIR)/s9
+	install $C -m 0644 s9.scm $(LIBDIR)
+	install $C -m 0644 s9.image $(LIBDIR)
+	install $C -m 0644 lib/* $(LIBDIR)
+	install $C -m 0644 ext/*.scm $(LIBDIR)
+	install $C -m 0644 contrib/* $(LIBDIR)
+	install $C -m 0644 s9.1.gz $(MANDIR)
+	install $C -m 0644 help/* $(LIBDIR)/help
+	install $C -m 0755 util/make-help-links $(LIBDIR)/help
+	(cd $(LIBDIR)/help && ./make-help-links && rm make-help-links)
 
 install-util:	install-arse
-	sed -e "s|^#! /usr/local|#! $(prefix)|"	\
-		<prog/s9help.scm >$(DESTDIR)$(BINDIR)/s9help
-	sed -e "s|^#! /usr/local|#! $(prefix)|"	\
-		<prog/s9resolve.scm >$(DESTDIR)$(BINDIR)/s9resolve
-	sed -e "s|^#! /usr/local|#! $(prefix)|"	\
-		<prog/scm2html1.scm >$(DESTDIR)$(BINDIR)/scm2html
-	sed -e "s|^#! /usr/local|#! $(prefix)|"	\
-		<prog/scmpp.scm >$(DESTDIR)$(BINDIR)/scmpp
-	-chmod +x $(DESTDIR)$(BINDIR)/s9help	\
-		  $(DESTDIR)$(BINDIR)/s9resolve	\
-		  $(DESTDIR)$(BINDIR)/scm2html	\
-		  $(DESTDIR)$(BINDIR)/scmpp
+	sed -e "s|^#! /usr/local|#! $(PREFIX)|"	\
+		<prog/s9help.scm >$(BINDIR)/s9help
+	sed -e "s|^#! /usr/local|#! $(PREFIX)|"	\
+		<prog/s9resolve.scm >$(BINDIR)/s9resolve
+	sed -e "s|^#! /usr/local|#! $(PREFIX)|"	\
+		<prog/scm2html1.scm >$(BINDIR)/scm2html
+	sed -e "s|^#! /usr/local|#! $(PREFIX)|"	\
+		<prog/scmpp.scm >$(BINDIR)/scmpp
+	-chmod +x $(BINDIR)/s9help	\
+		  $(BINDIR)/s9resolve	\
+		  $(BINDIR)/scm2html	\
+		  $(BINDIR)/scmpp
 
 arse-core.image: contrib/arse.scm ext/unix.scm ext/curses.scm
 	rm -f arse-core.image
@@ -160,60 +145,60 @@ arse-core.image: contrib/arse.scm ext/unix.scm ext/curses.scm
 		-l contrib/arse.scm -d arse-core.image
 
 install-arse: arse-core.image
-	cp arse-core.image $(DESTDIR)$(LIBDIR)
-	cp contrib/arse.help $(DESTDIR)$(LIBDIR)
-	sed -e "s|^#! /usr/local|#! $(prefix)|"	\
+	cp arse-core.image $(LIBDIR)
+	cp contrib/arse.help $(LIBDIR)
+	sed -e "s|^#! /usr/local|#! $(PREFIX)|"	\
 	    -e "s|^#! \(.*\)/s9|#! \1/arse-core|"	\
 	    -e '/arse.scm"/d' \
-		<prog/arse1.scm >$(DESTDIR)$(BINDIR)/arse
-	ln -fs s9 $(DESTDIR)$(BINDIR)/arse-core
-	-chmod +x $(DESTDIR)$(BINDIR)/arse
+		<prog/arse1.scm >$(BINDIR)/arse
+	ln -fs $(BINDIR)/s9 $(BINDIR)/arse-core
+	-chmod +x $(BINDIR)/arse
 
 install-programs:
-	sed -e "s|^#! /usr/local|#! $(prefix)|"	\
-		<prog/advgen.scm >$(DESTDIR)$(BINDIR)/advgen
-	sed -e "s|^#! /usr/local|#! $(prefix)|"	\
-		<prog/c2html1.scm >$(DESTDIR)$(BINDIR)/c2html
-	sed -e "s|^#! /usr/local|#! $(prefix)|"	\
-		<prog/cols.scm >$(DESTDIR)$(BINDIR)/cols
-	sed -e "s|^#! /usr/local|#! $(prefix)|"	\
-		<prog/dupes.scm >$(DESTDIR)$(BINDIR)/dupes
-	sed -e "s|^#! /usr/local|#! $(prefix)|"	\
-		<prog/edoc.scm >$(DESTDIR)$(BINDIR)/edoc
-	sed -e "s|^#! /usr/local|#! $(prefix)|"	\
-		<prog/htmlify.scm >$(DESTDIR)$(BINDIR)/htmlify
-	sed -e "s|^#! /usr/local|#! $(prefix)|"	\
-		<prog/s9hts.scm >$(DESTDIR)$(BINDIR)/s9hts
-	sed -e "s|^#! /usr/local|#! $(prefix)|"	\
-		<prog/soccat.scm >$(DESTDIR)$(BINDIR)/soccat
-	-chmod +x $(DESTDIR)$(BINDIR)/advgen	\
-		  $(DESTDIR)$(BINDIR)/c2html	\
-		  $(DESTDIR)$(BINDIR)/cols	\
-		  $(DESTDIR)$(BINDIR)/dupes	\
-		  $(DESTDIR)$(BINDIR)/edoc	\
-		  $(DESTDIR)$(BINDIR)/htmlify	\
-		  $(DESTDIR)$(BINDIR)/s9hts	\
-		  $(DESTDIR)$(BINDIR)/soccat
+	sed -e "s|^#! /usr/local|#! $(PREFIX)|"	\
+		<prog/advgen.scm >$(BINDIR)/advgen
+	sed -e "s|^#! /usr/local|#! $(PREFIX)|"	\
+		<prog/c2html1.scm >$(BINDIR)/c2html
+	sed -e "s|^#! /usr/local|#! $(PREFIX)|"	\
+		<prog/cols.scm >$(BINDIR)/cols
+	sed -e "s|^#! /usr/local|#! $(PREFIX)|"	\
+		<prog/dupes.scm >$(BINDIR)/dupes
+	sed -e "s|^#! /usr/local|#! $(PREFIX)|"	\
+		<prog/edoc.scm >$(BINDIR)/edoc
+	sed -e "s|^#! /usr/local|#! $(PREFIX)|"	\
+		<prog/htmlify.scm >$(BINDIR)/htmlify
+	sed -e "s|^#! /usr/local|#! $(PREFIX)|"	\
+		<prog/s9hts.scm >$(BINDIR)/s9hts
+	sed -e "s|^#! /usr/local|#! $(PREFIX)|"	\
+		<prog/soccat.scm >$(BINDIR)/soccat
+	-chmod +x $(BINDIR)/advgen	\
+		  $(BINDIR)/c2html	\
+		  $(BINDIR)/cols	\
+		  $(BINDIR)/dupes	\
+		  $(BINDIR)/edoc	\
+		  $(BINDIR)/htmlify	\
+		  $(BINDIR)/s9hts	\
+		  $(BINDIR)/soccat
 
 deinstall:
-	rm -f $(DESTDIR)$(LIBDIR)/help/* && rmdir $(DESTDIR)$(LIBDIR)/help
-	rm -f $(DESTDIR)$(LIBDIR)/* && rmdir $(DESTDIR)$(LIBDIR)
-	rm -f $(DESTDIR)$(BINDIR)/s9
-	-rmdir $(DESTDIR)$(BINDIR)
-	-rmdir $(DESTDIR)$(MANDIR)
+	rm -f $(LIBDIR)/help/* && rmdir $(LIBDIR)/help
+	rm -f $(LIBDIR)/* && rmdir $(LIBDIR)
+	rm -f $(BINDIR)/s9
+	-rmdir $(BINDIR)
+	-rmdir $(MANDIR)
 
 deinstall-util:
-	rm -f $(DESTDIR)$(BINDIR)/arse		\
-	      $(DESTDIR)$(BINDIR)/s9help		\
-	      $(DESTDIR)$(BINDIR)/s9resolve	\
-	      $(DESTDIR)$(BINDIR)/scm2html	\
-	      $(DESTDIR)$(BINDIR)/scmpp
+	rm -f $(BINDIR)/arse		\
+	      $(BINDIR)/s9help		\
+	      $(BINDIR)/s9resolve	\
+	      $(BINDIR)/scm2html	\
+	      $(BINDIR)/scmpp
 
 deinstall-programs:
-	rm -f $(DESTDIR)$(BINDIR)/advgen		\
-	      $(DESTDIR)$(BINDIR)/dupes		\
-	      $(DESTDIR)$(BINDIR)/htmlify		\
-	      $(DESTDIR)$(BINDIR)/soccat
+	rm -f $(BINDIR)/advgen		\
+	      $(BINDIR)/dupes		\
+	      $(BINDIR)/htmlify		\
+	      $(BINDIR)/soccat
 
 tabs:
 	@find . -name \*.scm -exec grep -l "	" {} \;

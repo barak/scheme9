@@ -1,0 +1,3 @@
+The patch to the s9 man page is trivial, but involves renaming a file,
+which quilt does not handle very well.  For this reason the patch is
+kept as a git commit, rather than a quilt patch.

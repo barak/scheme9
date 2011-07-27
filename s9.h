@@ -74,11 +74,6 @@
  #endif
 #endif
 
-#ifndef MAXPATHLEN
- /* MAXPATHLEN not defined on Hurd, as it is "bogus." */
- #define MAXPATHLEN 4096
-#endif
-
 /*
  * Tell later MSC compilers to let us use the standard CLIB API.
  * Blake McBride < b l a k e  at  m c b r i d e . n a m e >

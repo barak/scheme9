@@ -70,5 +70,4 @@ trap '
 	exit 1
 ' 1 2 3 15
 
-env S9FES_LIBRARY_PATH=.:lib \
 ./s9 !test -nf $testfile
