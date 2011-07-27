@@ -2,7 +2,7 @@
 
 ; An arse(1) command for invoking the ARSE editor.
 ; by Nils M Holm, 2010
-; Placed in the Public Domain
+; See the LICENSE file of the S9fES package for terms of use
 ;
 ; Usage: arse [-r] [file ...]
 

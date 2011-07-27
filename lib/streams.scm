@@ -1,6 +1,6 @@
 ; Scheme 9 from Empty Space, Function Library
 ; By Nils M Holm, 2006,2010
-; Placed in the Public Domain
+; See the LICENSE file of the S9fES package for terms of use
 ;
 ; (make-stream obj1 proc1 proc2 proc3 proc4 obj2)  ==>  stream
 ; (stream-any object)                              ==>  #t

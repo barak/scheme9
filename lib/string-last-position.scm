@@ -1,6 +1,6 @@
 ; Scheme 9 from Empty Space, Function Library
 ; By Nils M Holm, 2010
-; Placed in the Public Domain
+; See the LICENSE file of the S9fES package for terms of use
 ;
 ; (string-last-position string1 string2)          ==>  integer | #f
 ; (string-ci-last-position string1 string2)       ==>  integer | #f

@@ -232,7 +232,6 @@ if [ $update_only = no -o $update_only = dir ]; then
 
 	if [ $update_only = no ]; then
 		mv CATEGORIES.html webdump
-		cp util/contact.html webdump
 		make
 	fi
 fi
@@ -283,7 +282,6 @@ if [ $update_only = no -o $update_only = nah ]; then
 	naah util file libtail
 	naah util file stress-tests.tgz
 	naah util file categories.html
-	naah util file contact.html
 fi
 
 if [ $update_only = no -o $update_only = man ]; then

@@ -4,14 +4,13 @@
 	A Portable Scheme Interpreter with a Unix Interface
 	By Nils M Holm, 2007-2010
 
-	S9fES is a mature, portable, and comprehensible public-domain
-	interpreter for R4RS Scheme offering
+	S9fES is a mature, portable, and comprehensible interpreter
+	for R4RS Scheme plus
 
 	- support for low-level Unix programming;
-	- cursor addressing with Curses;
-	- decimal-based real number arithmetics;
-	- a vi-style integrated development environment (beta!);
 	- basic networking procedures;
+	- cursor addressing with Curses;
+	- a vi-style integrated development environment;
 	- loads of useful library functions.
 
 	It is written in ANSI C (C89) and Scheme and it runs in many
@@ -182,7 +181,17 @@
 	the Unix extensions are compiled by default.)
 
 
-	AUTHOR
+	CONTACT
 
-	Nils M Holm < n m h at t 3 x dot o r g >
+	Bug reports, patches, suggestions, questions, etc are welcome.
+	Please send them to:
+
+	Nils M Holm < n m h  at  t 3 x . o r g >
+
+	Or, if you want to send me a postcard:
+
+	Nils M Holm
+	Bosch-Str 2
+	69502 Hemsbach
+	Germany
 

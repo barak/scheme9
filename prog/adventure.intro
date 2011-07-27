@@ -1,7 +1,13 @@
 <IMG src="MASCOT.jpg" alt="Scheme 9 Mascot">
 
-<P>S9fES is a mature, portable, and comprehensible public-domain
-interpreter for R4RS Scheme offering</P>
+<P>Check out <A href="../s9/index.html">the <B>new</B> Scheme&nbsp;9 book</A>!
+</P>
+
+<P>This is the "official" (whatever that means!) Scheme 9 from Empty Space
+home page.</P>
+
+<P>S9fES is a mature, portable, and comprehensible interpreter for
+R4RS Scheme offering</P>
 
 <UL>
  <LI>support for low-level Unix programming</LI>
@@ -10,6 +16,12 @@ interpreter for R4RS Scheme offering</P>
  <LI>a vi-style integrated development environment</LI>
  <LI>basic networking procedures</LI>
  <LI>loads of useful library functions</LI>
+ <LI>a public-domain license</LI>
 </UL>
+
+<P style="color: #00a0ff">BTW: there are some old, bug-ridden,
+incomplete, and unmaintained versions of S9fES out there on the
+Web, but the real thing is <EM>only</EM> here!
+</P>
 
 <P>So you want to get access to the latest S9fES source code?</P>

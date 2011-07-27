@@ -2,7 +2,7 @@
 
 ; advgen -- generate HTML text adventures
 ; by Nils M Holm, 2010
-; Placed in the Public Domain
+; See the LICENSE file of the S9fES package for terms of use
 ;
 ; Usage: advgen [too many options] [file]
 ;

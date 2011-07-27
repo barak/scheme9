@@ -3,7 +3,8 @@
 /*
  * Scheme 9 from Empty Space
  * By Nils M Holm, 2007-2010
- * Placed in the Public Domain
+ * < n m h  at  t 3 x . o r g >
+ * See the LICENSE file of the S9fES package for terms of use
  */
 
 /*

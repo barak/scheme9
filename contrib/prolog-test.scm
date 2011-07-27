@@ -1,6 +1,6 @@
 ; Sample PROLOG program
 ; By Nils M Holm, 1998-2009
-; Placed in the Public Domain
+; See the LICENSE file of the S9fES package for terms of use
 ;
 ; To load this program, run
 ;

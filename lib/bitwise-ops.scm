@@ -1,6 +1,6 @@
 ; Scheme 9 from Empty Space, Function Library
 ; By Nils M Holm, 2009
-; Placed in the Public Domain
+; See the LICENSE file of the S9fES package for terms of use
 ;
 ; (bitwise-clear integer1 integer2 ...)        ==>  integer
 ; (bitwise-and integer1 integer2 ...)          ==>  integer
