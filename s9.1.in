@@ -132,7 +132,7 @@ starts with an exclamation point, the remainder of that argument
 is used as the name of the interpreter (instead of the name that
 was used to invoke
 .BR s9 ).
-This option allows to load alternative heap image files.
+This option allows one to load alternative heap image files.
 .SH "ONLINE HELP
 When the interpreter is running and the default heap image is loaded,
 just type \fB(help)\fP or \fB,h\fP to invoke the online help system.
@@ -684,7 +684,7 @@ Usenet message
 .in +4
 .I "<vhtzl9lupyp.fsf@maharal.csail.mit.edu>
 .br
-(Thu, 27 Aug 2009 13:27:42 -0400) and its follow-ups.
+(Thu, 27 Aug 2009 13:27:42 \-0400) and its follow-ups.
 .in -4
 .SH "REFERENCES
 .ne 3
