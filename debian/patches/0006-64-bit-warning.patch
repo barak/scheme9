@@ -1,0 +1,36 @@
+From: "Barak A. Pearlmutter" <barak+git@cs.nuim.ie>
+Date: Wed, 27 Jul 2011 21:15:55 +0100
+Subject: 64 bit warning
+
+---
+ s9-real.c |    2 +-
+ s9.c      |    2 +-
+ 2 files changed, 2 insertions(+), 2 deletions(-)
+
+diff --git a/s9-real.c b/s9-real.c
+index b3b3659..d4c91d8 100644
+--- a/s9-real.c
++++ b/s9-real.c
+@@ -551,7 +551,7 @@ void autoscale(cell *pa, cell *pb) {
+ 	}
+ }
+ 
+-int real_less_p(cell a, cell b) {
++cell real_less_p(cell a, cell b) {
+ 	cell	ma, mb;
+ 	int	ka, kb, neg;
+ 	int	dpa, dpb;
+diff --git a/s9.c b/s9.c
+index 660a3f0..b6b0616 100644
+--- a/s9.c
++++ b/s9.c
+@@ -2740,7 +2740,7 @@ cell pp_less_equal(cell x) {
+ 	return TRUE;
+ }
+ 
+-cell limit(char *msg, int(*pred)(cell,cell), cell x) {
++cell limit(char *msg, cell(*pred)(cell,cell), cell x) {
+ 	cell	k, p;
+ 	int	exact = 1;
+ 
+-- 

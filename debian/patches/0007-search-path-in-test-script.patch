@@ -3,20 +3,21 @@ Date: Wed, 27 Jul 2011 20:46:16 +0100
 Subject: search path in test script
 
 ---
- util/libtest.sh |    1 +
- 1 files changed, 1 insertions(+), 0 deletions(-)
+ util/libtest.sh |    2 ++
+ 1 files changed, 2 insertions(+), 0 deletions(-)
  mode change 100644 => 100755 util/libtest.sh
 
 diff --git a/util/libtest.sh b/util/libtest.sh
 old mode 100644
 new mode 100755
-index 4ca87ad..33f9463
+index 4ca87ad..6785809
 --- a/util/libtest.sh
 +++ b/util/libtest.sh
-@@ -70,4 +70,5 @@ trap '
+@@ -70,4 +70,6 @@ trap '
  	exit 1
  ' 1 2 3 15
  
-+env S9FES_LIBRARY_PATH=.:lib \
++# Use BUILD_ENV from Makefile here
++env S9FES_LIBRARY_PATH=.:lib:ext:contrib \
  ./s9 !test -nf $testfile
 -- 

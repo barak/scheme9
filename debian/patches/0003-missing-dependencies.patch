@@ -1,0 +1,23 @@
+From: "Barak A. Pearlmutter" <barak+git@cs.nuim.ie>
+Date: Thu, 28 Jul 2011 14:10:39 +0100
+Subject: missing dependencies
+
+a missing dependency on s9 in a Makefile caused a parallel make to get an error.
+---
+ Makefile |    2 +-
+ 1 files changed, 1 insertions(+), 1 deletions(-)
+
+diff --git a/Makefile b/Makefile
+index 10cdf6b..432a728 100644
+--- a/Makefile
++++ b/Makefile
+@@ -150,7 +150,7 @@ install-util:	install-arse
+ 		  $(DESTDIR)$(BINDIR)/scm2html	\
+ 		  $(DESTDIR)$(BINDIR)/scmpp
+ 
+-arse-core.image: contrib/arse.scm ext/unix.scm ext/curses.scm
++arse-core.image: s9 contrib/arse.scm ext/unix.scm ext/curses.scm
+ 	rm -f arse-core.image
+ 	$(BUILD_ENV) ./s9 !arse-core -n -l ext/unix.scm -l ext/curses.scm \
+ 		-l contrib/arse.scm -d arse-core.image
+-- 
