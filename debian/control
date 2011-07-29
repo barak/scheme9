@@ -2,7 +2,9 @@ Source: scheme9
 Section: lisp
 Priority: extra
 Maintainer: Barak A. Pearlmutter <bap@debian.org>
-Build-Depends: debhelper (>= 8), libx11-dev
+Build-Depends: debhelper (>= 8),
+	libncurses5-dev | libncurses-dev | ncurses-dev,
+	libx11-dev
 Standards-Version: 3.9.2
 Homepage: http://t3x.org/
 Vcs-Git: git://git.debian.org/git/collab-maint/scheme9.git
