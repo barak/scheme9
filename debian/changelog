@@ -1,3 +1,9 @@
+scheme9 (2010.11.13-2) unstable; urgency=low
+
+  * curses!  foiled again.  (closes: #635869)
+
+ -- Barak A. Pearlmutter <bap@debian.org>  Fri, 29 Jul 2011 13:46:35 +0100
+
 scheme9 (2010.11.13-1) unstable; urgency=low
 
   * bump standards version (debian/control)
