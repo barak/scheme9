@@ -4,13 +4,13 @@ Subject: maxpathlen for hurd
 
 ---
  s9.h |    5 +++++
- 1 files changed, 5 insertions(+), 0 deletions(-)
+ 1 file changed, 5 insertions(+)
 
 diff --git a/s9.h b/s9.h
-index fe51dcc..b3591d4 100644
+index f7f7d40..fdbf016 100644
 --- a/s9.h
 +++ b/s9.h
-@@ -74,6 +74,11 @@
+@@ -80,6 +80,11 @@
   #endif
  #endif
  
@@ -22,4 +22,3 @@ index fe51dcc..b3591d4 100644
  /*
   * Tell later MSC compilers to let us use the standard CLIB API.
   * Blake McBride < b l a k e  at  m c b r i d e . n a m e >
--- 

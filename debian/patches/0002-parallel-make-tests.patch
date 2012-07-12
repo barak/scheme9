@@ -4,24 +4,24 @@ Subject: parallel make tests
 
 allow "make tests" to parallelize the various tests
 ---
- Makefile |    6 +-----
- 1 files changed, 1 insertions(+), 5 deletions(-)
+ Makefile |    7 +------
+ 1 file changed, 1 insertion(+), 6 deletions(-)
 
 diff --git a/Makefile b/Makefile
-index 93ceb91..10cdf6b 100644
+index e2c53c0..47f2f95 100644
 --- a/Makefile
 +++ b/Makefile
-@@ -114,11 +114,7 @@ realtest:	s9 test.image
+@@ -115,12 +115,7 @@ realtest:	s9 test.image
  test.image:	s9 s9.scm s9-real.scm
- 	$(BUILD_ENV) ./s9 !test -n $(EXTRA_SCM) -d test.image
+ 	$(BUILD_ENV) ./s9 -n $(EXTRA_SCM) -d test.image
  
 -tests:
 -	make test
+-	make realtest
 -	make srtest
 -	make libtest
 -	make systest
-+tests: test srtest libtest systest
++tests: test realtest srtest libtest systest
  
  install:	install-s9 install-util
  
--- 

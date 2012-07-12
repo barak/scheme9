@@ -1,7 +1,5 @@
 0001-recombobulate-Makefile.patch
 0002-parallel-make-tests.patch
-0003-missing-dependencies.patch
-0004-tweak-make-arse.patch
-0005-maxpathlen-for-hurd.patch
-0006-64-bit-warning.patch
-0007-search-path-in-test-script.patch
+0003-maxpathlen-for-hurd.patch
+0004-64-bit-warning.patch
+0005-search-path-in-test-script.patch
