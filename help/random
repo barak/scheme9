@@ -17,4 +17,4 @@ its limited range.
 
 (list (random 100)
       (random 100)
-      (random 100))  ==>  (5 46 23)
+      (random 100))  ==>  (5 47 68)

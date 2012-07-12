@@ -1,6 +1,6 @@
 ; Scheme 9 from Empty Space, Function Library
-; By Nils M Holm, 2010
-; See the LICENSE file of the S9fES package for terms of use
+; By Nils M Holm, 2010,2012
+; Placed in the Public Domain
 ;
 ; (scm2html <option> ...)  ==>  string | unspecific
 ;
@@ -246,7 +246,7 @@
             (set! *Color* #f)
             (output c)
             (if (char=? c RP)
-                (output "</SPAN></SPAN><SPAN>")))
+                (output "</SPAN></SPAN>")))
           (else
             (with-color q
                         Color-paren

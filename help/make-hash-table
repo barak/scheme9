@@ -12,7 +12,7 @@ S9 LIB  (make-hash-table <option> ...)                  ==>  hash-table
 MAKE-HASH-TABLE creates a fresh hash table.
 
 When the 'SIZE option is passed to it, it must be followed by
-an integer ; specifying its initial number of slots. When no
+an integer specifying its initial number of slots. When no
 initial value is specified, a built-in default will be used.
 No matter what size is specified, the hash table will grow
 automatically when the number of elements stored in it

@@ -243,6 +243,8 @@ ln -fs position posv
 ln -fs position posq
 ln -fs pretty-print pp
 ln -fs pretty-print pp-file
+ln -fs pretty-print pp-loop
+ln -fs pretty-print pp-string
 ln -fs prolog factb
 ln -fs prolog new-databaseb
 ln -fs prolog predicateb

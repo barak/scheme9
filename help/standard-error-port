@@ -13,5 +13,5 @@ procedure. CALL-WITH-STDERR returns the value returned by PROCEDURE^1.
 
 (call-with-stderr
   (lambda (stderr)
-    (display "Someting went wrong!" stderr)
+    (display "Something went wrong!" stderr)
     (newline stderr)))                       ==> unspecific

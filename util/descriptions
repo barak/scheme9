@@ -6,8 +6,6 @@ and-letstar.scm|and-let*|-|Guarded LET*
 appendb.scm|append!|-|Append lists destructively
 append-to-output-file.scm|append-to-output-file|-|Open files for appending
 array.scm|-|Array type and operations|-
-arse.scm|-|ARSE is a Recursive Scheme Editor (beta version!)|-
-arse1.scm|-|ARSE command line wrapper|-
 bitops.scm|-|Fast small-magnitude bit operators|-
 char-canvas.scm|-|Character-based canvas plotter|-
 assp.scm|assp|-|Find first member of an alist satisfying a predicate
@@ -111,7 +109,6 @@ replace.scm|replace|-|Replace members in pairs
 runtime-stats.scm|runtime-stats|-|Gather runtime statistics
 s9.scm|-|S9fES core library|-
 s9-real.scm|-|S9fES core library (real numbers)|-
-s9calc.scm|-|Spread sheet calculator|-
 s9help.scm|-|Find and display S9fES help pages|-
 s9hts.scm|-|Hypertext server|-
 s9resolve.scm|-|Resolve S9fES library references|-
@@ -126,7 +123,7 @@ sieve.scm|sieve|-|Find prime numbers
 simple-module.scm|-|Simple module syntax|-
 soccat.scm|-|Connect to remote systems|-
 sort.scm|sort|-|Sort lists
-sos.scm|-|S9fES Scheme Object System|-
+s9sos.scm|-|S9fES Simple Object System|-
 spawn-command.scm|spawn-command|-|Spawn a child process
 spawn-shell-command.scm|spawn-shell-command|-|Spawn a shell command
 split-url.scm|split-url|-|Split an URL string into individual parts

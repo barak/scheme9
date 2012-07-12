@@ -2,7 +2,7 @@ R4RS 4.2.2  (letrec <bindings> <body>)  ==>  object
 
 Syntax: <Bindings> should have the form
 
-((<variable1> <init1>) ...),
+((<variable> <init>) ...),
 
 and <body> should be a sequence of one or more expressions. It is
 an error for a <variable> to appear more than once in the list of

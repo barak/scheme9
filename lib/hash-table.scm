@@ -1,6 +1,6 @@
 ; Scheme 9 from Empty Space, Function Library
-; By Nils M Holm, 2009,2010
-; See the LICENSE file of the S9fES package for terms of use
+; By Nils M Holm, 2009,2010,2012
+; Placed in the Public Domain
 ;
 ; (make-hash-table <option> ...)                  ==>  hash-table
 ; (alist->hash-table alist)                       ==>  hash-table
@@ -16,7 +16,7 @@
 ; MAKE-HASH-TABLE creates a fresh hash table.
 ;
 ; When the 'SIZE option is passed to it, it must be followed by
-; an integer ; specifying its initial number of slots. When no
+; an integer specifying its initial number of slots. When no
 ; initial value is specified, a built-in default will be used.
 ; No matter what size is specified, the hash table will grow
 ; automatically when the number of elements stored in it

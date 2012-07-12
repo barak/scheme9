@@ -24,3 +24,9 @@ it will signal an error when an unreadable expression is found.
 
 (read-from-string ")")
   ==>  "read-from-string: unexpected closing parenthesis"
+
+(read-from-string "#<foo>")
+  ==>  "unreadable expression #<foo>"
+
+(read-from-string "#<foo>" 'convert-unreadable #t)
+  ==>  ("#<foo>")

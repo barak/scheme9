@@ -1,6 +1,6 @@
 ; Scheme 9 from Empty Space, Function Library
-; By Nils M Holm, 2010
-; See the LICENSE file of the S9fES package for terms of use
+; By Nils M Holm, 2010,2012
+; Placed in the Public Domain
 ;
 ; (c2html <option> ...)  ==>  string | unspecific
 ;
@@ -55,8 +55,8 @@
 ;       specified in LIST (see INPUT-STRING:).
 ;
 ; (Example):   (c2html 'input-string: "x++")
-;                ==>  (("r" #f)
-;                      "</SPAN><SPAN class=s>x</SPAN><SPAN class=r>++")
+;                ==>  (("cr" #f)
+;                      "</SPAN><SPAN class=cs>x</SPAN><SPAN class=cr>++")
 
 (load-from-library "keyword-value.scm")
 (load-from-library "symbols.scm")

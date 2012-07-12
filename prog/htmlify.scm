@@ -2,7 +2,7 @@
 
 ; htmlify -- convert plain text files to HTML
 ; by Nils M Holm, 2010
-; See the LICENSE file of the S9fES package for terms of use
+; Placed in the Public Domain
 ;
 ; Usage: htmlify -t [file ...]
 

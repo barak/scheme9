@@ -1,6 +1,6 @@
 ; Scheme 9 from Empty Space, Function Library
-; By Nils M Holm, 2010
-; See the LICENSE file of the S9fES package for terms of use
+; By Nils M Holm, 2010,2012
+; Placed in the Public Domain
 ;
 ; (split-url string)  ==>  list
 ; (url-anchor list)   ==>  string
@@ -44,6 +44,7 @@
 (load-from-library "string-position.scm")
 (load-from-library "string-split.scm")
 (load-from-library "string-unsplit.scm")
+(load-from-library "hof.scm")
 
 (define (split-url s)
   (let* ((next   (cond ((string-position "//" s)
@@ -94,5 +95,5 @@
 (define url-host   cadr)
 (define url-path   caddr)
 (define url-suffix cadddr)
-(define url-args   (lambda (x) (car (cddddr x))))
-(define url-anchor (lambda (x) (cadr (cddddr x))))
+(define url-args   (compose car cddddr))
+(define url-anchor (compose cadr cddddr))

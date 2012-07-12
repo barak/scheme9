@@ -1,15 +1,14 @@
 <!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.0 Transitional//EN">
 <HTML>
 <HEAD>
-<TITLE>@TITLE@ : S9fES</TITLE>
+<TITLE>@TITLE@ : S9fES : T3X.ORG</TITLE>
 <LINK rel="stylesheet" type="text/css" href="s9.css" title="s9">
 </HEAD>
 <BODY>
 
-<H1><A href="../index.html">T3X.ORG</A>
- : <A href="index.html">S9fES</A>
- : <A href="@BASE@.html">@BASE@</A>
-</H1>
+<DIV class=menu>http://<A href="../index.html">t3x.org</A>/<A href="index.html">s9fes</A>/@BASE@</DIV>
 
-<H2>@DESC@</H2>
+<HR>
+
+<H1>@DESC@</H1>
 

@@ -7,7 +7,7 @@ NAME
           s9 - Scheme Interpreter
 
 USAGE
-          s9 [-h?] [!name] [-gnqv] [-m size[m]] [-f prog [args]]
+          s9 [-h?] [-i name] [-gnqv] [-m size[m]] [-f prog [args]]
              [-l prog] [-t count] [-d image] [-- [args]]
 
 DESCRIPTION
@@ -19,6 +19,12 @@ DESCRIPTION
 OPTIONS
           -h or -?
               Display a brief summary of options.
+          -i name
+              Load alternative image file `name.image'. When no  image
+              file can be found, try to load `name.scm'. The file will
+              be  searched  in  the  entire  S9FES_LIBRARY_PATH   (see
+              below).  When  this option is used, it must be the first
+              one of the s9 command.
           -d file
               Dump heap image to file and exit.
           -f program [arguments]
@@ -45,12 +51,6 @@ OPTIONS
               Arguments following -- are not interpreted by S9fES, but
               passed  to  the command-line procedure instead (requires
               the unix extension).
-
-          When the first argument of s9  starts  with  an  exclamation
-          point, the remainder of that argument is used as the name of
-          the interpreter (instead of the name that was used to invoke
-          s9).   This  option  allows  to  load alternative heap image
-          files.
 
 ONLINE HELP
           When the interpreter is running and the default  heap  image
@@ -176,8 +176,8 @@ S9(1)                  Scheme 9 from Empty Space                 S9(1)
 
           (stats form)  ==>  form
               Evaluate the given form and return a list containing its
-              normal  form  plus  the  resources  used to compute that
-              normal form:
+              normal  form  plus  a  summary  of the resources used to
+              compute that normal form:
 
                   - reduction steps
                   - conses allocated
@@ -364,9 +364,9 @@ BUGS
           You  may  not quasiquote quasiquote unless in unquote (e.g.:
           ``x does not work, but `,`x does).
           Syntax-rules is not fully hygienic.
-          Call/cc  sometimes  does  not  interact  well  with  binding
-          constructs.   (Try not to bind more than a single call/cc in
-          the same lambda.)
+          Multiple call/cc's in the arguments of the same  lambda  (or
+          derived   binding  syntax,  such  as  let)  will  break  the
+          evaluator.
 
 FILES
           $HOME/.s9fes/rc
@@ -419,10 +419,10 @@ REFERENCES
 
           Scheme  9 from Empty Space -- A Guide to Implementing Scheme
           in C.
-              http://www.lulu.com/content/9378374
+              Available at Lulu.com, see http://www.t3x.org
 
 AUTHOR
-          Nils M Holm < n m h  at  t 3 x . o r g >
+          Nils M Holm
 
 
 

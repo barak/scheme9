@@ -1,8 +1,8 @@
 S9fES  (bit-op integer1 integer2 integer3)  ==>  integer | #f
 
 BIT-OP implements the bitwise operators summarized in the below
-table. The operation itself is passed to BIT-OP as on INTEGER1
-(OP in the table) and the operators are passed as INTEGER2 (A)
+table. The operation itself is passed to BIT-OP as INTEGER1
+(OP in the table) and the operands are passed as INTEGER2 (A)
 and INTEGER3 (B).
 
  Op | Result            | Common name

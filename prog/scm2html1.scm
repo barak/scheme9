@@ -2,7 +2,7 @@
 
 ; scm2html -- print Scheme code to HTML
 ; By Nils M Holm, 2009,2010
-; See the LICENSE file of the S9fES package for terms of use
+; Placed in the Public Domain
 ;
 ; Usage: scm2html [-9dsx] [file ...]
 ;

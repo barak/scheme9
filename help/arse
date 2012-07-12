@@ -1,7 +1,0 @@
-S9 LIB  (arse string)  ==>  unspecific
-        (arse)         ==>  unspecific
-
-The ARSE procedure implements a vi-style editor. If specified,
-it loads the file STRING into an editing buffer.
-
-(arse "foo.scm")

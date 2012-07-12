@@ -1,6 +1,29 @@
 
 Change Log
 
+2012-07-09
+	Changed webdump color scheme. (util/)
+	Adapted web theme to current home page. (util/)
+	Updated the man page. (s9.1)
+	Misc. cosmetical changes. (lib/)
+2012-07-08
+	Renamed SOS to S9SOS - S9 Simple Object System. (contrib/)
+	Replaced the '!image' option by '-i image'. (s9.c)
+	Allowed to specify an image source file with '-i'; made the
+	LIBRARY option obsolete. (s9.c)
+	Cleaned up some meta files.
+2012-07-06
+	Fixed more typos.
+2012-07-05
+	Removed the ARSE development environment, because it has a
+	design bug that makes it crash when undoing changes near the
+	top or bottom of a file.
+	Fixed a few typos.
+	Fix: BIT-OP could overflow on 64-bit systems. (s9.c)
+2011-05-11
+	Cleaned up the Unix/POSIX/XOPEN Mambo Jambo prelude. (s9.h)
+	Added some casts to make later GCCs happy. (s9.c, s9-real.c)
+	(unreleased.)
 2010-11-13
 	Fix: sudden allocation of large vector failed, even if enough
 	vector space was present (this did not happen when allocating

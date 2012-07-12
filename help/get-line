@@ -18,6 +18,7 @@ accepts the following editing commands ([^A] = [control]+[A]):
       [^A]        go to beginning of buffer.
       [^E]        go to end of buffer.
       [^B]        move back one character (also [Left]).
+      [^D]        delete character under cursor.
       [^F]        move forward one character (also [Right]).
       [ESC]       end editing, return string (also [Enter]).
       [Backspace] delete character to the left.

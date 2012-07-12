@@ -9,13 +9,13 @@ the class "ccode" (<PRE class=ccode>). The following container
 classes are used to specify the colors and other styles of the
 individual elements:
 
-      o  comment
-      p  punctuation
-      s  symbol
-      c  constant
-      r  reserved word/operator
-      l  standard library symbol
-      x  extension
+      co  comment
+      cp  punctuation
+      cs  symbol
+      cc  constant
+      cr  reserved word/operator
+      cl  standard library symbol
+      cx  extension
 
 See the "ccode.css" style sheet for examples.
 
@@ -24,6 +24,9 @@ The following <option>s exist;
 'FULL-HTML: boolean
       When set to #T, C2HTML will output a full HTML document
       and not just a PRE container. Will not work in string mode.
+
+'LOUT-MODE: boolean
+      Generate Lout output rather than HTML output.
 
 'INPUT-STRING: string
       Input is read from a string and output is written to a string.
@@ -42,6 +45,10 @@ The following <option>s exist;
       from LIST. LIST should be the car part of an object returned by
       C2HTML previously. It allows to render multiple lines that are
       logicall connected by preserving the style across line boundaries.
+
+'TERMINATE: list
+      Return termination tags for the color and boldface settings
+      specified in LIST (see INPUT-STRING:).
 
   (c2html 'input-string: "x++")
     ==>  (("r" #f)

@@ -1,8 +1,8 @@
 #! /usr/local/bin/s9 -f
 
 ; advgen -- generate HTML text adventures
-; by Nils M Holm, 2010
-; See the LICENSE file of the S9fES package for terms of use
+; by Nils M Holm, 2010,2012
+; Placed in the Public Domain
 ;
 ; Usage: advgen [too many options] [file]
 ;
@@ -273,7 +273,10 @@
                       "<H1><A href=\"index.html\">"
                       text
                       "</A></H1>"
-                      #\newline))))
+                      #\newline
+		      "<HR>"
+                      #\newline
+		      ))))
   (cond ((opt-val page-prolog)
           => (lambda (path)
                (with-input-from-file

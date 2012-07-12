@@ -2,10 +2,10 @@ R4RS 4.2.4  (do <vars> <test> <body>)  ==>  object
 
 More specifically, the DO syntax is:
 
-        (do ((<variable1> <init1> <step1>)
-             ...)
-            (<test> <expression> ...)
-          <command> ...)
+(do ((<variable> <init> <step>)
+     ...)
+    (<test> <expression> ...)
+  <command> ...)
 
 DO is an iteration construct. It specifies a set of variables to
 be bound, how they are to be initialized at the start, and how they

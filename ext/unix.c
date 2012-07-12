@@ -1,7 +1,7 @@
 /*
  * Scheme 9 from Empty Space, Unix Interface
- * By Nils M Holm, 2009-2010
- * See the LICENSE file of the S9fES package for terms of use
+ * By Nils M Holm, 2009-2012
+ * Placed in the Public Domain
  *
  * A low-level interface to some Unix system services.
  */
@@ -55,12 +55,12 @@
 
 /*
  *	Allow us at least to write
- *		assign(assign(car(x) = cons(foo, bar)));
+ *		assign(car(x), cons(foo, bar));
  *	in presence of that fact that C's
  *	order of evaluation messes up
  *		car(x) = cons(foo, bar);
  */
-static cell	New_node;
+static cell		New_node;
 #define assign(n,v)	{ New_node = v; n = New_node; }
 
 cell	Last_errno = 0;
@@ -79,7 +79,7 @@ cell sys_error(char *who, cell what) {
 		k += 2;
 		q = strerror(errno);
 		for (p = &buf[k]; *q && k < 255; k++)
-			*p++ = tolower(*q++);
+			*p++ = tolower((int) *q++);
 		*p = 0;
 		if (Catch_errors)
 			return FALSE;

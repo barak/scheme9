@@ -1,7 +1,7 @@
 #!/bin/sh
 
 # Scheme 9 from Empty Space
-# By Nils M Holm, 2008-2010
+# By Nils M Holm, 2008-2012
 # Generate Library Test Suite
 
 testfile=util/libtest.scm
@@ -70,4 +70,4 @@ trap '
 	exit 1
 ' 1 2 3 15
 
-./s9 !test -nf $testfile
+./s9 -i test -nf $testfile

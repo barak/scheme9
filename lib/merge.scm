@@ -1,10 +1,10 @@
 ; Scheme 9 from Empty Space, Function Library
-; By Nils M Holm, 2010
-; See the LICENSE file of the S9fES package for terms of use
+; By Nils M Holm, 2010,2012
+; Placed in the Public Domain
 ;
 ; (merge procedure^2 list1 list2)  ==>  list
 ;
-; Merge the members of two list into one. The next member to be
+; Merge the members of two lists into one. The next member to be
 ; pushed to the output list will always be the one satisfying
 ;
 ;       (procedure^2 (car list1) (car list2))

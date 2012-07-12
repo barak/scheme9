@@ -30,6 +30,9 @@ The following <option>s exist;
       When set to #T, SCM2HTML will output a full HTML document
       and not just a PRE container. Will not work in string mode.
 
+'LOUT-MODE: boolean
+      Generate Lout output rather than HTML output.
+
 'INPUT-STRING: string
       Input is read from a string and output is written to a string.
       In string mode, the 'FULL-HTML: option does not work. When this
@@ -63,6 +66,10 @@ The following <option>s exist;
       parentheses interactively in the resulting code by moving the
       cursor over expressions. Does not work in string mode.
 
+'TERMINATE: list
+      Return termination tags for the color and boldface settings
+      specified in LIST (see INPUT-STRING:).
+
 (scm2html 'input-string: "'()")
-   ==> (("c" #f)
+   ==> (("c" #f quote 0 ())
         "<SPAN class=y><B>'</B></SPAN><SPAN class=c>()")

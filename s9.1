@@ -44,7 +44,7 @@
 .B "s9
 - Scheme Interpreter
 .SH USAGE
-.B "s9 [-h?] [!name] [-gnqv] [-m size[m]] [-f prog [args]]
+.B "s9 [-h?] [-i name] [-gnqv] [-m size[m]] [-f prog [args]]
 .B "   [-l prog] [-t count] [-d image] [-- [args]]
 .SH "DESCRIPTION
 .B "Scheme 9 from Empty Space
@@ -57,6 +57,16 @@ command starts the interpreter.
 .B "-h or -?
 .in +4
 Display a brief summary of options.
+.in -4
+.B "-i name
+.in +4
+Load alternative image file `\fIname\fP.image'. When no image file
+can be found, try to load `\fIname\fP.scm'. The file will be searched
+in the entire
+.I S9FES_LIBRARY_PATH
+(see below). When this option is used, it
+.B must
+be the first one of the s9 command.
 .in -4
 .B "-d file
 .in +4
@@ -125,14 +135,6 @@ procedure instead (requires the
 .B unix
 extension).
 .in -4
-.sp
-When the first argument of
-.B s9
-starts with an exclamation point, the remainder of that argument
-is used as the name of the interpreter (instead of the name that
-was used to invoke
-.BR s9 ).
-This option allows to load alternative heap image files.
 .SH "ONLINE HELP
 When the interpreter is running and the default heap image is loaded,
 just type \fB(help)\fP or \fB,h\fP to invoke the online help system.
@@ -339,8 +341,8 @@ Destructively set the current output port.
 .in +4
 Evaluate the given
 .I form
-and return a list containing its normal form plus the
-resources used to compute that normal form:
+and return a list containing its normal form plus a summary
+of the resources used to compute that normal form:
 .in +4
 .sp
 .nf
@@ -617,12 +619,13 @@ does).
 .B Syntax-rules
 is not fully hygienic.
 .br
-.B Call/cc
-sometimes does not interact well with binding constructs.
-(Try not to bind more than a single
-.B call/cc
-in the same
-.BR lambda .)
+Multiple
+.BR call/cc 's
+in the arguments of the same
+.B lambda
+(or derived binding syntax, such as
+.BR let )
+will break the evaluator.
 .SH "FILES
 .ne 2
 .B $HOME/.s9fes/rc
@@ -696,7 +699,7 @@ The Revised^4 Report on the Algorithmic Language Scheme.
 .ne 3
 Scheme 9 from Empty Space -- A Guide to Implementing Scheme in C.
 .in +4
-.B "http://www.lulu.com/content/9378374"
+.B "Available at Lulu.com, see http://www.t3x.org
 .in -4
 .SH AUTHOR
-Nils M Holm < n m h  at  t 3 x . o r g >
+Nils M Holm

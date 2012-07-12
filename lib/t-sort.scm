@@ -1,6 +1,6 @@
 ; Scheme 9 from Empty Space, Function Library
-; By Nils M Holm, 2010
-; See the LICENSE file of the S9fES package for terms of use
+; By Nils M Holm, 2010,2012
+; Placed in the Public Domain
 ;
 ; (t-sort procedure1 object procedure2 <option> ...)  ==>  list
 ; (t-sort-net procedure^2 list <option> ...)          ==>  list
@@ -26,8 +26,8 @@
 ; <ref> in the DAG must have a corresponding node. In non-strict
 ; operation undefined <ref>s are assumed to be leaves.
 ;
-; T-SORT-NET returns #F when cannot sort a given DAG, either because it
-; contains undefined <refs> in strict mode or because it cycles (and
+; T-SORT-NET returns #F when it cannot sort a given DAG, either because
+; it contains undefined <refs> in strict mode or because it cycles (and
 ; hence is not a DAG at all).
 ;
 ; When 'CHECK #T is passed as an option to T-SORT-NET, it will return
@@ -52,13 +52,13 @@
 ; PROCEDURE1 is the predicate used to compare objects, like in
 ; T-SORT-NET. OBJECT is the goal. PROCEDURE2 is a procedure that maps
 ; objects to dependencies their associated dependencies. The procedure
-; should return #F when a dependency cannot be resolved and a list of
-; the form
+; should return #F when a dependency cannot be resolved. In case of
+; success, it delivers a list of the form
 ;
 ;       (goal object ...)
 ;
-; in case of success, where GOAL is the goal that has been looked up
-; and each OBJECT is an object on which the goal depends.
+; GOAL is the goal that has been looked up and each OBJECT is an
+; object on which the goal depends.
 ;
 ; Example:   (t-sort-net eq?
 ;                        '((dressed shoes hat)
@@ -78,7 +78,7 @@
 ;                        (v y)
 ;                        (w z))))
 ;              (t-sort eq? 'a (lambda (x)
-;                               (assp eq? x db))
+;                               (assq x db))
 ;                             'top-down #t
 ;                             'reverse #t))      ==>  (a b c u v x y)
 ;

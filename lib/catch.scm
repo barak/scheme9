@@ -1,6 +1,6 @@
 ; Scheme 9 from Empty Space, Function Library
-; By Nils M Holm, 2010
-; See the LICENSE file of the S9fES package for terms of use
+; By Nils M Holm, 2010,2012
+; Placed in the Public Domain
 ;
 ; (catch <tag> <statement> ...)  ==>  object
 ; (throw <tag> <expression>)     ==>  undefined
@@ -12,7 +12,7 @@
 ; symbol). CATCH establishes a catch named <tag> and then evaluates
 ; the given <statement>s in an implicit BEGIN. Unless one of the
 ; statements executes THROW, the value of the last <statement> will
-; be returned. When a <statement> executes THROW, controll will be
+; be returned. When a <statement> executes THROW, control will be
 ; passed to the innermost catch with the same <tag> as the throw.
 ; In this case the catch will exit immediately, returning the value
 ; of <expression> as its result.

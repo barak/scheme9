@@ -1,7 +1,7 @@
 /*
  * Scheme 9 from Empty Space, Curses Interface
  * By Nils M Holm, 2010
- * See the LICENSE file of the S9fES package for terms of use
+ * Placed in the Public Domain
  *
  * A low-level interface to some CURSES(3) routines.
  */

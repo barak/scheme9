@@ -13,7 +13,7 @@ cleanup() {
 trap cleanup 1 2 3
 
 usage() {
-	echo "Usage: mkhtml [-u {scm|cee|txt|man|nah|dir}]"
+	echo "Usage: make-html [-u {scm|cee|txt|man|nah|dir}]"
 	exit 1
 }
 
@@ -34,6 +34,7 @@ format_scm_files() {
 	shift
 	files=$*
 	for file in $files; do
+		html=`basename $file`.html
 		fname=$(basename $file)
 		name=$(grep "^$fname|" util/descriptions | cut -f 2 -d "|")
 		desc=$(grep "^$fname|" util/descriptions | cut -f 3 -d "|")
@@ -42,11 +43,8 @@ format_scm_files() {
 		if [ "x$name" = "x" ]; then
 			echo -n " NO DESCRIPTION!"
 		fi
-		if [ "x$base" = "x" ]; then
-			sed -e "/@BASE@/d" <util/libhead >$tmpfile
-		else
-			sed -e "s/@BASE@/$base/g" <util/libhead >$tmpfile
-		fi
+		sed -e "s|@BASE@|<A href="$html">$html</A>|g" \
+			<util/libhead >$tmpfile
 		if [ "x$desc" != "x-" -a "x$name" != "x-" ] ; then
 			sed \
 			-e "s|@DESC@|<CODE>$name\&nbsp;\&nbsp;</CODE> $desc|" \
@@ -61,9 +59,13 @@ format_scm_files() {
 			    -e "s|@TITLE@|$name|" \
 				<$tmpfile >$oname
 		fi
-		echo -n "<P>LOC: " >>$oname
+		echo -n "<P>" >>$oname
+		if [ "x$base" != "x" ]; then
+			echo "Location: <A href=\"$base.html\">$base</A>, " \
+				>>$oname
+		fi
 		sed -e "1,/^$/d" <$file | wc -l >>$oname
-		echo "</P>" >>$oname
+		echo " Lines</P>" >>$oname
 		prog/scm2html1.scm -9x $file >>$oname
 		cat util/libtail >>$oname
 		echo " done"
@@ -75,17 +77,21 @@ format_C_files() {
 	shift
 	files=$*
 	for file in $files; do
+		html=`basename $file`.html
 		fname=$(basename $file)
 		oname=$dumpdir/`basename $fname`.html
 		echo -n $oname' ...'
+		sed -e "s|@BASE@|<A href="$html">$html</A>|g" \
+			<util/libhead >$tmpfile
 		if [ "x$base" = "x" ]; then
-			sed -e "/@BASE@/d" <util/libhead >$tmpfile
+			sed -e "s/@DESC@/`basename $file`/" \
+			    -e "s/@TITLE@/`basename $file`/" \
+				<$tmpfile >$oname
 		else
-			sed -e "s/@BASE@/$base/g" <util/libhead >$tmpfile
+			sed -e "s|@DESC@|<A href=\"$base.html\">$base</A>/`basename $file`|" \
+			    -e "s/@TITLE@/`basename $file`/" \
+				<$tmpfile >$oname
 		fi
-		sed -e "s/@DESC@/`basename $file`/" \
-		    -e "s/@TITLE@/`basename $file`/" \
-			<$tmpfile >$oname
 		echo -n "<P>LOC: " >>$oname
 		sed -e "1,/^$/d" <$file | wc -l >>$oname
 		echo "</P>" >>$oname
@@ -102,26 +108,30 @@ format_txt_files() {
 	shift
 	files=$*
 	for file in $files; do
-		ofile=$dumpdir/`basename $file`.html
-		echo -n $ofile' ...'
+		html=`basename $file`.html
+		oname=$dumpdir/`basename $file`.html
+		echo -n $oname' ...'
+		sed -e "s|@BASE@|<A href="$html">$html</A>|g" \
+			<util/libhead >$tmpfile
 		if [ "x$base" = "x" ]; then
-			sed -e "/@BASE@/d" <util/libhead >$tmpfile
+			sed -e "s/@DESC@/`basename $file`/" \
+			    -e "s/@TITLE@/`basename $file`/" \
+				<$tmpfile >$oname
 		else
-			sed -e "s/@BASE@/$base/g" <util/libhead >$tmpfile
+			sed -e "s|@DESC@|<A href=\"$base.html\">$base</A>/`basename $file`|" \
+			    -e "s/@TITLE@/`basename $file`/" \
+				<$tmpfile >$oname
 		fi
-		sed -e "s/@DESC@/`basename $file`/" \
-		    -e "s/@TITLE@/`basename $file`/" \
-			<$tmpfile >$ofile
-		echo '<PRE>' >>$ofile
+		echo '<PRE>' >>$oname
 		if [ $hrefs = yes ]; then
 			prog/htmlify.scm -t $file | \
 			sed -e 's/\(http:\/\/.*\)/<A href="\1">\1<\/A>/' \
-				>>$ofile
+				>>$oname
 		else
-			prog/htmlify.scm -t $file >>$ofile
+			prog/htmlify.scm -t $file >>$oname
 		fi
-		echo '</PRE>' >>$ofile
-		cat util/libtail >>$ofile
+		echo '</PRE>' >>$oname
+		cat util/libtail >>$oname
 		echo " done"
 	done
 }
@@ -131,9 +141,14 @@ format_man_pages() {
 	if [ "x$1" = "x-r" ]; then hrefs=yes; shift; fi
 	files=$*
 	for file in $files; do
+		html=`basename $file`.html
 		ofile=$dumpdir/`basename $file`.html
 		echo -n $ofile' ...'
-		sed -e "s/@DESC@/`basename $file`/" <util/dirhead >$ofile
+		sed -e "s|@BASE@|<A href="$html">$html</A>|g" \
+			<util/libhead >$tmpfile
+		sed -e "s/@DESC@/`basename $file`/" \
+		    -e "s/@TITLE@/`basename $file`/" \
+		<$tmpfile >$ofile
 		echo '<PRE class=man>' >>$ofile
 		if [ $hrefs = yes ]; then
 			nroff $file | ./rpp -p html | \
@@ -153,21 +168,25 @@ naah() {
 	what=$1; shift
 	files=$*
 	for file in $files; do
-		ofile=$dumpdir/`basename $file`.html
-		echo -n $ofile' ...'
+		html=`basename $file`.html
+		oname=$dumpdir/`basename $file`.html
+		echo -n $oname' ...'
+		sed -e "s|@BASE@|<A href="$html">$html</A>|g" \
+			<util/libhead >$tmpfile
 		if [ "x$base" = "x" ]; then
-			sed -e "/@BASE@/d" <util/libhead >$tmpfile
+			sed -e "s/@DESC@/`basename $file`/" \
+			    -e "s/@TITLE@/`basename $file`/" \
+				<$tmpfile >$oname
 		else
-			sed -e "s/@BASE@/$base/g" <util/libhead >$tmpfile
+			sed -e "s|@DESC@|<A href=\"$base.html\">$base</A>/`basename $file`|" \
+			    -e "s/@TITLE@/`basename $file`/" \
+				<$tmpfile >$oname
 		fi
-		sed -e "s/@DESC@/$file/" \
-		    -e "s/@TITLE@/$file/" \
-			<$tmpfile >$ofile
-		echo '<H2>Naah</H2>' >>$ofile
-		echo "<P>This $what is not included here. Please" >>$ofile
-		echo ' download the <A href="s9fes.tgz">archive</A>' >>$ofile
-		echo ' to have a look at it.</P>' >>$ofile
-		cat util/dirtail >>$ofile
+		echo '<H2>Naah</H2>' >>$oname
+		echo "<P>This $what is not included here. Please" >>$oname
+		echo ' download the <A href="s9fes.tgz">archive</A>' >>$oname
+		echo ' to have a look at it.</P>' >>$oname
+		cat util/dirtail >>$oname
 		echo " done"
 	done
 }
@@ -178,9 +197,10 @@ dirlist() {
 	title=$3
 	echo -n $ofile' ...'
 	if [ "x$dir" = "x." ]; then
-		sed -e "/@BASE@/d" <util/dirhead >$tmpfile
+		sed -e "s/@BASE@//" <util/dirhead >$tmpfile
 	else
-		cp util/dirhead $tmpfile
+		sed -e "s|@BASE@|<A href=\"`basename $ofile`\">$dir</A>|" \
+			<util/dirhead >$tmpfile
 	fi
 	sed -e "s/@DESC@/$title/" <$tmpfile >$ofile
 	echo '<PRE class=dirlist>' >>$ofile
@@ -242,10 +262,9 @@ if [ $update_only = no -o $update_only = txt ]; then
 	format_txt_files "" _checksums mkfile s9.1.txt
 	format_txt_files lib lib/_template
 	format_txt_files prog prog/adventure.adv prog/edoc.css
-	format_txt_files prog prog/advgen.txt prog/dot.arserc
+	format_txt_files prog prog/advgen.txt
 	format_txt_files contrib contrib/scheme.css contrib/ccode.css
-	format_txt_files contrib contrib/format.txt contrib/arse.help
-	format_txt_files contrib contrib/arse.porting contrib/sos.txt
+	format_txt_files contrib contrib/format.txt contrib/s9sos.txt
 	format_txt_files util util/descriptions util/make-help-links
 	format_txt_files util util/libtest.sh util/make-docs util/make-html
 	format_txt_files util util/rp_html util/s9.css	
@@ -271,7 +290,7 @@ fi
 if [ $update_only = no -o $update_only = nah ]; then
 	naah "" directory help
 	naah "" directory freebsd-port
-	naah "" file MASCOT.jpg
+	naah "" file MASCOT.png
 	naah contrib file S9Book
 	naah contrib file S9Book-bw
 	naah prog file adventure.intro

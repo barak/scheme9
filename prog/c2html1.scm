@@ -1,13 +1,13 @@
 #! /usr/local/bin/s9 -f
 
 ; c2html -- print C code to HTML
-; By Nils M Holm, 2009,2010
-; See the LICENSE file of the S9fES package for terms of use
+; By Nils M Holm, 2009,2010,2012
+; Placed in the Public Domain
 ;
 ; Usage: c2html [-dL] [file ...]
 ;
 ; Render C code contained in the given file. When no file
-; is given render stdin. Write output to stdout.
+; is given, render stdin. Write output to stdout.
 ;
 ; Options:
 ;

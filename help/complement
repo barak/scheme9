@@ -17,7 +17,7 @@ COMPLEMENT returns a predicate expressing the complement of the given
 procedure (which should also be a predicate).
 
 CONST generates a procedure that discards any arguments passed to it
-and always evaluates to <expression>. <Expression> evaluated each time
+and always evaluates to <expression>. <Expression> evaluates each time
 the procedure delivered by CONST is called.
 
 CURRY partially applies PROCEDURE to the given OBJECTs, resulting

@@ -6,10 +6,10 @@
 
 	This branch of S9fES is a hack. When something is broken or
 	missing, fix it. Do with the code whatever you want, it is
-	neither "mine" nor "yours." Rip it apart, make something new
+	neither "mine" nor "yours". Rip it apart, make something new
 	out of it, claim it is yours, re-license it, sell it, give
 	it away, do not even tell me about it. This is all fine by
-	me. Freedom cannot be possessed. Whenever there is freedom,
+	me. Freedom cannot be possessed. Wherever there is freedom,
 	it belongs to all.
 
 	Being a hack, in this case, does not mean that the code is
@@ -18,9 +18,8 @@
 	and I trust it to run even the most critical programs.
 
 	It does mean, though, that when it *does* break, you are on
-	your own. I am hacking it for fun and may or may not respond
-	to bug reports. Most probably I will fix bugs that are being
-	reported to me, but I will follow my own schedule.
+	your own. I have been hacking it for fun and may or may not
+	consider fixing any bugs reported to me.
 
-	Nils M Holm  < n m h  at  t 3 x . o r g >
+	Nils M Holm
 
