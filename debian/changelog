@@ -1,3 +1,13 @@
+scheme9 (2012.07.10-1) unstable; urgency=low
+
+  * New Upstream Version
+  * bump standards version (debian/control)
+  * dh 9 (debian/compat, debian/control)
+  * update quilt patches
+  * patch for library used in hardened build
+
+ -- Barak A. Pearlmutter <bap@debian.org>  Thu, 12 Jul 2012 12:00:13 +0100
+
 scheme9 (2010.11.13-2) unstable; urgency=low
 
   * curses!  foiled again.  (closes: #635869)
