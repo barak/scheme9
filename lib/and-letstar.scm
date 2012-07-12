@@ -1,6 +1,6 @@
 ; Scheme 9 from Empty Space, Function Library
-; By Nils M Holm, 2010
-; See the LICENSE file of the S9fES package for terms of use
+; By Nils M Holm, 2010,2012
+; Placed in the Public Domain
 ;
 ; (and-let* <binding> ... <body>)  ==>  object
 ;
@@ -9,7 +9,7 @@
 ; Each <binding> has the form (<variable> <expression>) and binds
 ; the given <variable> to the normal form of <expression>.
 ;
-; Like LET* AND-LET* evaluates its <bindings>s in sequence, so each
+; Like LET*, AND-LET* evaluates its <bindings>s in sequence, so each
 ; <expression> is evaluated in an environment that includes all previous
 ; <binding>s of the same AND-LET*. Unlike LET*, though, AND-LET* returns
 ; #F immediately as soon as one of its <expression>s evaluates to #F.

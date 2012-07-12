@@ -1,6 +1,6 @@
 ; Scheme 9 from Empty Space, Function Library
-; By Nils M Holm, 2010
-; See the LICENSE file of the S9fES package for terms of use
+; By Nils M Holm, 2010,2012
+; Placed in the Public Domain
 ;
 ; (complement procedure)               ==>  procedure
 ; (compose procedure1 procedure2 ...)  ==>  procedure
@@ -21,7 +21,7 @@
 ; procedure (which should also be a predicate).
 ;
 ; CONST generates a procedure that discards any arguments passed to it
-; and always evaluates to <expression>. <Expression> evaluated each time
+; and always evaluates to <expression>. <Expression> evaluates each time
 ; the procedure delivered by CONST is called.
 ; 
 ; CURRY partially applies PROCEDURE to the given OBJECTs, resulting

@@ -1,8 +1,8 @@
 ; Common LISP-style text output formatter for R4RS Scheme
-; Copyright (C) 1992, 1993 by Dirk Lutzebaeck; used with permission.
+; By Dirk Lutzebaeck, 1992, 1993
 ; With some additional hacking by Nils M Holm in 2009.
 ; Authors of the original version (< 1.4) were Ken Dickey and Aubrey Jaffer.
-; See the LICENSE file of the S9fES package for terms of use.
+; Placed in the Public Domain by the authors.
 ;
 ; (format #t string-f object ...)           ==>  string | #t | #f
 ; (format #f string-f object ...)           ==>  string | #t | #f

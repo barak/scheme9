@@ -1,6 +1,6 @@
-; Scheme 9 from Empty Space, Function Library
-; By Nils M Holm, 2010
-; See the LICENSE file of the S9fES package for terms of use
+; Scheme 9 from Empty Space, Simple Object System
+; By Nils M Holm, 2010,2012
+; Placed in the Public Domain
 ;
 ; (call-next-method)                              ==>  object
 ; (class-of object)                               ==>  class
@@ -16,15 +16,15 @@
 ;
 ; (load-from-library "sos.scm")
 ;
-; SOS is a Scheme Object System that is similar to CLOS, but simpler.
+; S9SOS is a Scheme Object System that is similar to CLOS, but simpler.
 ; It has multiple inheritance, generic procedures, and a meta object
 ; protocol (MOP). If you know CLOS, you will probably find it too
 ; limited. If you do not know CLOS, you will probably find it too
 ; complex.
 ;
 ; The procedures and macros above form the user-level interface to
-; SOS. For a more detailed description (including the MOP), see the
-; "sos.txt" file.
+; S9SOS. For a more detailed description (including the MOP), see the
+; "s9sos.txt" file.
 ;
 ; DEFINE-CLASS defines a new class named <name> that is a subclass
 ; of each specified <class>. Each <slot> specifies an instance
@@ -58,7 +58,7 @@
 ;
 ; When a type is specified, the method will only be applied to
 ; arguments of the specified types (or less specific types from
-; which the given type is derived). See "sos.txt" for details.
+; which the given type is derived). See "s9sos.txt" for details.
 ;
 ; Types may be user-defined classes or "built-in" types. Each
 ; built-in type corresponds to a Scheme type, e.g.: <pair> would

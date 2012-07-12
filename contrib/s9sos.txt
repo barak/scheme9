@@ -1,10 +1,10 @@
 
 
-        SOS - A simple Scheme Object System
-        -----------------------------------
-               By Nils M Holm, 2010
+        S9SOS - Scheme 9 Simple Object System
+        -------------------------------------
+              By Nils M Holm, 2010,2012
 
-        SOS is an extension for object oriented programming in Scheme.
+        S9SOS is an extension for object oriented programming in Scheme.
         It was inspired by CLOS, the Common Lisp Object System, but it
         is much simpler. However, it still provides:
 
@@ -85,9 +85,9 @@
         Systems that allow a class to be derived from multiple
         superclasses is said to support "multiple inheritance."
 
-        SOS support multiple inheritance to some degree. When a naming
+        S9SOS support multiple inheritance to some degree. When a naming
         conflict occurs because multiple superclasses of a given class
-        define slots of the same name, SOS will signal an error.
+        define slots of the same name, S9SOS will signal an error.
 
         (CLASS? OBJECT)  ==>  BOOLEAN                        [PROCEDURE]
 
@@ -105,7 +105,7 @@
         the entire object system works.
 
         The purpose of a MOP is far beyond the scope of this document.
-        The following procedures are part of the SOS MOP.
+        The following procedures are part of the S9SOS MOP.
 
         (CLASS-CPL CLASS)  ==>  LIST                     [MOP PROCEDURE]
 
@@ -167,7 +167,7 @@
         (The class is encapsulated in a procedure to keep its cyclic
          structure hidden from the Scheme printer.)
 
-        Of course, SOS classes are first-class objects, so they can be
+        Of course, S9SOS classes are first-class objects, so they can be
         bound to different symbols:
 
                 (define bar foo)
@@ -289,7 +289,7 @@
         The difference between CLASS-OF and INSTANCE-CLASS is that
         CLASS-OF is more general and will return "built-in" classes
         (q.v.) for primitive Scheme objects, while INSTANCE-CLASS can
-        only be applied to SOS instances.
+        only be applied to S9SOS instances.
 
         (INITIALIZE INSTANCE)  ==>  OBJECT                     [GENERIC]
 
@@ -533,7 +533,7 @@
         (GENERIC-METHODS GENERIC)  ==>  LIST             [MOP PROCEDURE]
 
         Return the list of methods of the given generic procedure. Note
-        that methods are not ordinary procedures. In SOS, they are
+        that methods are not ordinary procedures. In S9SOS, they are
         represented by lists of the form
 
                 (specializer procedure)
@@ -646,7 +646,7 @@
         Class Hierarchy
         ---------------
 
-        The basic S9 SOS class hierarchy consists of the following
+        The basic S9SOS class hierarchy consists of the following
         classes:
 
         <TYPE>
@@ -659,19 +659,19 @@
         specializing in <TYPE> will match any kind of argument.
 
         <INSTANCE> and <BUILT-IN> are the bases of two disjoint sets of
-        types, where <INSTANCE> forms the base of the "OOP part" of SOS
-        and <BUILT-IN> the base of the native Scheme type hierarchy.
-        Note in particular that this means that a <BUILT-IN> is *not*
-        an <INSTANCE>, so
+        types, where <INSTANCE> forms the base of the "OOP part" of
+        S9SOS and <BUILT-IN> the base of the native Scheme type
+        hierarchy. Note in particular that this means that a <BUILT-IN>
+        is *not an <INSTANCE>, so
 
                 (make-instance <integer>)
 
         will *not* create an instance of <INTEGER>.
 
         <CLASS> and <GENERIC> are the only instance classes that are
-        necessary to make SOS work. This small hierarchy reflects nicely
-        that both classes and generics are in fact ordinary instances.
-        Just try
+        necessary to make S9SOS work. This small hierarchy reflects
+        nicely that both classes and generics are in fact ordinary
+        instances. Just try
 
                 (class-name (class-of <class>))
         or      (slot-ref initialize 'methods)

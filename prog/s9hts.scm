@@ -1,8 +1,8 @@
 #! /usr/local/bin/s9 -f
 
 ; s9hts -- hyper text server
-; by Nils M Holm, 2010
-; See the LICENSE file of the S9fES package for terms of use
+; by Nils M Holm, 2010,2012
+; Placed in the Public Domain
 ;
 ; Usage: s9hts [-m sec] [host [port]]
 

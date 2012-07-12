@@ -2,7 +2,7 @@
 
 ; cols -- format input in two columns
 ; by Nils M Holm, 2010
-; See the LICENSE file of the S9fES package for terms of use
+; Placed in the Public Domain
 ;
 ; Usage: cols [-l] [-s separator] [file ...]
 

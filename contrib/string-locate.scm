@@ -1,6 +1,6 @@
 ; Fast STRING-LOCATE procedure
 ; By Nils M Holm, 2009,2010
-; See the LICENSE file of the S9fES package for terms of use
+; Placed in the Public Domain
 ;
 ; (string-locate string1 string2)     ==>  offset | #f
 ; (string-ci-locate string1 string2)  ==>  offset | #f

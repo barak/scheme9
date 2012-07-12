@@ -3,8 +3,8 @@
 #|edoc code|#
 
 ; edoc -- embedded documentation processor
-; By Nils M Holm, 2010
-; See the LICENSE file of the S9fES package for terms of use
+; By Nils M Holm, 2010,2012
+; Placed in the Public Domain
 
 #|edoc------------------------------------------------------------------
 \1{EDOC}
@@ -30,7 +30,7 @@ Embedded documentation is enclosed by a line starting with the string
 "/*edoc ... code*/"
 }
 
-(without the quotes) are ignored completely, by may be used to set the
+(without the quotes) are ignored completely, but may be used to set the
 language type at the beginning of a file. Lines of the form
 
 \b{
@@ -99,7 +99,7 @@ correctly. Caveat utilitor!
 \3{Synopsis}
 
 \b{
-edoc [iswL] [-b file] [-l lang] [-o file] [-t text] [-x name] [file ...]
+edoc [-iswL] [-b file] [-l lang] [-o file] [-t text] [-x name] [file ...]
 
 Render programs with embedded edoc sections in HTML
 

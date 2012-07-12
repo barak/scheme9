@@ -1,6 +1,6 @@
 ; Scheme 9 from Empty Space, Function Library
-; By Nils M Holm, 2010
-; See the LICENSE file of the S9fES package for terms of use
+; By Nils M Holm, 2010,2012
+; Placed in the Public Domain
 ;
 ; (define-structure <name> <slot> ...)  ==>  unspecific
 ;
@@ -24,8 +24,6 @@
 ; (define-structure <type> <slot-1> ... <slot-N>) will expand to
 ; definitions of the following procedures:
 ;
-; (<type>? x) is a predicate checking whether X has the type <type>.
-;
 ; (make-<type> object ...) creates a new object of the type <type> and
 ; initializes its slots with the values specified in DEFINE-STRUCTURE.
 ; When some OBJECTs are given, they will replace the default values of
@@ -33,8 +31,16 @@
 ; passed to MAKE-<TYPE> must not be larger than the number of slots
 ; of <type>.
 ;
-; (<type>-copy object) creates an exact copy an object of the given type
-; and returns it.
+; (<type>? x) is a predicate checking whether X has the type <type>.
+;
+; (<type>-assert caller object) asserts that OBJECT is of the type
+; <type>. When the assertion holds, it returns an unspecific value.
+; Otherwise, it prints an error message. CALLER is a symbol that
+; will be reported as the source of the error (typically the
+; procedure calling <type>-assert).
+;
+; (<type>-copy object) creates an exact (shallow) copy an object of
+; the given type and returns it.
 ;
 ; (<type>-<slot-1> x) evaluates to the value stored in slot <slot-1>
 ; of X. When X is not of the type <type>, an error will be signalled.

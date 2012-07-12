@@ -2,15 +2,15 @@
 
 	Scheme 9 from Empty Space
 	A Portable Scheme Interpreter with a Unix Interface
-	By Nils M Holm, 2007-2010
+	By Nils M Holm, 2007-2012
 
-	S9fES is a mature, portable, and comprehensible interpreter
-	for R4RS Scheme plus
+	S9fES is a mature, portable, and comprehensible public-domain
+	interpreter for R4RS Scheme offering
 
 	- support for low-level Unix programming;
-	- basic networking procedures;
 	- cursor addressing with Curses;
-	- a vi-style integrated development environment;
+	- decimal-based real number arithmetics;
+	- basic networking procedures;
 	- loads of useful library functions.
 
 	It is written in ANSI C (C89) and Scheme and it runs in many
@@ -23,9 +23,6 @@
 	programs in a high-level language (b) try Scheme without having
 	to jump through too many hoops (c) study the implementation of
 	Scheme (in a language other than Scheme). 
-
-	ARSE, the S9fES IDE, is completely written in Scheme with most
-	of the S9fES-specific procedures factored out cleanly.
 
 
 	QUICK START
@@ -43,8 +40,11 @@
 
 	Once installed, typing "s9" will start the interpreter.
 
-	(help) explains the online help system.
-	(apropos) returns a list of all help topics (long!).
+	,h  explains the online help system.
+	,a  returns a list of all help topics (long!).
+
+	If the above commands do not work, try  ,l contrib/help.scm
+	first.
 
 
 	COMPILING AND INSTALLING
@@ -91,7 +91,9 @@
 
 	- Copy the file "s9.scm" to a publically readable directory
 	  (default: /usr/local/share/s9fes). This directory will be
-	  referred to as LIBDIR in the following instructions.
+	  referred to as LIBDIR in the following instructions. Note
+	  that this directory must be contained in DEFAULT_LIBRARY_PATH,
+	  as defined above.
 
 	- Compile a heap image and copy it to LIBDIR:
 
@@ -166,32 +168,17 @@
 	Running "s9help topic" on the shell prompt will print the S9fES
 	online help page about the given topic.
 
-	To get an overview of ARSE (if installed), just run the "arse"
-	command and then enter ":h" inside of the editor. Entering
-	"/SCHEME PROG" will bring you straight to the Scheme-specific
-	section of the help file.
-
 
 	EXTENDED INTERPRETER
 
 	If compiled in, there are some extension procedures providing
 	access to some Unix system calls, some networking procedures,
 	and a Curses interface. To compile these extensions, uncomment
-	the three subsequent EXTRA_ lines in the Makefile. (In fact,
-	the Unix extensions are compiled by default.)
+	the three EXTRA_ lines in the Makefile. (In fact, the Unix
+	extensions are compiled in by default.)
 
 
-	CONTACT
+	AUTHOR
 
-	Bug reports, patches, suggestions, questions, etc are welcome.
-	Please send them to:
-
-	Nils M Holm < n m h  at  t 3 x . o r g >
-
-	Or, if you want to send me a postcard:
-
-	Nils M Holm
-	Bosch-Str 2
-	69502 Hemsbach
-	Germany
+	Nils M Holm < n m h @ t 3 x . o r g >
 

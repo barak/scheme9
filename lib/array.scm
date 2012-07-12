@@ -1,6 +1,6 @@
 ; Scheme 9 from Empty Space, Function Library
-; By Nils M Holm, 2010
-; See the LICENSE file of the S9fES package for terms of use
+; By Nils M Holm, 2010,2012
+; Placed in the Public Domain
 ;
 ; (make-array integer ...)                           ==>  array
 ; (array object ...)                                 ==>  array
@@ -57,7 +57,8 @@
 ; and copies the specified elements to the new array. Each INTEGER1
 ; specifies the first element to copy from the corresponding dimension
 ; and INTEGER2 specifies the first element not to copy. The dimensions
-; of the new array are INTEGER1,2-INTEGER1,1 ... INTEGERn,2-INTEGERn,1
+; of the new array are
+; (INTEGER1,2)-(INTEGER1,1) ... (INTEGERn,2)-(INTEGERn,1)
 ; where N is the rank of the array.
 ;
 ; Example:   (let ((a (make-array 3 3 3)))

@@ -825,7 +825,7 @@
               (v y)
               (w z))))
     (t-sort eq? 'a (lambda (x)
-                     (assp eq? x db))
+                     (assq x db))
                    'top-down #t
                    'reverse #t))      ==>  (a b c u v x y)
 ;
@@ -982,14 +982,7 @@
          (query '(mortal ?who)))  ==>  (((who . socrates)))
 )
 
-(load-from-library "scm2html.scm")
-(%test
-  (scm2html 'input-string: "'()")
-     ==> (("c" #f quote 0 ())
-          "<SPAN class=y><B>'</B></SPAN><SPAN class=c>()")
-)
-
-(load-from-library "sos.scm")
+(load-from-library "s9sos.scm")
 (%test
   (begin
     (define-generic mul)
@@ -1021,6 +1014,13 @@
     (define-method (len (x <pair>))
       (+ 1 (len (cdr x))))
     (len '(1 2 3 4 5)))                 ==>  5
+)
+
+(load-from-library "scm2html.scm")
+(%test
+  (scm2html 'input-string: "'()")
+     ==> (("c" #f quote 0 ())
+          "<SPAN class=y><B>'</B></SPAN><SPAN class=c>()")
 )
 
 (load-from-library "string-locate.scm")

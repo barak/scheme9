@@ -1,6 +1,6 @@
 ; Scheme 9 from Empty Space, Function Library
-; By Nils M Holm, 2009
-; See the LICENSE file of the S9fES package for terms of use
+; By Nils M Holm, 2009,2012
+; Placed in the Public Domain
 ;
 ; (exists procedure list ...)  ==>  boolean
 ;
@@ -9,8 +9,8 @@
 ; is given in the procedure argument. P is first applied to a
 ; list consisting of the first member of each given list. If P
 ; returns truth, EXISTS returns #T immediately. Otherwise it is
-; applied to a list consisting of the second member of each given
-; list, etc. If P returns falsity for all sets of members, EXISTS
+; applied to a list consisting of the second members of the given
+; lists, etc. If P returns falsity for all sets of members, EXISTS
 ; returns #F.
 ;
 ; Example:   (exists < '(9 1) '(8 2) '(7 3))  ==>  #t

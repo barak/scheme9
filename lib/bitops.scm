@@ -1,6 +1,6 @@
 ; Scheme 9 from Empty Space, Function Library
 ; By Nils M Holm, 2010
-; See the LICENSE file of the S9fES package for terms of use
+; Placed in the Public Domain
 ;
 ; (bit0  integer1 integer2)  ==>  integer | #f
 ; (bit*  integer1 integer2)  ==>  integer | #f

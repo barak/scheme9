@@ -2,9 +2,8 @@
 
 /*
  * Scheme 9 from Empty Space
- * By Nils M Holm, 2007-2010
- * < n m h  at  t 3 x . o r g >
- * See the LICENSE file of the S9fES package for terms of use
+ * By Nils M Holm, 2007-2012
+ * Placed in the Public Domain
  */
 
 /*
@@ -40,9 +39,16 @@
  #ifndef _BSD_SOURCE
   #define _BSD_SOURCE
  #endif
- #ifndef _POSIX_SOURCE
-  #define _POSIX_SOURCE
-  #define _POSIX_C_SOURCE 200112L
+ #ifndef __FreeBSD__
+  #ifndef __NetBSD__
+   #ifndef _POSIX_SOURCE
+    #define _POSIX_SOURCE
+    #define _POSIX_C_SOURCE 200112L
+   #endif
+   #ifndef _XOPEN_SOURCE
+    #define _XOPEN_SOURCE 500
+   #endif
+  #endif
  #endif
 #endif
 
@@ -98,10 +104,6 @@
 		":contrib"			\
 		":~/.s9fes"			\
 		":/usr/local/share/s9fes"
-#endif
-
-#ifndef LIBRARY
- #define LIBRARY	"s9.scm"
 #endif
 
 #ifndef INITIAL_SEGMENT_SIZE
@@ -540,7 +542,7 @@ int	new_port(void);
 char	*copy_string(char *s);
 cell	error(char *msg, cell expr);
 void	fatal(char *msg);
-int	integer_value(char *src, cell x);
+cell	integer_value(char *src, cell x);
 int	length(cell x);
 cell	make_char(int c);
 cell	make_integer(cell i);

@@ -53,7 +53,8 @@ SUBARRAY creates a fresh array with the same rank as the given ARRAY
 and copies the specified elements to the new array. Each INTEGER1
 specifies the first element to copy from the corresponding dimension
 and INTEGER2 specifies the first element not to copy. The dimensions
-of the new array are INTEGER1,2-INTEGER1,1 ... INTEGERn,2-INTEGERn,1
+of the new array are
+(INTEGER1,2)-(INTEGER1,1) ... (INTEGERn,2)-(INTEGERn,1)
 where N is the rank of the array.
 
 (let ((a (make-array 3 3 3)))

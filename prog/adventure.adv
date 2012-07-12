@@ -1,6 +1,6 @@
 ; ADVGEN sample adventure
-; By Nils M Holm, 2010
-; See the LICENSE file of the S9fES package for terms of use
+; By Nils M Holm, 2010,2012
+; Placed in the Public Domain
 
 (street
  ("You are standing in front of a building in an anonymous city. There is"
@@ -1230,6 +1230,6 @@
    (go terminal:session)))
 
 (terminal:session
- ("</P><TT><DL><DD>$ <A href=\"../5439664554/index.html\">ls -l</A>"
-  "<DD>$ <A href=\"../5439664554/adventure.adv.html\">cat"
+ ("</P><TT><DL><DD>$ <A href=\"../s9fes/index.html\">ls -l</A>"
+  "<DD>$ <A href=\"../s9fes/adventure.adv.html\">cat"
   "prog/adventure.adv</A></DD></DL></TT><P>"))

@@ -38,7 +38,7 @@ result of the procedure call.
   into a newly allocated list, and the list is stored in the binding
   of the <variable>.
 
-* (<variable1> ... <variable_n-1> . <variable_n>): If a space-delimited
+- (<variable1> ... <variable_n-1> . <variable_n>): If a space-delimited
   period precedes the last variable, then the value stored in the
   binding of the last variable will be a newly allocated list of
   the actual arguments left over after all the other actual arguments

@@ -1,13 +1,13 @@
 ; Scheme 9 from Empty Space, Function Library
-; By Nils M Holm, 2010
-; See the LICENSE file of the S9fES package for terms of use
+; By Nils M Holm, 2010,2012
+; Placed in the Public Domain
 ;
-; (canvas-draw canvas integer1 integer2 char)         ==>  unspecific
-; (canvas-draw-string canvas int1 int2 string)        ==>  unspecific
+; (canvas-draw canvas integer-X integer-Y char)       ==>  unspecific
+; (canvas-draw-string canvas int-X int-Y string)      ==>  unspecific
 ; (canvas-dump canvas)                                ==>  vector
-; (canvas-plot canvas integer1 integer2 char)         ==>  unspecific
-; (canvas-plot-line canvas int1 int2 int3 int4 char)  ==>  unspecific
-; (make-canvas integer1 integer2 integer3 integer4)   ==>  canvas
+; (canvas-plot canvas integer-X integer-Y char)       ==>  unspecific
+; (canvas-plot-line canvas X Y DX DY char)            ==>  unspecific
+; (make-canvas int-X int-Y int-W int-H)               ==>  canvas
 ;
 ; (load-from-library "char-canvas.scm")
 ;
@@ -15,25 +15,25 @@
 ; a scaled, character-based (a.k.a. "ASCII Art") canvas.
 ;
 ; MAKE-CANVAS creates a char canvas with a physical size of
-; x=INTEGER1 times y=INTEGER2 characters. The virtual size of
-; the canvas is x=INTEGER3 times y=INTEGER4 "pixels". "Real
+; x=INT-X times y=INT-Y characters. The virtual size of the
+; canvas is INT-W (width) times INT-H (height) "pixels". "Real
 ; coordinates" relate to the physical size of the canvas.
 ; "Virtual coordinates" are translated to real coordinates by
 ; scaling. Both types of coordinates are specified in X/Y
 ; notation. The origin 0/0 is at the lower left corner of the
 ; canvas. The new canvas will be filled with blanks initially.
 ;
-; CANVAS-DRAW draws character CHAR at position INTEGER1/INTEGER2.
+; CANVAS-DRAW draws character CHAR at position INTEGER-X/INTEGER-Y.
 ; It uses real coordinates. CANVAS-DRAWSTRING draws a string
 ; instead of a single character. When the X or Y coordinate is
 ; outside of the canvas, C will not be drawn. When STRING extends
 ; beyond the the limits of the canvas, it will be clipped.
 ;
 ; CANVAS-PLOT draws the character CHAR at the virtual position
-; INTEGER1/INTEGER2. CANVAS-PLOT-LINE draws a line from the
-; virtual position INT1/INT2 to INT3/INT4 using the character
-; CHAR. Lines originating or extending outside of the canvas
-; will be clipped.
+; INTEGER-X/INTEGER-Y. CANVAS-PLOT-LINE draws a line from the
+; virtual position X/Y to DX/DY using the character CHAR. All
+; arguments must be integers. Lines originating or extending
+; outside of the canvas will be clipped.
 ;
 ; CANVAS-DUMP returns a vector of strings that contain the
 ; characters written to the canvas. The vector indexes are the

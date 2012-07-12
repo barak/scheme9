@@ -2,9 +2,8 @@
 
 /*
  * Scheme 9 from Empty Space
- * By Nils M Holm, 2007-2010
- * < n m h  at  t 3 x . o r g >
- * See the LICENSE file of the S9fES package for terms of use
+ * By Nils M Holm, 2007-2012
+ * Placed in the Public Domain
  */
 
 /*
@@ -14,7 +13,7 @@
  *     (also add "s9-real.scm" to the heap image).
  */
 
-#define VERSION "2010-11-13"
+#define VERSION "2012-07-10"
 
 #define EXTERN
  #include "s9.h"
@@ -698,8 +697,8 @@ int strcmp_ci(char *s1, char *s2) {
 	int	c1, c2;
 
 	while (1) {
-		c1 = tolower(*s1++);
-		c2 = tolower(*s2++);
+		c1 = tolower((int) *s1++);
+		c2 = tolower((int) *s2++);
 		if (!c1 || !c2 || c1 != c2)
 			break;
 	}
@@ -1882,7 +1881,7 @@ cell make_integer(cell i) {
 	return new_atom(T_INTEGER, n);
 }
 
-int integer_value(char *src, cell x) {
+cell integer_value(char *src, cell x) {
 	char	msg[100];
 
 #ifdef BIG_REAL
@@ -1984,7 +1983,7 @@ cell bignum_add(cell a, cell b) {
 	return a;
 }
 
-cell bignum_less_p(cell a, cell b) {
+int bignum_less_p(cell a, cell b) {
 	int	ka, kb, neg_a, neg_b;
 
 	neg_a = _bignum_negative_p(a);
@@ -2012,7 +2011,7 @@ cell bignum_less_p(cell a, cell b) {
 	return 0;
 }
 
-cell bignum_equal_p(cell a, cell b) {
+int bignum_equal_p(cell a, cell b) {
 	a = cdr(a);
 	b = cdr(b);
 	while (a != NIL && b != NIL) {
@@ -2788,7 +2787,7 @@ cell pp_minus(cell x) {
 	return a;
 }
 
-cell real_greater_p(cell x, cell y) {
+int real_greater_p(cell x, cell y) {
 	return real_less_p(y, x);
 }
 
@@ -4826,16 +4825,18 @@ void load_library(char *argv0) {
 			box_value(S_library_path) = new;
 			return;
 		}
-		if (strlen(LIBRARY) + strlen(libdir) >= sizeof(libfile)-1)
+		if (strlen(image) + strlen(libdir) + strlen(".scm")
+			>= sizeof(libfile)-1
+		)
 			fatal("load_library: path too long");
-		sprintf(libfile, "%s/%s", libdir, LIBRARY);
+		sprintf(libfile, "%s/%s.scm", libdir, image);
 		if (load(libfile) == 0) {
 			free(path);
 			return;
 		}
 		p = strtok(NULL, ":");
 	}
-	sprintf(buf, "found neither \"%s.image\" nor \"%s\"", image, LIBRARY);
+	sprintf(buf, "found neither \"%s.image\" nor \"%s.scm\"", image, image);
 	fatal(buf);
 }
 
@@ -4996,7 +4997,7 @@ void init_extensions(void) {
 }
 
 void usage(int quit) {
-	pr("Usage: s9 [-h?] [!name] [-gnqv] [-f prog [args]] [-m size[m]]");
+	pr("Usage: s9 [-h?] [-i name] [-gnqv] [-f prog [args]] [-m size[m]]");
 	nl();
 	pr("          [-l prog] [-t count] [-d image] [-- [args]]");
 	nl();
@@ -5009,6 +5010,8 @@ void long_usage() {
 	usage(0);
 	nl();
 	pr("-h              display this summary (also -?)"); nl();
+	pr("-i name         base name of image file (must be first option!)");
+	nl();
 	pr("-d file         dump heap image to file and exit"); nl();
 	pr("-f file [args]  run program and exit (implies -q)"); nl();
 	pr("-g              print GC summaries (-gg = more)"); nl();
@@ -5092,9 +5095,12 @@ int main(int argc, char **argv) {
 	int	run_script;
 	char	*argv0;
 
-	if (argv[1] && argv[1][0] == '!') {
-		argv++;
-		argv[0]++;
+	if (argc > 1 && !strcmp(argv[1], "-i")) {
+		if (argc < 2) {
+			usage(1);
+			exit(1);
+		}
+		argv += 2;
 	}
 	init();
 	load_library(argv[0]);

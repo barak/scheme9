@@ -1,6 +1,6 @@
 ; Scheme 9 from Empty Space, Function Library
-; By Nils M Holm, 2010
-; See the LICENSE file of the S9fES package for terms of use
+; By Nils M Holm, 2010,2012
+; Placed in the Public Domain
 ;
 ; (amb <expression> ...)  ==>  object
 ; (amb-collector)         ==>  procedure
@@ -14,9 +14,10 @@
 ; AMB takes a list of <expressions>, immediately evaluates the first one
 ; and returns its value. When no <expression>s are passed to AMB (or it
 ; runs out of <expressions>), it checks whether there is another AMB further
-; up in the program structure. If it is, it returns control to that instance
-; of AMB, thereby initiating backtracking. When backtracking to an AMB that
-; AMB evaluates the next <expression> from its argument list, and so on.
+; up in the program structure. If there is one, it returns control to that
+; instance of AMB, thereby initiating backtracking. When backtracking to an
+; AMB, that AMB evaluates the next <expression> from its argument list, and
+; so on.
 ;
 ; When an AMB runs out of options and there is no AMB to return control
 ; to, it returns a special object that can be detected with AMB-DONE?.
@@ -28,7 +29,7 @@
 ; where P is a predicate and V* is a list of values. When called, the
 ; procedure will apply P to V* and if the predicate is satisfied, it will
 ; store the values internally and initiate backtracking by calling (amb).
-; When one of the values V* satisfies AMB-DONE?, the procedure will
+; When one of the values of V* satisfies AMB-DONE?, the procedure will
 ; return the list stored internally. At this point, the list contains
 ; the union of all combinations of AMB values that satisfy P.
 ;

@@ -14,5 +14,5 @@ UNLESS is evaluates its body only if <test-expression> eveluates to #F.
 It evaluates its <body> exactly if WHEN would not evaluate it and vice
 versa.
 
-(when (= 1 1) 'foo 'bar 'baz)    ==>  'baz
-(unless (= 1 2) 'foo 'bar 'baz)  ==>  'baz
+(when (= 1 1) 'foo 'bar 'baz)    ==>  baz
+(unless (= 1 2) 'foo 'bar 'baz)  ==>  baz

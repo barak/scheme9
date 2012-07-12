@@ -1,6 +1,7 @@
 # Scheme 9 from Empty Space
 # Makefile (obviously)
-# By Nils M Holm, 2007-2010
+# By Nils M Holm, 2007-2012
+# Placed in the Public Domain.
 
 # Change at least this line:
 PREFIX= /u
@@ -54,7 +55,7 @@ DEFS=	$(OSDEF) \
 	-DNETWORK -DCURSES_RESET \
 	-DBIG_REAL
 
-all:	s9 s9.image s9.1.gz arse-core.image s9.1.txt lib/syntax-rules.scm \
+all:	s9 s9.image s9.1.gz s9.1.txt lib/syntax-rules.scm \
 		lib/matcher.scm
 
 s9:	s9.o s9.h $(EXTRA_OBJS)
@@ -81,7 +82,7 @@ lint:
 	gcc -g -Wall -ansi -pedantic s9.c && rm a.out
 
 test:	s9 test.image
-	$(BUILD_ENV) ./s9 !test -f util/test.scm
+	$(BUILD_ENV) ./s9 -i test -f util/test.scm
 
 libtest:	s9 test.image
 	$(BUILD_ENV) sh util/libtest.sh
@@ -90,16 +91,17 @@ systest:	s9 s9.image
 	$(BUILD_ENV) ./s9 -f util/systest.scm
 
 srtest:	s9 test.image
-	$(BUILD_ENV) ./s9 !test -f util/srtest.scm
+	$(BUILD_ENV) ./s9 -i test -f util/srtest.scm
 
 realtest:	s9 test.image
-	$(BUILD_ENV) ./s9 !test -f util/realtest.scm
+	$(BUILD_ENV) ./s9 -i test -f util/realtest.scm
 
 test.image:	s9 s9.scm s9-real.scm
-	$(BUILD_ENV) ./s9 !test -n $(EXTRA_SCM) -d test.image
+	$(BUILD_ENV) ./s9 -n $(EXTRA_SCM) -d test.image
 
 tests:
 	make test
+	make realtest
 	make srtest
 	make libtest
 	make systest
@@ -125,7 +127,7 @@ install-s9:	s9 s9.scm s9.image s9.1.gz
 	install $C -m 0755 util/make-help-links $(LIBDIR)/help
 	(cd $(LIBDIR)/help && ./make-help-links && rm make-help-links)
 
-install-util:	install-arse
+install-util:
 	sed -e "s|^#! /usr/local|#! $(PREFIX)|"	\
 		<prog/s9help.scm >$(BINDIR)/s9help
 	sed -e "s|^#! /usr/local|#! $(PREFIX)|"	\
@@ -139,22 +141,7 @@ install-util:	install-arse
 		  $(BINDIR)/scm2html	\
 		  $(BINDIR)/scmpp
 
-arse-core.image: contrib/arse.scm ext/unix.scm ext/curses.scm
-	rm -f arse-core.image
-	$(BUILD_ENV) ./s9 !arse-core -n -l ext/unix.scm -l ext/curses.scm \
-		-l contrib/arse.scm -d arse-core.image
-
-install-arse: arse-core.image
-	cp arse-core.image $(LIBDIR)
-	cp contrib/arse.help $(LIBDIR)
-	sed -e "s|^#! /usr/local|#! $(PREFIX)|"	\
-	    -e "s|^#! \(.*\)/s9|#! \1/arse-core|"	\
-	    -e '/arse.scm"/d' \
-		<prog/arse1.scm >$(BINDIR)/arse
-	ln -fs $(BINDIR)/s9 $(BINDIR)/arse-core
-	-chmod +x $(BINDIR)/arse
-
-install-programs:
+install-progs:
 	sed -e "s|^#! /usr/local|#! $(PREFIX)|"	\
 		<prog/advgen.scm >$(BINDIR)/advgen
 	sed -e "s|^#! /usr/local|#! $(PREFIX)|"	\
@@ -188,16 +175,19 @@ deinstall:
 	-rmdir $(MANDIR)
 
 deinstall-util:
-	rm -f $(BINDIR)/arse		\
-	      $(BINDIR)/s9help		\
+	rm -f $(BINDIR)/s9help		\
 	      $(BINDIR)/s9resolve	\
 	      $(BINDIR)/scm2html	\
 	      $(BINDIR)/scmpp
 
-deinstall-programs:
+deinstall-progs:
 	rm -f $(BINDIR)/advgen		\
+	      $(BINDIR)/c2html		\
+	      $(BINDIR)/cols		\
 	      $(BINDIR)/dupes		\
+	      $(BINDIR)/edoc		\
 	      $(BINDIR)/htmlify		\
+	      $(BINDIR)/s9hts		\
 	      $(BINDIR)/soccat
 
 tabs:
@@ -207,7 +197,7 @@ cd:
 	s9 -f util/check-descr.scm
 
 clean:
-	rm -f s9 s9.image test.image arse-core.image s9.1.gz *.o *.core \
+	rm -f s9 s9.image test.image s9.1.gz *.o *.core \
 		CATEGORIES.html core s9fes.tgz __testfile__ 
 
 new-version:
@@ -244,7 +234,7 @@ advdump:	prog/advgen.scm prog/adventure.adv prog/adventure.intro \
 		-t "The Quest for S9fES" \
 		-y s9.css \
 		prog/adventure.adv
-	cp MASCOT.jpg util/s9.css advdump
+	cp MASCOT.png util/s9.css advdump
 
 csums:
 	txsum -u <_checksums >_checksums.new

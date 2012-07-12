@@ -8,8 +8,8 @@ result, if any. See the book "Logic Programming in Scheme"[1]
 for an introduction to AMK. If a variable is given, return all
 values for that variable that satisfy the query.
 
-[1] The book is now out of print, but a copy may be retrieved
-    at http://www.bcl.hamilton.ie/~nmh/t3x.org/zzz/.
+[1] http://www.lulu.com/shop/nils-m-holm/logic-programming-in-scheme/\
+    paperback/product-18693432.html
 
 (run* (vq) (appendo vq (_) '(a b c)))
   ==>  (() (a) (a b) (a b c))

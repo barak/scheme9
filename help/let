@@ -2,7 +2,7 @@ R4RS 4.2.2  (let <bindings> <body>)  ==>  object
 
 Syntax: <Bindings> should have the form
 
-((<variable1> <init1>) ...),
+((<variable> <init>) ...),
 
 where each <init> is an expression, and <body> should be a sequence
 of one or more expressions. It is an error for a <variable> to

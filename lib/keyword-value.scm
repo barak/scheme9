@@ -1,13 +1,13 @@
 ; Scheme 9 from Empty Space, Function Library
-; By Nils M Holm, 2010
-; See the LICENSE file of the S9fES package for terms of use
+; By Nils M Holm, 2010,2012
+; Placed in the Public Domain
 ;
 ; (accept-keywords string list1 list2)  ==>  #t | undefined
 ; (keyword-value list symbol)           ==>  object | undefined
 ; (keyword-value list symbol object)    ==>  object
 ;
 ; KEYWORD-VALUE finds the value associated with a keyword in a property
-; list (keywords in even positions, values in odd positions). When the
+; list (keywords in odd positions, values in even positions). When the
 ; keyword is not found in the plist and a default OBJECT is specified,
 ; that object is returned. When the keyword is not found and no default
 ; is given, an error is signalled.

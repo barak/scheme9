@@ -3,8 +3,7 @@
 /*
  * Scheme 9 from Empty Space, big real number arithmetics
  * By Nils M Holm, 2008-2010
- * < n m h  at  t 3 x . o r g >
- * See the LICENSE file of the S9fES package for terms of use
+ * Placed in the Public Domain
  */
 
 /*
@@ -20,8 +19,8 @@
 char	*ntoa(char *b, cell n, int w);
 cell	bignum_shift_right(cell a);
 cell	flat_copy(cell n, cell *lastp);
-cell	bignum_equal_p(cell a, cell b);
-cell	bignum_less_p(cell a, cell b);
+int	bignum_equal_p(cell a, cell b);
+int	bignum_less_p(cell a, cell b);
 cell	bignum_multiply(cell a, cell b);
 cell	bignum_divide(cell x, cell a, cell b);
 cell	bignum_negate(cell a);
@@ -49,11 +48,11 @@ int string_numeric_p(char *s) {
 		return 0;
 	while (s[i]) {
 		if (exponent_char_p(s[i]) && got_digits && !got_expn) {
-			if (isdigit(s[i+1]) || s[i+1] == '#') {
+			if (isdigit((int) s[i+1]) || s[i+1] == '#') {
 				got_expn = 1;
 			}
 			else if ((s[i+1] == '+' || s[i+1] == '-') &&
-				(isdigit(s[i+2]) || s[i+2] == '#')
+				(isdigit((int) s[i+2]) || s[i+2] == '#')
 			) {
 				got_expn = 1;
 				i++;
@@ -70,7 +69,7 @@ int string_numeric_p(char *s) {
 		) {
 			got_digits = 1;
 		}
-		else if (isdigit(s[i])) {
+		else if (isdigit((int) s[i])) {
 			got_digits = 1;
 		}
 		else {
@@ -155,7 +154,7 @@ cell string_to_real(char *s) {
 		i++;
 	}
 	found_dp = 0;
-	while (isdigit(s[i]) || s[i] == '#' || s[i] == '.') {
+	while (isdigit((int) s[i]) || s[i] == '#' || s[i] == '.') {
 		if (s[i] == '.') {
 			i++;
 			found_dp = 1;
