@@ -1,0 +1,31 @@
+From: "Barak A. Pearlmutter" <barak+git@cs.nuim.ie>
+Date: Thu, 12 Jul 2012 12:10:44 +0100
+Subject: parallel install
+
+Allow parallelism during "make install" by ensuring that each
+installation stanza creates any directories it targets.  This might
+result in multiple creation; that is okay.
+---
+ Makefile |    2 ++
+ 1 file changed, 2 insertions(+)
+
+diff --git a/Makefile b/Makefile
+index f636abb..c853b58 100644
+--- a/Makefile
++++ b/Makefile
+@@ -139,6 +139,7 @@ install-s9:	s9 s9.scm s9.image s9.1.gz
+ 	(cd $(DESTDIR)$(LIBDIR)/help && ./make-help-links && rm make-help-links)
+ 
+ install-util:
++	install -d -m 0755 $(DESTDIR)$(BINDIR)
+ 	sed -e "s|^#! /usr/local|#! $(prefix)|"	\
+ 		<prog/s9help.scm >$(DESTDIR)$(BINDIR)/s9help
+ 	sed -e "s|^#! /usr/local|#! $(prefix)|"	\
+@@ -153,6 +154,7 @@ install-util:
+ 		  $(DESTDIR)$(BINDIR)/scmpp
+ 
+ install-progs:
++	install -d -m 0755 $(DESTDIR)$(BINDIR)
+ 	sed -e "s|^#! /usr/local|#! $(prefix)|"	\
+ 		<prog/advgen.scm >$(DESTDIR)$(BINDIR)/advgen
+ 	sed -e "s|^#! /usr/local|#! $(prefix)|"	\

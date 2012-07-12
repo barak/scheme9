@@ -1,0 +1,23 @@
+From: "Barak A. Pearlmutter" <barak+git@cs.nuim.ie>
+Date: Thu, 12 Jul 2012 11:56:45 +0100
+Subject: use LDFLAGS
+
+Need to include LDFLAGS in link phase in order to get hardening
+libraries during hardened build.  See lintian tag hardening-no-relro.
+---
+ Makefile |    2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
+
+diff --git a/Makefile b/Makefile
+index 47f2f95..3d16ce2 100644
+--- a/Makefile
++++ b/Makefile
+@@ -69,7 +69,7 @@ all:	s9 s9.image lib/syntax-rules.scm \
+ all:	s9.1
+ 
+ s9:	s9.o s9.h $(EXTRA_OBJS)
+-	$(CC) -o s9 s9.o $(EXTRA_OBJS) $(EXTRA_LIBS)
++	$(CC) $(CFLAGS) $(LDFLAGS) -o s9 s9.o $(EXTRA_OBJS) $(EXTRA_LIBS)
+ 
+ s9.o:	s9.c s9-real.c s9.h
+ 	$(CC) -o s9.o $(CFLAGS) $(DEFS) -c s9.c
