@@ -1,3 +1,10 @@
+scheme9 (2012.07.10-2) unstable; urgency=low
+
+  * quilt patch for Makefile to not disregard passed CFLAGS, as needed
+    for, e.g., hardened builds (closes: #681488)
+
+ -- Barak A. Pearlmutter <bap@debian.org>  Fri, 13 Jul 2012 19:56:24 +0100
+
 scheme9 (2012.07.10-1) unstable; urgency=low
 
   * New Upstream Version
