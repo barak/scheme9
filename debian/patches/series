@@ -5,3 +5,4 @@
 0005-parallel-install.patch
 0006-maxpathlen-for-hurd.patch
 0007-search-path-in-test-script.patch
+0008-use-CFLAGS.patch

@@ -1,0 +1,23 @@
+From: Simon Ruderich <simon@ruderich.org>
+Date: Fri, 13 Jul 2012 17:06:56 +0200
+Subject: use CFLAGS
+
+Don't specify -O2 and -g (on by default) so they can be overwritten
+by dpkg-buildflags.
+---
+ Makefile |    2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
+
+diff --git a/Makefile b/Makefile
+index c853b58..f1d8163 100644
+--- a/Makefile
++++ b/Makefile
+@@ -27,7 +27,7 @@ BUILD_ENV=	env S9FES_LIBRARY_PATH=.:lib:ext:contrib
+ 
+ # Override default compiler and flags
+ CC=	gcc
+-CFLAGS=	-g -Wall -ansi -pedantic -O2
++CFLAGS+=	-Wall -ansi -pedantic
+ 
+ prefix=/usr/local
+ exec_prefix=$(prefix)
