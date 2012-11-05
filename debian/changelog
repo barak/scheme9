@@ -1,3 +1,9 @@
+scheme9 (2012.11.01-1) unstable; urgency=low
+
+  * New Upstream Version
+
+ -- Barak A. Pearlmutter <bap@debian.org>  Mon, 05 Nov 2012 14:05:18 +0000
+
 scheme9 (2012.07.10-2) unstable; urgency=low
 
   * quilt patch for Makefile to not disregard passed CFLAGS, as needed
