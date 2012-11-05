@@ -3,11 +3,12 @@ S9 LIB  (type-case object <clause> ...)  ==>  object
 
         (load-from-library "type-case.scm")
 
-TYPE-OF returns a symbol describing the type of the g-ven OBJECT.
-The following values may be returned by the procedure:
+TYPE-OF returns a symbol describing the type of the given OBJECT.
+The following symbols may be returned by the procedure:
 
       boolean char eof-object input-port integer output-port
-      pair procedure string symbol syntax unknown-object vector
+      pair procedure real string symbol syntax unknown-object
+      vector
 
 (Type-case obj ...)  is shorthand for  (case (type-of obj) ...)
 

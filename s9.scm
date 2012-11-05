@@ -90,8 +90,7 @@
 ;; Equivalence predicates
 
 (define (equal? a b)
-  (cond ((eq? a b)
-          #t)
+  (cond ((eq? a b))
         ((and (pair? a)
               (pair? b))
           (and (equal? (car a) (car b))
@@ -325,8 +324,7 @@
              (let ((dval (value-of-digit (car lst))))
                (and (< dval rdx)
                     (conv3 (cdr lst)
-                           (+ (value-of-digit (car lst))
-                              (* res rdx))
+                           (+ dval (* res rdx))
                            rdx))))))
      (conv
        (lambda (lst rdx)
@@ -479,8 +477,7 @@
 ; LET/LET*/LETREC helper
 
 (define (check-bindings who b opt-arg)
-  (cond ((null? b)
-          #t)
+  (cond ((null? b))
         ((and (pair? b)
               (pair? (car b))
               (symbol? (caar b))

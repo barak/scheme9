@@ -18,9 +18,9 @@
 ; Example:   (s9fes-syntax-objects)  ==>  ()
 
 (define (r4rs-syntax-objects)
-  '(and begin case cond define define-syntax delay do else if lambda
-    let let* letrec quote quasiquote or set!  syntax-rules unquote
-    unquote-splicing))
+  '(=> and begin case cond define define-syntax delay do else if
+    lambda let let* letrec quote quasiquote or set!  syntax-rules
+    unquote unquote-splicing))
 
 (define (s9fes-syntax-objects)
   '())

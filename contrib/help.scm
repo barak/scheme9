@@ -1,5 +1,5 @@
 ; Scheme 9 from Empty Space, Function Library
-; By Nils M Holm, 2009,2010
+; By Nils M Holm, 2009-2012
 ; Placed in the Public Domain
 ;
 ; (help)                     ==>  unspecific
@@ -47,7 +47,7 @@
     (lambda sym
 
       (define (more? tty)
-        (display "; ----- more (enter q to quit) -----")
+        (display "; ----- more (q = quit) -----")
         (let ((s (read-line tty)))
           (if (eof-object? s)
               (begin (newline)

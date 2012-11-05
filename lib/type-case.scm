@@ -1,5 +1,5 @@
 ; Scheme 9 from Empty Space, Function Library
-; By Nils M Holm, 2010
+; By Nils M Holm, 2010,2012
 ; Placed in the Public Domain
 ;
 ; (type-case object <clause> ...)  ==>  object
@@ -7,11 +7,12 @@
 ;
 ; (load-from-library "type-case.scm")
 ;
-; TYPE-OF returns a symbol describing the type of the g-ven OBJECT.
-; The following values may be returned by the procedure:
+; TYPE-OF returns a symbol describing the type of the given OBJECT.
+; The following symbols may be returned by the procedure:
 ;
 ;       boolean char eof-object input-port integer output-port
-;       pair procedure string symbol syntax unknown-object vector
+;       pair procedure real string symbol syntax unknown-object
+;       vector
 ;
 ; (Type-case obj ...)  is shorthand for  (case (type-of obj) ...)
 ;
@@ -29,6 +30,7 @@
         ((pair? obj)        'pair)
         ((boolean? obj)     'boolean)
         ((integer? obj)     'integer)
+        ((real? obj)        'real)
         ((char? obj)        'char)
         ((string? obj)      'string)
         ((vector? obj)      'vector)

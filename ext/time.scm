@@ -5,7 +5,7 @@
 ; (time form)  ==>  object
 ;
 ; The TIME procedures evaluates FORM, measuring the number of
-; allocation, reductions, etc with the STATS procedure. It also
+; allocations, reductions, etc with the STATS procedure. It also
 ; measures the time spent reducing FORM. When finished, it prints
 ; some interesting data and returns the normal form of FORM.
 ; The FORM must be quoted or it will be reduced *before* running

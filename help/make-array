@@ -17,7 +17,7 @@ array with two elements in the first dimensions, three in the
 second and four in the third.
 
 ARRAY creates a fresh array of rank one and stores the given
-elemenys in it. Arrays of higher rank can be created by nesting
+elements in it. Arrays of higher rank can be created by nesting
 applications of ARRAY.
 
 (Array? x) returns #T if X is an array and otherwise #F. The array
@@ -27,7 +27,7 @@ ARRAY-DIMENIONS returns a list of the dimensions of the given
 ARRAY. For a zero-dimensional array it returns ().
 
 ARRAY-MAP maps a procedure over the elements of the given arrays.
-The arity of PROCECURE must match the number of ARRAYs. ARRAY-MAP
+The arity of PROCEDURE must match the number of ARRAYs. ARRAY-MAP
 returns a new array in which the elements of the input arrays have
 been tuple-wise combined with PROCEDURE, e.g.:
 

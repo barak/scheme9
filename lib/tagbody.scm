@@ -70,7 +70,7 @@
   (let* ((labels (body->tagged-blocks body '() #f '()))
          (symtab (map cons
                       (map car labels)
-                      (iota 0 (- (length labels) 1))))
+                      (iota* 0 (length labels))))
          (blocks (map (lambda (label)
                         `(lambda ()
                            ,@(cdr label)))

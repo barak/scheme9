@@ -1,5 +1,5 @@
 .\" S9(1) Manual Page
-.\" By Nils M Holm, 2007-2010
+.\" By Nils M Holm, 2007-2012
 .ll 70
 .lt 70
 .de HD		\" header
@@ -170,12 +170,22 @@ S9fES supports nestable block comments of the form
 .fi
 .in -4
 .sp
+Square brackets may be used in the places of parentheses:
+.sp
+.in +4
+.nf
+\fB(cond [(foo) (bar)])\fP.
+.fi
+.in -4
+.sp
+The same type of bracket must be used on both ends of a list.
+.sp
 These S9fES procedures are not in R4RS:
 .sp
 .ne 3
-.B "(bit-op integer1 integer2 integer3)  ==>  integer | #f
+.B "(bit-op integer1 integer2 integer3 ...)  ==>  integer | #f
 .in +4
-Implement a variety of bitwise logic operations. See the
+Implement a variety of bitwise operations. See the
 .B bit\-op
 help page for details.
 .in -4
@@ -516,10 +526,10 @@ for a heap image file or the library source code. The heap image file
 is the name of the interpreter with a
 .I .image
 suffix appended. An alternative name can be specified with the
-.BR ! -option
-(see
+.B -i
+option (see
 .BR OPTIONS ).
-The library source code is always named
+The default library source code is named
 .IR s9.scm .
 The first directory containing either a heap image or the library
 source code is used. When the directory contains both an image and
@@ -678,6 +688,10 @@ Abort input or terminate program execution.
 .B "SIGQUIT
 .in +4
 Terminate the interpreter process (emergency exit).
+.in -4
+.B "SIGTERM
+.in +4
+Silently terminate the interpreter process.
 .in -4
 .SH "FOOTNOTES
 .B [1]

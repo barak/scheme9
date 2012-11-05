@@ -1,5 +1,5 @@
 ; Scheme 9 from Empty Space, Function Library
-; By Nils M Holm, 2010
+; By Nils M Holm, 2010,2012
 ; Placed in the Public Domain
 ;
 ; (curs:attron integer)   ==>  unspecific
@@ -12,7 +12,7 @@
 
 (require-extension curses)
 
-(load-from-library "bitwise-ops.scm")
+(load-from-library "bitops.scm")
 
 (define curs:attr-normal    (curs:get-magic-value "A_NORMAL"))
 (define curs:attr-standout  (curs:get-magic-value "A_STANDOUT"))
@@ -38,10 +38,10 @@
       (set! curs:attributes attr))))
 
 (define (curs:attron attr)
-  (curs:attrset (bitwise-or attr curs:attributes)))
+  (curs:attrset (bit+ attr curs:attributes)))
 
 (define (curs:attroff attr)
-  (curs:attrset (bitwise-and-c2 curs:attributes attr)))
+  (curs:attrset (bit*c curs:attributes attr)))
 
 (define (curs:standout)
   (curs:attrset curs:attr-standout))

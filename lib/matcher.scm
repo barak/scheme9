@@ -45,7 +45,7 @@
 ; or LET-MATCHER.
 ;
 ; The DEFINE-MATCHER syntax binds a matcher to a symbol at the
-; toplevel. LET-MATCHER binds a matcher locally. These constructs
+; top-level. LET-MATCHER binds a matcher locally. These constructs
 ; correspond to DEFINE and LETREC.
 ;
 ; Example:   (begin
@@ -69,7 +69,7 @@
 
 (load-from-library "position.scm")
 (load-from-library "sublist.scm")
-(load-from-library "group-list.scm")
+(load-from-library "group.scm")
 
 (define (make-matcher name . clauses)
 
@@ -212,7 +212,7 @@
 
   (define (gen-cad*r path)
     (let* ((name (cad*r-name path))
-           (body (let loop ((p (group-list 4 path)))
+           (body (let loop ((p (group path 4)))
                    (if (null? (cdr p))
                        `(,(cad*r-name (car p)) x)
                        (let ((op (cad*r-name (car p))))

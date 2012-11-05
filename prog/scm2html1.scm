@@ -30,17 +30,19 @@
 (define show-matches  (option #\s #f))
 (define full-html     (option #\d #f))
 (define mark-s9-procs (option #\9 #f))
+(define tilde-quotes  (option #\t #f))
 (define mark-s9-extns (option #\x #f))
 (define lout-mode     (option #\L #f))
 (define options      `(,show-matches
                        ,full-html
                        ,mark-s9-procs
+                       ,tilde-quotes
                        ,mark-s9-extns
                        ,show-help
                        ,lout-mode))
 
 (define (usage)
-  (display "Usage: scm2html [-9dsxL] [file ...]")
+  (display "Usage: scm2html [-9dstxL] [file ...]")
   (newline))
 
 (let ((files (parse-options! (sys:command-line) options usage)))
@@ -54,6 +56,7 @@
               "-9  highlight S9fES (non-R4RS) procedures"
               "-d  write full HTML document (default: PRE block only)"
               "-s  enable CSS-based syntax highlighting"
+              "-t  enable invisible tilde quotation"
               "-x  highlight S9fES extension procedures"
               "-L  emit Lout output instead of HTML"
               ""))
@@ -62,6 +65,7 @@
           (scm2html 'full-html: (opt-val full-html)
                     'show-matches: (opt-val show-matches)
                     'mark-s9-procs: (opt-val mark-s9-procs)
+                    'tilde-quotes: (opt-val tilde-quotes)
                     'mark-s9-extns: (opt-val mark-s9-extns)
                     'lout-mode: (opt-val lout-mode)))
         (else
@@ -72,6 +76,7 @@
                           (scm2html 'full-html: (opt-val full-html)
                                     'show-matches: (opt-val show-matches)
                                     'mark-s9-procs: (opt-val mark-s9-procs)
+                                    'tilde-quotes: (opt-val tilde-quotes)
                                     'mark-s9-extns: (opt-val mark-s9-extns)
                                     'lout-mode: (opt-val lout-mode)))))
                     files))))

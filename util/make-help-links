@@ -1,6 +1,8 @@
 #!/bin/sh
 
-# Run this script in help/ to rebuild all symlinks.
+# Run this script in the S9 root to rebuild the help symlinks
+
+cd help || exit 1
 
 ln -fs amb amb-collector
 ln -fs amb amb-donep
@@ -22,6 +24,8 @@ ln -fs bit0 bitca
 ln -fs bit0 bitcplus
 ln -fs bit0 bitnstar
 ln -fs bit0 bit1
+ln -fs bit0 bitsl
+ln -fs bit0 bitsr
 ln -fs bitwise-and bitwise-1
 ln -fs bitwise-and bitwise-2
 ln -fs bitwise-and bitwise-and-c1
@@ -228,7 +232,7 @@ ln -fs memoize define-memoizing
 ln -fs memq member
 ln -fs memq memv
 ln -fs minus slash
-ln -fs module import
+ln -fs module using
 ln -fs numberp integerp
 ln -fs parse-optionsb display-usage
 ln -fs parse-optionsb opt-argp
@@ -258,7 +262,8 @@ ln -fs quasiquote unquote
 ln -fs quasiquote unquote-splicing
 ln -fs queue make-queue
 ln -fs queue queue-emptyp
-ln -fs queue unqueue
+ln -fs queue queueb
+ln -fs queue unqueueb
 ln -fs queue unqueuestar
 ln -fs quotient modulo
 ln -fs quotient remainder

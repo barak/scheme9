@@ -23,7 +23,7 @@ CANVAS-DRAW draws character CHAR at position INTEGER-X/INTEGER-Y.
 It uses real coordinates. CANVAS-DRAWSTRING draws a string
 instead of a single character. When the X or Y coordinate is
 outside of the canvas, C will not be drawn. When STRING extends
-beyond the the limits of the canvas, it will be clipped.
+beyond the limits of the canvas, it will be clipped.
 
 CANVAS-PLOT draws the character CHAR at the virtual position
 INTEGER-X/INTEGER-Y. CANVAS-PLOT-LINE draws a line from the

@@ -4,6 +4,9 @@ dumpdir=webdump
 update_only=no
 tmpfile=/tmp/mkhtml.$$
 
+about="S9fES is a mature, portable, and comprehensible R4RS Scheme \
+interpreter with an (optional) Unix interface. It is in the public domain."
+
 cleanup() {
 	rm -f $tmpfile
 	rm -f rpp rp_html
@@ -92,9 +95,9 @@ format_C_files() {
 			    -e "s/@TITLE@/`basename $file`/" \
 				<$tmpfile >$oname
 		fi
-		echo -n "<P>LOC: " >>$oname
+		echo -n "<P>" >>$oname
 		sed -e "1,/^$/d" <$file | wc -l >>$oname
-		echo "</P>" >>$oname
+		echo " Lines</P>" >>$oname
 		prog/c2html1.scm $file >>$oname
 		cat util/libtail >>$oname
 		echo " done"
@@ -199,10 +202,11 @@ dirlist() {
 	if [ "x$dir" = "x." ]; then
 		sed -e "s/@BASE@//" <util/dirhead >$tmpfile
 	else
-		sed -e "s|@BASE@|<A href=\"`basename $ofile`\">$dir</A>|" \
+		sed -e "s|@BASE@|<A href=\"`basename $ofile`\">$dir.html</A>|" \
 			<util/dirhead >$tmpfile
 	fi
 	sed -e "s/@DESC@/$title/" <$tmpfile >$ofile
+	echo $4 >>$ofile
 	echo '<PRE class=dirlist>' >>$ofile
 	# XXX edoc
 	(cd $dir; ls -l | grep -v "$dumpdir") | grep -v "edoc$" | awk '
@@ -211,6 +215,8 @@ dirlist() {
 		  else
 		  if ($9 == "s9fes.tgz")
 			name=$9
+		  else if ($9 == "freebsd-port")
+			name="http://www.freebsd.org/cgi/cvsweb.cgi/ports/lang/s9fes"
 		  else
 			name=$9".html"
 		  if ($9 == "")
@@ -243,12 +249,12 @@ if [ $update_only = no -o $update_only = dir ]; then
 		cp s9fes.tgz util/s9.css $dumpdir
 	fi
 
-	dirlist . $dumpdir/index.html "Scheme 9 from Empty Space"
-	dirlist lib $dumpdir/lib.html "lib\/"
-	dirlist contrib $dumpdir/contrib.html "contrib\/"
-	dirlist ext $dumpdir/ext.html "ext\/"
-	dirlist prog $dumpdir/prog.html "prog\/"
-	dirlist util $dumpdir/util.html "util\/"
+	dirlist . $dumpdir/index.html "Scheme 9 from Empty Space" "$about"
+	dirlist lib $dumpdir/lib.html "lib\/" ""
+	dirlist contrib $dumpdir/contrib.html "contrib\/" ""
+	dirlist ext $dumpdir/ext.html "ext\/" ""
+	dirlist prog $dumpdir/prog.html "prog\/" ""
+	dirlist util $dumpdir/util.html "util\/" ""
 
 	if [ $update_only = no ]; then
 		mv CATEGORIES.html webdump

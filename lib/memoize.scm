@@ -14,7 +14,7 @@
 ; to speed up computation. This works best for massively recursive
 ; procedures.
 ;
-; When the 'RESET keyword is passed to MEMOIZE as a secod argument,
+; When the 'RESET keyword is passed to MEMOIZE as a second argument,
 ; the resulting memoizing procedure will allow to clear its cache
 ; by calling it with 'RESET as its only argument.
 ;

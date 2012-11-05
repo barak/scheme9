@@ -88,11 +88,12 @@
 
 (load-from-library "bitops.scm")
 (%test
-  (bit0 123 456)  ==>  0
-  (bit* 127  99)  ==>  99
-  (bit+  63  64)  ==>  127
-  (bita 123 456)  ==>  123
-  (bitb 123 456)  ==>  456
+  (bit0  123 456)  ==>  0
+  (bit*  127  99)  ==>  99
+  (bit+   63  64)  ==>  127
+  (bita  123 456)  ==>  123
+  (bitb  123 456)  ==>  456
+  (bitsl 123   1)  ==>  246
 )
 
 (load-from-library "bitwise-ops.scm")
@@ -247,9 +248,10 @@
   (rem-prop '(foo 42) 'foo)  ==>  ()
 )
 
-(load-from-library "group-list.scm")
+(load-from-library "group.scm")
 (%test
-  (group-list 2 '(1 2 3 4 5))  ==>  ((1 2) (3 4) (5))
+  (group '(1 2 3 4 5) 2)  ==>  ((1 2) (3 4) (5))
+  (group '(1 2 3 4 5) 5)  ==>  ((1 2 3 4 5))
 )
 
 (load-from-library "hash-table.scm")
@@ -319,8 +321,7 @@
 
 (load-from-library "iota.scm")
 (%test
-  (iota 17 21)   ==>  (17 18 19 20 21)
-  (iota 1 1)     ==>  (1)
+  (iota 7)       ==>  (1 2 3 4 5 6 7)
   (iota* 17 21)  ==>  (17 18 19 20)
   (iota* 1 1)    ==>  ()
 )
@@ -349,6 +350,11 @@
   (letrec* ((a (lambda () (lambda () 1)))
             (b (a)))
     (b))                                  ==>  1
+)
+
+(load-from-library "list-copy.scm")
+(%test
+  (list-copy '(foo bar baz))  ==>  (foo bar baz)
 )
 
 (load-from-library "list-to-set.scm")
@@ -482,7 +488,7 @@
 (load-from-library "queue.scm")
 (%test
   (let ((q (make-queue)))
-    (for-each (lambda (x) (queue q x))
+    (for-each (lambda (x) (queue! q x))
               '(a b c d e))
     (unqueue* q))            ==>  (a ((e) b c d e))
 )
@@ -615,13 +621,13 @@
   (sieve 20)  ==>  (2 3 5 7 11 13 17 19)
 )
 
-(load-from-library "simple-module.scm")
+(load-from-library "simple-modules.scm")
 (%test
   (begin ; Note: BEGIN is only needed for automatic testing
     (module math
       (define* (fact x)
         (if (= 0 x) 1 (* x (fact (- x 1))))))
-    (import math (fact)
+    (using math (fact)
       (fact 5)))                               ==> 120
 )
 
@@ -653,8 +659,7 @@
 (%test
   (stream->list
     (append-streams (list->stream '(a b c))
-                    (stream-iota 1 3)))
-                                          ==>  (a b c 1 2 3)
+                    (stream-iota 1 3)))   ==>  (a b c 1 2 3)
   (stream->list
     (filter-stream even?
                    (stream-iota 1 10)))   ==>  (2 4 6 8 10)
@@ -851,6 +856,13 @@
         (go fib)
       end)
     x1)                       ==>  144
+)
+
+(load-from-library "take.scm")
+(%test
+  (take '(foo bar baz) 0)  ==>  ()
+  (take '(foo bar baz) 1)  ==>  (foo)
+  (take '(foo bar baz) 3)  ==>  (foo bar baz)
 )
 
 (load-from-library "transpose.scm")

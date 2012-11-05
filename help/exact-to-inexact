@@ -3,12 +3,8 @@ R4RS 6.5.5  (exact->inexact number)  ==>  number
 
 EXACT->INEXACT returns an inexact representation of NUMBER. The
 value returned is the inexact number that is numerically closest
-to the argument. S9fES implements this by setting the "inexact"
-flag of the number if it is a real number. If it is an integer,
-it converts it to type "real" first.
+to the argument.
 
 INEXACT->EXACT returns an exact representation of NUMBER. The
 value returned is the exact number that is numerically closest
-to the argument. S9fES implements this by clearing the "inexact"
-flag of the number if it is a real number. If the fraction of
-the number is zero, it also converts it to an integer.
+to the argument.

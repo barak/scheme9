@@ -8,7 +8,7 @@
 ;
 ; INTEGER->BINARY-STRING writes a binary notation of INTEGER
 ; to a fresh string and returns it. The resulting string will
-; be INTEGER2 characters wide and will consist of zeroes and
+; be INTEGER2 characters wide and will consist of zeros and
 ; ones exclusively. INTEGER2 must be large enough to hold the
 ; desired binary representation. NUMBER-OF-BITS may be used
 ; to find this value.

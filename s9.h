@@ -112,6 +112,7 @@
 
 #define TOKEN_LENGTH		1024
 #define MAX_PORTS		32
+#define MAX_IO_DEPTH		65536	/* Reduce on 16-bit systems! */
 #define HASH_THRESHOLD		5
 #define MAX_CALL_TRACE		100
 
@@ -232,28 +233,29 @@ enum EVAL_STATES {
 #define NAN			(-7)
 #define DOT			(-8)
 #define RPAREN			(-9)
-#define NOEXPR			(-10)
+#define RBRACK			(-10)
+#define NOEXPR			(-11)
 
 /*
  * Types
  */
 
-#define T_NONE			(-11)
-#define T_BOOLEAN		(-12)
-#define T_CHAR			(-13)
-#define T_INPUT_PORT		(-14)
-#define T_INTEGER		(-15)
-#define T_OUTPUT_PORT		(-16)
-#define T_PAIR			(-17)
-#define T_PAIR_OR_NIL		(-18)
-#define T_PRIMITIVE		(-19)
-#define T_PROCEDURE		(-20)
-#define T_REAL			(-21)
-#define T_STRING		(-22)
-#define T_SYMBOL		(-23)
-#define T_SYNTAX		(-24)
-#define T_VECTOR		(-25)
-#define T_CONTINUATION		(-26)
+#define T_NONE			(-20)
+#define T_BOOLEAN		(-21)
+#define T_CHAR			(-22)
+#define T_INPUT_PORT		(-23)
+#define T_INTEGER		(-24)
+#define T_OUTPUT_PORT		(-25)
+#define T_PAIR			(-26)
+#define T_PAIR_OR_NIL		(-27)
+#define T_PRIMITIVE		(-28)
+#define T_PROCEDURE		(-29)
+#define T_REAL			(-30)
+#define T_STRING		(-31)
+#define T_SYMBOL		(-32)
+#define T_SYNTAX		(-33)
+#define T_VECTOR		(-34)
+#define T_CONTINUATION		(-35)
 
 /*
  * Short cuts for primitive procedure definitions

@@ -1,7 +1,7 @@
 S9 LIB  (runtime-stats procedure <option> ...)  ==>  list
 
 Measure the runtime of the unary PROCEDURE when applied to
-a range of values (see below) RUNTIME-STATS returns a list
+a range of values (see below). RUNTIME-STATS returns a list
 containing the data it gathered. Each entry of the list has
 the following form:
 
@@ -18,7 +18,7 @@ of garbage collections performed during the computation.
 The following options are used to pass ranges to RUNTIME-STATS:
 
 'START: INTEGER  The smallest value to be measured.
-'END: INTEGER    The largtest value to be measured.
+'END: INTEGER    The largest value to be measured.
 'STEP: INTEGER   The increment between values.
 'SET: LIST       A set of values.
 
@@ -38,7 +38,8 @@ There options are used to control the output of RUNTIME-STATS:
                  X-range. Setting this value to #F will disable
                  compression.
 
-(runtime-stats (lambda (x) (expt 2 x)) 1000 10000 1000)
+(runtime-stats (lambda (x) (expt 2 x))
+               'start: 1000 'end: 10000 'step: 1000)
   ==>  (( 1000 (0  23755) 276   96237   97242  0)
         ( 2000 (0  86518) 297  353246  354328  3)
         ( 3000 (0 177415) 322  783333  784501  6)

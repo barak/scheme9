@@ -6,7 +6,7 @@ should be of the form
 (<pattern> <template>)
 
 where the <pattern> and <template> are described in detail in the
-`Binding syntacic keywords' section of R4RS.
+`Binding syntactic keywords' section of R4RS.
 
 Semantics: An instance of SYNTAX-RULES produces a new macro
 transformer by specifying a sequence of hygienic rewrite rules. A
@@ -28,17 +28,17 @@ of the input in the template. It is an error for the same pattern
 variable to appear more than once in a <pattern>.
 
 Identifiers that appear in <literals> are interpreted as literal
-identifiers to be matched against corresponding subforms of the
-input. A subform in the input matches a literal identifier if and
+identifiers to be matched against corresponding sub-forms of the
+input. A sub-form in the input matches a literal identifier if and
 only if it is an identifier and either both its occurrence in the
 macro expression and its occurrence in the macro definition have
 the same lexical binding, or the two identifiers are equal and both
 have no lexical binding.
 
-A subpattern followed by `...' can match zero or more elements of
+A sub-pattern followed by `...' can match zero or more elements of
 the input. It is an error for `...' to appear in <literals>. Within
 a pattern the identifier `...' must follow the last element of a
-nonempty sequence of subpatterns.
+nonempty sequence of sub-patterns.
 
 More formally, an input form F matches a pattern P if and only if:
 
@@ -62,11 +62,11 @@ binding, in an expression that does not match any of the patterns.
 
 When a macro use is transcribed according to the template of the
 matching <syntax rule>, pattern variables that occur in the template
-are replaced by the subforms they match in the input. Pattern
-variables that occur in subpatterns followed by one or more instances
-of the identifier `...' are allowed only in subtemplates that are
+are replaced by the sub-forms they match in the input. Pattern
+variables that occur in sub-patterns followed by one or more instances
+of the identifier `...' are allowed only in sub-templates that are
 followed by as many instances of `...'. They are replaced in the
-output by all of the subforms they match in the input, distributed
+output by all of the sub-forms they match in the input, distributed
 as indicated. It is an error if the output cannot be built up as
 specified.
 

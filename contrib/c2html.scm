@@ -48,7 +48,7 @@
 ;       Initialize the color class and boldface flag with the values taken
 ;       from LIST. LIST should be the car part of an object returned by
 ;       C2HTML previously. It allows to render multiple lines that are
-;       logicall connected by preserving the style across line boundaries.
+;       logically connected by preserving the style across line boundaries.
 ;
 ; 'TERMINATE: list
 ;       Return termination tags for the color and boldface settings

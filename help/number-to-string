@@ -18,7 +18,7 @@ true.
 If NUMBER is inexact, the radix is 10, and the above expression can
 be satisfied by a result that contains a decimal point, then the
 result contains a decimal point and is expressed using the minimum
-number of digits (exclusive of exponent and trailing zeroes) needed
+number of digits (exclusive of exponent and trailing zeros) needed
 to make the above expression true; otherwise the format of the result
 is unspecified.
 

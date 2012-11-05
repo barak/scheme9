@@ -33,6 +33,5 @@ boolean constants evaluate "to themselves"; they need not be quoted.
 '#t       ==>  #t
 #t        ==>  #t
 
-As noted in section 3.5 Storage model, it is an error to alter a
-constant (i.e. the value of a literal expression) using a mutation
-procedure like set-car! or string-set!.
+It is an error to alter a constant (i.e. the value of a literal
+expression) using a mutation procedure like SET-CAR! or STRING-SET!.

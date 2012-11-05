@@ -73,7 +73,7 @@
 ; currently evaluating. Outside of methods, CALL-NEXT-METHOD
 ; is undefined.
 ;
-; INITALIZE is a generic procedure that is used to initialize
+; INITIALIZE is a generic procedure that is used to initialize
 ; instances dynamically. Whenever a new class is defined using
 ; DEFINE-CLASS, a new method covering that class is added to the
 ; INITIALIZE generic. Initialization code is added by redefining
@@ -255,7 +255,7 @@
                    slots                           ; all slots
                    (map make-accessors             ; slot accessors
                         (map car slots)
-                        (iota* 1 (+ 1 (length slots))))))
+                        (iota (length slots)))))
          (class
            (lambda ()
              class-vector)))

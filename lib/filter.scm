@@ -4,7 +4,7 @@
 ;
 ; (filter procecure^1 list)  ==>  list
 ;
-; Extract elements from a list. PROCDEDURE describes the property
+; Extract elements from a list. PROCEDURE describes the property
 ; of the elements to be extracted. It must be a procedure of one
 ; argument.
 ;

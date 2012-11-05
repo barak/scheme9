@@ -1,7 +1,7 @@
 S9 LIB  (scm2html <option> ...)  ==>  string | unspecific
 
 Render Scheme code in HTML with syntax highlighting and optional
-CSS-based paren matching. Input is read from (current-input-stream)
+CSS-based paren-matching. Input is read from (current-input-stream)
 and output is written to (current-output-stream) unless the
 'INPUT-STRING: option is specified (see below).
 
@@ -20,6 +20,7 @@ and other styles of the individual elements:
       y  R4RS syntax
       x  S9fES procedure
       z  S9fES syntax
+      m  normal form
       n  nested expression (for paren matching)
 
 See the "scheme.css" style sheet for examples.
@@ -48,8 +49,8 @@ The following <option>s exist;
 'INITIAL-STYLE: list
       Initialize the color class and boldface flag with the values taken
       from LIST. LIST should be the car part of an object returned by
-      C2HTML previously. It allows to render multiple lines that are
-      logicall connected by preserving the style across line boundaries.
+      SCM2HTML previously. It allows to render multiple lines that are
+      logically connected by preserving the style across line boundaries.
 
 'MARK-S9-PROCS: boolean
       When set to #T, S9fES procedures will be highlighted with an
@@ -65,6 +66,11 @@ The following <option>s exist;
       When set to #T, SCM2HTML will insert CSS code that allow to match
       parentheses interactively in the resulting code by moving the
       cursor over expressions. Does not work in string mode.
+
+'TILDE-QUOTES: boolean
+      When set to #T, #\~ characters in programs will serve is
+      invisible quotation. Used to facilitate the rendering of
+      evaluation sequences.
 
 'TERMINATE: list
       Return termination tags for the color and boldface settings
