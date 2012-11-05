@@ -5,7 +5,7 @@
 ; (scm2html <option> ...)  ==>  string | unspecific
 ;
 ; Render Scheme code in HTML with syntax highlighting and optional
-; CSS-based paren matching. Input is read from (current-input-stream)
+; CSS-based paren-matching. Input is read from (current-input-stream)
 ; and output is written to (current-output-stream) unless the
 ; 'INPUT-STRING: option is specified (see below).
 ;
@@ -24,6 +24,7 @@
 ;       y  R4RS syntax
 ;       x  S9fES procedure
 ;       z  S9fES syntax
+;       m  normal form
 ;       n  nested expression (for paren matching)
 ;
 ; See the "scheme.css" style sheet for examples.
@@ -52,8 +53,8 @@
 ; 'INITIAL-STYLE: list
 ;       Initialize the color class and boldface flag with the values taken
 ;       from LIST. LIST should be the car part of an object returned by
-;       C2HTML previously. It allows to render multiple lines that are
-;       logicall connected by preserving the style across line boundaries.
+;       SCM2HTML previously. It allows to render multiple lines that are
+;       logically connected by preserving the style across line boundaries.
 ;
 ; 'MARK-S9-PROCS: boolean
 ;       When set to #T, S9fES procedures will be highlighted with an
@@ -69,6 +70,11 @@
 ;       When set to #T, SCM2HTML will insert CSS code that allow to match
 ;       parentheses interactively in the resulting code by moving the
 ;       cursor over expressions. Does not work in string mode.
+;
+; 'TILDE-QUOTES: boolean
+;       When set to #T, #\~ characters in programs will serve is
+;       invisible quotation. Used to facilitate the rendering of
+;       evaluation sequences.
 ;
 ; 'TERMINATE: list
 ;       Return termination tags for the color and boldface settings
@@ -97,6 +103,8 @@
 
   (define LP #\()
   (define RP #\))
+  (define LB #\[)
+  (define RB #\])
 
   (define (Prolog)
     (let ((p (cond (show-matches
@@ -168,14 +176,15 @@
                 lines)
       (output last)))
 
-  (define Color-comment    "o")
-  (define Color-paren      "p")
-  (define Color-symbol     "s")
-  (define Color-constant   "c")
-  (define Color-std-proc   "r")
-  (define Color-std-syntax "y")
-  (define Color-ext-proc   "x")
-  (define Color-ext-syntax "z")
+  (define Color-comment     "o")
+  (define Color-paren       "p")
+  (define Color-symbol      "s")
+  (define Color-constant    "c")
+  (define Color-std-proc    "r")
+  (define Color-std-syntax  "y")
+  (define Color-ext-proc    "x")
+  (define Color-ext-syntax  "z")
+  (define Color-normal-form "m")
 
   (define *Color*        #f)
   (define *Bold*         #f)
@@ -226,7 +235,7 @@
     (thunk))
 
   (define symbolic?
-    (let ((specials "!#$%&*+-./:<=>?@^_"))
+    (let ((specials "!#$%&*+-./:<=>?@^_~"))
       (lambda (c)
         (or (char-alphabetic? c)
             (char-numeric? c)
@@ -238,14 +247,14 @@
                 (begin (output "</B>")
                        (set! *Bold* #f)))
             (output "</SPAN>")
-            (if (char=? c LP)
+            (if (or (char=? c LP) (char=? c LB))
                 (output "<SPAN class=n>"))
             (output "<SPAN class=")
             (output (if q Color-constant Color-paren))
             (output ">")
             (set! *Color* #f)
             (output c)
-            (if (char=? c RP)
+            (if (or (char=? c RP) (char=? c RB))
                 (output "</SPAN></SPAN>")))
           (else
             (with-color q
@@ -323,13 +332,13 @@
                           (lambda () (escaped-output (cdr c/s))))))
       (car c/s)))
 
-  (define (print-const s)
-    (with-color #f
+  (define (print-const s q)
+    (with-color q
                 Color-constant
                 (lambda () (escaped-output s)))
     (next-char))
 
-  (define (print-string c)
+  (define (print-string c q)
     (letrec
       ((collect-string
          (lambda (c s esc)
@@ -346,7 +355,7 @@
              (s2 (substring s 1 (- (string-length s) 1))))
         (if (and (not lout-mode)
                  (= *load-from-library* 1))
-            (with-color #f
+            (with-color q
                         Color-constant
                         (lambda ()
                           (output "\"<A href=\"")
@@ -359,23 +368,26 @@
                           (output ".html\">")
                           (escaped-output s2)
                           (output "</A>\"")))
-            (with-color #f
+            (with-color q
                         Color-constant
                         (lambda () (escaped-output s)))))
       (next-char)))
 
   (define (print-comment c)
-    (with-color #f
-                Color-comment
-                (lambda ()
-                  (escaped-output (cdr (collect (curry (compose not char=?)
-                                                       #\newline)
-                                                c
-                                                '())))))
+    (let ((col (if *Color* *Color* Color-symbol)))
+      (with-color #f
+                  Color-comment
+                  (lambda ()
+                    (escaped-output
+                      (cdr (collect (curry (compose not char=?)
+                                           #\newline)
+                                    c
+                                    '())))))
+      (with-color #f col (lambda () #t)))
     #\newline)
 
-  (define (print-name pre c)
-    (with-color #f
+  (define (print-name pre c q)
+    (with-color q
                 Color-constant
                 (lambda ()
                   (escaped-output "#")
@@ -387,6 +399,19 @@
                                       (list c))))
                     (escaped-output (cdr c/s))
                     (car c/s)))))
+
+  (define (print-unreadable c q)
+    (with-color q
+                Color-ext-syntax
+                (lambda ()
+                  (escaped-output "#")
+                  (let ((c/s (collect (lambda (c)
+                                        (not (char=? #\> c)))
+                                      (next-char)
+                                      (list c))))
+                    (escaped-output (cdr c/s))
+                    (escaped-output ">")
+                    (next-char)))))
 
   (define (print-shbang)
     (with-bold-color #f
@@ -449,22 +474,40 @@
                     (escaped-output "|#")))
       (next-char)))
 
-  (define (print-hash-syntax c)
+  (define (print-hash-syntax c q)
     (let ((c (next-char)))
       (case c
-            ((#\f) (print-const "#f"))
-            ((#\t) (print-const "#t"))
-            ((#\e) (print-name "e" (next-char)))
-            ((#\i) (print-name "i" (next-char)))
-            ((#\b) (print-name "b" (next-char)))
-            ((#\d) (print-name "d" (next-char)))
-            ((#\o) (print-name "o" (next-char)))
-            ((#\x) (print-name "x" (next-char)))
-            ((#\\) (print-name "\\" (next-char)))
+            ((#\f) (print-const "#f" q))
+            ((#\F) (print-const "#F" q))
+            ((#\t) (print-const "#t" q))
+            ((#\T) (print-const "#T" q))
+            ((#\e) (print-name "e" (next-char) q))
+            ((#\E) (print-name "E" (next-char) q))
+            ((#\i) (print-name "i" (next-char) q))
+            ((#\I) (print-name "I" (next-char) q))
+            ((#\b) (print-name "b" (next-char) q))
+            ((#\B) (print-name "B" (next-char) q))
+            ((#\d) (print-name "d" (next-char) q))
+            ((#\D) (print-name "D" (next-char) q))
+            ((#\o) (print-name "o" (next-char) q))
+            ((#\O) (print-name "O" (next-char) q))
+            ((#\x) (print-name "x" (next-char) q))
+            ((#\X) (print-name "X" (next-char) q))
+            ((#\\) (print-name "\\" (next-char) q))
             ((#\|) (print-block-comment))
-            ((#\() (print-const "#("))      ; )) balance
+            ((#\() (print-vector q))
+            ((#\<) (print-unreadable c q))
             ((#\!) (print-shbang))
             (else  (error "scm2html: unknown # syntax" c)))))
+
+  (define (print-quoted-datum q type color)
+    (with-color q
+                color
+                (lambda ()
+                  (set! *Qtype* (if (eq? q 'quote)
+                                    'quote
+                                    type))
+                  (print-quoted-form (next-char) *Qtype*))))
 
   (define (print-quoted c q type)
     (with-bold-color
@@ -472,13 +515,7 @@
       Color-std-syntax
       (lambda ()
         (output (if (eq? type 'quote) #\' #\`))))
-    (with-color #f
-                Color-constant
-                (lambda ()
-                  (set! *Qtype* (if (eq? q 'quasiquote)
-                                    'quasiquote
-                                    type))
-                  (print-quoted-form (next-char) *Qtype*))))
+    (print-quoted-datum q type Color-constant))
 
   (define (print-unquoted q)
     (with-bold-color
@@ -496,17 +533,22 @@
         (next-char)))
 
   (define (print-object c q)
-    (cond ((char=? c LP)  (set! *Parens* (+ 1 *Parens*))
-                          (print-paren LP q))
-          ((char=? c RP)  (set! *Parens* (- *Parens* 1))
-                          (print-paren RP q))
-          ((char=? c #\#) (print-hash-syntax c))
-          ((symbolic? c)  (print-symbol-or-number c q))
-          ((char=? c #\") (print-string c))
+    (cond ((or (char=? c LP) (char=? c LB))
+                          (set! *Parens* (+ 1 *Parens*))
+                          (print-paren c q))
+          ((or (char=? c RP) (char=? c RB))
+                          (set! *Parens* (- *Parens* 1))
+                          (print-paren c q))
+          ((char=? c #\#) (print-hash-syntax c q))
+          ((char=? c #\") (print-string c q))
           ((char=? c #\;) (print-comment c))
           ((char=? c #\') (print-quoted c q 'quote))
           ((char=? c #\`) (print-quoted c q 'quasiquote))
           ((char=? c #\,) (print-unquoted q))
+          ((and tilde-quotes
+                (char=? c #\~))
+                          (print-quoted-datum q 'quote Color-normal-form))
+          ((symbolic? c)  (print-symbol-or-number c q))
           (else           (error "scm2html: unknown character class" c))))
 
   (define (skip-spaces c)
@@ -538,6 +580,12 @@
                  (loop (skip-spaces (next-char))))
           c)))
 
+  (define (print-vector q)
+    (with-color q
+                Color-constant
+                (lambda () (escaped-output "#")))
+    (print-object LP q))
+
   (define (print-quoted-list c type)
     (let ((c (skip-whitespace c)))
       (cond ((end-of-input? c)
@@ -550,7 +598,8 @@
                     (print-quoted-list c type)))))))
 
   (define (print-quoted-form c type)
-    (let ((p0 *Parens*))
+    (let ((c (skip-whitespace c))
+          (p0 *Parens*))
       (let ((c (print-object c type)))
         (if (= p0 *Parens*)
             c
@@ -573,12 +622,14 @@
   (define mark-s9-procs #f)
   (define mark-s9-extns #f)
   (define show-matches  #f)
+  (define tilde-quotes  #f)
   (define input-string  #f)
 
   (accept-keywords "scm2html"
                    options
                    '(full-html: input-string: initial-style: lout-mode:
-                     mark-s9-procs: mark-s9-extns: show-matches: terminate:))
+                     mark-s9-procs: mark-s9-extns: show-matches: tilde-quotes:
+                     terminate:))
   (let ((fh  (keyword-value options 'full-html: #f))
         (lm  (keyword-value options 'lout-mode: #f))
         (is  (keyword-value options 'input-string: #f))
@@ -586,6 +637,7 @@
         (msp (keyword-value options 'mark-s9-procs: #f))
         (msx (keyword-value options 'mark-s9-extns: #f))
         (sm  (keyword-value options 'show-matches: #f))
+        (tq  (keyword-value options 'tilde-quotes: #f))
         (te  (keyword-value options 'terminate: #f)))
     (set! full-html fh)
     (set! lout-mode lm)
@@ -593,6 +645,7 @@
     (set! mark-s9-procs msp)
     (set! mark-s9-extns msx)
     (set! show-matches sm)
+    (set! tilde-quotes tq)
     (set! *Color*       (car st))
     (set! *Bold*        (cadr st))
     (set! *Parens*      (cadddr st))
@@ -617,9 +670,10 @@
                   (set! *Color* #f)
                   (set! *Bold* #f)
                   (change-color #f c b)))
-            (if (not (null? *Paren-stack*))
-                (print-quoted-list (next-char) *Qtype*))
-            (print-program (next-char) #f)
+            (let ((c (if (not (null? *Paren-stack*))
+                         (print-quoted-list (next-char) *Qtype*)
+                         (next-char))))
+              (print-program c #f))
             (let* ((out (output-string))
                    (out (if lout-mode
                             (string-append

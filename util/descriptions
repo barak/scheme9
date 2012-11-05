@@ -49,7 +49,7 @@ format.scm|format|Common Lisp-style text formatter|-
 get-line.scm|get-line|-|Edit lines of text interactively
 get-prop.scm|get-prop, etc|-|Property list procedures
 graph-tools.scm|-|Graph (tree, DAG, etc) tools|-
-group-list.scm|group-list|-|Group lists in tuples
+group.scm|group|-|Group lists in tuples
 hash-table.scm|-|Hash tables|-
 help.scm|-|Online help system|-
 hof.scm|-|Higher order functions (composition, partial application, etc)|-
@@ -70,6 +70,7 @@ letcc.scm|let/cc|-|Bind current continuation
 letrecstar.scm|letrec*|-|Sequential LETREC
 libtest.scm|-|S9fES library test suite|-
 list-to-set.scm|list-\&gt;set|-|Convert list to set
+list-copy.scm|list-copy|-|Copy the spine of a list
 list-tools.scm|-|List tools|-
 listq.scm|listq|-|Create list of quoted objects
 loutify-char.scm|-|Convert text to Lout input|-
@@ -120,7 +121,7 @@ set-difference.scm|-|Difference between sets|-
 set-tools.scm|-|Set tools|-
 setters.scm|push!, inc!, set-vars!, ...|-|Inc!, swap!, push! and friends
 sieve.scm|sieve|-|Find prime numbers
-simple-module.scm|-|Simple module syntax|-
+simple-modules.scm|-|Simple module syntax|-
 soccat.scm|-|Connect to remote systems|-
 sort.scm|sort|-|Sort lists
 s9sos.scm|-|S9fES Simple Object System|-
@@ -159,6 +160,7 @@ syntax-rules.scm|syntax-rules|-|Generate syntax transformers
 systest.scm|-|S9fES Unix extension test suite|-
 t-sort.scm|t-sort|-|Topological sort
 tagbody.scm|tagbody|-|Common Lisp TAGBODY
+take.scm|take|-|Copy leftmost elements of a list
 test.scm|-|S9fES core test suite|-
 threads.scm|-|Cooperative multithreading|-
 time.scm|time|-|Measure execution time

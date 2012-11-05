@@ -44,12 +44,12 @@ The following <option>s exist;
       Initialize the color class and boldface flag with the values taken
       from LIST. LIST should be the car part of an object returned by
       C2HTML previously. It allows to render multiple lines that are
-      logicall connected by preserving the style across line boundaries.
+      logically connected by preserving the style across line boundaries.
 
 'TERMINATE: list
       Return termination tags for the color and boldface settings
       specified in LIST (see INPUT-STRING:).
 
   (c2html 'input-string: "x++")
-    ==>  (("r" #f)
-          "</SPAN><SPAN class=s>x</SPAN><SPAN class=r>++")
+    ==>  (("cr" #f)
+          "</SPAN><SPAN class=cs>x</SPAN><SPAN class=cr>++")

@@ -274,9 +274,9 @@
                       text
                       "</A></H1>"
                       #\newline
-		      "<HR>"
+                      "<HR>"
                       #\newline
-		      ))))
+                      ))))
   (cond ((opt-val page-prolog)
           => (lambda (path)
                (with-input-from-file
@@ -603,12 +603,12 @@
                  "-b       emit bare HTML without headers or BODY tags"
                  "-c       include state comments in source files"
                  "-d       write visible state information to each page"
-                 "-e file  copy page epilog from file"
+                 "-e file  copy page epilogue from file"
                  "-H len   hash length (file name length)"
-                 "-i file  copy inroduction text from file"
+                 "-i file  copy introduction text from file"
                  "-n       dry-run, do not emit any data"
                  "-o path  output path"
-                 "-p file  copy page prolog from file"
+                 "-p file  copy page prologue from file"
                  "-P node  print the length of the shortest path to node"
                  "-r       remove left-over files before processing"
                  "         (will remove *all* files from destination!)"

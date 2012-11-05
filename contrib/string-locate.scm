@@ -49,12 +49,13 @@
                   ((> pi p_max)
                     #f)
                   ((char=? (string-ref pattern pi)
-                                (string-ref text ti))
+                           (string-ref text ti))
                     (if (= pi p_max)
                         i
                         (compare (+ pi 1) (+ ti 1))))
                   ((> (+ kp i) t_max)
                     #f)
                   (else
-                    (locate (+ i (lookup-offset shift-table
-                                              (+ i kp)))))))))))))
+                    (locate (+ i (lookup-offset
+                                   shift-table
+                                   (+ i kp)))))))))))))

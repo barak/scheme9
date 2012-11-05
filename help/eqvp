@@ -33,7 +33,7 @@ extensions.
 
 The EQV? procedure returns #F if:
 
-- one of ONJECT1 and OBJECT2 is an exact number but the other is an
+- one of OBJECT1 and OBJECT2 is an exact number but the other is an
   inexact number.
 - OBJECT1 and OBJECT2 are of different types (section see section
   3.4 Disjointness of types).

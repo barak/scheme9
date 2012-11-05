@@ -23,8 +23,7 @@
 ; LIST. It may be used to set variables to multiple values
 ; that are returned from a procedure in a list.
 ;
-; SWAP! swap the values bound to <variable1> and and
-; <variable2>.
+; SWAP! swap the values bound to <variable1> and <variable2>.
 ;
 ; Example:   (let ((stack (list 0 2 3 4)))
 ;              (let ((x (pop! stack)))

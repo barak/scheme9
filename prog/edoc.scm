@@ -63,7 +63,7 @@ contain \v{attributes}, but not vice versa. Neither \v{mode}s nor
 \\1{edoc-text\=}              new chapter        <H1>
 \\2{edoc-text\=}              new section        <H3>
 \\3{edoc-text\=}              new subsection     <H3>
-\\i{file}                     image              <IMG src="file">
+\\i{file\=}                   image              <IMG src="file">
 }
 
 These \v{attribute}s exist:
@@ -80,14 +80,17 @@ These \v{attribute}s exist:
 \\l{text\=}         list element         <LI>
 \\x{text name\=}    index entry          <A name=name>text</A>
 \\X{text name\=}    code index entry     <A name=name><CODE>text</CODE></A>
+\\n{text\=}         non-printing index   <A name="text"></A>
+\\V{text name\=}    variable index entry <A name=name><CODE>text</CODE></A>
 \\_{text\=}         subscript            <SUB>
 \\^{text\=}         superscript          <SUP>
 \\\\               literal backslash    literal
 \\=c              literal character    literal
 }
 
-Setting the \v{url} in \\r or the \v{name} in \\x and \\X to \v{*}
-duplicates the preceding text, e.g.: \\x{foo *\=} equals \\x{foo foo\=}.
+Setting the \v{url} in \\r or the \v{name} in \\x and \\X, and \\V to
+\v{*} duplicates the preceding text, e.g.: \\x{foo *\=} equals
+\\x{foo foo\=}
 
 The CSS2 style sheets "scheme.css" and "ccode.css" contain the
 default styles for syntax highlighting. The "edoc.css" style
@@ -103,7 +106,7 @@ edoc [-iswL] [-b file] [-l lang] [-o file] [-t text] [-x name] [file ...]
 
 Render programs with embedded edoc sections in HTML
 
--b file  make headings link back to 'file'
+-b file  make file headings link back to 'file'
 -i       generate index file (INDEX)
 -l lang  source language is lang (scheme, ccode)
 -o file  write output to the given file
@@ -306,6 +309,8 @@ Render programs with embedded edoc sections in HTML
 (define attr-elem    'element)  ; \l
 (define attr-index   'index)    ; \x
 (define attr-cindex  'cindex)   ; \X
+(define attr-nindex  'nindex)   ; \n
+(define attr-vindex  'vindex)   ; \V
 (define attr-small   'small)    ; \s
 (define attr-sub     'sub)      ; \_
 (define attr-super   'super)    ; \^
@@ -326,7 +331,9 @@ Render programs with embedded edoc sections in HTML
         ((eq? attr attr-sub)     (pr "</SUB>"))
         ((eq? attr attr-super)   (pr "</SUP>"))
         ((eq? attr attr-index)   (pr "</A>"))
-        ((eq? attr attr-cindex)  (pr "</CODE></A>")))
+        ((eq? attr attr-cindex)  (pr "</CODE></A>"))
+        ((eq? attr attr-vindex)  (pr "</VAR></A>"))
+        ((eq? attr attr-nindex)  (pr "</A>")))
   (set! attr #f))
 
 (define (lout-reset-attr!)
@@ -342,7 +349,9 @@ Render programs with embedded edoc sections in HTML
         ((eq? attr attr-sub)     (pr "}}"))
         ((eq? attr attr-super)   (pr "}}"))
         ((eq? attr attr-index)   (pr "}}"))
-        ((eq? attr attr-cindex)  (pr "}}}")))
+        ((eq? attr attr-cindex)  (pr "}}}"))
+        ((eq? attr attr-vindex)  (pr "}}}"))
+        ((eq? attr attr-nindex)  (pr "}}")))
   (set! attr #f))
 
 (define (reset-attr!)
@@ -363,7 +372,9 @@ Render programs with embedded edoc sections in HTML
         ((eq? x attr-sub)     (pr "<SUB>"))
         ((eq? x attr-super)   (pr "<SUP>"))
         ((eq? x attr-index)   (pr "<A name=\""))
-        ((eq? x attr-cindex)  (pr "<A name=\""))))
+        ((eq? x attr-cindex)  (pr "<A name=\""))
+        ((eq? x attr-vindex)  (pr "<A name=\""))
+        ((eq? x attr-nindex)  (pr "<A name=\""))))
 
 (define (lout-set-attr! x)
   (cond ((eq? x attr-elem)    (pr "{@Dash "))
@@ -378,7 +389,9 @@ Render programs with embedded edoc sections in HTML
         ((eq? x attr-sub)     (pr "{@Sub{"))
         ((eq? x attr-super)   (pr "{@Sup{"))
         ((eq? x attr-index)   (pr "{}{@X{\""))
-        ((eq? x attr-cindex)  (pr "{}{@X{\""))))
+        ((eq? x attr-cindex)  (pr "{}{@X{\""))
+        ((eq? x attr-vindex)  (pr "{}{@X{\""))
+        ((eq? x attr-nindex)  (pr "{}{@X{\""))))
 
 (define (set-attr! x)
   (if (not mode)
@@ -414,8 +427,7 @@ Render programs with embedded edoc sections in HTML
         ((eq? mode mode-text)  (pr "}//" #\newline))))
 
 (define (reset-mode!)
-  (if (and (or (eq? mode mode-hd0)
-               (eq? mode mode-hd1))
+  (if (and (eq? mode mode-hd0)
            (opt-val backlink))
       (pr "</A>"))
   (if (opt-val lout)
@@ -452,9 +464,6 @@ Render programs with embedded edoc sections in HTML
   (if (opt-val lout)
       (lout-set-mode! x)
       (html-set-mode! x))
-  (if (and (eq? x mode-hd1)
-           (opt-val backlink))
-      (pr "<A href=\"" (opt-val backlink) "\">"))
   (set! mode x))
 
 (define (do-break nnl)
@@ -599,14 +608,24 @@ Render programs with embedded edoc sections in HTML
                         (begin (pr (extract-ref! #t))
                                (pr "\">"))))
                   ((or (eq? attr attr-cindex)
-                       (eq? attr attr-index))
-                    (let* ((sym  (extract-ref! #f))
+                       (eq? attr attr-vindex)
+                       (eq? attr attr-index)
+                       (eq? attr attr-nindex))
+                    (let* ((sym  (if (eq? attr attr-nindex)
+                                     (let ((o *output*))
+                                       (set! *output* '())
+                                       (list->escaped-string (reverse! o)))
+                                     (extract-ref! #f)))
                            (star (string=? sym "*"))
-                           (ctag (if (eq? attr attr-cindex)
-                                     (if (opt-val lout)
-                                         '("@T{" "}")
-                                         '("<CODE>" "</CODE>"))
-                                     '("" "")))
+                           (ctag (cond ((eq? attr attr-cindex)
+                                         (if (opt-val lout)
+                                             '("@T{" "}")
+                                             '("<CODE>" "</CODE>")))
+                                       ((eq? attr attr-vindex)
+                                         (if (opt-val lout)
+                                             '("@I{" "}")
+                                             '("<VAR>" "</VAR>")))
+                                       (else '("" ""))))
                            (text  (command-text))
                            (text  (if (string=? text "")
                                       sym
@@ -664,6 +683,8 @@ Render programs with embedded edoc sections in HTML
                             ((#\v) (set-attr! attr-var))
                             ((#\x) (set-attr! attr-index))
                             ((#\X) (set-attr! attr-cindex))
+                            ((#\n) (set-attr! attr-nindex))
+                            ((#\V) (set-attr! attr-vindex))
                             ((#\_) (set-attr! attr-sub))
                             ((#\^) (set-attr! attr-super))
                             ((#\0) (set-mode! mode-hd0))
@@ -741,12 +762,11 @@ Render programs with embedded edoc sections in HTML
 ; tag.
 ;
 (define (skip-to-section tag)
+  (if (not *language*)
+      (edoc-error "language must be specified with -x"))
   (let ((kt (string-length tag)))
-    (let loop ((prev ""))
-      (let* ((line (read-line))
-             (kl   (if (eof-object? line)
-                       0
-                       (string-length line))))
+    (let loop ((line (read-line)))
+      (let ((kl (if (eof-object? line) 0 (string-length line))))
         (inc! *line-no*)
         (cond ((eof-object? line)
                 (edoc-error "no such section" tag))
@@ -754,9 +774,12 @@ Render programs with embedded edoc sections in HTML
                     (string=? "\\0{" (substring line 0 3))
                     (string=? tag (substring line (- kl kt 1) (- kl 1))))
                 (set! *read-buffer*
-                      (list prev line)))
+                      (list (if (eq? *language* 'scheme)
+                                "#|edoc"
+                                "/*edoc")
+                            line)))
               (else
-                (loop line)))))))
+                (loop (read-line))))))))
 
 (define (code)
   (if (opt-val extract)
@@ -823,6 +846,7 @@ Render programs with embedded edoc sections in HTML
                         ((eq? *language* 'scheme)
                           (set! out (scm2html 'mark-s9-procs: #t
                                               'mark-s9-extns: #t
+                                              'tilde-quotes: #t
                                               'input-string: line
                                               'initial-style: attr
                                               'lout-mode: (opt-val lout))))

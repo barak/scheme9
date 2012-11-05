@@ -3,7 +3,7 @@ R4RS 6.10.3  (display object)              ==>  unspecific
 
 Writes a representation of OBJECT to the given OUTPUT-PORT. Strings
 that appear in the written representation are not enclosed in
-doublequotes, and no characters are escaped within those strings.
+double quotes, and no characters are escaped within those strings.
 Character objects appear in the representation as if written by
 write-char instead of by write. DISPLAY returns an unspecified
 value. The OUTPUT-PORT argument may be omitted, in which case it

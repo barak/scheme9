@@ -212,7 +212,7 @@
 
         When a class inherits from multiple superclasses (like C-VOXEL
         above), the order of precedence of superclasses at the same
-        "level" of the class hierachy is determined by the order in
+        "level" of the class hierarchy is determined by the order in
         which the superclasses were specified when defining the derived
         class. In the following example, the order of COLOR and VOXEL is
         reversed:

@@ -39,7 +39,7 @@
 
         When a description has the special form (copy-from <vertex-id>),
         the description will be copied from the given vertex, allowing the
-        user to keep repetitive descritiptions in a single place.
+        user to keep repetitive descriptions in a single place.
 
         The "modifier" is where all the action takes place. First its
         formal definition:
@@ -81,7 +81,7 @@
                              | (not <property>)
 
         When a condition consists merely of the empty list (), it is
-        trivially true. When it contists of a property, it is true when
+        trivially true. When it consists of a property, it is true when
         the property exists and otherwise false. When a condition
         consists of a "clause" of the form (not <property>) then the
         condition is true when the property does not exist. When
@@ -142,7 +142,7 @@
         the final destination of the action. It is typically used to
         inject short explanatory messages.
 
-        For the sake of completeness here follow the formal defintions
+        For the sake of completeness here follow the formal definitions
         of the various identifiers used above:
 
                 <vertex-id> := <symbol>
@@ -442,7 +442,7 @@
         (whether or not they are visible to the user does not matter)
         that have separate state spaces. Of course it may be desirable
         to carry *some* state from level to level, but keeping the
-        state space of the sublevels manageable is certainly an
+        state space of the sub-levels manageable is certainly an
         important thing to keep in mind.
 
         ================================================================

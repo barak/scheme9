@@ -7,9 +7,9 @@ S9 LIB  (amb <expression> ...)  ==>  object
 
 Another variation of McCarthy's AMB operator.
 
-AMB takes a list of <expressions>, immediately evaluates the first one
+AMB takes a list of <expression>s, immediately evaluates the first one
 and returns its value. When no <expression>s are passed to AMB (or it
-runs out of <expressions>), it checks whether there is another AMB further
+runs out of <expression>s), it checks whether there is another AMB further
 up in the program structure. If there is one, it returns control to that
 instance of AMB, thereby initiating backtracking. When backtracking to an
 AMB, that AMB evaluates the next <expression> from its argument list, and

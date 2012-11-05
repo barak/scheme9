@@ -56,8 +56,8 @@
 ; STREAM-EOS? checks if a stream has been exhausted (end of stream).
 ;
 ; LIST->STREAM and STREAM->LIST convert lists to streams and
-; vica versa. STREAM-EXTRACT is like STREAM->LIST, but extracts
-; only a given number of arguments. The stream passd to it must
+; vice versa. STREAM-EXTRACT is like STREAM->LIST, but extracts
+; only a given number of arguments. The stream passed to it must
 ; be able to produce the given number of arguments.
 ;
 ; MAP-STREAM, STREAM-MEMBER, and APPEND-STREAMS resemble the
@@ -70,8 +70,7 @@
 ;
 ; Example:   (stream->list
 ;              (append-streams (list->stream '(a b c))
-;                              (stream-iota 1 3)))
-;                                                    ==>  (a b c 1 2 3)
+;                              (stream-iota 1 3)))   ==>  (a b c 1 2 3)
 ;            (stream->list
 ;              (filter-stream even?
 ;                             (stream-iota 1 10)))   ==>  (2 4 6 8 10)

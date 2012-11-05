@@ -7,7 +7,7 @@
 ;
 ; Create an exact copy of an arbitrary non-cyclic cons structure.
 ; When a second argument is passed to TREE-COPY and that argument
-; is not #F, then TREE-COPY will copy modifyable leaves of the tree,
+; is not #F, then TREE-COPY will copy modifiable leaves of the tree,
 ; too.
 ;
 ; Example:   (tree-copy '(((a . b) (c . d)) (e . f)))

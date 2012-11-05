@@ -415,7 +415,7 @@ cell pp_sys_kill(cell x) {
 
 cell pp_sys_lchown(cell x) {
 	int	r;
-#if __FreeBSD__ == 7
+#if __FreeBSD__ >= 2 && __FreeBSD_version < 704000
 	int	lchown(char *, int, int);	/* no prototype? */
 #endif
 

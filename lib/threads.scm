@@ -1,5 +1,5 @@
 ; Scheme 9 from Empty Space, Function Library
-; By Nils M Holm, 2010
+; By Nils M Holm, 2010,2012
 ; Placed in the Public Domain
 ;
 ; (thread-create procedure^0)  ==>  unspecific
@@ -30,36 +30,34 @@
 ;            (thread-start)
 
 (load-from-library "queue.scm")
+(load-from-library "letcc.scm")
 
 (define *thread-queue* (make-queue))
 
 (define (queue-thread thread)
-  (queue *thread-queue* thread))
+  (queue! *thread-queue* thread))
 
 (define (unqueue-thread)
-  (unqueue *thread-queue*))
+  (unqueue! *thread-queue*))
 
-(define thread-create
-  (let ((queue-thread queue-thread))
-    (lambda (thunk)
-      (call/cc
-        (lambda (k)
-          (queue-thread k)
-          (thunk))))))
+(define (thread-create thunk)
+  (let/cc k
+    (queue-thread k)
+    (thunk)))
 
-(define thread-yield
-  (let ((queue-thread   queue-thread)
-        (unqueue-thread unqueue-thread))
-    (lambda ()
-      (call/cc
-        (lambda (k)
-          (queue-thread k)
-          ((unqueue-thread) #t))))))
+(define (thread-yield)
+  (let/cc k
+    (queue-thread k)
+    ((unqueue-thread) #t)))
 
-(define thread-exit
-  (let ((queue-thread queue-thread))
-    (lambda ()
-      (if (not (queue-empty? *thread-queue*))
-          ((unqueue-thread) #t)))))
+(define thread-cleanup #f)
 
-(define thread-start thread-exit)
+(define (thread-exit)
+  (if (queue-empty? *thread-queue*)
+      (thread-cleanup #t)
+      ((unqueue-thread) #t)))
+
+(define (thread-start)
+  (let/cc k
+    (set! thread-cleanup k)
+    (thread-exit)))

@@ -39,7 +39,7 @@ a matcher to recurse, it must be bound using DEFINE-MATCHER
 or LET-MATCHER.
 
 The DEFINE-MATCHER syntax binds a matcher to a symbol at the
-toplevel. LET-MATCHER binds a matcher locally. These constructs
+top-level. LET-MATCHER binds a matcher locally. These constructs
 correspond to DEFINE and LETREC.
 
 (begin

@@ -5,8 +5,10 @@ SYS:INET-LISTEN creates a fresh socket, binds it to node name STRING1
 and service STRING2, and then announces its willingness to listen
 to incoming connections. When its first argument is #T rather than
 a node name, SYS:INET-LISTEN uses the uname(2) system call to figure
-out the node name of the host system. It returns a file descriptor
-for accessing the listening socket.
+out the node name of the host system. INTEGER is the maximum number
+of pending connects accepted by the socket before rejecting further
+connection requests. The procedure returns a file descriptor for
+accessing the listening socket.
 
 SYS:INET-ACCEPT waits for an incoming connection on a socket created
 by SYS:INET-LISTEN. It returns another socket that can be used to

@@ -1,6 +1,80 @@
 
 Change Log
 
+2012-11-01
+	Added LIST-COPY and TAKE procedures. (lib/)
+	Renamed GROUP-LIST to GROUP, swapped arguments to be more
+	consistent with other list procedures. (lib/)
+	Reverted EQUAL? to comparing vectors by converting them
+	to lists first. (s9.c)
+2012-10-30
+	Renamed QUEUE and UNQUEUE to QUEUE! and UNQUEUE!. (lib/)
+	Updated help pages.
+	Cleaned up cooperative threads procedures and fixed last thread
+	exit problem. (lib/)
+	Made the interpreter reset the TTY when exiting after an error.
+	(s9.c)
+	Added more EQUAL? tests. (util/)
+2012-10-27
+	Added a SIGTERM handler to reset the TTY when curses support
+	is compiled in. (s9.c)
+2012-10-22
+	Optimized DRAW-TREE. (contrib/)
+2012-10-21
+	Cleaned up DRAW-TREE code. (contrib/)
+2012-10-19
+	Fixed order of assignment in FLUID-LET. (lib/)
+2012-10-17
+	Made IOTA a single-argument procedure. (lib/)
+	Renamed IMPORT keyword of simple-modules to USING. (lib/)
+2012-10-16
+	Fix: SCM2HTML did not reset color after comments in quoted
+	objects in string-input mode. (s9.c)
+2012-10-14
+	Suppressed trailing blanks when stopping run-away output. (s9.c)
+	Fixes bounds checking in multi-dimensional ARRAYs. (lib/)
+2012-10-13
+	Fix: NUMBER->STRING would suppress trailing zeroes in expanded
+	real numbers. E.g.: (number->string 1.23e5) ==> "123". Oops!
+	(s9-real.scm)
+2012-10-11
+	Made SCM2HTML accept upper case # syntax, e.g.: #F. (contrib/)
+2012-10-11
+	Made BIT-OP variadic. (s9.c)
+	Added BIT-OP operations 16 (shift left) and 17 (shift right). (s9.c)
+2012-10-10
+	Made EQUAL? cons-free when comparing vectors. (s9.scm)
+2012-10-09
+	Made the reader and printer abort processing of suspiciously
+	deeply nested lists and vectors. Thanks to dig1 and bsamograd
+	on reddit! (s9.c, s9.h)
+	Made EDOC generate back links only in level-0 headings. (prog/)
+2012-10-05
+	Now accepting [...] as an alias of (...). (s9.c)
+	Updated SCM2HTML to handle [...] properly. (contrib/)
+	Updated test suite. (util/)
+	Fix: STANDARD-ERROR-PORT was documented as STANDARD-ERROR. (help/)
+2012-10-04
+	Fix: error reporting was broken by interruptible printer. (s9.c)
+2012-10-03
+	Made WRITE and DISPLAY primitives interruptible. (s9.c)
+	Passed help files through spell-checker.
+	(lib/, contrib/, prog/, help/, edoc/)
+2012-10-02
+	Added "variable index" command to EDOC. (prog/)
+	Added REAL type to TYPE-OF and TYPE-CASE. (lib/)
+2012-09-29
+	Added "non-printing index" command to EDOC. (prog/)
+2012-09-25
+	Added "unreadable" syntax (#<foo>) to SCM2HTML. (contrib/)
+2012-09-24
+	Fixed quotation in SCM2HTML. (contrib/)
+	Added -t (tilde-quotes) flag to SCM2HTML1. (prog/)
+2012-09-22
+	Added style for invisibly quoted forms to SCM2HTML. (contrib)
+2012-09-21
+	Added the TILDE-QUOTES option to SCM2HTML. (contrib/)
+	Made EDOC pass 'TILDE-QUOTES: #T to SCM2HTML. (prog/)
 2012-07-09
 	Changed webdump color scheme. (util/)
 	Adapted web theme to current home page. (util/)
@@ -52,7 +126,7 @@ Change Log
 2010-10-03
 	Misc. minor changes. This is the book version.
 2010-09-29
-	Applied minor change ro RIB internal structure. (s9.c)
+	Applied minor change to RIB internal structure. (s9.c)
 2010-09-27
 	Added \i (image) mode to EDOC. (prog/)
 2010-09-23

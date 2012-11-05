@@ -134,7 +134,7 @@
   "<P>\"Mass of earth: 5.98e+24kg\"</P>"
   "<P>\"Quidquid latine dictum sit, altum viditur\"</P>"
   "<P>\"Beware of the Turing tar pit\"</P>"
-  "<P>\"Preemptive War: Comitting Suicide Out Of Fear Of Death\"</P>"
+  "<P>\"Preemptive War: Committing Suicide Out Of Fear Of Death\"</P>"
   "<P>\"RIP Scheme 2007\"</P>"
   "<P>\"Believe absurdities, commit atrocities\"</P>"
   "<P>\"Once persons were property, now property is a person\"")
@@ -860,7 +860,7 @@
  (copy-from floor-1:3)
  (()
   ("One door sign catches your eye. This is the office of a"
-   "professor whom you know vagely.")
+   "professor whom you know vaguely.")
   ""
   (nop))
  (()

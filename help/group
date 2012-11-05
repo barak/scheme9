@@ -1,4 +1,4 @@
-S9 LIB  (group-list integer list)  ==>  list
+S9 LIB  (group list integer)  ==>  list
 
 Group the elements of LIST in tuples of INTEGER elements
 each (except for the last tuple, which may contain fewer
@@ -6,4 +6,7 @@ elements). Return a list of the resulting tuples. The
 elements appear in the output list in the same order as
 in the input list.
 
-(group-list 2 '(1 2 3 4 5))  ==>  ((1 2) (3 4) (5))
+INTEGER must be positive.
+
+(group '(1 2 3 4 5) 2)  ==>  ((1 2) (3 4) (5))
+(group '(1 2 3 4 5) 5)  ==>  ((1 2 3 4 5))

@@ -1,4 +1,4 @@
-S9 LIB  (standard-error)                     ==>  #<output-port>
+S9 LIB  (standard-error-port)                ==>  #<output-port>
         (call-with-stderr procedure^1)       ==>  object
         (with-output-to-stderr procedure^0)  ==>  unspecific
 

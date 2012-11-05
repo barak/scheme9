@@ -16,7 +16,7 @@
 ; SYMBOL or #F if SYMBOL does not exist in an odd position
 ; in the PLIST.
 ; PUT-PROP returns a new plist in which the given OBJECT is
-; the property associated with SYMBOL. When SYMBOL is alreay
+; the property associated with SYMBOL. When SYMBOL is already
 ; in the PLIST, the existing association will be removed.
 ; REM-PROP returns a new plist with the given SYMBOL and the
 ; associated property removed.

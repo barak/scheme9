@@ -13,7 +13,7 @@
  *     (also add "s9-real.scm" to the heap image).
  */
 
-#define VERSION "2012-07-10"
+#define VERSION "2012-11-01"
 
 #define EXTERN
  #include "s9.h"
@@ -159,6 +159,8 @@ void print_calltrace(void) {
 	nl();
 }
 
+void reset_tty(void);
+
 cell error(char *msg, cell expr) {
 	int	oport;
 	char	buf[100];
@@ -180,13 +182,17 @@ cell error(char *msg, cell expr) {
 	pr(msg);
 	if (expr != NOEXPR) {
 		pr(": ");
+		Error_flag = 0;
 		print_error_form(expr);
+		Error_flag = 1;
 	}
 	nl();
 	print_calltrace();
 	Output_port = oport;
-	if (Quiet_mode)
+	if (Quiet_mode) {
+		reset_tty();
 		exit(1);
+	}
 	return UNSPECIFIC;
 }
 
@@ -194,6 +200,7 @@ void fatal(char *msg) {
 	pr("fatal ");
 	Error_flag = 0;
 	error(msg, NOEXPR);
+	reset_tty();
 	exit(2);
 }
 
@@ -544,7 +551,7 @@ cell symbol_ref(char *s) {
 
 cell read_form(int flags);
 
-cell read_list(int flags) {
+cell read_list(int flags, int delim) {
 	cell	n,	/* Node read */
 		m,	/* List */
 		a;	/* Used to append nodes to m */
@@ -552,7 +559,10 @@ cell read_list(int flags) {
 	cell	new;
 	char	badpair[] = "malformed pair";
 
-	Level++;
+	if (++Level > MAX_IO_DEPTH) {
+		error("reader: too many nested lists or vectors", NOEXPR);
+		return NIL;
+	}
 	m = cons3(NIL, NIL, flags);	/* root */
 	save(m);
 	a = NIL;
@@ -577,7 +587,7 @@ cell read_list(int flags) {
 			}
 			n = read_form(flags);
 			cdr(a) = n;
-			if (n == RPAREN || read_form(flags) != RPAREN) {
+			if (n == delim || read_form(flags) != delim) {
 				error(badpair, NOEXPR);
 				continue;
 			}
@@ -585,8 +595,14 @@ cell read_list(int flags) {
 			Level--;
 			return m;
 		}
-		if (n == RPAREN)
+		if (n == RPAREN || n == RBRACK) {
+			if (n != delim)
+				error(n == RPAREN?
+				  "list starting with `[' ended with `)'":
+				  "list starting with `(' ended with `]'",
+				  NOEXPR);
 			break;
+		}
 		if (a == NIL)
 			a = m;		/* First member: insert at root */
 		else
@@ -812,7 +828,8 @@ cell unreadable(void) {
 	((c) == ' '  || (c) == '\t' || (c) == '\n' || \
 	 (c) == '\r' || (c) == '('  || (c) == ')'  || \
 	 (c) == ';'  || (c) == '\'' || (c) == '`'  || \
-	 (c) == ','  || (c) == '"'  || (c) == EOF)
+	 (c) == ','  || (c) == '"'  || (c) == '['  || \
+	 (c) == ']'  || (c) == EOF)
 
 #define is_symbolic(c) \
 	(isalpha(c) ||				\
@@ -877,7 +894,7 @@ cell list_to_vector(cell m, char *msg, int flags) {
 cell read_vector(void) {
 	cell	n;
 
-	n = read_list(0);
+	n = read_list(0, RPAREN);
 	save(n);
 	n = list_to_vector(n, "invalid vector syntax", CONST_TAG);
 	unsave(1);
@@ -999,7 +1016,10 @@ cell read_form(int flags) {
 	if (Error_flag)
 		return UNSPECIFIC;
 	if (c == '(') {
-		return read_list(flags);
+		return read_list(flags, RPAREN);
+	}
+	else if (c == '[') {
+		return read_list(flags, RBRACK);
 	}
 	else if (c == '\'' || c == '`') {
 		cell	n;
@@ -1052,9 +1072,12 @@ cell read_form(int flags) {
 		return read_string();
 	}
 	else if (c == ')') {
-		if (!Level)
-			return error("unexpected ')'", NOEXPR);
+		if (!Level) return error("unexpected ')'", NOEXPR);
 		return RPAREN;
+	}
+	else if (c == ']') {
+		if (!Level) return error("unexpected ']'", NOEXPR);
+		return RBRACK;
 	}
 	else if (c == '.') {
 		c2 = read_c_ci();
@@ -1276,9 +1299,13 @@ int print_port(cell n) {
 	return 1;
 }
 
-void print_form(cell n) {
+void _print_form(cell n, int depth) {
 	if (Ports[Output_port] == NULL) {
 		error("output port is not open", NOEXPR);
+		return;
+	}
+	if (depth > MAX_IO_DEPTH) {
+		error("printer: too many nested lists or vectors", NOEXPR);
 		return;
 	}
 	if (n == NIL) {
@@ -1319,19 +1346,25 @@ void print_form(cell n) {
 		if (print_port(n)) return;
 		pr("(");
 		while (n != NIL) {
+			if (Error_flag) return;
 			if (Printer_limit && Printer_count > Printer_limit)
 				return;
-			print_form(car(n));
+			_print_form(car(n), depth+1);
+			if (Error_flag) return;
 			n = cdr(n);
 			if (n != NIL && atom_p(n)) {
 				pr(" . ");
-				print_form(n);
+				_print_form(n, depth+1);
 				n = NIL;
 			}
 			if (n != NIL) pr(" ");
 		}
 		pr(")");
 	}
+}
+
+void print_form(cell n) {
+	_print_form(n, 0);
 }
 
 /*
@@ -3591,12 +3624,9 @@ cell pp_write_char(cell x) {
 
 cell pp_bit_op(cell x) {
 	char		name[] = "bit-op";
-	cell		op, a, b, r;
+	cell		op, a, b;
 	static cell	mask = 0;
 
-	op = integer_value(name, cadr(x));
-	a = integer_value(name, caddr(x));
-	b = integer_value(name, cadddr(x));
 	if (mask == 0) {
 		mask = 1;
 		while (mask <= INT_SEG_LIMIT)
@@ -3605,28 +3635,37 @@ cell pp_bit_op(cell x) {
 			mask >>= 1;
 		mask--;
 	}
-	if (a & ~mask || b & ~mask || a < 0 || b < 0)
-		return FALSE;
-	switch (op) {
-	case  0: r =  0;        break;
-	case  1: r =   a &  b;  break;
-	case  2: r =   a & ~b;  break;
-	case  3: r =   a;       break;
-	case  4: r =  ~a &  b;  break;
-	case  5: r =        b;  break;
-	case  6: r =   a ^  b;  break;
-	case  7: r =   a |  b;  break;
-	case  8: r = ~(a |  b); break;
-	case  9: r = ~(a ^  b); break;
-	case 10: r =       ~b;  break;
-	case 11: r =   a | ~b;  break;
-	case 12: r =  ~a;       break;
-	case 13: r =  ~a |  b;  break;
-	case 14: r = ~(a &  b); break;
-	case 15: r = ~0;        break;
-	default: return FALSE;  break;
+	op = integer_value(name, cadr(x));
+	x = cddr(x);
+	a = integer_value(name, car(x));
+	for (x = cdr(x); x != NIL; x = cdr(x)) {
+		b = integer_value(name, car(x));
+		if (a & ~mask || b & ~mask || a < 0 || b < 0)
+			return FALSE;
+		switch (op) {
+		case  0: a =  0;        break;
+		case  1: a =   a &  b;  break;
+		case  2: a =   a & ~b;  break;
+		case  3: a =   a;       break;
+		case  4: a =  ~a &  b;  break;
+		case  5: a =        b;  break;
+		case  6: a =   a ^  b;  break;
+		case  7: a =   a |  b;  break;
+		case  8: a = ~(a |  b); break;
+		case  9: a = ~(a ^  b); break;
+		case 10: a =       ~b;  break;
+		case 11: a =   a | ~b;  break;
+		case 12: a =  ~a;       break;
+		case 13: a =  ~a |  b;  break;
+		case 14: a = ~(a &  b); break;
+		case 15: a = ~0;        break;
+		case 16: a = a  <<  b;  break;
+		case 17: a = a  >>  b;  break;
+		default: return FALSE;  break;
+		}
+		a &= mask;
 	}
-	return make_integer(r & mask);
+	return make_integer(a);
 }
 
 char *copy_string(char *s) {
@@ -3841,7 +3880,7 @@ PRIM Primitives[] = {
  { "apply",               pp_apply,               2, -1, { PRC,___,___ } },
  { "assq",                pp_assq,                2,  2, { ___,LST,___ } },
  { "assv",                pp_assv,                2,  2, { ___,LST,___ } },
- { "bit-op",              pp_bit_op,              3,  3, { INT,INT,INT } },
+ { "bit-op",              pp_bit_op,              3, -1, { INT,INT,INT } },
  { "boolean?",            pp_boolean_p,           1,  1, { ___,___,___ } },
  { "caar",                pp_caar,                1,  1, { PAI,___,___ } },
  { "cadr",                pp_cadr,                1,  1, { PAI,___,___ } },
@@ -4551,6 +4590,13 @@ void clear_leftover_envs(void) {
 		Environment = cdr(Environment);
 }
 
+void reset_tty(void) {
+#ifdef CURSES_RESET
+	cell pp_curs_endwin(cell);
+	pp_curs_endwin(NIL);
+#endif
+}
+
 #ifndef NO_SIGNALS
  void keyboard_interrupt(int sig) {
 	Input_port = 0;
@@ -4560,7 +4606,13 @@ void clear_leftover_envs(void) {
  }
 
  void keyboard_quit(int sig) {
+	reset_tty();
 	fatal("received quit signal, exiting");
+ }
+
+ void terminated(int sig) {
+	reset_tty();
+	exit(1);
  }
 #endif
 
@@ -4571,14 +4623,10 @@ void repl(void) {
 	sane_env = cons(NIL, NIL);
 	save(sane_env);
 	if (!Quiet_mode) {
-		signal(SIGQUIT, keyboard_quit);
 		signal(SIGINT, keyboard_interrupt);
 	}
 	while (1) {
-#ifdef CURSES_RESET
-		cell pp_curs_endwin(cell);
-		pp_curs_endwin(NIL);
-#endif
+		reset_tty();
 		Error_flag = 0;
 		Input_port = 0;
 		Output_port = 1;
@@ -5103,6 +5151,8 @@ int main(int argc, char **argv) {
 		argv += 2;
 	}
 	init();
+	signal(SIGQUIT, keyboard_quit);
+	signal(SIGTERM, terminated);
 	load_library(argv[0]);
 	argv0 = *argv++;
 	init_extensions();

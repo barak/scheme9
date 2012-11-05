@@ -278,8 +278,9 @@
                    (loop (- n 1) (cons #\0 z))
                    (list->string z)))))
          (conv-expanded-real
-           (lambda (n offset)
-             (let ((m (abs n)))
+           (lambda (n expn digits)
+             (let ((m      (abs n))
+                   (offset (+ expn digits)))
                (string-append
                  (if (negative? n) "-" "")
                  (cond ((negative? offset) "0.")
@@ -287,20 +288,22 @@
                        (else               ""))
                  (zeroes (- offset))
                  (let ((m-str (conv-int m 10)))
-                   (let ((k (string-length m-str)))
-                     (if (<= 0 offset k)
-                         (string-append (substring m-str 0 offset)
-                                        "."
-                                        (substring m-str offset k)
-                                        (if (= offset k) "0" ""))
-                         m-str)))))))
+                   (if (<= 0 offset digits)
+                       (string-append (substring m-str 0 offset)
+                                      "."
+                                      (substring m-str offset digits)
+                                      (if (= offset digits) "0" ""))
+                       m-str))
+                 (if (> offset digits)
+                     (string-append (zeroes (- offset digits)) ".0")
+                     "")))))
          (conv-real
            (lambda (n)
              (let ((m (mantissa n))
                    (e (exponent n)))
                (let ((d (number-of-digits m 0)))
                  (if (< -4 (+ e d) 10)
-                     (conv-expanded-real m (+ e d))
+                     (conv-expanded-real m e d)
                      (conv-sci-real m (+ e d -1)))))))
          (get-radix
            (lambda ()

@@ -1,5 +1,5 @@
 ; Scheme 9 from Empty Space, Function Library
-; By Nils M Holm, 2009,2010
+; By Nils M Holm, 2009-2012
 ; Placed in the Public Domain
 ;
 ; (draw-tree object)  ==>  unspecific
@@ -40,8 +40,6 @@
          (visited? x)
          (null? (cdr x))))
 
-  (define (void) (if #f #f))
-
   (define (draw-fixed-string s)
     (let* ((b (make-string 8 #\space))
            (k (string-length s))
@@ -69,86 +67,73 @@
             (error "draw-atom: unknown type" n))))
 
   (define (draw-conses n)
-    (letrec
-      ((d-conses
-         (lambda (n)
-           (cond ((not (pair? n))
-                   (draw-atom n))
-                 ((null? (cdr n))
-                   (display "[o|/]"))
-                 (else
-                   (display "[o|o]---")
-                   (d-conses (cdr n)))))))
-      (d-conses n)
-      n))
+    (let draw-conses ((n n)
+                      (r '()))
+      (cond ((not (pair? n))
+              (draw-atom n)
+              (reverse! r))
+            ((null? (cdr n))
+              (display "[o|/]")
+              (reverse! (cons (car n) r)))
+            (else
+              (display "[o|o]---")
+              (draw-conses (cdr n) (cons (car n) r))))))
 
   (define (draw-bars n)
-    (letrec
-      ((d-bars
-         (lambda (n)
-           (cond ((not (pair? n))
-                   (void))
-                 ((empty? (car n))
-                   (draw-fixed-string "")
-                   (d-bars (cdr n)))
-                 ((and (pair? (car n))
-                       (visited? (car n)))
-                   (d-bars (cdar n))
-                   (d-bars (cdr n)))
-                 (else
-                   (draw-fixed-string "|")
-                   (d-bars (cdr n)))))))
-      (d-bars (members-of n))))
+    (let draw-bars ((n (members-of n)))
+      (cond ((not (pair? n)))
+            ((empty? (car n))
+              (draw-fixed-string "")
+              (draw-bars (cdr n)))
+            ((and (pair? (car n))
+                  (visited? (car n)))
+              (draw-bars (members-of (car n)))
+              (draw-bars (cdr n)))
+            (else
+              (draw-fixed-string "|")
+              (draw-bars (cdr n))))))
 
   (define (skip-empty n)
-    (letrec
-      ((skip2
-         (lambda (n)
-           (cond ((not (pair? n))
-                   n)
-                 ((or (empty? (car n))
-                      (done? (car n)))
-                   (skip2 (cdr n)))
-                 (else
-                   n)))))
-      (skip2 n)))
+    (if (and (pair? n)
+             (or (empty? (car n))
+                 (done? (car n))))
+        (skip-empty (cdr n))
+        n))
 
   (define (remove-trailing-nothing n)
-    (reverse! (skip-empty (reverse n))))
+    (reverse (skip-empty (reverse n))))
 
   (define (all-vertical? n)
     (or (not (pair? n))
-             (and (null? (cdr n))
-                  (all-vertical? (car n)))))
+        (and (null? (cdr n))
+             (all-vertical? (car n)))))
 
   (define (draw-members n)
-    (letrec
-      ((d-members
-         (lambda (n r)
-           (cond ((not (pair? n))
-                   (reverse! r))
-                 ((empty? (car n))
-                   (draw-fixed-string "")
-                   (d-members (cdr n)
-                              (cons *nothing* r)))
-                 ((not (pair? (car n)))
-                   (draw-atom (car n))
-                   (d-members (cdr n)
-                              (cons *nothing* r)))
-                 ((null? (cdr n))
-                   (d-members (cdr n)
-                              (cons (draw-final (car n)) r)))
-                 ((all-vertical? (car n))
-                   (draw-fixed-string "[o|/]")
-                   (d-members (cdr n)
-                              (cons (caar n) r)))
-                 (else
-                   (draw-fixed-string "|")
-                   (d-members (cdr n)
-                              (cons (car n) r)))))))
-      (mark-visited
-        (remove-trailing-nothing
-          (d-members (members-of n) '())))))
+    (let draw-members ((n (members-of n))
+                       (r '()))
+      (cond ((not (pair? n))
+              (mark-visited
+                (remove-trailing-nothing
+                  (reverse r))))
+            ((empty? (car n))
+              (draw-fixed-string "")
+              (draw-members (cdr n)
+                            (cons *nothing* r)))
+            ((not (pair? (car n)))
+              (draw-atom (car n))
+              (draw-members (cdr n)
+                            (cons *nothing* r)))
+            ((null? (cdr n))
+              (draw-members (cdr n)
+                            (cons (draw-final (car n)) r)))
+            ((all-vertical? (car n))
+              (draw-fixed-string "[o|/]")
+              (draw-members (cdr n)
+                            (cons (caar n) r)))
+            (else
+              (draw-fixed-string "|")
+              (draw-members (cdr n)
+                            (cons (car n) r))))))
 
   (define (draw-final n)
     (cond ((not (pair? n))
@@ -159,19 +144,14 @@
           (else
             (mark-visited (draw-conses n)))))
 
-  (letrec
-    ((d-tree
-       (lambda (n)
-         (cond ((done? n)
-                 (void))
-               (else
-                 (newline)
-                 (draw-bars n)
-                 (newline)
-                 (d-tree (draw-members n)))))))
-    (if (not (pair? n))
-        (draw-atom n)
-        (d-tree (mark-visited (draw-conses n))))
-    (newline)))
+  (if (not (pair? n))
+      (draw-atom n)
+      (let draw-tree ((n (mark-visited (draw-conses n))))
+        (if (not (done? n))
+            (begin (newline)
+                   (draw-bars n)
+                   (newline)
+                   (draw-tree (draw-members n))))))
+  (newline))
 
 (define dt draw-tree)

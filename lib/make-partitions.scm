@@ -24,7 +24,7 @@
                                         (map (lambda (p)
                                                (cons x p))
                                              (partition (- n x))))
-                                      (iota 1 n)))))))
+                                      (iota n)))))))
      (filter-descending
        (lambda (x)
          (filter (lambda (p)

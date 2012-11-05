@@ -1,5 +1,5 @@
 ; Scheme 9 from Empty Space, Function Library
-; By Nils M Holm, 2009-2010
+; By Nils M Holm, 2009-2012
 ; Placed in the Public Domain
 ;
 ; An interface to some Unix system services.
@@ -50,7 +50,7 @@
 
 (require-extension sys-unix)
 
-(load-from-library "bitwise-ops.scm")
+(load-from-library "bitops.scm")
 (load-from-library "for-all.scm")
 (load-from-library "string-split.scm")
 (load-from-library "string-unsplit.scm")
@@ -171,8 +171,7 @@
 
 (define (sys:change-mode mode modifier)
   (letrec
-    ((b-or bitwise-or)
-     (suid sys:s-isuid)
+    ((suid sys:s-isuid)
      (sgid sys:s-isgid)
      (svtx sys:s-isvtx)
      (rwxu sys:s-irwxu)
@@ -186,50 +185,42 @@
               (lambda (u g o m)
                 (if (char=? #\= op)
                     (let* ((new (if u
-                                    (bitwise-or
-                                      (bitwise-and
-                                        rwxu
-                                        (bitwise-shift-left m 6))
-                                      (bitwise-and m suid)
-                                      (bitwise-and mode #o77770077))
+                                    (bit+
+                                      (bit* rwxu (bitsl m 6))
+                                      (bit* m suid)
+                                      (bit* mode #o77770077))
                                     mode))
                            (new (if g
-                                    (bitwise-or
-                                      (bitwise-and
-                                        rwxg
-                                        (bitwise-shift-left m 3))
-                                      (if (zero? (bitwise-and m suid))
+                                    (bit+
+                                      (bit* rwxg (bitsl m 3))
+                                      (if (zero? (bit* m suid))
                                           0
                                           sgid)
-                                      (bitwise-and new #o77770707))
+                                      (bit* new #o77770707))
                                     new))
                            (new (if o
-                                    (bitwise-or
-                                      (bitwise-and rwxo m)
-                                      (bitwise-and new #o77770770))
+                                    (bit+
+                                      (bit* rwxo m)
+                                      (bit* new #o77770770))
                                     new))
-                           (new (bitwise-or new (bitwise-and m svtx))))
+                           (new (bit+ new (bit* m svtx))))
                       new)
                     ((if (char=? #\+ op)
-                         bitwise-or
-                         bitwise-and-c2)
+                         bit+
+                         bit*c)
                      mode
-                     (bitwise-or (if u (bitwise-or
-                                         (bitwise-and
-                                           rwxu
-                                           (bitwise-shift-left m 6))
-                                         (bitwise-and m suid))
-                                       0)
-                                 (if g (bitwise-or
-                                         (bitwise-and
-                                           rwxg
-                                           (bitwise-shift-left m 3))
-                                         (if (zero? (bitwise-and m suid))
-                                             0
-                                             sgid))
-                                       0)
-                                 (if o (bitwise-and rwxo m) 0)
-                                 (bitwise-and m svtx)))))))
+                     (bit+ (if u (bit+
+                                   (bit* rwxu (bitsl m 6))
+                                   (bit* m suid))
+                                 0)
+                           (if g (bit+
+                                   (bit* rwxg (bitsl m 3))
+                                   (if (zero? (bit* m suid))
+                                       0
+                                       sgid))
+                                 0)
+                           (if o (bit* rwxo m) 0)
+                           (bit* m svtx)))))))
            (let loop ((l (string->list s))
                       (u #f)
                       (g #f)
@@ -251,11 +242,11 @@
                    ((#\g) (if b #f (loop (cdr l) u  #t o  m #f)))
                    ((#\o) (if b #f (loop (cdr l) u  g  #t m #f)))
                    ((#\a) (if b #f (loop (cdr l) #t #t #t m #f)))
-                   ((#\r) (if b (loop (cdr l) u g o (b-or m 4) #t) #f))
-                   ((#\w) (if b (loop (cdr l) u g o (b-or m 2) #t) #f))
-                   ((#\x) (if b (loop (cdr l) u g o (b-or m 1) #t) #f))
-                   ((#\s) (if b (loop (cdr l) u g o (b-or m suid) #t) #f))
-                   ((#\t) (if b (loop (cdr l) u g o (b-or m svtx) #t) #f))
+                   ((#\r) (if b (loop (cdr l) u g o (bit+ m 4) #t) #f))
+                   ((#\w) (if b (loop (cdr l) u g o (bit+ m 2) #t) #f))
+                   ((#\x) (if b (loop (cdr l) u g o (bit+ m 1) #t) #f))
+                   ((#\s) (if b (loop (cdr l) u g o (bit+ m suid) #t) #f))
+                   ((#\t) (if b (loop (cdr l) u g o (bit+ m svtx) #t) #f))
                    ((#\+ #\- #\=)
                           (if b #f (begin (set! op (car l))
                                           (loop (cdr l) u g o m #t))))

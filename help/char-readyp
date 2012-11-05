@@ -17,4 +17,4 @@ at end of file, a port at end of file would be indistinguishable
 from an interactive port that has no ready characters.
 
 NOTE: In S9fES this procedure is part of the SYS-UNIX extension
-and not of the core system.
+and not in the core system.

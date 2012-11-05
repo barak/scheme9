@@ -24,6 +24,13 @@
 	to jump through too many hoops (c) study the implementation of
 	Scheme (in a language other than Scheme). 
 
+	S9fES supports the following SRFI's: 
+	- SRFI-0: feature-based conditional expansion (subset)
+	- SRFI-2: AND-LET* (subset)
+	- SRFI-22: running Scheme scripts on Unix
+	- SRFI-23: error reporting mechanism
+	- SRFI-30: nested multi-line comments
+
 
 	QUICK START
 
@@ -84,12 +91,12 @@
 
 	  ".:~/s9fes:/usr/local/share/s9fes"
 
-	  Security fetishists may consider removing the dot.
+	  Security-sensitive people may consider removing the dot.
 
 	- Copy the "s9" binary to a location where it can be executed
 	  (e.g. /usr/local/bin).
 
-	- Copy the file "s9.scm" to a publically readable directory
+	- Copy the file "s9.scm" to a publicly readable directory
 	  (default: /usr/local/share/s9fes). This directory will be
 	  referred to as LIBDIR in the following instructions. Note
 	  that this directory must be contained in DEFAULT_LIBRARY_PATH,
@@ -153,9 +160,10 @@
 	typing "s9 -f program.scm" at your shell prompt.
 
 	If you installed the extension library functions in LIBDIR,
-	they can be loaded by the LOAD-FROM-LIBRARY procedure:
+	they can be loaded by the LOAD-FROM-LIBRARY procedure or the
+	",l" (comma ell) meta command:
 
-	> (load-from-library "draw-tree.scm")
+	> ,l draw-tree
 	; loading from /usr/local/share/s9fes/draw-tree.scm
 	> (draw-tree '(a b c))
 	[o|o]---[o|o]---[o|/]
@@ -178,7 +186,7 @@
 	extensions are compiled in by default.)
 
 
-	AUTHOR
+	CONTACT
 
 	Nils M Holm < n m h @ t 3 x . o r g >
 

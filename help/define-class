@@ -12,15 +12,15 @@ S9 LIB  (call-next-method)                              ==>  object
 
         (load-from-library "sos.scm")
 
-SOS is a Scheme Object System that is similar to CLOS, but simpler.
+S9SOS is a Scheme Object System that is similar to CLOS, but simpler.
 It has multiple inheritance, generic procedures, and a meta object
 protocol (MOP). If you know CLOS, you will probably find it too
 limited. If you do not know CLOS, you will probably find it too
 complex.
 
 The procedures and macros above form the user-level interface to
-SOS. For a more detailed description (including the MOP), see the
-"sos.txt" file.
+S9SOS. For a more detailed description (including the MOP), see the
+"s9sos.txt" file.
 
 DEFINE-CLASS defines a new class named <name> that is a subclass
 of each specified <class>. Each <slot> specifies an instance
@@ -54,7 +54,7 @@ and a class:
 
 When a type is specified, the method will only be applied to
 arguments of the specified types (or less specific types from
-which the given type is derived). See "sos.txt" for details.
+which the given type is derived). See "s9sos.txt" for details.
 
 Types may be user-defined classes or "built-in" types. Each
 built-in type corresponds to a Scheme type, e.g.: <pair> would
@@ -69,7 +69,7 @@ applicable to the arguments passed to the method that is
 currently evaluating. Outside of methods, CALL-NEXT-METHOD
 is undefined.
 
-INITALIZE is a generic procedure that is used to initialize
+INITIALIZE is a generic procedure that is used to initialize
 instances dynamically. Whenever a new class is defined using
 DEFINE-CLASS, a new method covering that class is added to the
 INITIALIZE generic. Initialization code is added by redefining

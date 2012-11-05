@@ -19,7 +19,7 @@ the <keyword> to the specified transformer.
          body1 body2 ...)))))
 
 In addition to the above the DEFINE-SYNTAX implementation of S9fES
-allows to bind an ordinary procedure to a syntatic keyword. Its forms
+allows to bind an ordinary procedure to a syntactic keyword. Its forms
 are similar to those of DEFINE. The first form binds a <symbol> to a
 <procedure>, which is specified as its second argument. The other form
 binds <sym1> to the form

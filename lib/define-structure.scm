@@ -16,7 +16,7 @@
 ;       (<slot-name> <initial-value>)
 ;
 ; <Slot-name> must be a symbol and <initial-value> may be any value.
-; When an <initial-value> is specified, the correpsonding slot will
+; When an <initial-value> is specified, the corresponding slot will
 ; be filled with that value whenever a new instance of the structure
 ; is created. When the value is omitted, it defaults to an unspecific
 ; value. <Slot-name> is equal to (<slot-name>).
@@ -88,7 +88,7 @@
          (slot-defs
            (map cons
                 (map car slots)
-                (iota 1 (length slots))))
+                (iota (length slots))))
          (def-tag
            `(define ,(symbol-append '* name '-type-tag*) (list ',name)))
          (def-maker

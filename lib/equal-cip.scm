@@ -4,7 +4,7 @@
 ;
 ; (equal-ci? object1 object2)  ==>  boolean
 ;
-; EQUAL-CI? is like EQUAL? but compares strings and characters
+; EQUAL-CI? is like EQUAL?, but compares strings and characters
 ; using case-insensitive predicates whereas EQUAL? distinguishes
 ; case.
 ;

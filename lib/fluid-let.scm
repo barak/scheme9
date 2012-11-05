@@ -1,5 +1,5 @@
 ; Scheme 9 from Empty Space, Function Library
-; By Nils M Holm, 2009
+; By Nils M Holm, 2009,2012
 ; Placed in the Public Domain
 ;
 ; (fluid-let ((variable expression) ...) expression ...)  ==>  object
@@ -54,7 +54,7 @@
                         tmp*))
              (val  (gensym)))
          `(let ,env*
-            ,@ini*
+            ,@(reverse! ini*)
             (let ((,val (begin ,@body)))
               ,@res*
               ,val)))))

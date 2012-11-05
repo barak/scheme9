@@ -14,7 +14,7 @@
 ; evaluates to #f, WHEN does not evaluate its <body> and returns an
 ; unspecific value.
 ;
-; UNLESS is evaluates its body only if <test-expression> eveluates to #F.
+; UNLESS is evaluates its body only if <test-expression> evaluates to #F.
 ; It evaluates its <body> exactly if WHEN would not evaluate it and vice
 ; versa.
 ;

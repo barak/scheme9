@@ -70,8 +70,8 @@ mv -f setters pushb
 mv -f rb-tree make-rbt
 mv -f records record
 mv -f regex re-comp
-mv -f simple-module module
-mv -f sos define-class
+mv -f simple-modules module
+mv -f s9sos define-class
 mv -f standard-error standard-error-port
 mv -f streams make-stream
 mv -f string-case string-upcase

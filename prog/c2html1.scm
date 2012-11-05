@@ -1,7 +1,7 @@
 #! /usr/local/bin/s9 -f
 
 ; c2html -- print C code to HTML
-; By Nils M Holm, 2009,2010,2012
+; By Nils M Holm, 2009-2012
 ; Placed in the Public Domain
 ;
 ; Usage: c2html [-dL] [file ...]

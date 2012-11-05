@@ -1,8 +1,8 @@
 ; Scheme 9 from Empty Space, Function Library
-; By Nils M Holm, 2010
+; By Nils M Holm, 2010,2012
 ; Placed in the Public Domain
 ;
-; (standard-error)                     ==>  #<output-port>
+; (standard-error-port)                ==>  #<output-port>
 ; (call-with-stderr procedure^1)       ==>  object
 ; (with-output-to-stderr procedure^0)  ==>  unspecific
 ;

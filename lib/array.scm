@@ -21,7 +21,7 @@
 ; second and four in the third.
 ;
 ; ARRAY creates a fresh array of rank one and stores the given
-; elemenys in it. Arrays of higher rank can be created by nesting
+; elements in it. Arrays of higher rank can be created by nesting
 ; applications of ARRAY.
 ;
 ; (Array? x) returns #T if X is an array and otherwise #F. The array
@@ -31,7 +31,7 @@
 ; ARRAY. For a zero-dimensional array it returns ().
 ;
 ; ARRAY-MAP maps a procedure over the elements of the given arrays.
-; The arity of PROCECURE must match the number of ARRAYs. ARRAY-MAP
+; The arity of PROCEDURE must match the number of ARRAYs. ARRAY-MAP
 ; returns a new array in which the elements of the input arrays have
 ; been tuple-wise combined with PROCEDURE, e.g.:
 ;
@@ -80,66 +80,63 @@
 (define *array-type-tag* (list 'array))
 
 (define (make-array . dim*)
-  (let ((rank (length dim*)))
-    (if (zero? rank)
-        (vector *array-type-tag* #f)
-        (let make ((rank rank)
-                   (dim* dim*))
-          (let ((subvec (make-vector (+ 1 (car dim*)))))
-            (vector-set! subvec 0 *array-type-tag*)
-            (if (> rank 1)
-                (vector-map! (lambda (x)
-                               (if (not (eq? x *array-type-tag*))
-                                   (make (- rank 1) (cdr dim*))
-                                   x))
-                             subvec))
-            subvec)))))
+  (if (null? dim*)
+      (vector *array-type-tag* #f)
+      (let make ((dim* dim*))
+        (let ((subvec (make-vector (+ 1 (car dim*)))))
+          (vector-set! subvec 0 *array-type-tag*)
+          (if (not (null? (cdr dim*)))
+              (vector-map! (lambda (x)
+                             (if (not (eq? x *array-type-tag*))
+                                 (make (cdr dim*))
+                                 x))
+                           subvec))
+          subvec))))
 
 (define (array? x)
   (and (vector? x)
        (positive? (vector-length x))
        (eq? *array-type-tag* (vector-ref x 0))))
 
-(define (array-ref ar . i*)
-  (if (not (array? ar))
-      (error "array-ref: expected array, got" ar)
-      (let aref ((a  ar)
-                 (i* i*))
+(define (array-ref a . indexes)
+  (if (not (array? a))
+      (error "array-ref: expected array, got" a)
+      (let aref ((a  a)
+                 (i* indexes))
         (if (null? i*)
             (if (array? a)
-                (error "array-ref: too few indexes" ar)
+                (error "array-ref: too few indexes" indexes)
                 a)
             (if (array? a)
-                (if (<= (car i*) (vector-length a))
+                (if (< (+ 1 (car i*)) (vector-length a))
                     (aref (vector-ref a (+ 1 (car i*)))
                           (cdr i*))
                     (error "array-ref: index out of range" (car i*)))
-                (error "array-ref: too many indexes" ar))))))
+                (error "array-ref: too many indexes" indexes))))))
 
-(define (array-set! ar . i*v)
-  (if (not (array? ar))
-      (error "array-set!: expected array, got" ar)
-      (let aset ((a   ar)
-                 (i*v i*v))
-        (cond ((null? i*v)
-                (error "array-set!: missing value"))
-              ((null? (cdr i*v))
-                (error "array-set!: missing index"))
-              ((null? (cddr i*v))
-                (if (array? a)
-                    (if (<= (car i*v) (vector-length a))
-                        (if (array? (vector-ref a (+ 1 (car i*v))))
-                            (error "array-set!: too few indexes" ar)
-                            (vector-set! a (+ 1 (car i*v)) (cadr i*v)))
-                        (error "array-set!: index out of range" (car i*v)))
-                    (error "array-set!: too many indexes" ar)))
-              (else
-                (if (array? a)
-                    (if (<= (car i*v) (vector-length a))
-                        (aset (vector-ref a (+ 1 (car i*v)))
-                              (cdr i*v))
-                        (error "array-set!: index out of range" (car i*v)))
-                    (error "array-set!: too many indexes" ar)))))))
+(define (array-set! a . indexes+val)
+  (if (not (array? a))
+      (error "array-set!: expected array, got" a))
+  (if (< (length indexes+val) 2)
+      (error "array-set!: missing indexes"))
+  (let* ((x    (reverse indexes+val))
+         (val  (car x))
+         (ind* (reverse (cdr x))))
+    (let aset ((a  a)
+               (i* ind*))
+      (if (null? (cdr i*))
+          (if (array? a)
+              (if (< (+ 1 (car i*)) (vector-length a))
+                  (if (array? (vector-ref a (+ 1 (car i*))))
+                      (error "array-set!: too few indexes" ind*)
+                      (vector-set! a (+ 1 (car i*)) val))
+                  (error "array-set!: index out of range" (car i*)))
+              (error "array-set!: too many indexes" ind*))
+          (if (array? a)
+              (if (< (+ 1 (car i*)) (vector-length a))
+                  (aset (vector-ref a (+ 1 (car i*))) (cdr i*))
+                  (error "array-set!: index out of range" (car i*)))
+              (error "array-set!: too many indexes" ind*))))))
 
 (define (array . v)
   (list->vector (cons *array-type-tag* v)))

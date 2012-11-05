@@ -40,7 +40,6 @@ OSDEF=	-Dunix
 # Options to be added to $(DEFS)
 #	-DBITS_PER_WORD_64	# use 64-bit bignum arithmetics
 #	-DNO_SIGNALS		# disable POSIX signal handlers
-#	-DLIBRARY="\"file\""	# default library source file
 #	-DDEFAULT_LIBRARY_PATH="\"dir:...\""
 #				# default search path for LOCATE-FILE
 #	-DNETWORK		# include socket code in the Unix extension
@@ -122,12 +121,7 @@ realtest:	s9 test.image
 test.image:	s9 s9.scm s9-real.scm
 	$(BUILD_ENV) ./s9 -n $(EXTRA_SCM) -d test.image
 
-tests:
-	make test
-	make realtest
-	make srtest
-	make libtest
-	make systest
+tests: test realtest srtest libtest systest
 
 install:	install-s9 install-util
 
@@ -147,8 +141,8 @@ install-s9:	s9 s9.scm s9.image s9.1.gz
 	install $C -m 0644 contrib/* $(LIBDIR)
 	install $C -m 0644 s9.1.gz $(MANDIR)
 	install $C -m 0644 help/* $(LIBDIR)/help
-	install $C -m 0755 util/make-help-links $(LIBDIR)/help
-	(cd $(LIBDIR)/help && ./make-help-links && rm make-help-links)
+	install $C -m 0755 util/make-help-links $(LIBDIR)
+	(cd $(LIBDIR) && ./make-help-links && rm make-help-links)
 
 install-util:
 	sed -e "s|^#! /usr/local|#! $(PREFIX)|"	\

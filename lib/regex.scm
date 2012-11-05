@@ -22,8 +22,8 @@
 ;
 ; where FIRST is the index of the first character matching the RE and
 ; LIMIT is the first character *after* the match (so the match can be
-; extracted with SUBSTRING). When no submatches are used, just a list
-; of the form ((first limit)) will be returned. When submatches using
+; extracted with SUBSTRING). When no sub-matches are used, just a list
+; of the form ((first limit)) will be returned. When sub-matches using
 ; \( and \) are contained in the regular expression, the subsequent pairs
 ; will contain the ranges matched by the sub-expressions (in order of
 ; occurrence of sub-expressions in the RE). See examples.
@@ -53,15 +53,15 @@
 ; +          match one or more instances of the preceding pattern
 ; ?          match the preceding pattern optionally
 ; \          match the following character literally (exception below!)
-; \(         mark the beginning of a submatch
-; \)         mark the end of a submatch
+; \(         mark the beginning of a sub-match
+; \)         mark the end of a sub-match
 ;
 ; RE-SUBST attempts to match the CRE LIST against STRING1. When it
 ; succeeds, it returns a fresh copy of STRING1 with the match replaced
 ; by STRING2. When the 'ALL option is used (see RE-MATCH), all occurrences
-; of the match will be replaced. When the CRE contains submatches, they can
+; of the match will be replaced. When the CRE contains sub-matches, they can
 ; be referred to in STRING2 by using a backslash and the position of the
-; submatch, i.e.: \1, \2, ... The notation \0 denotes the entire match. To
+; sub-match, i.e.: \1, \2, ... The notation \0 denotes the entire match. To
 ; include a literal backslash in the replacement string, use \\. (Of course,
 ; Scheme strings use backslashes for escaping, so you will have to use \\1
 ; in the place of \1 and \\\\ in the place of \\. Yes, this is awkward.)

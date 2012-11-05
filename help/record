@@ -16,7 +16,7 @@ These procedures implement ML-style records.
 
 RECORD creates a new record from the given (TAG . OBJECT) PAIRs,
 where TAG is a symbol naming the record field and OBJECT is the
-value stord in that field. Each TAG must be unique.
+value stored in that field. Each TAG must be unique.
 
 RECORD? returns #T, if the given OBJECT is a record.
 
