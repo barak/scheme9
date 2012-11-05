@@ -9,10 +9,10 @@ libraries during hardened build.  See lintian tag hardening-no-relro.
  1 file changed, 1 insertion(+), 1 deletion(-)
 
 diff --git a/Makefile b/Makefile
-index 47f2f95..3d16ce2 100644
+index 12ec72d..8e6d793 100644
 --- a/Makefile
 +++ b/Makefile
-@@ -69,7 +69,7 @@ all:	s9 s9.image lib/syntax-rules.scm \
+@@ -68,7 +68,7 @@ all:	s9 s9.image lib/syntax-rules.scm \
  all:	s9.1
  
  s9:	s9.o s9.h $(EXTRA_OBJS)

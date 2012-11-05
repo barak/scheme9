@@ -3,11 +3,11 @@ Date: Wed, 27 Jul 2011 20:46:53 +0100
 Subject: recombobulate Makefile
 
 ---
- Makefile |  165 ++++++++++++++++++++++++++++++++++----------------------------
- 1 file changed, 90 insertions(+), 75 deletions(-)
+ Makefile |  166 ++++++++++++++++++++++++++++++++++----------------------------
+ 1 file changed, 91 insertions(+), 75 deletions(-)
 
 diff --git a/Makefile b/Makefile
-index 6605d29..e2c53c0 100644
+index 3613b13..12ec72d 100644
 --- a/Makefile
 +++ b/Makefile
 @@ -4,7 +4,7 @@
@@ -41,7 +41,7 @@ index 6605d29..e2c53c0 100644
  
  # Which OS are we using (unix or plan9)?
  OSDEF=	-Dunix
-@@ -55,9 +63,11 @@ DEFS=	$(OSDEF) \
+@@ -54,9 +62,11 @@ DEFS=	$(OSDEF) \
  	-DNETWORK -DCURSES_RESET \
  	-DBIG_REAL
  
@@ -54,7 +54,7 @@ index 6605d29..e2c53c0 100644
  s9:	s9.o s9.h $(EXTRA_OBJS)
  	$(CC) -o s9 s9.o $(EXTRA_OBJS) $(EXTRA_LIBS)
  
-@@ -69,8 +79,14 @@ s9.image:	s9 s9.scm s9-real.scm ext/unix.scm ext/curses.scm config.scm
+@@ -68,8 +78,14 @@ s9.image:	s9 s9.scm s9-real.scm ext/unix.scm ext/curses.scm config.scm
  	rm -f s9.image && \
  		$(BUILD_ENV) ./s9 -n $(EXTRA_SCM) -l config.scm -d s9.image
  
@@ -71,7 +71,7 @@ index 6605d29..e2c53c0 100644
  
  unix.o:	ext/unix.c s9.h
  	$(CC) $(CFLAGS) $(DEFS) -I . -o unix.o -c ext/unix.c
-@@ -111,84 +127,83 @@ install:	install-s9 install-util
+@@ -105,84 +121,84 @@ install:	install-s9 install-util
  # old version of install(1) may need -c
  #C=-c
  install-s9:	s9 s9.scm s9.image s9.1.gz
@@ -88,13 +88,14 @@ index 6605d29..e2c53c0 100644
 -	install $C -m 0644 contrib/* $(LIBDIR)
 -	install $C -m 0644 s9.1.gz $(MANDIR)
 -	install $C -m 0644 help/* $(LIBDIR)/help
--	install $C -m 0755 util/make-help-links $(LIBDIR)/help
--	(cd $(LIBDIR)/help && ./make-help-links && rm make-help-links)
+-	install $C -m 0755 util/make-help-links $(LIBDIR)
+-	(cd $(LIBDIR) && ./make-help-links && rm make-help-links)
 +	install -d -m 0755 $(DESTDIR)$(BINDIR)
 +	install -d -m 0755 $(DESTDIR)$(LIBDIR)
 +	install -d -m 0755 $(DESTDIR)$(LIBDIR)/help
 +	install -d -m 0755 $(DESTDIR)$(MANDIR)
 +	install $C -m 0755 s9 $(DESTDIR)$(BINDIR)
++	echo skip strip $(DESTDIR)$(BINDIR)/s9
 +	install $C -m 0644 s9.scm $(DESTDIR)$(LIBDIR)
 +	install $C -m 0644 s9.image $(DESTDIR)$(LIBDIR)
 +	install $C -m 0644 lib/* $(DESTDIR)$(LIBDIR)
@@ -102,8 +103,8 @@ index 6605d29..e2c53c0 100644
 +	install $C -m 0644 contrib/* $(DESTDIR)$(LIBDIR)
 +	install $C -m 0644 s9.1.gz $(DESTDIR)$(MANDIR)
 +	install $C -m 0644 help/* $(DESTDIR)$(LIBDIR)/help
-+	install $C -m 0755 util/make-help-links $(DESTDIR)$(LIBDIR)/help
-+	(cd $(DESTDIR)$(LIBDIR)/help && ./make-help-links && rm make-help-links)
++	install $C -m 0755 util/make-help-links $(DESTDIR)$(LIBDIR)
++	(cd $(DESTDIR)$(LIBDIR) && ./make-help-links && rm make-help-links)
  
  install-util:
 -	sed -e "s|^#! /usr/local|#! $(PREFIX)|"	\

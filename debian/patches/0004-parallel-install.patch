@@ -10,11 +10,11 @@ result in multiple creation; that is okay.
  1 file changed, 2 insertions(+)
 
 diff --git a/Makefile b/Makefile
-index f636abb..c853b58 100644
+index 491fad7..fdc0699 100644
 --- a/Makefile
 +++ b/Makefile
 @@ -139,6 +139,7 @@ install-s9:	s9 s9.scm s9.image s9.1.gz
- 	(cd $(DESTDIR)$(LIBDIR)/help && ./make-help-links && rm make-help-links)
+ 	(cd $(DESTDIR)$(LIBDIR) && ./make-help-links && rm make-help-links)
  
  install-util:
 +	install -d -m 0755 $(DESTDIR)$(BINDIR)

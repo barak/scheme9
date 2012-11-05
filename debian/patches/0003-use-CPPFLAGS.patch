@@ -9,10 +9,10 @@ hardened build.  See lintian tag hardening-no-fortify-functions.
  1 file changed, 1 insertion(+)
 
 diff --git a/Makefile b/Makefile
-index 3d16ce2..f636abb 100644
+index 8e6d793..491fad7 100644
 --- a/Makefile
 +++ b/Makefile
-@@ -58,6 +58,7 @@ OSDEF=	-Dunix
+@@ -57,6 +57,7 @@ OSDEF=	-Dunix
  #				# (requires "s9-real.scm" EXTRA_SCM, above)
  
  DEFS=	$(OSDEF) \
