@@ -1,3 +1,10 @@
 version=3
 http://t3x.org/s9fes/s9fes-(\d\d\d\d)(\d\d)(\d\d)\.tar\.gz
 http://t3x.org/s9fes/s9fes-(\d\d\d\d)(\d\d)(\d\d)(.+)\.tar\.gz
+
+## This checks for the current version.
+# wget --quiet -O- http://www.t3x.org/s9fes/s9fes.tgz \
+#  | tar -zxf - --to-stdout s9/s9.c \
+#  | egrep '^ *[#]define +VERSION' \
+#  | sed 's/^ *[#]define  *VERSION  *//' \
+#  | sed s'/"//'
