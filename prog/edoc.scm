@@ -14,7 +14,7 @@ EDOC is a text processor that renders Scheme and C programs with
 embedded documentation in EDOC format to HTML. This file is an EDOC
 document and the program implementing EDOC at the same time. When
 run in a Scheme system, it processes EDOC documents, and when passed
-to EDOC it results in the documentation for the program, including
+to EDOC, it results in the documentation for the program, including
 its own syntax-highlighted source code.
 
 To convert this file to HTML, run
@@ -88,9 +88,11 @@ These \v{attribute}s exist:
 \\=c              literal character    literal
 }
 
-Setting the \v{url} in \\r or the \v{name} in \\x and \\X, and \\V to
+Setting the \v{url} in \\r or the \v{name} in \\x, \\X, and \\V to
 \v{*} duplicates the preceding text, e.g.: \\x{foo *\=} equals
-\\x{foo foo\=}
+\\x{foo foo\=}. Omitting the \v{name} in \\x and \\X will generate
+an index entry that uses \v{text} as \v{name} and will not be
+visible in the text.
 
 The CSS2 style sheets "scheme.css" and "ccode.css" contain the
 default styles for syntax highlighting. The "edoc.css" style
@@ -114,6 +116,8 @@ Render programs with embedded edoc sections in HTML
 -t text  content of the HTML TITLE tag
 -w       overwrite output files (default: keep)
 -x name  extract section with given file name
+-E file  insert epilog 'file' at end of output
+-P file  insert prolog 'file' at beginning of output
 -L       generate Lout output (experimental!)
 }
 ------------------------------------------------------------------code|#
@@ -133,10 +137,10 @@ Render programs with embedded edoc sections in HTML
 (load-from-library "standard-error.scm")
 (load-from-library "hash-table.scm")
 
-(define *language*   #f)
-(define *title*      #f)
-(define *file-name*  #f)
-(define *extracting* #f)
+(define *language*    #f)
+(define *title*       #f)
+(define *file-name*   #f)
+(define *extracting*  #f)
 
 (define *output-port* (current-output-port))
 (define *to-file*     #f)
@@ -156,6 +160,8 @@ Render programs with embedded edoc sections in HTML
 (define extract     (option #\x 'string #f))
 (define lout        (option #\L #f))
 (define overwrite   (option #\w #f))
+(define prolog-file (option #\P 'string #f))
+(define epilog-file (option #\E 'string #f))
 (define options     `(,show-help
                       ,backlink
                       ,make-index
@@ -165,6 +171,8 @@ Render programs with embedded edoc sections in HTML
                       ,title
                       ,extract
                       ,overwrite
+                      ,prolog-file
+                      ,epilog-file
                       ,lout))
 
 (define (edoc-error msg . arg)
@@ -202,6 +210,17 @@ Render programs with embedded edoc sections in HTML
   (set! *output-port* (open-output-file name))
   (set! *to-file* name))
 
+(define (copy-file file)
+  (if (not (file-exists? file))
+      (edoc-error "file not found" file))
+  (with-input-from-file
+    file
+    (lambda ()
+      (let copy ((c (read-char)))
+        (cond ((not (eof-object? c))
+                (write-char c *output-port*)
+                (copy (read-char))))))))
+
 (define (html-prolog)
   (for-each
     pr
@@ -215,12 +234,12 @@ Render programs with embedded edoc sections in HTML
        ,(if (and *title* *file-name*) " : " "")
        ,(if *title* *title* "")
        "</TITLE>"                                       #\newline
-       "<LINK rel=\"stylesheet\" type=\"text/css\" href=\"scheme.css\">"
-       #\newline
-       "<LINK rel=\"stylesheet\" type=\"text/css\" href=\"ccode.css\">"
-       #\newline
        "<LINK rel=\"stylesheet\" type=\"text/css\""
        " href=\"edoc.css\">"                            #\newline
+       "<LINK rel=\"stylesheet\" type=\"text/css\""
+       " href=\"scheme.css\">"                          #\newline
+       "<LINK rel=\"stylesheet\" type=\"text/css\""
+       " href=\"ccode.css\">"                           #\newline
        "</HEAD>"                                        #\newline
        "<BODY>"                                         #\newline
        #\newline)))
@@ -261,7 +280,10 @@ Render programs with embedded edoc sections in HTML
     ((opt-val lout)
       (lout-prolog))
     (else
-      (html-prolog))))
+      (html-prolog)))
+  (if (and (not (opt-val extract))
+           (opt-val prolog-file))
+      (copy-file (opt-val prolog-file))))
 
 (define (html-epilog)
   (for-each
@@ -277,6 +299,9 @@ Render programs with embedded edoc sections in HTML
       #\newline)))
 
 (define (epilog)
+  (if (and (not (opt-val extract))
+           (opt-val epilog-file))
+      (copy-file (opt-val epilog-file)))
   (if (and (not (opt-val strip-doc))
            (or (not (opt-val extract))
                *extracting*))
@@ -802,8 +827,8 @@ Render programs with embedded edoc sections in HTML
                                  (if (opt-val lout)
                                      (pr "}" #\newline)
                                      (pr "</PRE>" #\newline)))
-                             (close-ndx)
-                             (epilog))))
+                             (close-ndx)))
+                  (epilog))
                 ((string=? "" line)
                   (loop (+ 1 nnl)))
                 ((edoc-start? line)
@@ -870,7 +895,7 @@ Render programs with embedded edoc sections in HTML
   (display "Usage: edoc [-iswL] [-b file] [-l lang] [-o file] [-t title]")
   (display " [-x name]")
   (newline)
-  (display "            [file ...]")
+  (display "            [-E file] [-P file] [file ...]")
   (newline))
 
 (let ((files (parse-options! (sys:command-line) options usage)))
@@ -895,6 +920,8 @@ Render programs with embedded edoc sections in HTML
               "-t text  content of the HTML TITLE tag"
               "-w       overwrite output files (default: keep)"
               "-x name  extract section with given file name"
+              "-E file  insert epilog 'file' at end of output"
+              "-P file  insert prolog 'file' at beginning of output"
               "-L       generate Lout output (experimental!)"
               ""))
           (sys:exit 0))

@@ -54,7 +54,8 @@
 
 ; Give a unique name to each variable that is bound in FORM.
 ; BOUND is a list of initially bound variables. This function
-; also renames variables of LET, LET*, and LETREC, e.g.:
+; also renames variables of (named) LET, LET*, and LETREC, and
+; DO, e.g.:
 ;
 ; (ALPHA-CONV '(LET ((X Y)) X) '()) => (LET ((G123 Y)) G123)
 
@@ -96,14 +97,23 @@
                      (pair? (cddr form)))
                  (let ((e (map-improper (lambda (x)
                                           (cons x (gensym)))
-                                        (cadr form)
+                                        (flatten (cadr form))
                                         '())))
                    `(lambda ,@(conv (cdr form)
                                     (append (remove-bound e bound)
                                             env)))))
+               ((and (eq? (car form) 'let)
+                     (pair? (cdr form))
+                     (symbol? (cadr form))
+                     (pair? (cddr form)))
+                 (let* ((e (list (cons (cadr form) (gensym))))
+                        (x (conv `(let ,@(cddr form))
+                                  (append e env))))
+                   `(let ,(cdar e) ,@(cdr x))))
                ((and (or (eq? (car form) 'let)
                          (eq? (car form) 'letrec)
-                         (eq? (car form) 'let*))
+                         (eq? (car form) 'let*)
+                         (eq? (car form) 'do))
                      (pair? (cdr form))
                      (pair? (cadr form))
                      (pair? (caadr form))

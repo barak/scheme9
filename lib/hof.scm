@@ -6,6 +6,7 @@
 ; (compose procedure1 procedure2 ...)  ==>  procedure
 ; (const <expression>)                 ==>  procedure
 ; (curry procedure object ...)         ==>  procedure
+; (curryr procedure object ...)        ==>  procedure
 ; (fork procedure1 procedure2)         ==>  procedure
 ;
 ; (load-from-library "hof.scm")
@@ -32,9 +33,17 @@
 ; Application of the given PROCEDURE is finished when the procedure
 ; returned by CURRY is applied to some arguments.
 ;
+; CURRYR curries the right-hand operands of P, yielding a unary procedure
+;
+;       (lambda (arg) (apply p arg (list object ...)))
+;
 ; FORK arranges two procedures to form a fork:
 ;
 ;       ((fork f g) x1 ... xN)  -->  (f (g x1) ... (g xN))
+;
+; THUNK creates a nullary procedure that, when called, evaluates the
+; given expressions in sequence. It returns the value of the last
+; expression evaluated.
 ;
 ; Example:   ((complement pair?) '(1 2 3))  ==>  #f
 ;            ((complement eq?) 'foo 'bar)   ==>  #t
@@ -47,6 +56,9 @@
 ;
 ;            ((curry + 1) 9)              ==>  10
 ;            ((curry map list) '(1 2 3))  ==>  ((1) (2) (3))
+;
+;            ((curry  - 1) 10)  ==>  -9
+;            ((curryr - 1) 10)  ==>  9
 ;
 ;            ((fork < car) '(1 . a) '(2 . b) '(3 . c))  ==>  #t
 ;            ((fork append reverse) '(3 2 1) '(6 5 4))  ==>  (1 2 3 4 5 6)
@@ -68,6 +80,10 @@
 (define-syntax (curry f . x)
   (let ((y (gensym)))
     `(lambda ,y (apply ,f ,@x ,y))))
+
+(define-syntax (curryr f . y)
+  (let ((x (gensym)))
+    `(lambda (,x) (apply ,f ,x (list ,@y)))))
 
 (define (fork f g)
   (lambda x

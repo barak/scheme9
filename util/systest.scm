@@ -1,6 +1,6 @@
 ; Scheme 9 from Empty Space
 ; Unix Extension Test Suite
-; By Nils M Holm, 2010
+; By Nils M Holm, 2010,2012
 
 ; NOTE: SOCKET-TEST will fail if this test is run
 ; multiple times in quick succession.
@@ -8,6 +8,7 @@
 (load-from-library "mergesort.scm")
 (load-from-library "displaystar.scm")
 (load-from-library "read-line.scm")
+(load-from-library "bitops.scm")
 
 ; ----- Prelude --------------------------------------------------------------
 
@@ -76,7 +77,7 @@
           (fail2 ',form ,form)))
 
 (define (stat-umode file)
-  (bitwise-and #o777 (sys:stat-mode file)))
+  (bit* #o777 (sys:stat-mode file)))
 
 ; ----- Directory creation and access ----------------------------------------
 
@@ -332,9 +333,7 @@
 (test (equal? "name" (sys:readlink "reference")))
 (fail (sys:readlink "name"))
 
-(test (sys:lchown "reference" (sys:getuid) (sys:getgid)))
 (test (sys:utimes "reference"))
-(test (sys:lutimes "reference"))
 
 (test (sys:unlink "reference"))
 (test (sys:unlink "alias"))

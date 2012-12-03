@@ -201,8 +201,7 @@ enum EVAL_STATES {
 	EV_ARGS,	/* Evaluating argument list */
 	EV_BETA,	/* Evaluating procedure body */
 	EV_IF_PRED,	/* Evaluating predicate of IF */
-	EV_SET_VAL,	/* Evaluating value of SET! */
-	EV_DEFINE,	/* Evaluating value of DEFINE */
+	EV_SET_VAL,	/* Evaluating value of SET! and DEFINE */
 	EV_MACRO,	/* Evaluating value of DEFINE-SYNTAX */
 	EV_BEGIN,	/* Evaluating expressions of BEGIN */
 	EV_AND,		/* Evaluating arguments of AND */
@@ -451,12 +450,12 @@ EXTERN cell	S_and, S_begin, S_cond, S_define,
 #define real_p(n) \
 	(!special_value_p(n) && (Tag[n] & ATOM_TAG) && Car[n] == T_REAL)
 #define special_p(n)	((n) == S_quote	  || \
+			 (n) == S_begin	  || \
 			 (n) == S_if	  || \
 			 (n) == S_cond	  || \
 			 (n) == S_and	  || \
 			 (n) == S_or	  || \
 			 (n) == S_lambda  || \
-			 (n) == S_begin	  || \
 			 (n) == S_set_b	  || \
 			 (n) == S_define  || \
 			 (n) == S_define_syntax)

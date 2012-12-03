@@ -72,6 +72,11 @@
 	(Make sure to re-compile S9fES (make clean; make) after changing
 	 PREFIX, because it is used to set up some internal paths).
 
+	OSX
+
+	Basically as on generic Unix, but you may have to enable some
+	extra LDFLAGS in the Makefile.
+
 	Plan 9
 
 	To compile S9fES on Plan 9 from Bell Labs, just type "mk", but
@@ -184,6 +189,18 @@
 	and a Curses interface. To compile these extensions, uncomment
 	the three EXTRA_ lines in the Makefile. (In fact, the Unix
 	extensions are compiled in by default.)
+
+
+	ACKNOWLEDGEMENTS
+
+	I would line to thank the following people and organisations for
+	patches, bug reports, suggestions, hardware, access to hardware,
+	etc:
+
+	Bakul Shah, Barak Pearlmutter, Blake McBride, Bsamograd (reddit),
+	Dig1 (reddit), Dirk Lutzebaeck, Doug Currie, Mario Deilmann,
+	Masaru KIMURA, Torsten Leibold, and the Super Dimension Fortress
+	(SDF.ORG).
 
 
 	CONTACT

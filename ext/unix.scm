@@ -12,7 +12,6 @@
 ; (sys:group-name string) ==> string
 ; (sys:group-gid string) ==> integer
 ; (sys:kill integer)  ==>  unspecific
-; (sys:lchown string1 string2|integer1 string3|integer2)  ==>  unspecific
 ; (sys:lstat-name string)  ==>  string
 ; (sys:lstat-size string)  ==>  integer
 ; (sys:lstat-uid string)  ==>  integer
@@ -356,14 +355,6 @@
         (old:chown old:chown))
     (lambda (file user group)
       (do-chown old:chown file user group))))
-
-(define old:lchown sys:lchown)
-
-(define sys:lchown
-  (let ((do-chown   do-chown)
-        (old:lchown old:lchown))
-    (lambda (file user group)
-      (do-chown old:lchown file user group))))
 
 (define (char-ready? . port)
   (let ((port (if (null? port)

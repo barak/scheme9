@@ -2,6 +2,7 @@ S9 LIB  (complement procedure)               ==>  procedure
         (compose procedure1 procedure2 ...)  ==>  procedure
         (const <expression>)                 ==>  procedure
         (curry procedure object ...)         ==>  procedure
+        (curryr procedure object ...)        ==>  procedure
         (fork procedure1 procedure2)         ==>  procedure
 
         (load-from-library "hof.scm")
@@ -28,9 +29,17 @@ in a new procedure
 Application of the given PROCEDURE is finished when the procedure
 returned by CURRY is applied to some arguments.
 
+CURRYR curries the right-hand operands of P, yielding a unary procedure
+
+      (lambda (arg) (apply p arg (list object ...)))
+
 FORK arranges two procedures to form a fork:
 
       ((fork f g) x1 ... xN)  -->  (f (g x1) ... (g xN))
+
+THUNK creates a nullary procedure that, when called, evaluates the
+given expressions in sequence. It returns the value of the last
+expression evaluated.
 
 ((complement pair?) '(1 2 3))  ==>  #f
 ((complement eq?) 'foo 'bar)   ==>  #t
@@ -43,6 +52,9 @@ FORK arranges two procedures to form a fork:
 
 ((curry + 1) 9)              ==>  10
 ((curry map list) '(1 2 3))  ==>  ((1) (2) (3))
+
+((curry  - 1) 10)  ==>  -9
+((curryr - 1) 10)  ==>  9
 
 ((fork < car) '(1 . a) '(2 . b) '(3 . c))  ==>  #t
 ((fork append reverse) '(3 2 1) '(6 5 4))  ==>  (1 2 3 4 5 6)

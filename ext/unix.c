@@ -219,6 +219,7 @@ cell pp_sys_execv(cell x) {
 		argv[i++] = string(car(p));
 	argv[i] = NULL;
 	execv(string(cadr(x)), argv);
+	free(argv);
 	return sys_error("sys:execv", NOEXPR);
 }
 
@@ -313,7 +314,7 @@ cell pp_sys_getgrgid(cell x) {
 }
 
 cell pp_sys_getpgid(cell x) {
-	/* No prototype, neither on FreeBSD 7.0 nor on Debian Lenny? */
+	/* No prototype, neither on FreeBSD 8.2 nor on Debian Lenny? */
 	pid_t	getpgid(pid_t);
 
 	return make_integer(getpgid(0));
@@ -413,20 +414,6 @@ cell pp_sys_kill(cell x) {
 	return sys_ok();
 }
 
-cell pp_sys_lchown(cell x) {
-	int	r;
-#if __FreeBSD__ >= 2 && __FreeBSD_version < 704000
-	int	lchown(char *, int, int);	/* no prototype? */
-#endif
-
-	r = lchown(string(cadr(x)),
-		integer_value("sys:chown", caddr(x)),
-		integer_value("sys:chown", cadddr(x)));
-	if (r < 0)
-		return sys_error("sys:chown", x);
-	return sys_ok();
-}
-
 cell pp_sys_link(cell x) {
 	if (link(string(cadr(x)), string(caddr(x))) < 0)
 		return sys_error("sys:link", x);
@@ -453,12 +440,6 @@ cell pp_sys_lseek(cell x) {
 	if (r < 0L)
 		return sys_error("sys:lseek", x);
 	return make_integer(r);
-}
-
-cell pp_sys_lutimes(cell x) {
-	if (lutimes(string(cadr(x)), NULL) < 0)
-		return sys_error("sys:utimes", x);
-	return sys_ok();
 }
 
 cell pp_sys_get_magic_value(cell x) {
@@ -1092,7 +1073,6 @@ struct Primitive_procedure Unix_primitives[] = {
  { "sys:gettimeofday",     pp_sys_gettimeofday,     0,  0, { ___,___,___ } },
  { "sys:getuid",           pp_sys_getuid,           0,  0, { ___,___,___ } },
  { "sys:kill",             pp_sys_kill,             2,  2, { INT,INT,___ } },
- { "sys:lchown",           pp_sys_lchown,           3,  3, { STR,INT,INT } },
  { "sys:link",             pp_sys_link,             2,  2, { STR,STR,___ } },
  { "sys:lock",             pp_sys_lock,             1,  1, { STR,___,___ } },
  { "sys:lseek",            pp_sys_lseek,            3,  3, { INT,INT,INT } },
@@ -1104,7 +1084,6 @@ struct Primitive_procedure Unix_primitives[] = {
  { "sys:lstat-regular?",   pp_sys_lstat_regular_p,  1,  1, { STR,___,___ } },
  { "sys:lstat-socket?",    pp_sys_lstat_socket_p,   1,  1, { STR,___,___ } },
  { "sys:lstat-symlink?",   pp_sys_lstat_symlink_p,  1,  1, { STR,___,___ } },
- { "sys:lutimes",          pp_sys_lutimes,          1,  1, { STR,___,___ } },
  { "sys:get-magic-value",  pp_sys_get_magic_value,  1,  1, { STR,___,___ } },
  { "sys:make-input-port",  pp_sys_make_input_port,  1,  1, { INT,___,___ } },
  { "sys:make-output-port", pp_sys_make_output_port, 1,  1, { INT,___,___ } },

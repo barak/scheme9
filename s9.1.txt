@@ -25,6 +25,9 @@ OPTIONS
               be  searched  in  the  entire  S9FES_LIBRARY_PATH   (see
               below).  When  this option is used, it must be the first
               one of the s9 command.
+              When `-' is specified as name, no  heap  image  will  be
+              loaded,  and  the  core  library  will  be read from the
+              source file `s9.scm'.
           -d file
               Dump heap image to file and exit.
           -f program [arguments]
@@ -57,9 +60,6 @@ ONLINE HELP
           is  loaded, just type (help) or ,h to invoke the online help
           system.  When the online help system is not loaded, you will
           have to run the following command first:
-
-
-
 
 
 S9 Interpreter                  Page 1                           S9(1)
@@ -141,9 +141,10 @@ S9(1)                  Scheme 9 from Empty Space                 S9(1)
               element.
 
           (gensym)         ==>  symbol
+          (gensym symbol)  ==>  symbol
           (gensym string)  ==>  symbol
-              Return  a fresh symbol. When a string argument is given,
-              use it as prefix for the fresh symbol.
+              Return  a fresh symbol. When a string or symbol argument
+              is given, use it as prefix for the fresh symbol.
 
           (load-from-library string)  ==>  unspecific
               Attempt to load the file string from each  directory  of
@@ -191,7 +192,6 @@ S9(1)                  Scheme 9 from Empty Space                 S9(1)
                   - total nodes allocated
                   - garbage collections
 
-              Each  resource  count  will  be  returned  as a group of
 
 
 S9 Interpreter                  Page 3                           S9(1)
@@ -200,6 +200,7 @@ S9 Interpreter                  Page 3                           S9(1)
 S9(1)                  Scheme 9 from Empty Space                 S9(1)
 
 
+              Each  resource  count  will  be  returned  as a group of
               integers representing ones,  thousands,  millions,  etc.
               Note  that  form  must be quoted or it will be evaluated
               before passing it to stats.
@@ -207,17 +208,30 @@ S9(1)                  Scheme 9 from Empty Space                 S9(1)
           (symbols)  ==>  list
               Return a list of all defined symbols.
 
-          (syntax? object)  ==>  boolean
-              Check whether object is a syntax object (i.e.: a macro).
-
           (trace symbol ...)  ==>  list | #t
           (trace #t)          ==>  list | #t
-              Trace  the procedure or syntax object bound to the given
-              symbols.   When  #t  is  passed  to  trace,  trace   all
-              procedures  and syntax objects (expect lots of output!).
-              When no arguments are passed  to  it,  disable  tracing.
-              Trace  returns the symbols that were being traced before
+              Trace the procedure or syntax object bound to the  given
+              symbols.    When  #t  is  passed  to  trace,  trace  all
+              procedures and syntax objects (expect lots of  output!).
+              When  no  arguments  are  passed to it, disable tracing.
+              Trace returns the symbols that were being traced  before
               its invocation.
+
+          (vector-append vector ...)  ==>  vector
+              Return  a  fresh  vector containing the concatenation of
+              the given vectors.
+
+          (vector-copy vector)                           ==>  vector
+          (vector-copy vector integer)                   ==>  vector
+          (vector-copy vector integer1 integer2)         ==>  vector
+          (vector-copy vector integer1 integer2 object)  ==>  vector
+              Return a copy of the  given  vector.  When  integer1  is
+              specified,  skip  the  given  number  of  elements. When
+              integer2 is also specified, copy elements from  integer1
+              up  to,  but  not  including,  integer2.   When integer2
+              exceeds the size of the original vector, add  unspecific
+              slots  to  the  copy.  When an object argument is given,
+              fill extra slots with that argument.
 
           (void)  ==>  unspecific
               Return an unspecific value.
@@ -244,6 +258,14 @@ MACROS
           A macro is a procedure that is applied  to  its  unevaluated
           arguments.  The macro application is replaced with the value
           returned  by  the  procedure.   This  happens   before   the
+
+
+S9 Interpreter                  Page 4                           S9(1)
+
+
+S9(1)                  Scheme 9 from Empty Space                 S9(1)
+
+
           expression containing the macro application is evaluated, so
           a macro rewrites its own application:
 
@@ -257,14 +279,6 @@ MACROS
           (when (= 1 1) 1 2 3)  ==>  3
 
           The define-syntax form introduces a new macro:
-
-
-
-S9 Interpreter                  Page 4                           S9(1)
-
-
-S9(1)                  Scheme 9 from Empty Space                 S9(1)
-
 
           (define-syntax name procedure)        ==>  unspecific
           (define-syntax (name args ...) body)  ==>  unspecific
@@ -310,6 +324,14 @@ INTERPRETER START-UP
               code. The heap image file is the name of the interpreter
               with a .image suffix appended. An alternative  name  can
               be  specified  with  the  -i  option (see OPTIONS).  The
+
+
+S9 Interpreter                  Page 5                           S9(1)
+
+
+S9(1)                  Scheme 9 from Empty Space                 S9(1)
+
+
               default library source code is named s9.scm.  The  first
               directory  containing either a heap image or the library
               source code is used. When the directory contains both an
@@ -324,14 +346,6 @@ INTERPRETER START-UP
               will be called at this point.
 
           Evaluate command line options.
-
-
-S9 Interpreter                  Page 5                           S9(1)
-
-
-S9(1)                  Scheme 9 from Empty Space                 S9(1)
-
-
               When a -l file option is found, the program contained in
               the  given  file  will  be  loaded.  When a -f file args
               option is found, the program contained in the file  will
@@ -344,7 +358,7 @@ S9(1)                  Scheme 9 from Empty Space                 S9(1)
               load procedure. (Unless the -n option was specified.)
 
           Enter REPL.
-              Interactive mode is only entered if no  -f  options  was
+              Interactive mode is only entered, when no -f option  was
               specified.
 
 ALLOCATION STRATEGY
@@ -374,6 +388,16 @@ BUGS
           Syntax-rules is not fully hygienic.
           Multiple  call/cc's  in the arguments of the same lambda (or
           derived  binding  syntax,  such  as  let)  will  break   the
+
+
+
+
+S9 Interpreter                  Page 6                           S9(1)
+
+
+S9(1)                  Scheme 9 from Empty Space                 S9(1)
+
+
           evaluator.
 
 FILES
@@ -388,16 +412,6 @@ FILES
               The interpreter heap image.
           *.scm
               Scheme source code.
-
-
-
-
-S9 Interpreter                  Page 6                           S9(1)
-
-
-S9(1)                  Scheme 9 from Empty Space                 S9(1)
-
-
 
 ENVIRONMENT
           S9FES_LIBRARY_PATH
@@ -433,20 +447,6 @@ REFERENCES
 
 AUTHOR
           Nils M Holm
-
-
-
-
-
-
-
-
-
-
-
-
-
-
 
 
 

@@ -1,5 +1,5 @@
 BODY { color: #000000;
-       background: #e0e0e0; }
+       background: #e8e0c0; }
 
 CODE { font-family: courier;
        font-weight: bold;
@@ -10,6 +10,9 @@ A { background: #ffffe0; }
 
 A:link { text-decoration: none;
          border: 1px dotted #0000ff; }
+
+A:visited { text-decoration: none;
+            border: 1px dotted #0000ff; }
 
 VAR { color: #000080;
       font-style: italic; }
@@ -25,10 +28,8 @@ BLOCKQUOTE { border-style: none;
 	     margin-right: 1.5em;
 	     margin-left: 1.5em; }
 
-PRE { border-color: #202020;
-      background: #eaf0f6;
-      border-width: 1px;
-      border-style: solid;
+PRE { background: #e8f4f8;
+      border: 1px solid #808080;
       padding: 0.5em; }
 
 IMG { border-color: #808080;

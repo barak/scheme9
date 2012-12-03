@@ -6,6 +6,7 @@
 
 (load-from-library "bitops.scm")
 (load-from-library "bitwise-ops.scm")
+(load-from-library "choose.scm")
 (load-from-library "factor.scm")
 (load-from-library "factorial.scm")
 (load-from-library "hyper.scm")

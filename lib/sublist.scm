@@ -16,7 +16,7 @@
             (do ((i   p0 (+ 1 i))
                  (in  (list-tail x p0) (cdr in))
                  (out '() (cons (car in) out)))
-                 ((= i pn)
-                   (reverse! out))))
+                ((= i pn)
+                  (reverse! out))))
           (else
             (error "sublist: bad range" (list p0 pn))))))
