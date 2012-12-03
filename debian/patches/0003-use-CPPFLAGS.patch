@@ -9,14 +9,14 @@ hardened build.  See lintian tag hardening-no-fortify-functions.
  1 file changed, 1 insertion(+)
 
 diff --git a/Makefile b/Makefile
-index 8e6d793..491fad7 100644
+index f254650..2a35ac1 100644
 --- a/Makefile
 +++ b/Makefile
-@@ -57,6 +57,7 @@ OSDEF=	-Dunix
- #				# (requires "s9-real.scm" EXTRA_SCM, above)
+@@ -45,6 +45,7 @@ EXTRA_SCM+=	-l s9-real.scm
+ #				# (requires the Curses extension)
  
  DEFS=	$(OSDEF) \
 +	$(CPPFLAGS) \
  	-DDEFAULT_LIBRARY_PATH="\".:~/s9fes:$(LIBDIR)\"" \
  	-DEXTENSIONS="$(EXTRA_INIT)" \
- 	-DNETWORK -DCURSES_RESET \
+ 	-DREALNUM \

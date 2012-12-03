@@ -3,11 +3,11 @@ Date: Wed, 27 Jul 2011 20:46:53 +0100
 Subject: recombobulate Makefile
 
 ---
- Makefile |  166 ++++++++++++++++++++++++++++++++++----------------------------
- 1 file changed, 91 insertions(+), 75 deletions(-)
+ Makefile |   29 +++++++++++++++++++++--------
+ 1 file changed, 21 insertions(+), 8 deletions(-)
 
 diff --git a/Makefile b/Makefile
-index 3613b13..12ec72d 100644
+index 44fc9a8..7b72cdf 100644
 --- a/Makefile
 +++ b/Makefile
 @@ -4,7 +4,7 @@
@@ -15,14 +15,17 @@ index 3613b13..12ec72d 100644
  
  # Change at least this line:
 -PREFIX= /u
-+#PREFIX= /u
++PREFIX=$(prefix)
  
- # Uncomment these to include the Unix extensions
- EXTRA_SCM+=	-l ext/unix.scm
-@@ -29,10 +29,18 @@ BUILD_ENV=	env S9FES_LIBRARY_PATH=.:lib:ext:contrib
+ # Override default compiler and flags
  CC=	gcc
- CFLAGS=	-g -Wall -ansi -pedantic -O2
+@@ -53,14 +53,21 @@ DEFS=	$(OSDEF) \
+ 	-DCURSES_RESET
  
+ # Where to install the stuff
+-BINDIR=	$(PREFIX)/bin
+-LIBDIR=	$(PREFIX)/share/s9fes
+-MANDIR=	$(PREFIX)/man/man1
 +prefix=/usr/local
 +exec_prefix=$(prefix)
 +bindir=$(exec_prefix)/bin
@@ -30,31 +33,19 @@ index 3613b13..12ec72d 100644
 +libdir=$(exec_prefix)/lib
 +mandir=$(prefix)/man
 +
- # Where to install the stuff
--BINDIR=	$(PREFIX)/bin
--LIBDIR=	$(PREFIX)/share/s9fes
--MANDIR=	$(PREFIX)/man/man1
-+BINDIR=$(bindir)
-+LIBDIR=$(libdir)/s9fes
-+DATADIR=$(datadir)/s9fes
-+MANDIR=$(mandir)/man1
++BINDIR=$(DESTDIR)$(bindir)
++LIBDIR=$(DESTDIR)$(libdir)
++MANDIR=$(DESTDIR)$(mandir)/man1
  
- # Which OS are we using (unix or plan9)?
- OSDEF=	-Dunix
-@@ -54,9 +62,11 @@ DEFS=	$(OSDEF) \
- 	-DNETWORK -DCURSES_RESET \
- 	-DBIG_REAL
+ # Set up environment to be used during the build process
+ BUILD_ENV=	env S9FES_LIBRARY_PATH=.:lib:ext:contrib
  
 -all:	s9 s9.image s9.1.gz s9.1.txt lib/syntax-rules.scm \
-+all:	s9 s9.image lib/syntax-rules.scm \
++all:	s9 s9.image s9.1 lib/syntax-rules.scm \
  		lib/matcher.scm
  
-+all:	s9.1
-+
  s9:	s9.o s9.h $(EXTRA_OBJS)
- 	$(CC) -o s9 s9.o $(EXTRA_OBJS) $(EXTRA_LIBS)
- 
-@@ -68,8 +78,14 @@ s9.image:	s9 s9.scm s9-real.scm ext/unix.scm ext/curses.scm config.scm
+@@ -74,8 +81,14 @@ s9.image:	s9 s9.scm s9-real.scm ext/unix.scm ext/curses.scm config.scm
  	rm -f s9.image && \
  		$(BUILD_ENV) ./s9 -n $(EXTRA_SCM) -l config.scm -d s9.image
  
@@ -71,156 +62,12 @@ index 3613b13..12ec72d 100644
  
  unix.o:	ext/unix.c s9.h
  	$(CC) $(CFLAGS) $(DEFS) -I . -o unix.o -c ext/unix.c
-@@ -105,84 +121,84 @@ install:	install-s9 install-util
- # old version of install(1) may need -c
- #C=-c
- install-s9:	s9 s9.scm s9.image s9.1.gz
--	install -d -m 0755 $(BINDIR)
--	install -d -m 0755 $(LIBDIR)
--	install -d -m 0755 $(LIBDIR)/help
--	install -d -m 0755 $(MANDIR)
--	install $C -m 0755 s9 $(BINDIR)
+@@ -116,7 +129,7 @@ install-s9:	s9 s9.scm s9.image s9.1.gz
+ 	install -d -m 0755 $(LIBDIR)/help
+ 	install -d -m 0755 $(MANDIR)
+ 	install $C -m 0755 s9 $(BINDIR)
 -	strip $(BINDIR)/s9
--	install $C -m 0644 s9.scm $(LIBDIR)
--	install $C -m 0644 s9.image $(LIBDIR)
--	install $C -m 0644 lib/* $(LIBDIR)
--	install $C -m 0644 ext/*.scm $(LIBDIR)
--	install $C -m 0644 contrib/* $(LIBDIR)
--	install $C -m 0644 s9.1.gz $(MANDIR)
--	install $C -m 0644 help/* $(LIBDIR)/help
--	install $C -m 0755 util/make-help-links $(LIBDIR)
--	(cd $(LIBDIR) && ./make-help-links && rm make-help-links)
-+	install -d -m 0755 $(DESTDIR)$(BINDIR)
-+	install -d -m 0755 $(DESTDIR)$(LIBDIR)
-+	install -d -m 0755 $(DESTDIR)$(LIBDIR)/help
-+	install -d -m 0755 $(DESTDIR)$(MANDIR)
-+	install $C -m 0755 s9 $(DESTDIR)$(BINDIR)
-+	echo skip strip $(DESTDIR)$(BINDIR)/s9
-+	install $C -m 0644 s9.scm $(DESTDIR)$(LIBDIR)
-+	install $C -m 0644 s9.image $(DESTDIR)$(LIBDIR)
-+	install $C -m 0644 lib/* $(DESTDIR)$(LIBDIR)
-+	install $C -m 0644 ext/*.scm $(DESTDIR)$(LIBDIR)
-+	install $C -m 0644 contrib/* $(DESTDIR)$(LIBDIR)
-+	install $C -m 0644 s9.1.gz $(DESTDIR)$(MANDIR)
-+	install $C -m 0644 help/* $(DESTDIR)$(LIBDIR)/help
-+	install $C -m 0755 util/make-help-links $(DESTDIR)$(LIBDIR)
-+	(cd $(DESTDIR)$(LIBDIR) && ./make-help-links && rm make-help-links)
- 
- install-util:
--	sed -e "s|^#! /usr/local|#! $(PREFIX)|"	\
--		<prog/s9help.scm >$(BINDIR)/s9help
--	sed -e "s|^#! /usr/local|#! $(PREFIX)|"	\
--		<prog/s9resolve.scm >$(BINDIR)/s9resolve
--	sed -e "s|^#! /usr/local|#! $(PREFIX)|"	\
--		<prog/scm2html1.scm >$(BINDIR)/scm2html
--	sed -e "s|^#! /usr/local|#! $(PREFIX)|"	\
--		<prog/scmpp.scm >$(BINDIR)/scmpp
--	-chmod +x $(BINDIR)/s9help	\
--		  $(BINDIR)/s9resolve	\
--		  $(BINDIR)/scm2html	\
--		  $(BINDIR)/scmpp
-+	sed -e "s|^#! /usr/local|#! $(prefix)|"	\
-+		<prog/s9help.scm >$(DESTDIR)$(BINDIR)/s9help
-+	sed -e "s|^#! /usr/local|#! $(prefix)|"	\
-+		<prog/s9resolve.scm >$(DESTDIR)$(BINDIR)/s9resolve
-+	sed -e "s|^#! /usr/local|#! $(prefix)|"	\
-+		<prog/scm2html1.scm >$(DESTDIR)$(BINDIR)/scm2html
-+	sed -e "s|^#! /usr/local|#! $(prefix)|"	\
-+		<prog/scmpp.scm >$(DESTDIR)$(BINDIR)/scmpp
-+	-chmod +x $(DESTDIR)$(BINDIR)/s9help	\
-+		  $(DESTDIR)$(BINDIR)/s9resolve	\
-+		  $(DESTDIR)$(BINDIR)/scm2html	\
-+		  $(DESTDIR)$(BINDIR)/scmpp
- 
- install-progs:
--	sed -e "s|^#! /usr/local|#! $(PREFIX)|"	\
--		<prog/advgen.scm >$(BINDIR)/advgen
--	sed -e "s|^#! /usr/local|#! $(PREFIX)|"	\
--		<prog/c2html1.scm >$(BINDIR)/c2html
--	sed -e "s|^#! /usr/local|#! $(PREFIX)|"	\
--		<prog/cols.scm >$(BINDIR)/cols
--	sed -e "s|^#! /usr/local|#! $(PREFIX)|"	\
--		<prog/dupes.scm >$(BINDIR)/dupes
--	sed -e "s|^#! /usr/local|#! $(PREFIX)|"	\
--		<prog/edoc.scm >$(BINDIR)/edoc
--	sed -e "s|^#! /usr/local|#! $(PREFIX)|"	\
--		<prog/htmlify.scm >$(BINDIR)/htmlify
--	sed -e "s|^#! /usr/local|#! $(PREFIX)|"	\
--		<prog/s9hts.scm >$(BINDIR)/s9hts
--	sed -e "s|^#! /usr/local|#! $(PREFIX)|"	\
--		<prog/soccat.scm >$(BINDIR)/soccat
--	-chmod +x $(BINDIR)/advgen	\
--		  $(BINDIR)/c2html	\
--		  $(BINDIR)/cols	\
--		  $(BINDIR)/dupes	\
--		  $(BINDIR)/edoc	\
--		  $(BINDIR)/htmlify	\
--		  $(BINDIR)/s9hts	\
--		  $(BINDIR)/soccat
-+	sed -e "s|^#! /usr/local|#! $(prefix)|"	\
-+		<prog/advgen.scm >$(DESTDIR)$(BINDIR)/advgen
-+	sed -e "s|^#! /usr/local|#! $(prefix)|"	\
-+		<prog/c2html1.scm >$(DESTDIR)$(BINDIR)/c2html
-+	sed -e "s|^#! /usr/local|#! $(prefix)|"	\
-+		<prog/cols.scm >$(DESTDIR)$(BINDIR)/cols
-+	sed -e "s|^#! /usr/local|#! $(prefix)|"	\
-+		<prog/dupes.scm >$(DESTDIR)$(BINDIR)/dupes
-+	sed -e "s|^#! /usr/local|#! $(prefix)|"	\
-+		<prog/edoc.scm >$(DESTDIR)$(BINDIR)/edoc
-+	sed -e "s|^#! /usr/local|#! $(prefix)|"	\
-+		<prog/htmlify.scm >$(DESTDIR)$(BINDIR)/htmlify
-+	sed -e "s|^#! /usr/local|#! $(prefix)|"	\
-+		<prog/s9hts.scm >$(DESTDIR)$(BINDIR)/s9hts
-+	sed -e "s|^#! /usr/local|#! $(prefix)|"	\
-+		<prog/soccat.scm >$(DESTDIR)$(BINDIR)/soccat
-+	-chmod +x $(DESTDIR)$(BINDIR)/advgen	\
-+		  $(DESTDIR)$(BINDIR)/c2html	\
-+		  $(DESTDIR)$(BINDIR)/cols	\
-+		  $(DESTDIR)$(BINDIR)/dupes	\
-+		  $(DESTDIR)$(BINDIR)/edoc	\
-+		  $(DESTDIR)$(BINDIR)/htmlify	\
-+		  $(DESTDIR)$(BINDIR)/s9hts	\
-+		  $(DESTDIR)$(BINDIR)/soccat
- 
- deinstall:
--	rm -f $(LIBDIR)/help/* && rmdir $(LIBDIR)/help
--	rm -f $(LIBDIR)/* && rmdir $(LIBDIR)
--	rm -f $(BINDIR)/s9
--	-rmdir $(BINDIR)
--	-rmdir $(MANDIR)
-+	rm -f $(DESTDIR)$(LIBDIR)/help/* && rmdir $(DESTDIR)$(LIBDIR)/help
-+	rm -f $(DESTDIR)$(LIBDIR)/* && rmdir $(DESTDIR)$(LIBDIR)
-+	rm -f $(DESTDIR)$(BINDIR)/s9
-+	-rmdir $(DESTDIR)$(BINDIR)
-+	-rmdir $(DESTDIR)$(MANDIR)
- 
- deinstall-util:
--	rm -f $(BINDIR)/s9help		\
--	      $(BINDIR)/s9resolve	\
--	      $(BINDIR)/scm2html	\
--	      $(BINDIR)/scmpp
-+	rm -f $(DESTDIR)$(BINDIR)/s9help		\
-+	      $(DESTDIR)$(BINDIR)/s9resolve	\
-+	      $(DESTDIR)$(BINDIR)/scm2html	\
-+	      $(DESTDIR)$(BINDIR)/scmpp
- 
- deinstall-progs:
--	rm -f $(BINDIR)/advgen		\
--	      $(BINDIR)/c2html		\
--	      $(BINDIR)/cols		\
--	      $(BINDIR)/dupes		\
--	      $(BINDIR)/edoc		\
--	      $(BINDIR)/htmlify		\
--	      $(BINDIR)/s9hts		\
--	      $(BINDIR)/soccat
-+	rm -f $(DESTDIR)$(BINDIR)/advgen		\
-+	      $(DESTDIR)$(BINDIR)/c2html		\
-+	      $(DESTDIR)$(BINDIR)/cols		\
-+	      $(DESTDIR)$(BINDIR)/dupes		\
-+	      $(DESTDIR)$(BINDIR)/edoc		\
-+	      $(DESTDIR)$(BINDIR)/htmlify		\
-+	      $(DESTDIR)$(BINDIR)/s9hts		\
-+	      $(DESTDIR)$(BINDIR)/soccat
- 
- tabs:
- 	@find . -name \*.scm -exec grep -l "	" {} \;
++	echo skip strip $(BINDIR)/s9
+ 	install $C -m 0644 s9.scm $(LIBDIR)
+ 	install $C -m 0644 s9.image $(LIBDIR)
+ 	install $C -m 0644 lib/* $(LIBDIR)

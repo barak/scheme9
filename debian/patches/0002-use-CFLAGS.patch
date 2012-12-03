@@ -1,0 +1,32 @@
+From: "Barak A. Pearlmutter" <barak+git@cs.nuim.ie>
+Date: Thu, 12 Jul 2012 11:56:45 +0100
+Subject: use CFLAGS
+
+Don't specify -O2 and -g (on by default) so they can be overwritten
+by builder, e.g., dpkg-buildflags.
+---
+ Makefile |    4 ++--
+ 1 file changed, 2 insertions(+), 2 deletions(-)
+
+diff --git a/Makefile b/Makefile
+index 7b72cdf..f254650 100644
+--- a/Makefile
++++ b/Makefile
+@@ -8,7 +8,7 @@ PREFIX=$(prefix)
+ 
+ # Override default compiler and flags
+ CC=	gcc
+-CFLAGS=	-g -Wall -ansi -pedantic -O2
++CFLAGS+=	-Wall -ansi -pedantic
+ 
+ # Uncomment the following, if you get "wrong interpreter" errors on OSX
+ #LDFLAGS+=	-Wl,-no_pie
+@@ -71,7 +71,7 @@ all:	s9 s9.image s9.1 lib/syntax-rules.scm \
+ 		lib/matcher.scm
+ 
+ s9:	s9.o s9.h $(EXTRA_OBJS)
+-	$(CC) -o s9 $(LDFLAGS) s9.o $(EXTRA_OBJS) $(EXTRA_LIBS)
++	$(CC) $(CFLAGS) -o s9 $(LDFLAGS) s9.o $(EXTRA_OBJS) $(EXTRA_LIBS)
+ 
+ s9.o:	s9.c s9-real.c s9.h
+ 	$(CC) -o s9.o $(CFLAGS) $(DEFS) -c s9.c
