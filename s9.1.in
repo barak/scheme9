@@ -44,7 +44,7 @@
 .B "s9
 - Scheme Interpreter
 .SH USAGE
-.B "s9 [\-h?] [\-i name] [\-gnqv] [-m size[m]] [-f prog [args]]
+.B "s9 [\-h?] [\-i name] [\-gnqv] [\-m size[m]] [\-f prog [args]]
 .B "   [\-l prog] [\-t count] [\-d image] [\-\- [args]]
 .SH "DESCRIPTION
 .B "Scheme 9 from Empty Space
@@ -86,7 +86,7 @@ and exit (implies \-q). When there are any
 they are passed to the
 .IR program ,
 where they can be extracted using the
-.B command-line
+.B command\-line
 procedure.
 .in -4
 .B "\-g
@@ -111,7 +111,7 @@ before entering the REPL or processing
 .in +4
 Set memory limit to
 .I N
-kilo (or mega) nodes (\fB-m 0\fP
+kilo (or mega) nodes (\fB\-m 0\fP
 means no limit; use with care!).
 .in -4
 .B "\-q
@@ -133,7 +133,7 @@ Display version and exit.
 Arguments following
 .B \-\-
 are not interpreted by S9fES, but passed to the
-.B command-line
+.B command\-line
 procedure instead (requires the
 .B unix
 extension).
@@ -144,7 +144,7 @@ just type \fB(help)\fP or \fB,h\fP to invoke the online help system.
 When the online help system is not loaded, you will have to run the
 following command first:
 .sp
-\fB(load-from-library "help.scm")\fP
+\fB(load\-from\-library "help.scm")\fP
 .SH "META COMMANDS
 In order to facilitate the invocation of frequently-used top-level
 procedures,
@@ -158,7 +158,7 @@ prompt):
 .nf
 \fB,a text\fP  =  (apropos "text")
 \fB,h text\fP  =  (help "text")
-\fB,l file\fP  =  (load-from-library "file")
+\fB,l file\fP  =  (load\-from\-library "file")
 \fB,q     \fP  =  (sys:exit)
 .fi
 .in -4
@@ -186,7 +186,7 @@ The same type of bracket must be used on both ends of a list.
 These S9fES procedures are not in R4RS:
 .sp
 .ne 3
-.B "(bit-op integer1 integer2 integer3 ...)  ==>  integer | #f
+.B "(bit\-op integer1 integer2 integer3 ...)  ==>  integer | #f
 .in +4
 Implement a variety of bitwise operations. See the
 .B bit\-op
@@ -298,17 +298,17 @@ return \fB#f\fP.
 .in -4
 .sp
 .ne 3
-.B "(macro-expand object)  ==>  object
+.B "(macro\-expand object)  ==>  object
 .br 
-.B "(macro-expand-1 object)  ==>  object
+.B "(macro\-expand\-1 object)  ==>  object
 .in +4
 If
 .I object
 is a list resembling a macro application, return the expanded form,
 else return the object.
-.B Macro-expand-1
+.B Macro\-expand\-1
 expands macros only once while
-.B macro-expand
+.B macro\-expand
 expands them recursively.
 .in -4
 .sp
@@ -327,7 +327,7 @@ separated by spaces.
 .in -4
 .sp
 .ne 2
-.B "(require-extension name ...)  ==>  unspecific
+.B "(require\-extension name ...)  ==>  unspecific
 .in +4
 Require the named extensions to be compiled-in. Signal an error
 if not all of the required extensions are present.
@@ -403,20 +403,20 @@ returns the symbols that were being traced before its invocation.
 .in -4
 .sp
 .ne 3
-.B "(vector-append vector ...)  ==>  vector
+.B "(vector\-append vector ...)  ==>  vector
 .in +4
 Return a fresh vector containing the concatenation of the given
 vectors.
 .in -4
 .sp
 .ne 3
-.B "(vector-copy vector)                           ==>  vector
+.B "(vector\-copy vector)                           ==>  vector
 .br
-.B "(vector-copy vector integer)                   ==>  vector
+.B "(vector\-copy vector integer)                   ==>  vector
 .br
-.B "(vector-copy vector integer1 integer2)         ==>  vector
+.B "(vector\-copy vector integer1 integer2)         ==>  vector
 .br
-.B "(vector-copy vector integer1 integer2 object)  ==>  vector
+.B "(vector\-copy vector integer1 integer2 object)  ==>  vector
 .in +4
 Return a copy of the given vector. When
 .I integer1
@@ -528,11 +528,11 @@ work, though:
 .B "(define\-syntax (d x) (and (pair? x) `(d ,(cdr x)))) ; OK"
 .sp
 The body of
-.B define-syntax
+.B define\-syntax
 may be a
-.B syntax-rules
+.B syntax\-rules
 transformer, as described in R4RS, if the
-.B syntax-rules
+.B syntax\-rules
 extension has been loaded.
 .SH "TECHNICAL DETAILS
 S9fES is a tree-walking interpreter using deep binding and hashed
@@ -557,7 +557,7 @@ for a heap image file or the library source code. The heap image file
 is the name of the interpreter with a
 .I .image
 suffix appended. An alternative name can be specified with the
-.B -i
+.B \-i
 option (see
 .BR OPTIONS ).
 The default library source code is named
@@ -610,7 +610,7 @@ option was specified.)
 Enter REPL.
 .in +4
 Interactive mode is only entered, when no
-.I -f
+.I \-f
 option was specified.
 .in -4
 .SH "ALLOCATION STRATEGY
@@ -657,7 +657,7 @@ does not work, but
 .B `,`x
 does).
 .br
-.B Syntax-rules
+.B Syntax\-rules
 is not fully hygienic.
 .br
 Multiple
