@@ -68,7 +68,7 @@ in the entire
 .B must
 be the first one of the s9 command.
 .br
-When `-' is specified as \fIname\fP, no heap image will be loaded,
+When `\-' is specified as \fIname\fP, no heap image will be loaded,
 and the core library will be read from the source file `s9.scm'.
 .in -4
 .B "\-d file
