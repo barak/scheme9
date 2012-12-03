@@ -141,6 +141,13 @@
                                               "**      ##")
 )
 
+(load-from-library "choose.scm")
+(%test
+  (choose 23 1)  ==>  23
+  (choose 23 2)  ==>  253
+  (choose 23 3)  ==>  1771
+)
+
 (load-from-library "combine.scm")
 (%test
   (combine 2 '(a b c))   ==>  ((a b) (a c) (b c))
@@ -275,6 +282,9 @@
   ((curry + 1) 9)              ==>  10
   ((curry map list) '(1 2 3))  ==>  ((1) (2) (3))
 ;
+  ((curry  - 1) 10)  ==>  -9
+  ((curryr - 1) 10)  ==>  9
+;
   ((fork < car) '(1 . a) '(2 . b) '(3 . c))  ==>  #t
   ((fork append reverse) '(3 2 1) '(6 5 4))  ==>  (1 2 3 4 5 6)
 )
@@ -322,6 +332,7 @@
 (load-from-library "iota.scm")
 (%test
   (iota 7)       ==>  (1 2 3 4 5 6 7)
+  (iota 17 21)   ==>  (17 18 19 20 21)
   (iota* 17 21)  ==>  (17 18 19 20)
   (iota* 1 1)    ==>  ()
 )
@@ -797,7 +808,6 @@
 (%test
   (subvector '#(a b c d e) 2 4)  ==>  #(c d)
   (subvector '#(a b c d e) 2 2)  ==>  #()
-  (vector-copy '#(a b c))        ==>  #(a b c)
 )
 
 (load-from-library "sum.scm")

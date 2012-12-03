@@ -1,7 +1,6 @@
 
                 Documentation of FORMAT Version 2.3
 
-
 Please consult a Common LISP format reference manual for a detailed
 description of the format string syntax. (I haven't the time to
 copy the CL format standard text in here). For a demonstration of

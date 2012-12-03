@@ -1,6 +1,7 @@
 PRE.ccode { background: #f6f0ea;
             line-height: 130%;
-            padding: 0.5em; }
+            padding: 0.5em;
+            border: 1px solid #808080; }
 
 PRE.ccode SPAN.co { color: #600000; } /* comment */
 PRE.ccode SPAN.cp { color: #505050; } /* punctuation */

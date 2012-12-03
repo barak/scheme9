@@ -2,7 +2,7 @@
 ; By Nils M Holm, 2010
 ; Placed in the Public Domain
 ;
-; (makr-rbt procedure)                   ==>  rb-tree
+; (make-rbt procedure)                   ==>  rb-tree
 ; (rbt-find rb-tree object)              ==>  object | #f
 ; (rbt-insert rb-tree object1 object2)   ==>  rb-tree
 ; (rbt-rebuild rb-tree object)           ==>  rb-tree

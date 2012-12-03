@@ -34,7 +34,7 @@ of a command, the remaining parameters can be omitted, as in
 But when, for example, the first and the third parameters is to
 be specified, an empty parameter has to be included, as in
 
-        ~10D,,'.D
+        ~10,,,'.D
 
 Default values are assumed for parameters that are not specified.
 

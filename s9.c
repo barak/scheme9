@@ -9,11 +9,11 @@
 /*
  * Use -DNO_SIGNALS to disable POSIX signal handlers.
  * Use -DBITS_PER_WORD_64 on 64-bit systems.
- * Use -DBIG_REAL to enable real number support
+ * Use -DREALNUM to enable real number support
  *     (also add "s9-real.scm" to the heap image).
  */
 
-#define VERSION "2012-11-01"
+#define VERSION "2012-11-30"
 
 #define EXTERN
  #include "s9.h"
@@ -128,6 +128,18 @@ void pr(char *s) {
  * Error Handling
  */
 
+void reset_tty(void) {
+#ifdef CURSES_RESET
+	cell pp_curs_endwin(cell);
+	pp_curs_endwin(NIL);
+#endif
+}
+
+void bye(int n) {
+	reset_tty();
+	exit(n);
+}
+
 void print_form(cell n);
 
 void print_error_form(cell n) {
@@ -189,10 +201,8 @@ cell error(char *msg, cell expr) {
 	nl();
 	print_calltrace();
 	Output_port = oport;
-	if (Quiet_mode) {
-		reset_tty();
-		exit(1);
-	}
+	if (Quiet_mode)
+		bye(1);
 	return UNSPECIFIC;
 }
 
@@ -200,8 +210,7 @@ void fatal(char *msg) {
 	pr("fatal ");
 	Error_flag = 0;
 	error(msg, NOEXPR);
-	reset_tty();
-	exit(2);
+	bye(2);
 }
 
 /*
@@ -626,12 +635,12 @@ cell quote(cell n, cell quotation) {
 	return cons(quotation, q);
 }
 
-#ifdef BIG_REAL
+#ifdef REALNUM
 
  #include "s9-real.c"
  #define SYM_CHARS	"!@#$%^&*-/_+=~.?<>:"
 
-#else /* !BIG_REAL */
+#else /* !REALNUM */
 
  #define string_to_number(x)	string_to_bignum(x)
  #define SYM_CHARS	"!@$%^&*-/_+=~.?<>:"
@@ -699,7 +708,7 @@ cell quote(cell n, cell quotation) {
 	return new_atom(T_INTEGER, n);
  }
 
-#endif /* !BIG_REAL */
+#endif /* !REALNUM */
 
 /* Create a character literal. */
 cell make_char(int x) {
@@ -1059,7 +1068,7 @@ cell read_form(int flags) {
 		case 'd':	return bignum_read("#d", 10);
 		case 'o':	return bignum_read("#o", 8);
 		case 'x':	return bignum_read("#x", 16);
-#ifdef BIG_REAL
+#ifdef REALNUM
 		case 'e':	return read_real_number(0);
 		case 'i':	return read_real_number(1);
 #endif
@@ -1333,7 +1342,7 @@ void _print_form(cell n, int depth) {
 		if (print_char(n)) return;
 		if (print_procedure(n)) return;
 		if (print_continuation(n)) return;
-#ifdef BIG_REAL
+#ifdef REALNUM
 		if (print_real(n)) return;
 #endif
 		if (print_integer(n)) return;
@@ -1878,8 +1887,6 @@ cell sf_define(int syntax, cell x, int *pc, int *ps) {
 	*pc = 2;
 	if (syntax)
 		*ps = EV_MACRO;
-	else if (pair_p(a) && car(a) == S_lambda)
-		*ps = EV_DEFINE;	/* use dynamic scoping */
 	else
 		*ps = EV_SET_VAL;
 	return a;
@@ -1917,7 +1924,7 @@ cell make_integer(cell i) {
 cell integer_value(char *src, cell x) {
 	char	msg[100];
 
-#ifdef BIG_REAL
+#ifdef REALNUM
 	x = integer_argument(src, x);
 	if (x == NIL)
 		return 0;
@@ -2707,7 +2714,7 @@ cell pp_equal(cell x) {
 }
 
 int even_p(char *who, cell x) {
-#ifdef BIG_REAL
+#ifdef REALNUM
 	x = integer_argument(who, x);
 	if (x == NIL)
 		return UNDEFINED;
@@ -3314,8 +3321,7 @@ cell pp_substring(cell x) {
 	int	k = string_len(cadr(x))-1;
 	int	p0 = integer_value("substring", caddr(x));
 	int	pn = integer_value("substring", cadddr(x));
-	char	*src = string(cadr(x));
-	char	*dst;
+	char	*src, *dst;
 	cell	n;
 
 	if (p0 < 0 || p0 > k || pn < 0 || pn > k || pn < p0) {
@@ -3325,6 +3331,7 @@ cell pp_substring(cell x) {
 	}
 	n = make_string("", pn-p0);
 	dst = string(n);
+	src = string(cadr(x));
 	if (pn-p0 != 0)
 		memcpy(dst, &src[p0], pn-p0);
 	dst[pn-p0] = 0;
@@ -3352,6 +3359,69 @@ cell pp_make_vector(cell x) {
 
 cell pp_vector(cell x) {
 	return list_to_vector(cdr(x), "vector: improper list", 0);
+}
+
+cell pp_vector_append(cell x) {
+	cell	n, p, *ov, *nv;
+	int	i, j, k, total;
+
+	total = 0;
+	for (p = cdr(x); p != NIL; p = cdr(p))
+		if (vector_p(car(p)))
+			total += vector_len(car(p));
+		else
+			return error("vector-append: expected vector, got",
+					car(p));
+	n = new_vec(T_VECTOR, total * sizeof(cell));;
+	nv = vector(n);
+	j = 0;
+	for (p = cdr(x); p != NIL; p = cdr(p)) {
+		ov = vector(car(p));
+		k = vector_len(car(p));
+		for (i = 0; i < k; i++)
+			nv[j++] = ov[i];
+	}
+	return n;
+}
+
+cell pp_vector_copy(cell x) {
+	cell	n, vec, *ov, *nv;
+	int	k0 = 0, kn, k = vector_len(cadr(x));
+	int	i, j;
+	cell	fill = UNSPECIFIC;
+	char	err[] = "vector-copy: expected integer, got";
+	char	name[] = "vector-copy";
+
+	kn = k;
+	vec = cadr(x);
+	x = cddr(x);
+	if (x != NIL) {
+		if (!number_p(car(x))) return error(err, car(x));
+		k0 = integer_value(name, car(x));
+		x = cdr(x);
+	}
+	if (x != NIL) {
+		if (!number_p(car(x))) return error(err, car(x));
+		kn = integer_value(name, car(x));
+		x = cdr(x);
+	}
+	if (k0 > kn)
+		return error("vector-copy: bad range", NOEXPR);
+	if (x != NIL) {
+		fill = car(x);
+		x = cdr(x);
+	}
+	if (x != NIL)
+		return error("vector-copy: too many arguments", NOEXPR);
+	n = new_vec(T_VECTOR, (kn-k0) * sizeof(cell));
+	nv = vector(n);
+	ov = vector(vec);
+	for (j = 0, i = k0; i < kn; i++, j++)
+		if (i >= k)
+			nv[j] = fill;
+		else
+			nv[j] = ov[i];
+	return n;
 }
 
 cell pp_vector_fill_b(cell x) {
@@ -3732,10 +3802,17 @@ cell pp_gensym(cell x) {
 		pre = "g";
 		k = 1;
 	}
-	else {
+	else if (string_p(cadr(x))) {
 		pre = string(cadr(x));
 		k = string_len(cadr(x));
 	}
+	else if (symbol_p(cadr(x))) {
+		pre = symbol_name(cadr(x));
+		k = symbol_len(cadr(x));
+	}
+	else
+		return error("gensym: expected string or symbol, got",
+				cadr(x));
 	if (k > 100)
 		return error("gensym: prefix too long", cadr(x));
 	return gensym(pre);
@@ -3841,10 +3918,6 @@ cell pp_symbols(cell x) {
 	return n;
 }
 
-cell pp_syntax_p(cell x) {
-	return syntax_p(cadr(x))? TRUE: FALSE;
-}
-
 cell pp_trace(cell x) {
 	cell	n = Trace_list;
 
@@ -3947,7 +4020,7 @@ PRIM Primitives[] = {
  { "even?",               pp_even_p,              1,  1, { REA,___,___ } },
  { "error",               pp_error,               1,  2, { STR,___,___ } },
  { "file-exists?",        pp_file_exists_p,       1,  1, { STR,___,___ } },
- { "gensym",              pp_gensym,              0,  1, { STR,___,___ } },
+ { "gensym",              pp_gensym,              0,  1, { ___,___,___ } },
  { ">",                   pp_greater,             2, -1, { REA,___,___ } },
  { ">=",                  pp_greater_equal,       2, -1, { REA,___,___ } },
  { "input-port?",         pp_input_port_p,        1,  1, { ___,___,___ } },
@@ -4017,12 +4090,13 @@ PRIM Primitives[] = {
  { "symbol?",             pp_symbol_p,            1,  1, { ___,___,___ } },
  { "symbol->string",      pp_symbol_to_string,    1,  1, { SYM,___,___ } },
  { "symbols",             pp_symbols,             0,  0, { ___,___,___ } },
- { "syntax?",             pp_syntax_p,            1,  1, { ___,___,___ } },
  { "*",                   pp_times,               0, -1, { REA,___,___ } },
  { "trace",               pp_trace,               0, -1, { ___,___,___ } },
  { "unquote",             pp_unquote,             1,  1, { ___,___,___ } },
  { "unquote-splicing",    pp_unquote_splicing,    1,  1, { ___,___,___ } },
  { "vector",              pp_vector,              0, -1, { ___,___,___ } },
+ { "vector-append",       pp_vector_append,       0, -1, { VEC,___,___ } },
+ { "vector-copy",         pp_vector_copy,         1, -1, { VEC,INT,INT } },
  { "vector-fill!",        pp_vector_fill_b,       2,  2, { VEC,___,___ } },
  { "vector-length",       pp_vector_length,       1,  1, { VEC,___,___ } },
  { "vector-set!",         pp_vector_set_b,        3,  3, { VEC,INT,___ } },
@@ -4032,7 +4106,7 @@ PRIM Primitives[] = {
  { "write",               pp_write,               1,  2, { ___,OUP,___ } },
  { "write-char",          pp_write_char,          1,  2, { CHR,OUP,___ } },
  { "zero?",               pp_zero_p,              1,  1, { REA,___,___ } },
-#ifdef BIG_REAL
+#ifdef REALNUM
  { "/",                   pp_divide,              1, -1, { REA,___,___ } },
  { "exact->inexact",      pp_exact_to_inexact,    1,  1, { REA,___,___ } },
  { "exact?",              pp_exact_p,             1,  1, { REA,___,___ } },
@@ -4042,7 +4116,7 @@ PRIM Primitives[] = {
  { "inexact?",            pp_inexact_p,           1,  1, { REA,___,___ } },
  { "mantissa",            pp_mantissa,            1,  1, { REA,___,___ } },
  { "real?",               pp_real_p,              1,  1, { ___,___,___ } },
-#endif /* BIG_REAL */
+#endif /* REALNUM */
  { NULL }
 };
 
@@ -4223,19 +4297,14 @@ cell restore_state(void) {
 }
 
 cell bind_arguments(cell n, int tail) {
-	cell	p, v, a, e;
+	cell	p, v, a;
 	cell	rib;
 
 	save(Environment);
 	p = car(n);
-	v = cadr(p);
-	e = cdddr(p);
 	a = cdr(n);
-	if (e != NIL)
-		Environment = e;
-	else if (!tail)
-		while (cdr(Environment) != NIL)
-			Environment = cdr(Environment);
+	v = cadr(p);
+	Environment = cdddr(p);
 	rib = NIL;
 	save(rib);
 	while (pair_p(v)) {
@@ -4274,11 +4343,6 @@ int tail_call(void) {
 	save(Tmp);
 	Tmp = NIL;
 	return 1;
-}
-
-void make_dynamic(cell x) {
-	if (procedure_p(x))
-		cdddr(x) = NIL; /* clear lexical env. */
 }
 
 void trace(cell name, cell expr) {
@@ -4523,11 +4587,9 @@ cell _eval(cell x, int cbn) {
 			c = 1;
 			break;
 		}
-		else if (s == EV_SET_VAL || s == EV_DEFINE || s == EV_MACRO) {
+		else if (s == EV_SET_VAL || s == EV_MACRO) {
 			char err[] = "define-syntax: expected procedure, got";
 
-			if (s == EV_DEFINE)
-				make_dynamic(Acc);
 			if (s == EV_MACRO) {
 				if (procedure_p(Acc)) {
 					Acc = new_atom(T_SYNTAX, Acc);
@@ -4590,13 +4652,6 @@ void clear_leftover_envs(void) {
 		Environment = cdr(Environment);
 }
 
-void reset_tty(void) {
-#ifdef CURSES_RESET
-	cell pp_curs_endwin(cell);
-	pp_curs_endwin(NIL);
-#endif
-}
-
 #ifndef NO_SIGNALS
  void keyboard_interrupt(int sig) {
 	Input_port = 0;
@@ -4611,8 +4666,7 @@ void reset_tty(void) {
  }
 
  void terminated(int sig) {
-	reset_tty();
-	exit(1);
+	bye(1);
  }
 #endif
 
@@ -4866,7 +4920,7 @@ void load_library(char *argv0) {
 		)
 			fatal("load_library: path too long");
 		sprintf(libfile, "%s/%s.image", libdir, image);
-		if (load_image(libfile) == 0) {
+		if (strcmp(image, "-") && load_image(libfile) == 0) {
 			free(path);
 			/* *library-path* is overwritten by load_image() */
 			new = get_library_path();
@@ -4877,7 +4931,8 @@ void load_library(char *argv0) {
 			>= sizeof(libfile)-1
 		)
 			fatal("load_library: path too long");
-		sprintf(libfile, "%s/%s.scm", libdir, image);
+		sprintf(libfile, "%s/%s.scm", libdir,
+			!strcmp(image, "-")? "s9": image);
 		if (load(libfile) == 0) {
 			free(path);
 			return;
@@ -4945,7 +5000,7 @@ void make_initial_env(void) {
 	Call_magic = NULL;
 	add_primitives(NULL, Primitives);
 	EXTENSIONS;
-#ifdef BIG_REAL
+#ifdef REALNUM
 	add_primitives("realnums", NULL);
 #endif
 	Environment = cons(Environment, NIL);
@@ -5049,8 +5104,7 @@ void usage(int quit) {
 	nl();
 	pr("          [-l prog] [-t count] [-d image] [-- [args]]");
 	nl();
-	if (quit)
-		exit(1);
+	if (quit) bye(1);
 }
 
 void long_usage() {
@@ -5060,6 +5114,7 @@ void long_usage() {
 	pr("-h              display this summary (also -?)"); nl();
 	pr("-i name         base name of image file (must be first option!)");
 	nl();
+	pr("-i -            ignore image, load s9.scm instead"); nl();
 	pr("-d file         dump heap image to file and exit"); nl();
 	pr("-f file [args]  run program and exit (implies -q)"); nl();
 	pr("-g              print GC summaries (-gg = more)"); nl();
@@ -5093,7 +5148,13 @@ void version_info(char *name) {
  #endif
 #endif
 	nl();
-	pr("heap image:      "); pr(name); pr(".image"); nl();
+	pr("heap image:      ");
+	if (!strcmp(name, "-"))
+		pr("n/a");
+	else {
+		pr(name); pr(".image");
+	}
+	nl();
 	pr("library path:    "); pr(string(box_value(S_library_path))); nl();
 	pr("memory limit:    ");
 	if (Memory_limit_kn) {
@@ -5112,7 +5173,7 @@ void version_info(char *name) {
 			pr(" ");
 	}
 	nl();
-#ifdef BIG_REAL
+#ifdef REALNUM
 	pr("mantissa size:   ");
 	sprintf(buf, "%d", MANTISSA_SIZE);
 	pr(buf); pr(" digits"); nl();
@@ -5146,7 +5207,7 @@ int main(int argc, char **argv) {
 	if (argc > 1 && !strcmp(argv[1], "-i")) {
 		if (argc < 2) {
 			usage(1);
-			exit(1);
+			bye(1);
 		}
 		argv += 2;
 	}
@@ -5169,7 +5230,7 @@ int main(int argc, char **argv) {
 				if (argv[1] == NULL)
 					usage(1);
 				dump_image(argv[1]);
-				exit(Error_flag? 1: 0);
+				bye(Error_flag? 1: 0);
 				break;
 			case 'f':
 			case 'l':
@@ -5185,9 +5246,9 @@ int main(int argc, char **argv) {
 						make_string(argv[1],
 							(int)strlen(argv[1])));
 				if (Error_flag)
-					exit(1);
+					bye(1);
 				if (run_script)
-					exit(0);
+					bye(0);
 				argv++;
 				*argv = &(*argv)[strlen(*argv)];
 				break;
@@ -5221,12 +5282,12 @@ int main(int argc, char **argv) {
 				break;
 			case 'v':
 				version_info(argv0);
-				exit(0);
+				bye(0);
 				break;
 			case 'h':
 			case '?':
 				long_usage();
-				exit(0);
+				bye(0);
 				break;
 			default:
 				usage(1);
@@ -5246,6 +5307,7 @@ int main(int argc, char **argv) {
 	if (!ignore_rc)
 		load_rc();
 	repl();
+	reset_tty();
 	return 0;
 }
 

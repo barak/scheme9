@@ -1,8 +1,6 @@
 S9 EXT  (sys:utimes string)   ==>  unspecific
-        (sys:lutimes string)  ==>  unspecific
 
 Set the access and modification time of the file STRING to
-the current time. SYS:UTIMES dereferences symlinks while
-SYS:LUTIMES operates on the symlinks themselves.
+the current time.
 
 (sys:utimes "file")  ==>  unspecific

@@ -139,7 +139,10 @@ cell pp_curs_get_magic_value(cell x) {
 	if (!strcmp(s, "A_STANDOUT")) return make_integer(A_STANDOUT);
 	if (!strcmp(s, "A_UNDERLINE")) return make_integer(A_UNDERLINE);
 	if (!strcmp(s, "KEY_BACKSPACE")) return make_integer(KEY_BACKSPACE);
+	if (!strcmp(s, "KEY_DC")) return make_integer(KEY_DC);
 	if (!strcmp(s, "KEY_DOWN")) return make_integer(KEY_DOWN);
+	if (!strcmp(s, "KEY_END")) return make_integer(KEY_END);
+	if (!strcmp(s, "KEY_IC")) return make_integer(KEY_IC);
 	if (!strcmp(s, "KEY_HOME")) return make_integer(KEY_HOME);
 	if (!strcmp(s, "KEY_LEFT")) return make_integer(KEY_LEFT);
 	if (!strcmp(s, "KEY_NPAGE")) return make_integer(KEY_NPAGE);
@@ -191,12 +194,53 @@ cell pp_curs_insch(cell x) {
 	return UNSPECIFIC;
 }
 
+#ifdef CURSES_COLOR
+
+cell pp_curs_initscr(cell x) {
+	int colors[] = { COLOR_BLACK, COLOR_BLUE, COLOR_GREEN,
+			 COLOR_CYAN, COLOR_RED, COLOR_MAGENTA,
+			 COLOR_YELLOW, COLOR_WHITE };
+	int	f, b;
+
+	if (Running) return UNSPECIFIC;
+	initscr();
+	start_color();
+	for (b=0; b<8; b++) {
+		for (f=0; f<8; f++) {
+			init_pair(b*8+f, colors[f], colors[b]);
+		}
+	}
+	Running = 1;
+	return UNSPECIFIC;
+}
+
+cell pp_curs_color_set(cell x) {
+	int	f, b;
+	char	name[] = "curs:color-set";
+
+	f = integer_value(name, cadr(x));
+	b = integer_value(name, caddr(x));
+	color_set(b<<3|f, NULL);
+	return UNSPECIFIC;
+}
+
+cell pp_curs_has_colors(cell x) {
+	return has_colors()? S9_TRUE: S9_FALSE;
+}
+
+#else /* !CURSES_COLOR */
+
+cell pp_curs_has_colors(cell x) {
+	return S9_FALSE;
+}
 cell pp_curs_initscr(cell x) {
 	if (Running) return UNSPECIFIC;
 	initscr();
 	Running = 1;
 	return UNSPECIFIC;
 }
+
+#endif /* !CURSES_COLOR */
 
 cell pp_curs_insertln(cell x) {
 	if (!Running) return UNSPECIFIC;
@@ -392,6 +436,9 @@ struct Primitive_procedure Curs_primitives[] = {
  { "curs:clearok",          pp_curs_clearok,         1,  1, { BOL,___,___ } },
  { "curs:clrtobot",         pp_curs_clrtobot,        0,  0, { ___,___,___ } },
  { "curs:clrtoeol",         pp_curs_clrtoeol,        0,  0, { ___,___,___ } },
+#ifdef CURSES_COLOR
+ { "curs:color-set",        pp_curs_color_set,       2,  2, { INT,INT,___ } },
+#endif /* CURSES_COLOR */
  { "curs:cols",             pp_curs_cols,            0,  0, { ___,___,___ } },
  { "curs:cursoff",          pp_curs_cursoff,         0,  0, { ___,___,___ } },
  { "curs:curson",           pp_curs_curson,          0,  0, { ___,___,___ } },
@@ -404,6 +451,7 @@ struct Primitive_procedure Curs_primitives[] = {
  { "curs:get-magic-value",  pp_curs_get_magic_value, 1,  1, { STR,___,___ } },
  { "curs:getch",            pp_curs_getch,           0,  0, { ___,___,___ } },
  { "curs:getyx",            pp_curs_getyx,           0,  0, { ___,___,___ } },
+ { "curs:has-colors",       pp_curs_has_colors,      0,  0, { ___,___,___ } },
  { "curs:idlok",            pp_curs_idlok,           1,  1, { BOL,___,___ } },
  { "curs:inch",             pp_curs_inch,            0,  0, { ___,___,___ } },
  { "curs:insch",            pp_curs_insch,           1,  1, { CHR,___,___ } },

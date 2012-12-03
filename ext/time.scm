@@ -2,16 +2,20 @@
 ; By Nils M Holm, 2010
 ; Placed in the Public Domain
 ;
-; (time form)  ==>  object
+; (time* expression)  ==>  object
+; (time  form)        ==>  object
 ;
-; The TIME procedures evaluates FORM, measuring the number of
-; allocations, reductions, etc with the STATS procedure. It also
+; The TIME* procedures evaluates EXPRESSION, measuring the number
+; of allocations, reductions, etc with the STATS procedure. It also
 ; measures the time spent reducing FORM. When finished, it prints
 ; some interesting data and returns the normal form of FORM.
 ; The FORM must be quoted or it will be reduced *before* running
 ; TIME.
 ;
-; (Example): (time '(begin (expt 2 10000) #t))  ==>  #t
+; The TIME special form is like TIME*, but does not require its
+; argument to be quoted.
+;
+; (Example): (time (begin (expt 2 10000) #t))  ==>  #t
 ;            ;               1.8990 seconds
 ;            ;                  350 reduction steps
 ;            ;            8,327,846 conses allocated
@@ -23,7 +27,7 @@
 
 (load-from-library "format.scm")
 
-(define (time form)
+(define (time* form)
   (letrec
     ((sval->integer
        (lambda (sval)
@@ -65,3 +69,6 @@
                (sval->integer (caddr sval*))
                (sval->integer (cadddr sval*)))
     (car result))))
+
+(define-syntax (time form)
+  `(time* ',form))

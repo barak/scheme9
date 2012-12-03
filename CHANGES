@@ -1,6 +1,58 @@
 
 Change Log
 
+2012-11-30
+	Fix: SUBSTRING had a GC race condition, which could result in
+	the extraction of garbage. (s9.c)
+2012-11-27
+	Added SRFI-43-compliant VECTOR-COPY and VECTOR-APPEND primitives.
+	(s9.c, s9.scm)
+2012-11-26
+	Fix: REM-PROP failed to remove properties from empty lists. (lib/)
+	Removed SYS:LCHOWN and SYS:LUTIMES system calls. Caused only
+	portability issues. (ext/)
+2012-11-25
+	Added S9SYMBOLS program (dump symbols from help pages). (prog/)
+2012-11-24
+	Added "-i -" (don't load heap image) option. (s9.c)
+2012-11-18
+	Added color support to GET-LINE. (ext/)
+	Added more key codes to GET-LINE. (ext/)
+2012-11-15
+	Added CURS:KEY-DC (delete-char key), CURS:KEY-IC (insert-char key),
+	and CURS:KEY-END constants. (ext/)
+2012-11-14
+	Fix: swapped fore/background arguments of CURS:COLOR-SET. (ext/)
+2012-11-13
+	Fix: PACKAGE was lacking an import of FILTER. (lib/)
+	Fix: test process created wrong image file. (util/)
+	Thanks, Doug Currie!
+2012-11-12
+	Added color support to the curses extension. (ext/)
+	Added the CURS:COLOR-SET and CURS:HAS-COLORS primitives. (ext/)
+	Updated the help pages.
+2012-11-11
+	Simplified creation of top-level bindings. (s9.c, s9.h)
+	Removed SYNTAX? predicate. (s9.c)
+	Added -P (prolog) and -E (epilog) options to EDOC. (prog/)
+	Changed web color scheme. (util/)
+2012-11-09
+	Factored out CHAR-PLOT from RUNTIME-STATS. (ext/, lib/)
+	Made CHAR-CANVAS a package. (lib/)
+	Made RUNTIME-STATS a package. (ext/)
+2012-11-08
+	Made IOTA accept a second argument. (lib/)
+	Added the CHOOSE procedure. (lib/)
+	Added the CURRYR (curry-right) macro. (lib/)
+2012-11-07
+	Made GENSYM accept a symbolic argument. (s9.c)
+2012-11-04
+	Added extra LDFLAGS for OSX. Thanks, Doug Currie!
+	Fix: (lambda x ...) did not work in SYNTAX-RULES. (lib/)
+2012-11-02
+	Fixed a potential memory leak in SYS:EXECVE. (ext/)
+	Made (the still broken) SYNTAX-RULES alpha-rename variables
+	of named LET and DO. (lib/)
 2012-11-01
 	Added LIST-COPY and TAKE procedures. (lib/)
 	Renamed GROUP-LIST to GROUP, swapped arguments to be more

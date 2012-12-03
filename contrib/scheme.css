@@ -1,6 +1,7 @@
 PRE.scheme { background: #f6f0ea;
              line-height: 130%;
-             padding: 0.5em; }
+             padding: 0.5em;
+             border: 1px solid #808080; }
 
 PRE.scheme SPAN.o { color: #600000; } /* comment */
 PRE.scheme SPAN.p { color: #707070; } /* parenthesis */
@@ -13,8 +14,9 @@ PRE.scheme SPAN.z { color: #c06000; } /* s9fes syntax */
 PRE.scheme SPAN.m { color: #000080; } /* normal form */
 
 PRE.scheme-hl { background: #f6f0ea;
-                line-height: 110%;
-                padding: 0.5em; }
+                line-height: 130%;
+                padding: 0.5em;
+                border: 1px solid #808080; }
 
 PRE.scheme-hl SPAN.o { color: #600000; } /* comment */
 PRE.scheme-hl SPAN.p { color: #707070; } /* parenthesis */

@@ -474,11 +474,11 @@
   (go college-office:degree))
  (()
   ()
-  "Naive Idealism (a.k.a \"Social Studies\")"
+  "Naive Idealism (a.k.a. \"Social Studies\")"
   (go college-office:sure?))
  (()
   ()
-  "Privateering (a.k.a \"Business Arts\")"
+  "Privateering (a.k.a. \"Business Arts\")"
   (go college-office:degree))
  (()
   ()
@@ -511,7 +511,7 @@
   (go college-office:enroll)))
 
 (college-office:ok
- ("\"But nobody wants to study such stuff these days! Well, it's"
+ ("\"But nobody wants to study that stuff these days! Well, it's"
   "your funeral. Here is your student's ID.\"")
  (((not id))
   ()

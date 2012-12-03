@@ -72,7 +72,7 @@
 ;
 ; The special option "--" can be used to abort option processing.
 ; In this case, any remaining option groups will be returned,
-; not matter which characters they contain.
+; no matter which characters they contain.
 ;
 ; The DISPLAY-USAGE procedure prints the strings in its LIST
 ; argument. Each member prints in an individual line. When

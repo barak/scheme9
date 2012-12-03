@@ -273,8 +273,7 @@
 
 (define x 1)
 
-(define (g)
-  x)
+(define (g) x)
 
 (define (f0)
   (let ((x 0))
@@ -289,6 +288,13 @@
 
 (test (f0) 1)
 (test (f1) 1)
+
+(define (f2)
+  (let ((x 2))
+    (let ((r (g)))
+      r)))
+
+(test (f2) 1)
 
 ; let
 (test (let () 1) 1)
@@ -531,18 +537,6 @@
 (test (symbol? (current-input-port)) #f)
 (test (symbol? (current-output-port)) #f)
 (test (symbol? let) #f)
-
-(test (syntax? #f) #f)
-(test (syntax? #\c) #f)
-(test (syntax? 1) #f)
-(test (syntax? '(pair)) #f)
-(test (syntax? (lambda () #f)) #f)
-(test (syntax? "string") #f)
-(test (syntax? 'symbol) #f)
-(test (syntax? '#(vector)) #f)
-(test (syntax? (current-input-port)) #f)
-(test (syntax? (current-output-port)) #f)
-(test (syntax? let) #t)
 
 (test (vector? #f) #f)
 (test (vector? #\c) #f)

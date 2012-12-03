@@ -45,6 +45,7 @@
 ;                (define foo3 (foo-maker 3 '())))
 ;              (list (bar:foo2) (foo3)))           ==>  ((1 2) (1 2 3))
 
+(load-from-library "filter.scm")
 (load-from-library "for-all.scm")
 (load-from-library "and-letstar.scm")
 (load-from-library "letrecstar.scm")

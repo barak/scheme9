@@ -6,6 +6,16 @@
 # Change at least this line:
 PREFIX= /u
 
+# Override default compiler and flags
+CC=	gcc
+CFLAGS=	-g -Wall -ansi -pedantic -O2
+
+# Uncomment the following, if you get "wrong interpreter" errors on OSX
+#LDFLAGS+=	-Wl,-no_pie
+
+# Which OS are we using (unix or plan9)?
+OSDEF=	-Dunix
+
 # Uncomment these to include the Unix extensions
 EXTRA_SCM+=	-l ext/unix.scm
 EXTRA_OBJS+=	unix.o
@@ -18,47 +28,43 @@ EXTRA_OBJS+=	curses.o
 EXTRA_INIT+=	curs_init();
 EXTRA_LIBS+=	-lcurses
 
-# Uncomment this and define BIG_REAL below to include
+# Uncomment this and add REALNUM to DEFS (below) to include
 # real number arithmetics
 EXTRA_SCM+=	-l s9-real.scm
 
-# Set up environment to be used during the build process
-BUILD_ENV=	env S9FES_LIBRARY_PATH=.:lib:ext:contrib
+# Options to be added to $(DEFS)
+#	-DBITS_PER_WORD_64	# use 64-bit bignum arithmetics
+#	-DNO_SIGNALS		# disable POSIX signal handlers
+#	-DREALNUM		# enable real number arithmetics
+#				# (requires "s9-real.scm" EXTRA_SCM, above)
+#	-DDEFAULT_LIBRARY_PATH="\"dir:...\""
+#				# default search path for LOCATE-FILE
+#	-DNETWORK		# include socket code in the Unix extension
+#	-DCURSES_COLOR		# enable the CURS:SET-COLOR primitive
+#	-DCURSES_RESET		# automatically run CURS:ENDWIN on the REPL
+#				# (requires the Curses extension)
 
-# Override default compiler and flags
-CC=	gcc
-CFLAGS=	-g -Wall -ansi -pedantic -O2
+DEFS=	$(OSDEF) \
+	-DDEFAULT_LIBRARY_PATH="\".:~/s9fes:$(LIBDIR)\"" \
+	-DEXTENSIONS="$(EXTRA_INIT)" \
+	-DREALNUM \
+	-DNETWORK \
+	-DCURSES_COLOR \
+	-DCURSES_RESET
 
 # Where to install the stuff
 BINDIR=	$(PREFIX)/bin
 LIBDIR=	$(PREFIX)/share/s9fes
 MANDIR=	$(PREFIX)/man/man1
 
-# Which OS are we using (unix or plan9)?
-OSDEF=	-Dunix
-
-# Options to be added to $(DEFS)
-#	-DBITS_PER_WORD_64	# use 64-bit bignum arithmetics
-#	-DNO_SIGNALS		# disable POSIX signal handlers
-#	-DDEFAULT_LIBRARY_PATH="\"dir:...\""
-#				# default search path for LOCATE-FILE
-#	-DNETWORK		# include socket code in the Unix extension
-#	-DCURSES_RESET		# automatically run CURS:ENDWIN on the REPL
-#				# (*requires* the Curses extension)
-#	-DBIG_REAL		# Enable big real arithmetics
-#				# (requires "s9-real.scm" EXTRA_SCM, above)
-
-DEFS=	$(OSDEF) \
-	-DDEFAULT_LIBRARY_PATH="\".:~/s9fes:$(LIBDIR)\"" \
-	-DEXTENSIONS="$(EXTRA_INIT)" \
-	-DNETWORK -DCURSES_RESET \
-	-DBIG_REAL
+# Set up environment to be used during the build process
+BUILD_ENV=	env S9FES_LIBRARY_PATH=.:lib:ext:contrib
 
 all:	s9 s9.image s9.1.gz s9.1.txt lib/syntax-rules.scm \
 		lib/matcher.scm
 
 s9:	s9.o s9.h $(EXTRA_OBJS)
-	$(CC) -o s9 s9.o $(EXTRA_OBJS) $(EXTRA_LIBS)
+	$(CC) -o s9 $(LDFLAGS) s9.o $(EXTRA_OBJS) $(EXTRA_LIBS)
 
 s9.o:	s9.c s9-real.c s9.h
 	$(CC) -o s9.o $(CFLAGS) $(DEFS) -c s9.c
@@ -86,8 +92,8 @@ test:	s9 test.image
 libtest:	s9 test.image
 	$(BUILD_ENV) sh util/libtest.sh
 
-systest:	s9 s9.image
-	$(BUILD_ENV) ./s9 -f util/systest.scm
+systest:	s9 test.image
+	$(BUILD_ENV) ./s9 -i test -f util/systest.scm
 
 srtest:	s9 test.image
 	$(BUILD_ENV) ./s9 -i test -f util/srtest.scm
@@ -96,7 +102,7 @@ realtest:	s9 test.image
 	$(BUILD_ENV) ./s9 -i test -f util/realtest.scm
 
 test.image:	s9 s9.scm s9-real.scm
-	$(BUILD_ENV) ./s9 -n $(EXTRA_SCM) -d test.image
+	$(BUILD_ENV) ./s9 -i - -n $(EXTRA_SCM) -d test.image
 
 tests: test realtest srtest libtest systest
 
@@ -188,11 +194,11 @@ tabs:
 	@find . -name \*.scm -exec grep -l "	" {} \;
 
 cd:
-	s9 -f util/check-descr.scm
+	./s9 -f util/check-descr.scm
 
 clean:
-	rm -f s9 s9.image test.image s9.1.gz *.o *.core \
-		CATEGORIES.html core s9fes.tgz __testfile__ 
+	rm -f s9 s9.image s9e.image test.image s9.1.gz *.o *.core \
+		CATEGORIES.html HACKING.html core s9fes.tgz __testfile__ 
 
 new-version:
 	vi edoc/s9.c.edoc CHANGES
@@ -206,7 +212,7 @@ update-library:
 		util/categories.html
 	clear
 	@echo "Now copy the new help pages from help-new to help"
-	@echo "and run (cd help; ../util/make-help-links)."
+	@echo "and run util/make-help-links."
 
 s9.1.txt:	s9.1
 	cc -o rpp util/rpp.c
@@ -219,16 +225,20 @@ docs:	lib ext contrib
 webdump:
 	util/make-html
 
-advdump:	prog/advgen.scm prog/adventure.adv prog/adventure.intro \
-		prog/adventure.imprint
-	 prog/advgen.scm -rv \
+advdump:	prog/advgen.scm prog/adventure.adv prog/adventure.intro
+	sed -e 's/@dir/quest/' -e 's/@file/index/g' <util/pagehead >pagehead
+	prog/advgen.scm -rv \
 		-P terminal:session \
-		-e prog/adventure.imprint \
+		-p pagehead \
+		-e util/pagetail \
 		-i prog/adventure.intro \
 		-t "The Quest for S9fES" \
 		-y s9.css \
 		prog/adventure.adv
-	cp MASCOT.png util/s9.css advdump
+	rm -f pagehead
+	cp MASCOT.png advdump
+	sed -e 's/^A:link/A/' -e '/^A:visited/,+3d' \
+		<util/s9.css >advdump/s9.css
 
 csums:
 	txsum -u <_checksums >_checksums.new

@@ -38,7 +38,6 @@
         ((input-port? obj)  'input-port)
         ((output-port? obj) 'output-port)
         ((eof-object? obj)  'eof-object)
-        ((syntax? obj)      'syntax)
         (else               'unknown-object)))
 
 (define-syntax (type-case obj . clauses)

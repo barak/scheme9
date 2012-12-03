@@ -7,7 +7,8 @@ appendb.scm|append!|-|Append lists destructively
 append-to-output-file.scm|append-to-output-file|-|Open files for appending
 array.scm|-|Array type and operations|-
 bitops.scm|-|Fast small-magnitude bit operators|-
-char-canvas.scm|-|Character-based canvas plotter|-
+char-canvas.scm|-|Character-based canvas|-
+char-plot.scm|-|Character-based graph plotter|-
 assp.scm|assp|-|Find first member of an alist satisfying a predicate
 basename.scm|basename|-|Extract the base name from a path
 bitwise-ops.scm|-|Bitwise logic operators|-
@@ -15,6 +16,7 @@ c2html.scm|c2html|-|Render C code in HTML
 c2html1.scm|-|C2HTML command line wrapper|-
 catch.scm|catch / throw|-|Handle exceptions
 check-descr.scm|-|Missing description ;-)|-
+choose.scm|choose|-|Compute binomial coefficients
 cols.scm|-|Format input in two columns|-
 combine.scm|combine|-|Generate combinations of sets
 cond-expand.scm|cond-expand|-|Simple feature-based conditional expansion
@@ -124,7 +126,10 @@ sieve.scm|sieve|-|Find prime numbers
 simple-modules.scm|-|Simple module syntax|-
 soccat.scm|-|Connect to remote systems|-
 sort.scm|sort|-|Sort lists
+s9e.scm|-|The Scheme 9 Editor|-
+s9e1.scm|-|S9E command line wrapper|-
 s9sos.scm|-|S9fES Simple Object System|-
+s9symbols.scm|-|Extract S9 symbols from help pages|-
 spawn-command.scm|spawn-command|-|Spawn a child process
 spawn-shell-command.scm|spawn-shell-command|-|Spawn a shell command
 split-url.scm|split-url|-|Split an URL string into individual parts

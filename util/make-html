@@ -208,12 +208,12 @@ dirlist() {
 	sed -e "s/@DESC@/$title/" <$tmpfile >$ofile
 	echo $4 >>$ofile
 	echo '<PRE class=dirlist>' >>$ofile
-	# XXX edoc
 	(cd $dir; ls -l | grep -v "$dumpdir") | grep -v "edoc$" | awk '
 		{ if ($9 == "CATEGORIES.html")
 			name=$9
-		  else
-		  if ($9 == "s9fes.tgz")
+		  else if ($9 == "s9fes.tgz")
+			name=$9
+		  else if ($9 == "MASCOT.png")
 			name=$9
 		  else if ($9 == "freebsd-port")
 			name="http://www.freebsd.org/cgi/cvsweb.cgi/ports/lang/s9fes"
@@ -235,6 +235,7 @@ if [ $update_only = no -o $update_only = dir ]; then
 	if [ $update_only = no ]; then
 		# XXX edoc
 		make stripped-arc
+		# make HACKING.html
 		s9 -f util/make-cats.scm
 	fi
 
@@ -246,7 +247,8 @@ if [ $update_only = no -o $update_only = dir ]; then
 		fi
 	else
 		mkdir $dumpdir
-		cp s9fes.tgz util/s9.css $dumpdir
+		cp s9fes.tgz util/s9.css MASCOT.png $dumpdir
+		cp prog/edoc.css contrib/scheme.css contrib/ccode.css $dumpdir
 	fi
 
 	dirlist . $dumpdir/index.html "Scheme 9 from Empty Space" "$about"
@@ -257,7 +259,8 @@ if [ $update_only = no -o $update_only = dir ]; then
 	dirlist util $dumpdir/util.html "util\/" ""
 
 	if [ $update_only = no ]; then
-		mv CATEGORIES.html webdump
+		mv CATEGORIES.html $dumpdir
+		# mv HACKING.html $dumpdir/HACKING.html.html
 		make
 	fi
 fi
@@ -296,15 +299,15 @@ fi
 if [ $update_only = no -o $update_only = nah ]; then
 	naah "" directory help
 	naah "" directory freebsd-port
-	naah "" file MASCOT.png
 	naah contrib file S9Book
 	naah contrib file S9Book-bw
 	naah prog file adventure.intro
-	naah prog file adventure.imprint
 	naah util file dirhead
 	naah util file dirtail
 	naah util file libhead
 	naah util file libtail
+	naah util file pagehead
+	naah util file pagetail
 	naah util file stress-tests.tgz
 	naah util file categories.html
 fi

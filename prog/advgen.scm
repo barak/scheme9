@@ -267,6 +267,12 @@
                      ""))
              "</HEAD>"  #\newline
              "<BODY>"  #\newline))
+  (cond ((opt-val page-prolog)
+          => (lambda (path)
+               (with-input-from-file
+                 path
+                 (lambda ()
+                   (copy-to out))))))
   (cond ((opt-val title-text)
           => (lambda (text)
                (emit* out
@@ -274,15 +280,9 @@
                       text
                       "</A></H1>"
                       #\newline
-                      "<HR>"
+                      (if (opt-val page-prolog) "" "<HR>")
                       #\newline
-                      ))))
-  (cond ((opt-val page-prolog)
-          => (lambda (path)
-               (with-input-from-file
-                 path
-                 (lambda ()
-                   (copy-to out)))))))
+                      )))))
 
 (define (html-postlude out)
   (cond ((opt-val page-epilog)
