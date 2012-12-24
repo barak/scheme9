@@ -9,7 +9,7 @@ hardened build.  See lintian tag hardening-no-fortify-functions.
  1 file changed, 1 insertion(+)
 
 diff --git a/Makefile b/Makefile
-index f254650..2a35ac1 100644
+index e71e7b5..7764263 100644
 --- a/Makefile
 +++ b/Makefile
 @@ -45,6 +45,7 @@ EXTRA_SCM+=	-l s9-real.scm

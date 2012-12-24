@@ -7,7 +7,7 @@ Subject: recombobulate Makefile
  1 file changed, 21 insertions(+), 8 deletions(-)
 
 diff --git a/Makefile b/Makefile
-index 44fc9a8..7b72cdf 100644
+index d22075d..f5add4d 100644
 --- a/Makefile
 +++ b/Makefile
 @@ -4,7 +4,7 @@
@@ -40,14 +40,14 @@ index 44fc9a8..7b72cdf 100644
  # Set up environment to be used during the build process
  BUILD_ENV=	env S9FES_LIBRARY_PATH=.:lib:ext:contrib
  
--all:	s9 s9.image s9.1.gz s9.1.txt lib/syntax-rules.scm \
-+all:	s9 s9.image s9.1 lib/syntax-rules.scm \
+-default:	s9 s9.image s9.1.gz s9.1.txt lib/syntax-rules.scm \
++default:	s9 s9.image s9.1 lib/syntax-rules.scm \
  		lib/matcher.scm
  
- s9:	s9.o s9.h $(EXTRA_OBJS)
-@@ -74,8 +81,14 @@ s9.image:	s9 s9.scm s9-real.scm ext/unix.scm ext/curses.scm config.scm
- 	rm -f s9.image && \
- 		$(BUILD_ENV) ./s9 -n $(EXTRA_SCM) -l config.scm -d s9.image
+ all:	default s9e
+@@ -77,8 +84,14 @@ s9.o:	s9.c s9-real.c s9.h
+ s9.image:	s9 s9.scm s9-real.scm ext/unix.scm ext/curses.scm config.scm
+ 	$(BUILD_ENV) ./s9 -i - -n $(EXTRA_SCM) -l config.scm -d s9.image
  
 -s9.1.gz:	s9.1
 -	sed -e "s,@LIBDIR@,$(LIBDIR)," <s9.1 |gzip -9 >s9.1.gz
@@ -62,7 +62,7 @@ index 44fc9a8..7b72cdf 100644
  
  unix.o:	ext/unix.c s9.h
  	$(CC) $(CFLAGS) $(DEFS) -I . -o unix.o -c ext/unix.c
-@@ -116,7 +129,7 @@ install-s9:	s9 s9.scm s9.image s9.1.gz
+@@ -127,7 +140,7 @@ install-s9:	s9 s9.scm s9.image s9.1.gz
  	install -d -m 0755 $(LIBDIR)/help
  	install -d -m 0755 $(MANDIR)
  	install $C -m 0755 s9 $(BINDIR)

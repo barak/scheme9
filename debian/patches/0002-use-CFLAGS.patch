@@ -9,7 +9,7 @@ by builder, e.g., dpkg-buildflags.
  1 file changed, 2 insertions(+), 2 deletions(-)
 
 diff --git a/Makefile b/Makefile
-index 7b72cdf..f254650 100644
+index f5add4d..e71e7b5 100644
 --- a/Makefile
 +++ b/Makefile
 @@ -8,7 +8,7 @@ PREFIX=$(prefix)
@@ -21,8 +21,8 @@ index 7b72cdf..f254650 100644
  
  # Uncomment the following, if you get "wrong interpreter" errors on OSX
  #LDFLAGS+=	-Wl,-no_pie
-@@ -71,7 +71,7 @@ all:	s9 s9.image s9.1 lib/syntax-rules.scm \
- 		lib/matcher.scm
+@@ -75,7 +75,7 @@ all:	default s9e
+ s9e:	s9e-core.image
  
  s9:	s9.o s9.h $(EXTRA_OBJS)
 -	$(CC) -o s9 $(LDFLAGS) s9.o $(EXTRA_OBJS) $(EXTRA_LIBS)
