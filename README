@@ -11,7 +11,8 @@
 	- cursor addressing with Curses;
 	- decimal-based real number arithmetics;
 	- basic networking procedures;
-	- loads of useful library functions.
+	- loads of useful library functions;
+	- an experimental Scheme-centric full-screen editor.
 
 	It is written in ANSI C (C89) and Scheme and it runs in many
 	popular environments, including *BSD, Linux, Plan 9, and the
@@ -26,10 +27,11 @@
 
 	S9fES supports the following SRFI's: 
 	- SRFI-0: feature-based conditional expansion (subset)
-	- SRFI-2: AND-LET* (subset)
+	- SRFI-2: AND-LET*                            (subset)
 	- SRFI-22: running Scheme scripts on Unix
 	- SRFI-23: error reporting mechanism
 	- SRFI-30: nested multi-line comments
+	- VECTOR-COPY and VECTOR-APPEND from SRFI-43
 
 
 	QUICK START
@@ -189,6 +191,26 @@
 	and a Curses interface. To compile these extensions, uncomment
 	the three EXTRA_ lines in the Makefile. (In fact, the Unix
 	extensions are compiled in by default.)
+
+
+	SCHEME EDITOR
+
+	The Scheme 9 Editor is started with the "s9e" command. The help
+	page is loaded by pressing [control]+[L] and then [h]. See the
+	"Usage" section at the end of the help file for instructions.
+
+	The most interesting feature of S9E is probably its interaction
+	buffer. Type [^Z][s] to open an interaction buffer, type any
+	Scheme expression, move to its closing paren and press [^J].
+
+	To compile an S9E image, run "make s9e" or "make all". To install
+	S9E, run "make install-all". To try the editor without installing,
+	create an image and then run
+
+	./s9 -i s9e-core prog/s9e1.scm
+
+	Note that S9E is quite experimental at this point. Bug reports
+	and patches are welcome!
 
 
 	ACKNOWLEDGEMENTS

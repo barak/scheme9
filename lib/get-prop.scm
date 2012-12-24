@@ -62,7 +62,7 @@
   (let loop ((in  a)
              (out '()))
     (cond ((null? in)
-            out)
+            (reverse! out))
           ((and (eq? x (car in))
                 (pair? (cdr in)))
             (append (reverse! out) (cddr in)))

@@ -1,0 +1,10 @@
+S9 LIB  (s9e string <option> ...)  ==>  unspecific
+        (s9e)                      ==>  unspecific
+
+The S9E procedure implements a Scheme-centric full screen text editor.
+If specified, it loads the file STRING into an editing buffer.
+
+When the 'READ-ONLY option is passed to S9E, the initial buffer will
+be read-only.
+
+(s9e "foo.scm")

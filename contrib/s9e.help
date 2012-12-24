@@ -1,0 +1,358 @@
+ ____  ____   ____  ____  __  _____  ____  ____
+/ ___)/ __ \ |  __)| __ \(  )(_   _)/    \| __ \           By Nils M Holm, 2012
+\___ \\__  / |  __)|    /|  |  | | /  /  /|    /           In the Public Domain
+(____/(___/  |____)|___/ |__|  |_| \____/ |_|\_\
+                                                           [^L][q] closes help
+----- Cursor Motion --------  ----- Files -----------
+    [^P]       Previous       [^L][a]  Save as         ----- Buffers ----------
+[^B][^N][F] Backw./Next/Forw. [^L][e]  Edit file       [^L][k]  Kill buffers
+ [^A] [^E]  Beg./End of line  [^L][r]  Read to region  [^L][o]  Open buffer
+ [^X] [^W]  Prev./Next word   [^L][s]  Save buffer     [^L][v]  View buffers
+ [^T] [^V]  Prev./Next page   [^L][w]  Write region    [^Q]     Rotate buffers
+ [^L][b]    Bottom of file    [^L][q]  Close/quit    
+ [^L][t]    Top of file       [^L][y]  Sync buffers    ----- Search -----------
+ [^L][g]    Go to line        [^L][z]  Save+exit       [^L][l]  Locate text
+                                                       [^L][n]  Locate next
+----- Insert / Delete ------  ----- Miscellanea -----  [^L][x]  Exchange
+[^S]  Begin/end/clear region   [TAB]   Auto-complete
+[^D]  Delete region/char      [^L][^L] Refresh screen  ----- Scheme -----------  
+[^Y]  Insert region           [^L][i]  Indent region   [^Z][c]  Compile buffer
+[^O]  Copy region             [^L][f]  Run filter      [^Z][e]  Evaluate expr.
+[^H]  Del. region/char left   [^L][p]  Properties      [^Z][f]  Format region
+[^K]  Del. to eol / line       [^U]    Undo commands   [^Z][p]  Pretty-print
+[^Z][^Z]  Mark expression      [^R]    Redo commands   [^Z][s]  Scheme REPL
+-------------------------------------------------------------------------------
+
+::::: THE STATUS LINE :::::::::::::::::::::::::::::::::::::::::::::::::::::::::
+
+        The bottom line contains various information about the current buffer:
+
+        +-------------------------------------------------+
+        |   aRmr  L:line/total C:column  [buffer name]    |
+        +-------------------------------------------------+
+
+        The flag characters on the left indicate "a": auto-load, "R": region
+        (a region is currently marked), "m": modified, and "r": read-only.
+
+::::: INSERTING AND DELETING TEXT :::::::::::::::::::::::::::::::::::::::::::::
+
+Mark a Region
+        To mark a region of text, move the cursor to one end of the region,
+        press [^S] ([control] + [s]), move to the other end and press [^S]
+        again. Pressing [^S] a third time will unmark the region.
+        The second [^S] can be omitted, and the desired operation can be
+        performed directly instead.
+        
+        The [^Z][^Z] command marks the innermost parenthesized expression
+        around the cursor.
+
+Delete Text
+        When a region is marked, pressing [^D] or [Backspace] will delete
+        the region. With no region marked, [^D] will delete the character
+        to the right and [Backspace] the character to the left. Deleting a
+        region will automatically copy it to the copy buffer. The [DEL]
+        key, if present, can be used instead of [^D].
+        
+        Pressing [^K] will delete all text up to end of the current line.
+        When the cursor is already at the end of the current line, it will
+        remove the entire line.
+
+Insert Text
+        Pressing [^Y] will insert the content of the copy buffer at the
+        cursor location and mark it. [INS] can be used instead of [^Y].
+        [^O] is short for [^D][^Y].
+
+Auto-Completion
+        Pressing the [TAB] at the end of a word will attempt to match the
+        partial word to the left and replace it with one of the words
+        contained in the file "$HOME/.s9fes/symbols".
+
+        The S9SYMBOLS program from the S9fES distribution can be used to
+        create a "symbols" file containing all Scheme and S9fES keywords.
+        
+        When [TAB] is pressed after a blank character or at the beginning of
+        a line, enough blanks will be inserted to move the cursor to the next
+        "tab stop" (every 8'th column).
+        
+::::: SEARCHING AND REPLACING TEXT ::::::::::::::::::::::::::::::::::::::::::::
+
+Searching
+        Pressing [^L][l] ([^L] and then [l]) will prompt for a string to be
+        searched in the current buffer. The string will be searched in the
+        area between the current location and the end of the file. When a
+        match is found, [^N] (or [Down Arrow]) will move to the next match
+        and [^P] (or [Up Arrow]) will move to the previous match. Pressing
+        any other key will return to edit mode.
+
+        Pressing [^L][n] will locate the next occurence of a previous match
+        without entering search mode.
+
+Manual Text Exchange
+        The [^L][x] command will prompt for some old text to be searched for
+        and some new text to replace the old text. When a match is found,
+        S9E will present the following options:
+
+        CR = replace  Pressing [CR] ([ENTER]) will replace the match found
+                      and keep searching;
+        space = skip  [Space] will not replace the match and keep searching;
+        q = quit      [q] will not replace the match and stop;
+        l = last      [l] will replace the match and top
+        a = all       [a] will replace all subsequent matches without any
+                      further interaction with the user.
+
+Automatic Text Exchange
+        When a region is marked when the [^L][x] command is started, then
+        all occurences inside of the region will be replaced without any
+        interaction.
+
+::::: LOADING, SAVING, AND EXITING ::::::::::::::::::::::::::::::::::::::::::::
+
+        [^L][e] prompts for a file name, loads it into the current buffer,
+                and associates the buffer with the new file. When the
+                current buffer is modified, a warning will print. 
+        
+        [^L][s] is the principal "save" command. It saves the text in the
+                current buffer and prompts for a name when the buffer is
+                anonymous.
+
+        [^L][a] ("save as") saves the buffer under a different name.
+
+        [^L][y] synchronizes (saves) all buffers.
+        
+        [^L][q] quits without saving any buffers. A warning will display,
+                if there ar any unsaved buffers.
+
+        [^L][z] saves the current buffer and exits.
+
+        [^L][k] kills all buffers and exits. All unsaved texts in all
+                buffers will be lost. Use with care!
+
+::::: PROCESSING REGIONS ::::::::::::::::::::::::::::::::::::::::::::::::::::::
+
+        [^L][r] reads a file and inserts its content at the cursor location.
+                The inserted region will be marked.
+
+        [^L][w] writes the marked region to a file.
+
+        [^L][i] enters indent mode. In this mode, the marked region can be
+                indented by pressing [^F] (or [Right Arrow]) and outdented
+                with [^B] (or [Left Arrow]). Any other key returns to edit
+                mode.
+
+::::: MULTIPLE BUFFERS ::::::::::::::::::::::::::::::::::::::::::::::::::::::::
+
+        [^L][o] opens an empty buffer and switches to it. Use [^L][e] to
+                load a file into the buffer.
+
+        [^L][q] closes the current buffer. When the buffer is modified, a
+                warning will display. When the buffer being closed is the
+                only buffer, S9E will exit.
+
+        [^Q]    "rotates" the buffers, i.e. switches to the next buffer in
+                the list of buffers, starting over when reaching the end.
+
+        [^L][v] lists all buffers, their lengths, and their attributes.
+                Navigation keys can be used to move through the buffer.
+                Pressing [CR] / [ENTER] will switch to the currently marked
+                buffer, pressing [q] will exit without switching. 
+
+::::: UNDO AND REDO :::::::::::::::::::::::::::::::::::::::::::::::::::::::::::
+
+        [^U] This command will successively undo all changes to the current
+             buffer up to the point where the buffer was created. This is
+             what is called "unlimited undo" in tech speak.
+
+        [^R] This command will re-apply changes that have been undone
+             immediately before. Like "undo", "redo" is theoretically
+             unlimited, but applying a change manually (not via "undo" or
+             "redo") will flush the redo buffer immediately, so [^R] works
+             only as long as no new changes are applied.
+
+::::: SCHEME INTERFACE ::::::::::::::::::::::::::::::::::::::::::::::::::::::::
+
+        [^Z][s] start Scheme REPL. This command starts a Scheme process and
+                connects it to a special buffer called the "REPL buffer".
+                All output generates by the Scheme system will be appended to
+                that buffer. The [^Z][s] command also switches to the REPL
+                buffer. When the REPL is already active, the command simply
+                switches to the existing REPL.
+
+        [^Z][c] compile the current buffer. All lines in the current buffer
+                will be send to the Scheme REPL. Output received from the
+                compiler, if any, will be sent to the REPL buffer.
+
+        [^Z][e] evaluate expression (also [^J]). The innermost parenthesized
+                expression will be marked and sent to the REPL. The result
+                will be appended to the REPL buffer.
+                
+                When there are buffers with the "auto-load" property set
+                (see "properties", below), these buffers will be sent to the
+                REPL before the expression to evaluate.
+
+        [^Z][f] format expression.
+        [^Z][p] pretty-print expression. Both of these commands pretty-print
+                the marked region. The difference between these commands is
+                that [^Z][f] formats regions as lists (data) and [^Z][p]
+                formats regions as Scheme programs.
+
+::::: PROPERTIES ::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::
+
+        Properties control the behavior of the editor.
+
+        [^L][p] invokes the property editor. The editor prompts for a
+                property to modify, parses the command entered and exits.
+                When an empty command is entered, it opens a buffer that
+                lists all properties and their current settings.
+
+                Normal navigation works in the property buffer. In addition,
+                [CR] / [ENTER] will pass the current propery to the prompt,
+                and [q] will return to edit mode.
+
+        The following properties exist. Each property is either a string, a
+        number, or a flag. Entering the name of a flag will set the flag,
+        entering no<flag> or no-<flag> (where <flag> is the name of the flag)
+        will clear the flag. For instance, entering no-auto-indent (or noai)
+        will clear the "auto-indent" flag.
+        
+        Other properties are changed by entering their name, an equal sign,
+        and the new value, e.g.: "rt=10" or "sc=foo -q". No quotes should be
+        used to demilit string properties.
+        
+        "Global" properties affect all buffers, "local" ones affect only the
+        current buffer.
+        
+        auto-indent (ai) global flag
+                When set, pressing [CR] (or [ENTER]) will insert leading
+                blanks to a new line to make it start in the same column as
+                the preceding line. When the cursor is in the blank space
+                indenting the current line, the new line will only be
+                indented up to the cursor position.
+
+        auto-load (al) local flag
+                Buffers with the "auto-load" flag set will be automatically
+                re-compiled (i.e. sent to the REPL) whenever an expression
+                is evaluated with the [^Z][e] or [^J] command.
+
+                The first buffer opened by S9E has the auto-load flag set by
+                default. All subsequently opened buffers have it cleared.
+
+        color-text   (ct) global string
+        color-region (cr) global string
+        color-status (cs) global string
+        color-info   (ci) global string
+        color-error  (ce) global string
+        color-paren  (cp) global string
+                These properties specify the colors to be used in the
+                corresponding parts of the editor. Valid color values are
+                black, blue, green, cyan, red, magenta, yellow, gray, and
+                white. White and gray denote the same color. Colors are
+                specified as "foreground/background", e.g. "green/black"
+                would mean green letters on black background.
+
+        error-bell (eb) global flag
+                When activated, an audible bell will ring when a motion
+                command would move the cursor outside of the buffer or when
+                an error messags displays.
+
+        help-reminder (hr) global flag
+                Display a brief remainder of the principal command key ([^L])
+                in the status line. This text will reduce the length of the
+                buffer name, which is also displayed in the status line.
+
+        load-timeout (lt) global number
+                This is the number of seconds to wait before reporting an
+                error ("run time limit exceeded") when compiling/loading
+                buffers with the [^Z][c] command or via the auto-load flag.
+
+        read-only (ro) local flag
+                A buffer with this flag set cannot be saved or modified. This
+                will happen automatically when
+                - the "-r" command line option is passed to the editor script;
+                - the 'read-only option is passed to the S9E prcedure;
+                - an unwritable file is loaded to a buffer.
+
+        repl-command (rc) global string
+                This string contains the command that will start the Scheme
+                REPL in the background. When available, the command should
+                include an option that makes the Scheme system "silent",
+                otherwise prompts and informational messages emitted by the
+                Scheme system will appear in the REPL buffer.
+
+        repl-init (ri) global string
+                The content of this string will be sent to the Scheme system
+                immediately after starting it. It can be used, for example,
+                to set options that cannot be specified on the command line.
+                When the init command is more complex, write them to a file
+                and insert a corresponding "load" command into the repl-init
+                string.
+
+        repl-timeout (rt) global number
+                This is the number of seconds to wait before reporting an
+                error ("run time limit exceeded") when evaluating an
+                expression with the [^Z][e] or [^J] command.
+
+        sense-case (sc) global flag
+                When set, the search ([^L][l], [^L][n]) and exchange
+                ([^L][x]) commands will distinguish between upper and lower
+                case letters. Otherwise, upper and lower case letters will
+                be considered to be equal.
+
+        show-match (sm) global flag
+                When set, the editor will highlight matching parentheses and
+                brackets when moving the cursor onto either of them.
+
+::::: CONFIGURATION FILE ::::::::::::::::::::::::::::::::::::::::::::::::::::::
+
+        When an a file named "$HOME/.s9fes/s9e-config" exists, property
+        commands will be read from that file when S9E starts. The following
+        lines would set up the default options:
+
+                auto-indent
+                no-auto-load
+                color-text=white/blue
+                color-region=white/red
+                color-status=blue/cyan
+                color-info=white/green
+                color-error=black/yellow
+                color-paren=blue/yellow
+                error-bell
+                help-reminder
+                load-timeout=10
+                no-read-only
+                repl-command=s9 -q
+                repl-init=
+                repl-timeout=5
+                no-sense-case
+                show-match
+
+::::: USAGE :::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::
+
+        A typical S9E session looks like this:
+       
+        1) The first buffer holds the Scheme program to edit.
+       
+        2) The REPL buffer ([^Z][s]) is used to test the program in the
+           first buffer.
+
+        3) When an expression in the REPL buffer is evaluated ([^J], the
+           first buffer is automatically re-loaded, because it has the
+           "auto-load" flag set.
+
+        4) Additional definitions can be added to the Scheme process by
+           opening new buffers ([^L][o]), loading code into them ([^L][e]),
+           and compiling them ([^Z][c]) or setting their "auto-load" flags
+           ([^L][p]al[ENTER]).
+
+        So editing of code is primarily done in an auto-loading buffer,
+        while testing is done in the REPL buffer.
+
+::::: CAVEATS :::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::
+
+        - Tabs are expanded to spaces when loading a file.
+
+        - Files in DOS format (CR,LF separators) are currently unsupported.
+
+        - Multiple buffers with the "auto-load" flag set will be loaded in
+          no specific order.
+
+-------- End of S9E help file -------------------------------------------------

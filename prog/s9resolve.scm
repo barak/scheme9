@@ -114,6 +114,8 @@
           (case (car form)
                 ((and begin if or)
                   (for-each check-deps (cdr form)))
+                ((apply)
+                  (check-deps (cdr form)))
                 ((case)
                   (check-deps (cadr form))
                   (for-each (lambda (x)
