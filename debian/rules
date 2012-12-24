@@ -1,11 +1,12 @@
 #!/usr/bin/make -f
 
-# binary-arch binary-indep binary install build clean:
 %:
 	dh $@ --parallel
 
+mflags=prefix=/usr mandir=/usr/share/man
+
 override_dh_auto_build:
-	dh_auto_build -- prefix=/usr mandir=/usr/share/man
+	dh_auto_build -- $(mflags) all
 
 override_dh_auto_install:
-	dh_auto_install -- prefix=/usr mandir=/usr/share/man
+	dh_auto_install -- $(mflags) install-all
