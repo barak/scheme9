@@ -4,3 +4,4 @@
 0004-parallel-install.patch
 0005-maxpathlen-for-hurd.patch
 0006-search-path-in-test-script.patch
+0007-bin-symlink.patch
