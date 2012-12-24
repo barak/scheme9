@@ -1,6 +1,21 @@
 
 Change Log
 
+2012-12-17
+	Added color customization to S9E. (contrib/)
+2012-12-12
+	Cleaned up AMK, made it more compatible with the book. (lib/)
+	Fix: REM-PROP reversed its property list argument. (lib/)
+2012-12-10
+	Finished S9E, the new S9 Editor with integrated REPL buffer.
+	(contrib/)
+2012-12-05
+	Made DEFINE-MACRO an alias of DEFINE-SYNTAX. (s9.c)
+2012-12-02
+	Fix: GENSYM had a potential race condition resulting in a wrong
+	prefix. (s9.c)
+	Checked for similar race conditions due to string/vector pool
+	compaction; seems clean.
 2012-11-30
 	Fix: SUBSTRING had a GC race condition, which could result in
 	the extraction of garbage. (s9.c)

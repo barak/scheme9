@@ -38,7 +38,7 @@
 
 (define empty-s '())
 
-(define _bottom_ (var 'bottom))
+(define *failure* (var 'failure))
 
 (define (atom? x) (not (pair? x)))
 
@@ -126,12 +126,6 @@
           (succeed s)
           (fail s)))))
 
-(define (choice x lst)
-  (if (null? lst)
-      fail
-      (any (== x (car lst))
-           (choice x (cdr lst)))))
-
 (define-syntax fresh
   (syntax-rules ()
     ((_ () g)
@@ -160,12 +154,12 @@
                    ((atom? x) x)
                    (else (cons (w* (car x) s)
                                (w* (cdr x) s))))))))
-    (cond ((circular? x s) _bottom_)
+    (cond ((circular? x s) *failure*)
           ((eq? x (walk x s)) empty-s)
           (else (w* x s)))))
 
-(define (preserve-bottom s)
-  (if (occurs? _bottom_ s s)
+(define (propagate-failure s)
+  (if (occurs? *failure* s s)
       '()
       s))
 
@@ -187,16 +181,16 @@
                             (reify-s (car v) s))))))))
     (reify-s v empty-s)))
 
-(define (run x g)
-  (preserve-bottom
+(define (query x g)
+  (propagate-failure
     (map (lambda (s)
            (walk* x (append s (reify (walk* x s)))))
          (g empty-s))))
 
 (define-syntax run*
   (syntax-rules ()
-    ((_ () goal) (run #f goal))
-    ((_ (v) goal) (run v goal))))
+    ((_ () goal) (query #f goal))
+    ((_ (v) goal) (query v goal))))
 
 ; ----- Tools -----
 
@@ -221,32 +215,29 @@
          (all (cdro l d)
               (memo x d)))))
 
-(define (rmemo x l)
-  (fresh (d)
-    (any (all (cdro l d)
-              (memo x d))
-         (caro l x))))
-
-(define (reverseo l r) (rmemo r l))
-
-(define (appendo x y r)
-  (any (all (== x '())
-            (== y r))
-       (fresh (hd tl app)
-         (all (conso hd tl x)
-              (conso hd app r)
-              (appendo tl y app)))))
-
-(define (memqo x l r)
+(define (membero x l r)
   (fresh (d)
     (any (all (caro l x)
               (== l r))
          (all (cdro l d)
-              (memqo x d r)))))
+              (membero x d r)))))
 
-(define (rmemqo x l r)
+(define (reverseo x r)
   (fresh (d)
-    (any (all (cdro l d)
-              (rmemqo x d r))
-         (all (caro l x)
-              (== l r)))))
+    (any (all (cdro x d)
+              (reverseo d r))
+         (all (caro x r)))))
+
+(define (appendo x y r)
+  (any (all (== x '())
+            (== y r))
+       (fresh (h t tr)
+         (all (conso h t x)
+              (conso h tr r)
+              (appendo t y tr)))))
+
+(define (choice x a)
+  (if (null? a)
+      fail
+      (any (== x (car a))
+           (choice x (cdr a)))))

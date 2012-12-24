@@ -274,6 +274,7 @@ if [ $update_only = no -o $update_only = txt ]; then
 	format_txt_files prog prog/advgen.txt
 	format_txt_files contrib contrib/scheme.css contrib/ccode.css
 	format_txt_files contrib contrib/format.txt contrib/s9sos.txt
+	format_txt_files contrib contrib/s9e.help
 	format_txt_files util util/descriptions util/make-help-links
 	format_txt_files util util/libtest.sh util/make-docs util/make-html
 	format_txt_files util util/rp_html util/s9.css	

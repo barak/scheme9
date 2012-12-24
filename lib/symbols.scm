@@ -58,7 +58,8 @@
   '(delete-file error file-exists? fold-left fold-right gensym
     load-from-library locate-file macro-expand macro-expand-1 print
     require-extension reverse! set-input-port! set-output-port! stats
-    symbols trace void ** *extensions* *library-path* *loading*))
+    symbols trace vector-append vector-copy void ** *extensions*
+    *library-path* *loading*))
 
 (define (s9fes-extension-procedures)
   '(sys:access sys:catch-errors sys:chdir sys:change-mode sys:chmod

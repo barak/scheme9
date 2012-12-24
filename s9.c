@@ -13,7 +13,7 @@
  *     (also add "s9-real.scm" to the heap image).
  */
 
-#define VERSION "2012-11-30"
+#define VERSION "2012-12-17"
 
 #define EXTERN
  #include "s9.h"
@@ -876,6 +876,8 @@ cell read_symbol_or_number(int c) {
 		return funny_char("funny character in symbol", funny);
 	if (string_numeric_p(s))
 		return string_to_number(s);
+	if (!strcmp(s, "define-macro"))
+		return S_define_syntax;
 	return symbol_ref(s);
 }
 
@@ -3795,19 +3797,19 @@ cell gensym(char *prefix) {
 	return symbol_ref(s);
 }
 cell pp_gensym(cell x) {
-	char	*pre;
+	char	pre[101];
 	int	k;
 
 	if (cdr(x) == NIL) {
-		pre = "g";
+		strcpy(pre, "g");
 		k = 1;
 	}
 	else if (string_p(cadr(x))) {
-		pre = string(cadr(x));
+		memcpy(pre, string(cadr(x)), 100);
 		k = string_len(cadr(x));
 	}
 	else if (symbol_p(cadr(x))) {
-		pre = symbol_name(cadr(x));
+		memcpy(pre, symbol_name(cadr(x)), 100);
 		k = symbol_len(cadr(x));
 	}
 	else
@@ -3815,6 +3817,7 @@ cell pp_gensym(cell x) {
 				cadr(x));
 	if (k > 100)
 		return error("gensym: prefix too long", cadr(x));
+	pre[100] = 0;
 	return gensym(pre);
 }
 
