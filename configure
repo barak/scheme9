@@ -1,0 +1,26 @@
+#!/bin/sh
+
+cat <<EOT
+
+To compile a bare-bones S9fES system in a Unix user land, run:
+
+	cc -Dunix -o s9 s9.c
+	./s9 -i - -d s9.image
+
+To compile the S9fES system on a native (386-based) Plan 9 system:
+
+	8c -Dplan9 -o s9 s9.c
+	./s9 -i - -d s9.image
+
+To include portable, decimal-based real number arithmetics:
+
+	cc -Dunix -DREALNUM -o s9 s9.c
+	./s9 -i - -l s9-real.scm -d s9.image
+
+To compile all extensions including the S9 editor, try "make all".
+This should work fine on FreeBSD, NetBSD, and Linux. Refer to the
+README and Makefile for further instructions.
+
+Good Luck!  I hope you'll enjoy using Scheme 9 from Empty Space!
+
+EOT

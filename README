@@ -2,7 +2,7 @@
 
 	Scheme 9 from Empty Space
 	A Portable Scheme Interpreter with a Unix Interface
-	By Nils M Holm, 2007-2012
+	By Nils M Holm, 2007-2013
 
 	S9fES is a mature, portable, and comprehensible public-domain
 	interpreter for R4RS Scheme offering
@@ -23,7 +23,10 @@
 	particularly interesting to people who want to (a) write Unix
 	programs in a high-level language (b) try Scheme without having
 	to jump through too many hoops (c) study the implementation of
-	Scheme (in a language other than Scheme). 
+	Scheme (in a language other than Scheme).
+
+	There is a book describing the implementation in detail. It is
+	available in print and PDF format. See http://t3x.org/s9book/
 
 	S9fES supports the following SRFI's: 
 	- SRFI-0: feature-based conditional expansion (subset)
@@ -42,7 +45,7 @@
 	The S9 code is only loosely coupled to its Makefile, so in most
 	cases running "cc -Dunix -o s9 s9.c" or "8c -Dplan9 -o s9 s9.c"
 	will compile the interpreter just fine. (However, doing so will
-	not include the Unix/Curses/Networking extensions.)
+	not include the RealNum/Unix/Curses/Networking extensions.)
 
 	On most systems of the Unix family (plus CygWin and MINGW),
 	you can compile and install S9fES by running "make install".
@@ -71,7 +74,7 @@
 	You can install S9fES (including the goodies) on a Unix system
 	by typing "make install" as root, but before doing so, please
 	edit at least the PREFIX variable at the beginning of Makefile.
-	(Make sure to re-compile S9fES (make clean; make) after changing
+	(Be sure to re-compile S9fES (make clean; make) after changing
 	 PREFIX, because it is used to set up some internal paths).
 
 	OSX
@@ -205,17 +208,17 @@
 
 	To compile an S9E image, run "make s9e" or "make all". To install
 	S9E, run "make install-all". To try the editor without installing,
-	create an image and then run
+	create an image (make s9e) and then run
 
 	./s9 -i s9e-core prog/s9e1.scm
 
-	Note that S9E is quite experimental at this point. Bug reports
-	and patches are welcome!
+	Note that S9E is experimental at this point. Bug reports and
+	patches are welcome!
 
 
 	ACKNOWLEDGEMENTS
 
-	I would line to thank the following people and organisations for
+	I would like to thank the following people and organisations for
 	patches, bug reports, suggestions, hardware, access to hardware,
 	etc:
 

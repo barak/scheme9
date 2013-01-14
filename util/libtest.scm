@@ -46,8 +46,10 @@
 
 (load-from-library "amk.scm")
 (%test
-  (run* (vq) (appendo vq (_) '(a b c)))
-    ==>  (() (a) (a b) (a b c))
+  (run* (q) (fresh (h t) 
+              (== q (list h t))
+              (appendo h t '(1 2 3))))
+    ==>  ((() (1 2 3)) ((1) (2 3)) ((1 2) (3)) ((1 2 3) ()))
 )
 
 (load-from-library "and-letstar.scm")
@@ -1004,6 +1006,11 @@
          (query '(mortal ?who)))  ==>  (((who . socrates)))
 )
 
+(load-from-library "queens.scm")
+(%test
+  (queens 4)  ==>  ((2 0 3 1) (1 3 0 2))
+)
+
 (load-from-library "s9sos.scm")
 (%test
   (begin
@@ -1049,6 +1056,15 @@
 (%test
   (string-locate "test" "This is a test string")     ==>  10
   (string-locate "TEST" "This is a test string")     ==>  #f
+)
+
+(load-from-library "zebra.scm")
+(%test
+  (zebra)  ==>  (((norwegian kools _.0 fox yellow)
+                  (ukrainian chesterfields tea horse blue)
+                  (englishman oldgolds milk snails red)
+                  (spaniard luckystrikes orangejuice dog ivory)
+                  (japanese parliaments coffee zebra green)))
 )
 
 (load-from-library "basename.scm")

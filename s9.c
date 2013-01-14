@@ -2,7 +2,7 @@
 
 /*
  * Scheme 9 from Empty Space
- * By Nils M Holm, 2007-2012
+ * By Nils M Holm, 2007-2013
  * Placed in the Public Domain
  */
 
@@ -13,7 +13,7 @@
  *     (also add "s9-real.scm" to the heap image).
  */
 
-#define VERSION "2012-12-17"
+#define VERSION "2013-01-09"
 
 #define EXTERN
  #include "s9.h"

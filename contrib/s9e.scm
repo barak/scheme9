@@ -590,7 +590,7 @@
     (or (= y (cadr r0))
         (= y (cadr rn)))))
 
-(define (show-region-break buf line pos)
+(define (show-region-break buf line pos len)
   (let* ((rs (region-start buf))
          (re (region-end buf))
          (b0 (if (= pos (cadr rs))
@@ -600,7 +600,7 @@
                  0))
          (bn (if (= pos (cadr re))
                  (car re)
-                 (+ 1 (string-length line)))))
+                 (+ 1 len))))
     (let loop ((chars (string->list line))
                (i     (buffer-off buf)))
       (if (= i b0) (color-region))
@@ -620,7 +620,7 @@
          (line (string-cut line (cols))))
     (cond ((region-break? buf pos)
             (move y 0)
-            (show-region-break buf line pos))
+            (show-region-break buf line pos k))
           (else
             (if (in-region? buf 0 pos)
                 (color-region))
@@ -2563,14 +2563,16 @@
         (let ((errors #f))
           (let read ((line (read-line)))
             (if (not (eof-object? line))
-                (begin (parse-setprop-cmd
-                         buf
-                         line
-                         (lambda x
-                           (display (apply format #f x))
-                           (newline)
-                           (set! errors #t)))
-                       (read (read-line)))))
+                (cond ((or (zero? (string-length line))
+                           (char=? #\# (string-ref line 0))))
+                      (else (parse-setprop-cmd
+                              buf
+                              line
+                              (lambda x
+                                (display (apply format #f x))
+                                (newline)
+                                (set! errors #t)))
+                            (read (read-line))))))
           (if errors (exit 1)))))))
 
 (define (load-symbols)
@@ -2593,7 +2595,7 @@
       (show-buffer buf)
       (if file
           (load-buffer buf file)
-          (info "Welcome to S9E BETA - expect bugs! Press ^L-h for help."))
+          (info "Welcome to S9E beta! Press ^L-h for help."))
       (menu-dashes)
       (show-buffer buf)
       (command-loop buf)

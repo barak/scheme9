@@ -96,6 +96,7 @@ programp.scm|program?|-|Check Scheme program syntax
 prolog-test.scm|-|Tiny PROLOG sample program|-
 prolog.scm|-|Tiny PROLOG interpreter|-
 proper-timep.scm|proper-time?|-|Check whether a time specification is sound
+queens.scm|-|N-Queens puzzle (using AMK)|-
 queue.scm|-|Queue data structure and operations|-
 quicksort.scm|quicksort|-|Sort elements using Quicksort
 random.scm|random|-|Generate pseudo-random numbers
