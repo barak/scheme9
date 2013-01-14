@@ -1,6 +1,20 @@
 
 Change Log
 
+2013-01-09
+	S9E: Fixed highlighting of marked regions in side-scrolled lines.
+	(contrib/)
+2013-01-02
+	Added experimental "hard" cutting (TRY/CUT) to AMK. (lib/)
+	Added the N-Queens program (using AMK). (contrib/)
+2012-12-26
+	Added numeric goals to AMK. (lib/)
+2012-12-22
+	More changes to AMK for compatibility with the upcoming version
+	of the book. (lib/)
+2012-12-20
+	Made AMK always return () or (()) when no variable was given
+	in RUN*. (lib/)
 2012-12-17
 	Added color customization to S9E. (contrib/)
 2012-12-12

@@ -15,34 +15,37 @@
 ; [1] http://www.lulu.com/shop/nils-m-holm/logic-programming-in-scheme/\
 ;     paperback/product-18693432.html
 ;
-; Example:   (run* (vq) (appendo vq (_) '(a b c)))
-;              ==>  (() (a) (a b) (a b c))
+; Example:   (run* (q) (fresh (h t) 
+;                        (== q (list h t))
+;                        (appendo h t '(1 2 3))))
+;              ==>  ((() (1 2 3)) ((1) (2 3)) ((1 2) (3)) ((1 2 3) ()))
 
 (load-from-library "syntax-rules.scm")
 
 ; ----- Core -----
 
-(define (fail x) '())
+(define (fail x)
+  '())
 
-(define (succeed x) (list x))
+(define (succeed x)
+  (list x))
 
 (define failed? null?)
 
-(define (var x) (cons '? x))
-
-(define (_) (var '_))
+(define (var x)
+  (cons '? x))
 
 (define (var? x)
   (and (pair? x)
        (eq? (car x) '?)))
 
+(define (_)
+  (var '_))
+
 (define empty-s '())
 
-(define *failure* (var 'failure))
-
-(define (atom? x) (not (pair? x)))
-
-(define (ext-s x v s) (cons (cons x v) s))
+(define (ext-s x v s)
+  (cons (cons x v) s))
 
 (define (walk x s)
   (if (not (var? x))
@@ -52,14 +55,17 @@
             (walk (cdr v) s)
             x))))
 
+(define (atom? x)
+  (not (pair? x)))
+
 (define (unify x y s)
   (let ((x (walk x s))
         (y (walk y s)))
     (cond ((eqv? x y) s)
           ((var? x) (ext-s x y s))
           ((var? y) (ext-s y x s))
-          ((or (atom? x) (atom? y))
-            #f)
+          ((or (atom? x)
+               (atom? y)) #f)
           (else
             (let ((s (unify (car x) (car y) s)))
               (and s (unify (cdr x) (cdr y) s)))))))
@@ -74,13 +80,13 @@
 (define (any* . g*)
   (lambda (s)
     (letrec
-      ((try
+      ((any*
          (lambda g*
            (if (null? g*)
                (fail s)
                (append ((car g*) s)
-                       (apply try (cdr g*)))))))
-      (apply try g*))))
+                       (apply any* (cdr g*)))))))
+      (apply any* g*))))
 
 (define-syntax any
   (syntax-rules ()
@@ -91,27 +97,27 @@
 (define (all . g*)
   (lambda (s)
     (letrec
-      ((try
+      ((all
          (lambda (g* s*)
            (if (null? g*)
                s*
-               (try (cdr g*)
+               (all (cdr g*)
                     (apply append
                            (map (car g*) s*)))))))
-      (try g* (succeed s)))))
+      (all g* (succeed s)))))
 
 (define (one* . g*)
   (lambda (s)
     (letrec
-      ((try
+      ((one*
          (lambda g*
            (if (null? g*)
                (fail s)
                (let ((out ((car g*) s)))
                  (if (failed? out)
-                     (apply try (cdr g*))
+                     (apply one* (cdr g*))
                      out))))))
-      (apply try g*))))
+      (apply one* g*))))
 
 (define-syntax one
   (syntax-rules ()
@@ -128,10 +134,11 @@
 
 (define-syntax fresh
   (syntax-rules ()
-    ((_ () g)
-       (let () g))
-    ((_ (v ...) g)
-       (let ((v (var 'v)) ...) g))))
+    ((_ () g ...)
+       (let () (all g ...)))
+    ((_ (v ...) g ...)
+       (let ((v (var 'v)) ...)
+         (all g ...)))))
 
 (define (occurs? x y s)
   (let ((v (walk y s)))
@@ -147,21 +154,18 @@
          (occurs? x (walk x s) s))))
 
 (define (walk* x s)
-  (letrec
-    ((w* (lambda (x s)
-           (let ((x (walk x s)))
-             (cond ((var? x) x)
-                   ((atom? x) x)
-                   (else (cons (w* (car x) s)
-                               (w* (cdr x) s))))))))
-    (cond ((circular? x s) *failure*)
-          ((eq? x (walk x s)) empty-s)
-          (else (w* x s)))))
+  (let ((x (walk x s)))
+    (cond ((var? x) x)
+          ((atom? x) x)
+          (else (cons (walk* (car x) s)
+                      (walk* (cdr x) s))))))
 
-(define (propagate-failure s)
-  (if (occurs? *failure* s s)
-      '()
-      s))
+(define *failure* (var 'failure))
+
+(define (s-walk* x s)
+  (cond ((circular? x s) *failure*)
+        ((eq? x (walk x s)) empty-s)
+        (else (walk* x s))))
 
 (define (reify-name n)
   (string->symbol
@@ -181,21 +185,38 @@
                             (reify-s (car v) s))))))))
     (reify-s v empty-s)))
 
-(define (query x g)
+(define (propagate-failure s)
+  (if (occurs? *failure* s s)
+      '()
+      s))
+
+(define (collapse-null x)
+  (letrec
+    ((all-null?
+       (lambda (x)
+         (or (null? x)
+             (and (null? (car x))
+                  (all-null? (cdr x)))))))
+    (cond ((null? x)     x)
+          ((all-null? x) (succeed '()))
+          (else          x))))
+
+(define (query x . g)
   (propagate-failure
     (map (lambda (s)
-           (walk* x (append s (reify (walk* x s)))))
-         (g empty-s))))
+           (s-walk* x (append s (reify (s-walk* x s)))))
+         ((apply all g) empty-s))))
 
 (define-syntax run*
   (syntax-rules ()
-    ((_ () goal) (query #f goal))
-    ((_ (v) goal) (query v goal))))
+    ((_ () g ...)
+       (collapse-null
+         (query #f g ...)))
+    ((_ (v) g ...)
+       (let ((v (var 'v)))
+         (query v g ...)))))
 
 ; ----- Tools -----
-
-(define vp (var 'p))
-(define vq (var 'q))
 
 (define (conso a d p) (== (cons a d) p))
 
@@ -232,12 +253,104 @@
   (any (all (== x '())
             (== y r))
        (fresh (h t tr)
-         (all (conso h t x)
-              (conso h tr r)
-              (appendo t y tr)))))
+         (conso h t x)
+         (conso h tr r)
+         (appendo t y tr))))
 
 (define (choice x a)
   (if (null? a)
       fail
       (any (== x (car a))
            (choice x (cdr a)))))
+
+; ----- Debugging Helpers -----
+
+(define (printo . x)
+  (lambda (s)
+    (display (walk (car x) s))
+    (for-each (lambda (x)
+                (write-char #\space)
+                (display (walk x s)))
+              (cdr x))
+    (newline)
+    (succeed s)))
+
+(define (print*o . x)
+  (lambda (s)
+    (display (walk* (car x) s))
+    (for-each (lambda (x)
+                (write-char #\space)
+                (display (walk* x s)))
+              (cdr x))
+    (newline)
+    (succeed s)))
+
+; ----- Numeric Tools -----
+
+(define-macro (eql vv x)
+  (letrec
+    ((walk-vars
+       (lambda (x)
+         (cond ((null? x)   '())
+               ((pair? x)   (cons (car x)
+                                  (map walk-vars 
+                                       (cdr x))))
+               ((symbol? x) `(walk ,x s))
+               (else        x)))))
+    `(lambda (s)
+       (let ((v (walk ,vv s)))
+         (cond ((var? v)
+                 (succeed
+                   (ext-s v ,(walk-vars x) s)))
+               (else
+                 (if (eqv? v ,(walk-vars x))
+                     (succeed s)
+                     (fail s))))))))
+
+(define-macro (=p a b)  `(eql #t (=  ,a ,b)))
+(define-macro (<p a b)  `(eql #t (<  ,a ,b)))
+(define-macro (>p a b)  `(eql #t (>  ,a ,b)))
+(define-macro (<=p a b) `(eql #t (<= ,a ,b)))
+(define-macro (>=p a b) `(eql #t (>= ,a ,b)))
+(define-macro (/=p a b) `(eql #F (=  ,a ,b)))
+
+(define (range x l h)
+  (if (> l h)
+      fail
+      (any (== x l)
+           (range x (+ 1 l) h))))
+
+; ----- Hard Cutting -----
+
+(define *cut* #f)
+
+(define (try* . g*)
+  (lambda (s)
+    (letrec
+      ((try*
+         (lambda g*
+           (if (null? g*)
+               (fail s)
+               (append ((car g*) s)
+                       (apply try* (cdr g*)))))))
+      (call-with-current-continuation
+        (lambda (k)
+          (cond (*cut*
+                  (apply try* g*))
+                (else
+                  (set! *cut* k)
+                  (let ((r (apply try* g*)))
+                    (set! *cut* #f)
+                    r))))))))
+
+(define-syntax try
+  (syntax-rules ()
+    ((_) fail)
+    ((_ g ...)
+       (try* (lambda (s) (g s)) ...))))
+
+(define (cut)
+  (lambda (s)
+    (let ((cut *cut*))
+      (set! *cut* #f)
+      (cut (succeed s)))))

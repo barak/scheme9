@@ -84,7 +84,7 @@ Searching
         and [^P] (or [Up Arrow]) will move to the previous match. Pressing
         any other key will return to edit mode.
 
-        Pressing [^L][n] will locate the next occurence of a previous match
+        Pressing [^L][n] will locate the next occurrence of a previous match
         without entering search mode.
 
 Manual Text Exchange
@@ -102,7 +102,7 @@ Manual Text Exchange
 
 Automatic Text Exchange
         When a region is marked when the [^L][x] command is started, then
-        all occurences inside of the region will be replaced without any
+        all occurrences inside of the region will be replaced without any
         interaction.
 
 ::::: LOADING, SAVING, AND EXITING ::::::::::::::::::::::::::::::::::::::::::::
@@ -120,7 +120,7 @@ Automatic Text Exchange
         [^L][y] synchronizes (saves) all buffers.
         
         [^L][q] quits without saving any buffers. A warning will display,
-                if there ar any unsaved buffers.
+                if there are any unsaved buffers.
 
         [^L][z] saves the current buffer and exits.
 
@@ -133,6 +133,9 @@ Automatic Text Exchange
                 The inserted region will be marked.
 
         [^L][w] writes the marked region to a file.
+
+        [^L][f] sends a region to an external program (a filter) and then
+                replaces the region with the output of the filter.
 
         [^L][i] enters indent mode. In this mode, the marked region can be
                 indented by pressing [^F] (or [Right Arrow]) and outdented
@@ -205,7 +208,7 @@ Automatic Text Exchange
                 lists all properties and their current settings.
 
                 Normal navigation works in the property buffer. In addition,
-                [CR] / [ENTER] will pass the current propery to the prompt,
+                [CR] / [ENTER] will pass the current property to the prompt,
                 and [q] will return to edit mode.
 
         The following properties exist. Each property is either a string, a
@@ -215,8 +218,8 @@ Automatic Text Exchange
         will clear the "auto-indent" flag.
         
         Other properties are changed by entering their name, an equal sign,
-        and the new value, e.g.: "rt=10" or "sc=foo -q". No quotes should be
-        used to demilit string properties.
+        and the new value, e.g.: "rt=10" or "sc=foo -q". No quotes may be
+        used to delimit string properties.
         
         "Global" properties affect all buffers, "local" ones affect only the
         current buffer.
@@ -252,10 +255,10 @@ Automatic Text Exchange
         error-bell (eb) global flag
                 When activated, an audible bell will ring when a motion
                 command would move the cursor outside of the buffer or when
-                an error messags displays.
+                an error message displays.
 
         help-reminder (hr) global flag
-                Display a brief remainder of the principal command key ([^L])
+                Display a brief reminder of the principal command key ([^L])
                 in the status line. This text will reduce the length of the
                 buffer name, which is also displayed in the status line.
 
@@ -268,7 +271,7 @@ Automatic Text Exchange
                 A buffer with this flag set cannot be saved or modified. This
                 will happen automatically when
                 - the "-r" command line option is passed to the editor script;
-                - the 'read-only option is passed to the S9E prcedure;
+                - the 'read-only option is passed to the S9E procedure;
                 - an unwritable file is loaded to a buffer.
 
         repl-command (rc) global string
@@ -303,9 +306,9 @@ Automatic Text Exchange
 
 ::::: CONFIGURATION FILE ::::::::::::::::::::::::::::::::::::::::::::::::::::::
 
-        When an a file named "$HOME/.s9fes/s9e-config" exists, property
-        commands will be read from that file when S9E starts. The following
-        lines would set up the default options:
+        When a file named "$HOME/.s9fes/s9e-config" exists, property
+        commands will be read from that file when S9E starts. The
+        following lines would set up the default options:
 
                 auto-indent
                 no-auto-load
