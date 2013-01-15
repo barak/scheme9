@@ -1,3 +1,18 @@
+scheme9 (2013.01.09-2) unstable; urgency=low
+
+  * Add s9 prefix to names of generically named binaries:
+    - /usr/bin/advgen	to /usr/bin/s9advgen
+    - /usr/bin/c2html	to /usr/bin/s9c2html (closes: #697901)
+    - /usr/bin/cols	to /usr/bin/s9cols
+    - /usr/bin/dupes	to /usr/bin/s9dupes
+    - /usr/bin/edoc	to /usr/bin/s9edoc
+    - /usr/bin/htmlify	to /usr/bin/s9htmlify
+    - /usr/bin/scm2html	to /usr/bin/s9scm2html
+    - /usr/bin/scmpp	to /usr/bin/s9scmpp
+    - /usr/bin/soccat	to /usr/bin/s9soccat
+
+ -- Barak A. Pearlmutter <bap@debian.org>  Tue, 15 Jan 2013 09:06:11 +0000
+
 scheme9 (2013.01.09-1) unstable; urgency=low
 
   * New Upstream Version
