@@ -10,3 +10,8 @@ override_dh_auto_build:
 
 override_dh_auto_install:
 	dh_auto_install -- $(mflags) install-all
+	echo "Rename binaries to avoid namespace pollution and collisions"
+	cd debian/scheme9/usr/bin && \
+	 for f in advgen c2html cols dupes edoc htmlify scm2html scmpp soccat; do \
+	  mv --verbose $$f s9$$f || true; \
+	 done
