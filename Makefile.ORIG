@@ -10,8 +10,10 @@ PREFIX= /u
 CC=	gcc
 CFLAGS=	-g -Wall -ansi -pedantic -O2
 
-# Uncomment the following, if you get "wrong interpreter" errors on OSX
+# You may try one of the following, if you get "wrong interpreter" errors
 #LDFLAGS+=	-Wl,-no_pie
+#LDFLAGS+=	-no_pie
+#LDFLAGS+=	-fno_pie
 
 # Which OS are we using (unix or plan9)?
 OSDEF=	-Dunix

@@ -31,7 +31,9 @@
            ((pair? pattern)
              (cond
                ((and (pair? (cdr pattern))
-                     (eq? '... (cadr pattern)))
+                     (eq? '... (cadr pattern))
+                     (or (pair? form)
+                         (null? form)))
                  (let ((e* (map (lambda (x)
                                   (match x (car pattern) keywords '()))
                                 form)))

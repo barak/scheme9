@@ -6,6 +6,7 @@
 
 (load-from-library "assp.scm")
 (load-from-library "combine.scm")
+(load-from-library "collect.scm")
 (load-from-library "count.scm")
 (load-from-library "depth.scm")
 (load-from-library "equal-cip.scm")

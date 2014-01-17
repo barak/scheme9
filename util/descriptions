@@ -17,6 +17,7 @@ c2html1.scm|-|C2HTML command line wrapper|-
 catch.scm|catch / throw|-|Handle exceptions
 check-descr.scm|-|Missing description ;-)|-
 choose.scm|choose|-|Compute binomial coefficients
+collect.scm|collect|-|Collect related elements from lists
 cols.scm|-|Format input in two columns|-
 combine.scm|combine|-|Generate combinations of sets
 cond-expand.scm|cond-expand|-|Simple feature-based conditional expansion

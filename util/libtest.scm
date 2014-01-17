@@ -150,6 +150,12 @@
   (choose 23 3)  ==>  1771
 )
 
+(load-from-library "collect.scm")
+(%test
+  (collect eq? '(a a a b c c))  ==>  ((a a a) (b) (c c))
+  (collect < '(1 2 3 3 4 5 4))  ==>  ((1 2 3) (3 4 5) (4))
+)
+
 (load-from-library "combine.scm")
 (%test
   (combine 2 '(a b c))   ==>  ((a b) (a c) (b c))
@@ -1087,7 +1093,7 @@
 (%test
   (format-time "~w ~4y-~@m-~2d ~2h:~2m:~2s"
                '(1 2009 3 9 8 53 20))
-      ==> "Tue 2009-Apr-09 08:53:20"
+      ==> "Tue 2009-Mar-09 08:53:20"
 )
 
 (load-from-library "leap-yearp.scm")

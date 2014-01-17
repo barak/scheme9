@@ -7,9 +7,9 @@
 	S9fES is a mature, portable, and comprehensible public-domain
 	interpreter for R4RS Scheme offering
 
+	- decimal-based real number arithmetics;
 	- support for low-level Unix programming;
 	- cursor addressing with Curses;
-	- decimal-based real number arithmetics;
 	- basic networking procedures;
 	- loads of useful library functions;
 	- an experimental Scheme-centric full-screen editor.
@@ -35,6 +35,19 @@
 	- SRFI-23: error reporting mechanism
 	- SRFI-30: nested multi-line comments
 	- VECTOR-COPY and VECTOR-APPEND from SRFI-43
+
+
+	***** NOTE *****************************************************
+
+	If you are planning to use image files (which the S9 default
+	setup does!), you will have to disable both address space layout
+	randomization (ASLR) and position-independent code (PIE) for the
+	S9 executable. This is because the image file contains pointers
+	to functions in the interpreter executable, and either of the
+	above techniques will invalidate these pointers, resulting in
+	fatal "wrong interpreter" errors when the S9 system starts up.
+
+	****************************************************************
 
 
 	QUICK START
@@ -76,11 +89,6 @@
 	edit at least the PREFIX variable at the beginning of Makefile.
 	(Be sure to re-compile S9fES (make clean; make) after changing
 	 PREFIX, because it is used to set up some internal paths).
-
-	OSX
-
-	Basically as on generic Unix, but you may have to enable some
-	extra LDFLAGS in the Makefile.
 
 	Plan 9
 

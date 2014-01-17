@@ -1,6 +1,25 @@
 
 Change Log
 
+2013-11-26
+	Added ARGV primitive to core system. See below. (s9.c)
+2013-11-24
+	Added ENVIRON and SYSTEM primitives to the core interpreter. (s9.c)
+	Mostly to use minimal S9 in web programming.
+2013-04-10
+	Added a workaround for plan9's atol() function, which
+	interprets leading '0' as octal. Thanks, Bakul Shah! (s9.c)
+2013-02-09
+	Fix: FORMAT-TIME emitted wrong month name with ~@m. Thanks,
+	Doug Currie! (ext/)
+2013-01-22
+	Fix: S9E would abort when exiting from the [^L][e] prompt using
+	backspace. (contrib/)
+2013-01-17
+	Added COLLECT procedure. (lib/)
+2013-01-14
+	Fix: SYNTAX-RULES could abort while matching an ellipsis against
+	an atom. (lib/)
 2013-01-09
 	S9E: Fixed highlighting of marked regions in side-scrolled lines.
 	(contrib/)
