@@ -1,3 +1,16 @@
+scheme9 (2013.11.26-1) unstable; urgency=medium
+
+  * New Upstream Version
+  * debian/control:
+    - Bump standards version (no changes required)
+    - Update debian repo urls
+  * Update quilt patches
+    - forward-port patches (tiny change to comment in context of diff)
+    - gbp-pq import/export
+    - add patch for fread status
+
+ -- Barak A. Pearlmutter <bap@debian.org>  Fri, 17 Jan 2014 10:26:40 +0000
+
 scheme9 (2013.01.09-2) unstable; urgency=low
 
   * Add s9 prefix to names of generically named binaries:
