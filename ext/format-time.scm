@@ -28,7 +28,7 @@
 ;
 ; Example:   (format-time "~w ~4y-~@m-~2d ~2h:~2m:~2s"
 ;                         '(1 2009 3 9 8 53 20))
-;                ==> "Tue 2009-Apr-09 08:53:20"
+;                ==> "Tue 2009-Mar-09 08:53:20"
 
 (load-from-library "proper-timep.scm")
 
@@ -80,8 +80,9 @@
                                                (number->string
                                                  (list-ref t 2)))
                                              (at
-                                               (vector-ref months
-                                                           (list-ref t 2)))
+                                               (vector-ref
+                                                 months
+                                                 (- (list-ref t 2) 1)))
                                              (else
                                                (number->string
                                                  (list-ref t 5)))))

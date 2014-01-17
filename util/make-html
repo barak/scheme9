@@ -269,7 +269,7 @@ fi
 if [ $update_only = no -o $update_only = txt ]; then
 	format_txt_files -r "" ABOUT
 	format_txt_files "" CHANGES LICENSE Makefile README Todo
-	format_txt_files "" _checksums mkfile s9.1.txt
+	format_txt_files "" configure _checksums mkfile s9.1.txt
 	format_txt_files lib lib/_template
 	format_txt_files prog prog/adventure.adv prog/edoc.css
 	format_txt_files prog prog/advgen.txt

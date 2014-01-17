@@ -1378,6 +1378,7 @@
 
 (define (auto-complete buf)
   (if-writable buf
+    (drop-mark buf)
     (let ((line (buf-cur-line buf)))
       (if (or (zero? (buffer-x buf))
               (char=? #\space (string-ref line (- (buffer-x buf) 1))))
@@ -1535,7 +1536,10 @@
                     (yesno buf)))
           (color-info)
           (let* ((file (get-line (statline-pos) 0 "" "edit: "))
-                 (file (if (string=? "" file) "." file)))
+                 (file (if (and file
+                                (string=? "" file))
+                                "."
+                                file)))
             (cond ((not file))
                   ((directory? file)
                     (let ((file (select-file buf file)))

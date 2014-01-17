@@ -397,10 +397,21 @@
                 (equal? '("foo" "bar" "baz")
                         (read (sys:make-input-port (car pipe))))))))
 
+; XXX should also test built-in ARGV primitive
+
 (test (let ((pipe (sys:pipe)))
         (cond ((zero? (sys:fork))
                 (sys:dup2 (cadr pipe) 1)
                 (sys:system "echo hello")
+                (sys:exit))
+              (else
+                (equal? (string-append "hello" (string #\newline))
+                        (sys:read (car pipe) 1024))))))
+
+(test (let ((pipe (sys:pipe))) ; SYSTEM of core S9, not of SYS:
+        (cond ((zero? (sys:fork))
+                (sys:dup2 (cadr pipe) 1)
+                (system "echo hello")
                 (sys:exit))
               (else
                 (equal? (string-append "hello" (string #\newline))
@@ -534,6 +545,9 @@
 
 (test (sys:getenv "HOME"))
 (fail (sys:getenv ""))
+
+(test (environ "HOME")) ; these two are in fact not in SYS:
+(fail (environ ""))
 
 (test (sys:getpid))
 

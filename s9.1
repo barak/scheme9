@@ -186,6 +186,14 @@ The same type of bracket must be used on both ends of a list.
 These S9fES procedures are not in R4RS:
 .sp
 .ne 3
+.B "(argv integer)  ==>  string | #f
+.in +4
+Retrieve the value of the given command line argument. Return
+\fB#f\fP, if there are less than \fIinteger\fP+1 arguments.
+Arguments start at 0.
+.in -4
+.sp
+.ne 3
 .B "(bit-op integer1 integer2 integer3 ...)  ==>  integer | #f
 .in +4
 Implement a variety of bitwise operations. See the
@@ -209,6 +217,13 @@ Write a heap image to the file given in the
 .I string
 argument. If the file already exists, report
 an error.
+.in -4
+.sp
+.ne 3
+.B "(environ string)  ==>  string | #f
+.in +4
+Retrieve the value of the given environment variable. Return
+\fB#f\fP, if the variable is undefined.
 .in -4
 .sp
 .ne 3
@@ -381,6 +396,12 @@ must be quoted or it will be evaluated before passing it to
 .B "(symbols)  ==>  list
 .in +4
 Return a list of all defined symbols.
+.in -4
+.sp
+.ne 3
+.B "(system string)  ==>  number
+.in +4
+Run the given shell command and return its exit code.
 .in -4
 .sp
 .ne 3

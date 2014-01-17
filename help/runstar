@@ -11,5 +11,7 @@ values for that variable that satisfy the query.
 [1] http://www.lulu.com/shop/nils-m-holm/logic-programming-in-scheme/\
     paperback/product-18693432.html
 
-(run* (vq) (appendo vq (_) '(a b c)))
-  ==>  (() (a) (a b) (a b c))
+(run* (q) (fresh (h t) 
+            (== q (list h t))
+            (appendo h t '(1 2 3))))
+  ==>  ((() (1 2 3)) ((1) (2 3)) ((1 2) (3)) ((1 2 3) ()))

@@ -13,7 +13,7 @@
  *     (also add "s9-real.scm" to the heap image).
  */
 
-#define VERSION "2013-01-09"
+#define VERSION "2013-11-26"
 
 #define EXTERN
  #include "s9.h"
@@ -694,6 +694,9 @@ cell quote(cell n, cell quotation) {
 	else if (s[0] == '+') {
 		s++;
 	}
+	/* plan9's atol() interprets leading 0 as octal! */
+	while (s[0] == '0' && s[1])
+		s++;
 	k = (int) strlen(s);
 	n = NIL;
 	while (k) {
@@ -3946,6 +3949,39 @@ cell pp_trace(cell x) {
 	return n;
 }
 
+#ifdef unix
+
+cell pp_argv(cell x) {
+	cell	n;
+	char	**cl;
+
+	if (Command_line == NULL || *Command_line == NULL)
+		return FALSE;
+	n = integer_value("argv", cadr(x));
+	cl = Command_line;
+	for (; n--; cl++)
+		if (*cl == NULL)
+			return FALSE;
+	return *cl == NULL? FALSE: make_string(*cl, strlen(*cl));
+}
+
+cell pp_environ(cell x) {
+	char	*s;
+
+	s = getenv(string(cadr(x)));
+	if (s == NULL)
+		return FALSE;
+	return make_string(s, strlen(s));
+}
+
+cell pp_system(cell x) {
+	int	r;
+
+	r = system(string(cadr(x)));
+	return make_integer(r >> 8);
+}
+#endif
+
 /*
  * Evaluator
  */
@@ -4120,6 +4156,11 @@ PRIM Primitives[] = {
  { "mantissa",            pp_mantissa,            1,  1, { REA,___,___ } },
  { "real?",               pp_real_p,              1,  1, { ___,___,___ } },
 #endif /* REALNUM */
+#ifdef unix
+ { "argv",                pp_argv,                1,  1, { INT,___,___ } },
+ { "environ",             pp_environ,             1,  1, { STR,___,___ } },
+ { "system",              pp_system,              1,  1, { STR,___,___ } },
+#endif
  { NULL }
 };
 
