@@ -6,14 +6,14 @@ Simplify installed symlink from bin/s9e-core to s9e by removing
 absolute prefix, which is wrong when DESTDIR is turned on, and
 problematic if the target bin directory is moved.
 ---
- Makefile |    2 +-
+ Makefile | 2 +-
  1 file changed, 1 insertion(+), 1 deletion(-)
 
 diff --git a/Makefile b/Makefile
-index b25cd1d..fe63716 100644
+index de1f746..3cb0df0 100644
 --- a/Makefile
 +++ b/Makefile
-@@ -170,7 +170,7 @@ install-util:
+@@ -172,7 +172,7 @@ install-util:
  install-s9e:	s9e-core.image
  	install -d -m 0755 $(BINDIR)
  	install -d -m 0755 $(LIBDIR)

@@ -5,14 +5,14 @@ Subject: use CPPFLAGS
 Need CPPFLAGS during compilation to call hardened routines during
 hardened build.  See lintian tag hardening-no-fortify-functions.
 ---
- Makefile |    1 +
+ Makefile | 1 +
  1 file changed, 1 insertion(+)
 
 diff --git a/Makefile b/Makefile
-index e71e7b5..7764263 100644
+index c225941..f3c0937 100644
 --- a/Makefile
 +++ b/Makefile
-@@ -45,6 +45,7 @@ EXTRA_SCM+=	-l s9-real.scm
+@@ -47,6 +47,7 @@ EXTRA_SCM+=	-l s9-real.scm
  #				# (requires the Curses extension)
  
  DEFS=	$(OSDEF) \

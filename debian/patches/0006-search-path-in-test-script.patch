@@ -3,7 +3,7 @@ Date: Wed, 27 Jul 2011 20:46:16 +0100
 Subject: search path in test script
 
 ---
- util/libtest.sh |    2 ++
+ util/libtest.sh | 2 ++
  1 file changed, 2 insertions(+)
  mode change 100644 => 100755 util/libtest.sh
 

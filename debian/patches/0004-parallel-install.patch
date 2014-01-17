@@ -6,14 +6,14 @@ Allow parallelism during "make install" by ensuring that each
 installation stanza creates any directories it targets.  This might
 result in multiple creation; that is okay.
 ---
- Makefile |    4 ++++
+ Makefile | 4 ++++
  1 file changed, 4 insertions(+)
 
 diff --git a/Makefile b/Makefile
-index 7764263..b25cd1d 100644
+index f3c0937..de1f746 100644
 --- a/Makefile
 +++ b/Makefile
-@@ -153,6 +153,7 @@ install-s9:	s9 s9.scm s9.image s9.1.gz
+@@ -155,6 +155,7 @@ install-s9:	s9 s9.scm s9.image s9.1.gz
  	(cd $(LIBDIR) && ./make-help-links && rm make-help-links)
  
  install-util:
@@ -21,7 +21,7 @@ index 7764263..b25cd1d 100644
  	sed -e "s|^#! /usr/local|#! $(PREFIX)|"	\
  		<prog/s9help.scm >$(BINDIR)/s9help
  	sed -e "s|^#! /usr/local|#! $(PREFIX)|"	\
-@@ -167,6 +168,8 @@ install-util:
+@@ -169,6 +170,8 @@ install-util:
  		  $(BINDIR)/scmpp
  
  install-s9e:	s9e-core.image
@@ -30,7 +30,7 @@ index 7764263..b25cd1d 100644
  	ln -fs $(BINDIR)/s9 $(BINDIR)/s9e-core
  	install $C -m 0644 s9e-core.image $(LIBDIR)
  	sed -e "s|^#! /usr/local|#! $(PREFIX)|"	\
-@@ -174,6 +177,7 @@ install-s9e:	s9e-core.image
+@@ -176,6 +179,7 @@ install-s9e:	s9e-core.image
  	-chmod +x $(BINDIR)/s9e
  
  install-progs:

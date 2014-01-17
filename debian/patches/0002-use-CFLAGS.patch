@@ -5,11 +5,11 @@ Subject: use CFLAGS
 Don't specify -O2 and -g (on by default) so they can be overwritten
 by builder, e.g., dpkg-buildflags.
 ---
- Makefile |    4 ++--
+ Makefile | 4 ++--
  1 file changed, 2 insertions(+), 2 deletions(-)
 
 diff --git a/Makefile b/Makefile
-index f5add4d..e71e7b5 100644
+index 18a4a94..c225941 100644
 --- a/Makefile
 +++ b/Makefile
 @@ -8,7 +8,7 @@ PREFIX=$(prefix)
@@ -21,7 +21,7 @@ index f5add4d..e71e7b5 100644
  
  # You may try one of the following, if you get "wrong interpreter" errors
  #LDFLAGS+=	-Wl,-no_pie
-@@ -75,7 +75,7 @@ all:	default s9e
+@@ -77,7 +77,7 @@ all:	default s9e
  s9e:	s9e-core.image
  
  s9:	s9.o s9.h $(EXTRA_OBJS)

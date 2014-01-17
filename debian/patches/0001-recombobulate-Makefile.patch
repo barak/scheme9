@@ -3,11 +3,11 @@ Date: Wed, 27 Jul 2011 20:46:53 +0100
 Subject: recombobulate Makefile
 
 ---
- Makefile |   29 +++++++++++++++++++++--------
+ Makefile | 29 +++++++++++++++++++++--------
  1 file changed, 21 insertions(+), 8 deletions(-)
 
 diff --git a/Makefile b/Makefile
-index d22075d..f5add4d 100644
+index 698929c..18a4a94 100644
 --- a/Makefile
 +++ b/Makefile
 @@ -4,7 +4,7 @@
@@ -19,7 +19,7 @@ index d22075d..f5add4d 100644
  
  # Override default compiler and flags
  CC=	gcc
-@@ -53,14 +53,21 @@ DEFS=	$(OSDEF) \
+@@ -55,14 +55,21 @@ DEFS=	$(OSDEF) \
  	-DCURSES_RESET
  
  # Where to install the stuff
@@ -45,7 +45,7 @@ index d22075d..f5add4d 100644
  		lib/matcher.scm
  
  all:	default s9e
-@@ -77,8 +84,14 @@ s9.o:	s9.c s9-real.c s9.h
+@@ -79,8 +86,14 @@ s9.o:	s9.c s9-real.c s9.h
  s9.image:	s9 s9.scm s9-real.scm ext/unix.scm ext/curses.scm config.scm
  	$(BUILD_ENV) ./s9 -i - -n $(EXTRA_SCM) -l config.scm -d s9.image
  
@@ -62,7 +62,7 @@ index d22075d..f5add4d 100644
  
  unix.o:	ext/unix.c s9.h
  	$(CC) $(CFLAGS) $(DEFS) -I . -o unix.o -c ext/unix.c
-@@ -127,7 +140,7 @@ install-s9:	s9 s9.scm s9.image s9.1.gz
+@@ -129,7 +142,7 @@ install-s9:	s9 s9.scm s9.image s9.1.gz
  	install -d -m 0755 $(LIBDIR)/help
  	install -d -m 0755 $(MANDIR)
  	install $C -m 0755 s9 $(BINDIR)

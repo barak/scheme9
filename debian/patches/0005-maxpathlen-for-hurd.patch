@@ -3,7 +3,7 @@ Date: Wed, 27 Jul 2011 20:45:24 +0100
 Subject: maxpathlen for hurd
 
 ---
- s9.h |    5 +++++
+ s9.h | 5 +++++
  1 file changed, 5 insertions(+)
 
 diff --git a/s9.h b/s9.h
