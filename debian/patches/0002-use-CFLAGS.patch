@@ -19,7 +19,7 @@ index f5add4d..e71e7b5 100644
 -CFLAGS=	-g -Wall -ansi -pedantic -O2
 +CFLAGS+=	-Wall -ansi -pedantic
  
- # Uncomment the following, if you get "wrong interpreter" errors on OSX
+ # You may try one of the following, if you get "wrong interpreter" errors
  #LDFLAGS+=	-Wl,-no_pie
 @@ -75,7 +75,7 @@ all:	default s9e
  s9e:	s9e-core.image
