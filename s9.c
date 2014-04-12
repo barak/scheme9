@@ -13,7 +13,7 @@
  *     (also add "s9-real.scm" to the heap image).
  */
 
-#define VERSION "2013-11-26"
+#define VERSION "2014-01-11"
 
 #define EXTERN
  #include "s9.h"
@@ -1558,7 +1558,7 @@ cell lookup(cell v, cell env, int req) {
 		if (n != NIL)
 			return n;
 		if (e != NIL)
-			e = cdr(e);
+			e = cdr(e);	/* skip over hash table */
 		while (e != NIL) {
 			if (v == caar(e))
 				return car(e);

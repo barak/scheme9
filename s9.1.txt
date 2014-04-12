@@ -378,17 +378,17 @@ INTERPRETER START-UP
 
 ALLOCATION STRATEGY
           The S9fES memory pool grows exponentially until  the  memory
-          limit  its  reached.  When the limit is reached, the current
+          limit  is  reached.  When  the limit is reached, the current
           computation is aborted. A  memory  limit  can  be  specified
           using  the -m command line option. The limit is specified in
           units of 1024 nodes (or  in  units  of  1024*1024  nodes  by
           appending an m suffix).
+
           Note that computations may abort before the limit is reached
           due to the way the pool  grows.  Use  the  -g  command  line
           option to experiment with pool sizes.
           Specifying  a  limit  of  zero  disables  the  memory  limit
           completely and the interpreter will allocate as much  memory
-
 
 
 

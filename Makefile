@@ -244,7 +244,7 @@ update-library:
 
 s9.1.txt:	s9.1
 	cc -o rpp util/rpp.c
-	nroff s9.1 | ./rpp -a >s9.1.txt
+	nroff -mdoc s9.1 | ./rpp -a >s9.1.txt
 	rm -f rpp
 
 docs:	lib ext contrib
@@ -277,3 +277,12 @@ mksums:	clean
 
 stripped-arc:	clean s9.1.txt
 	mv Makefile Makefile.ORIG
+	sed -e '/^#EDOC/,/^#CODE/d' <Makefile.ORIG >Makefile
+	cd .. && tar -cf - --exclude edoc --exclude freebsd-port s9 | \
+		gzip -9 > s9fes.tgz && mv s9fes.tgz s9
+	mv -f Makefile.ORIG Makefile
+	ls -l s9fes.tgz | awk '{print int($$5/1024+.5)}'
+
+arc:	clean s9.1.txt
+	cd .. && tar cf - s9 | gzip -9 > s9fes.tgz && mv s9fes.tgz s9
+	ls -l s9fes.tgz | awk '{print int($$5/1024+.5)}'

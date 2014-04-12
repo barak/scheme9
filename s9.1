@@ -375,8 +375,8 @@ Evaluate the given
 .I form
 and return a list containing its normal form plus a summary
 of the resources used to compute that normal form:
-.in +4
 .sp
+.in +4
 .nf
 - reduction steps
 - conses allocated
@@ -636,14 +636,14 @@ option was specified.
 .in -4
 .SH "ALLOCATION STRATEGY
 The S9fES memory pool grows exponentially until the memory limit
-its reached. When the limit is reached, the current computation
+is reached. When the limit is reached, the current computation
 is aborted. A memory limit can be specified using the
 .B -m
 command line option. The limit is specified in units of 1024
 nodes (or in units of 1024*1024 nodes by appending an
 .B m
 suffix).
-.br
+.sp
 Note that computations may abort
 .I before
 the limit is reached due to the way the pool grows. Use the
