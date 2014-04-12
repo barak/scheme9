@@ -1,6 +1,9 @@
 
 Change Log
 
+2014-01-11
+	Added clarifying coment in lookup(). (s9.c)
+	Fixed typo in man page. Thanks, Yi Dai (s9.1)
 2013-11-26
 	Added ARGV primitive to core system. See below. (s9.c)
 2013-11-24
