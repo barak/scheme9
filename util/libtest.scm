@@ -413,8 +413,7 @@
     (how-many 1 2 3 4 5))                  ==> 5
 ;
   (let-matcher appnd
-    ((x ()      => x)
-     (() x      => x)
+    ((() x      => x)
      ((h . t) x => (cons h (appnd t x))))
     (appnd '(a b c) '(d e f)))             ==>  (a b c d e f)
 )

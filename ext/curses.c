@@ -1,6 +1,6 @@
 /*
  * Scheme 9 from Empty Space, Curses Interface
- * By Nils M Holm, 2010
+ * By Nils M Holm, 2010,2014
  * Placed in the Public Domain
  *
  * A low-level interface to some CURSES(3) routines.
@@ -326,7 +326,7 @@ cell pp_curs_mvinch(cell x) {
 	char	name[] = "curs:mvinch";
 
 	if (!Running) return UNSPECIFIC;
-	return make_char(mvinch(integer_value(name, cadr(x)),
+	return make_char((int) mvinch(integer_value(name, cadr(x)),
 			integer_value(name, caddr(x))));
 }
 

@@ -2,7 +2,7 @@
 
 /*
  * Scheme 9 from Empty Space
- * By Nils M Holm, 2007-2012
+ * By Nils M Holm, 2007-2014
  * Placed in the Public Domain
  */
 
@@ -82,7 +82,7 @@
 
 /*
  * Tell later MSC compilers to let us use the standard CLIB API.
- * Blake McBride < b l a k e  at  m c b r i d e . n a m e >
+ * Blake McBride < b l a k e @ m c b r i d e . n a m e >
  */
 
 #ifdef _MSC_VER
@@ -258,6 +258,7 @@ enum EVAL_STATES {
 
 /*
  * Short cuts for primitive procedure definitions
+ * Yes, ___ violates the C standard, but it's too tempting
  */
 
 #define BOL T_BOOLEAN
@@ -284,6 +285,8 @@ struct Primitive_procedure {
 
 #define PRIM    struct Primitive_procedure
 
+#define PRIM_SEG_SIZE	256
+
 /*
  * Globals
  */
@@ -306,6 +309,10 @@ EXTERN cell	*Vectors;
 EXTERN cell	Free_list;
 EXTERN cell	Free_vecs;
 
+EXTERN PRIM	*Primitives;
+
+EXTERN int	Last_prim, Max_prims;
+
 EXTERN cell	Stack,
 		Stack_bottom;
 EXTERN cell	State_stack;
@@ -316,7 +323,7 @@ EXTERN cell	Symbols;
 EXTERN cell	Program;
 EXTERN cell	Environment;
 EXTERN cell	Acc;
-EXTERN PRIM	*Apply_magic, *Call_magic;
+EXTERN cell	Apply_magic, Callcc_magic;
 EXTERN cell	New;
 
 EXTERN int	Level;
@@ -327,6 +334,7 @@ EXTERN cell     Called_procedures[MAX_CALL_TRACE];
 EXTERN int      Proc_ptr, Proc_max;
 EXTERN cell     File_list;
 EXTERN int      Line_no;
+EXTERN int	Opening_line;
 EXTERN int      Printer_count, Printer_limit;
 
 EXTERN cell     Trace_list;
@@ -389,13 +397,13 @@ EXTERN cell	S_and, S_begin, S_cond, S_define,
  * Flags and structure of real numbers
  */
 
-#define _real_flags(x)          (cadr(x))
-#define _real_exponent(x)       (caddr(x))
-#define _real_mantissa(x)       (cdddr(x))
+#define x_real_flags(x)          (cadr(x))
+#define x_real_exponent(x)       (caddr(x))
+#define x_real_mantissa(x)       (cdddr(x))
 
 #define REAL_NEGATIVE   0x01
 
-#define _real_negative_flag(x)  (_real_flags(x) & REAL_NEGATIVE)
+#define x_real_negative_flag(x)  (x_real_flags(x) & REAL_NEGATIVE)
 
 /*
  * Nested lists
@@ -505,32 +513,32 @@ EXTERN cell	S_and, S_begin, S_cond, S_define,
 #define save_state(v)   (State_stack = cons3((v), State_stack, ATOM_TAG))
 
 /*
- * Bignum arithmitcs
+ * Bignum arithmetics
  */
 
-#define _bignum_negative_p(a)	((cadr(a)) < 0)
-#define _bignum_zero_p(a)	((cadr(a) == 0) && (cddr(a)) == NIL)
-#define _bignum_positive_p(a) \
-		(!_bignum_negative_p(a) && !_bignum_zero_p(a))
+#define x_bignum_negative_p(a)	((cadr(a)) < 0)
+#define x_bignum_zero_p(a)	((cadr(a) == 0) && (cddr(a)) == NIL)
+#define x_bignum_positive_p(a) \
+		(!x_bignum_negative_p(a) && !x_bignum_zero_p(a))
 
 /*
  * Real-number arithmetics
  */
 
-#define _real_zero_p(x) \
-	(car(_real_mantissa(x)) == 0 && cdr(_real_mantissa(x)) == NIL)
+#define x_real_zero_p(x) \
+	(car(x_real_mantissa(x)) == 0 && cdr(x_real_mantissa(x)) == NIL)
 
-#define _real_negative_p(x) \
-	(_real_negative_flag(x) && !_real_zero_p(x))
+#define x_real_negative_p(x) \
+	(x_real_negative_flag(x) && !x_real_zero_p(x))
 
-#define _real_positive_p(x) \
-	(!_real_negative_flag(x) && !_real_zero_p(x))
+#define x_real_positive_p(x) \
+	(!x_real_negative_flag(x) && !x_real_zero_p(x))
 
-#define _real_negate(a) \
-	make_real(_real_flags(a) & REAL_NEGATIVE?	\
-			_real_flags(a) & ~REAL_NEGATIVE: \
-			_real_flags(a) |  REAL_NEGATIVE, \
-		_real_exponent(a), _real_mantissa(a))
+#define x_real_negate(a) \
+	make_real(x_real_flags(a) & REAL_NEGATIVE?	\
+			x_real_flags(a) & ~REAL_NEGATIVE: \
+			x_real_flags(a) |  REAL_NEGATIVE, \
+		x_real_exponent(a), x_real_mantissa(a))
 
 /*
  * Prototypes

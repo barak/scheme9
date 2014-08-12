@@ -1,5 +1,5 @@
 .\" S9(1) Manual Page
-.\" By Nils M Holm, 2007-2012
+.\" By Nils M Holm, 2007-2014
 .ll 70
 .lt 70
 .de HD		\" header
@@ -234,6 +234,19 @@ Retrieve the value of the given environment variable. Return
 Print an error message of the form
 .I "error: string: object
 and terminate program execution.
+.in -4
+.sp
+.ne 3
+.B "(eval object1)          ==>  object
+.br
+.B "(eval object1 object2)  ==>  object
+.in +4
+Evaluate
+.I object1
+in the current environment and return its normal form.
+If
+.I object2
+is also specified, it is ignored.
 .in -4
 .sp
 .ne 3
@@ -681,13 +694,14 @@ does).
 .B Syntax\-rules
 is not fully hygienic.
 .br
-Multiple
-.BR call/cc 's
-in the arguments of the same
+.B Call/cc
+must be the only argument when used in
 .B lambda
 (or derived binding syntax, such as
-.BR let )
-will break the evaluator.
+.BR let ).
+Not observing this rule
+.I will
+break the interpreter.
 .SH "FILES
 .ne 2
 .B $HOME/.s9fes/rc

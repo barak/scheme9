@@ -566,14 +566,11 @@
       (letrec
         ((nest-let
            (lambda (b)
-             (cond ((null? b)
-                     (cons expr exprs))
-                   ((null? (cdr b))
-                     `(let ((,(caar b) ,(cadar b)))
-                        ,@(cons expr exprs)))
-                   (else
-                     `(let ((,(caar b) ,(cadar b)))
-                        ,(nest-let (cdr b))))))))
+             (if (null? (cdr b))
+                 `(let (,(car b))
+                   ,@(cons expr exprs))
+                 `(let (,(car b))
+                   ,(nest-let (cdr b)))))))
         (check-bindings "let*" bindings #f)
         (if (null? bindings)
             `(let () ,expr ,@exprs)
@@ -587,7 +584,7 @@
                ((or (not (pair? c*))
                     (not (pair? (car c*)))
                     (not (pair? (cdar c*))))
-                 (error "case: invalid syntax" c*))
+                 (error "case: syntax error" c*))
                ((null? (cdr c*))
                  (if (eq? 'else (caar c*))
                      `((else ,@(cdar c*)))

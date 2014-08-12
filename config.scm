@@ -7,7 +7,6 @@
 
 (load-from-library "hash-table.scm")
 (load-from-library "keyword-value.scm")
-(load-from-library "id.scm")
 
 (load-from-library "graph-tools.scm")
 (load-from-library "io-tools.scm")

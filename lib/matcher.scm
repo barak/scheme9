@@ -4,9 +4,9 @@
 ; By Nils M Holm, 2009,2010
 ; Placed in the Public Domain
 ;
-; (define make-matcher symbol list ...)           ==>  list
+; (make-matcher symbol list ...)                  ==>  form
 ; (define-matcher symbol <clause> ...)            ==>  unspecific
-; (let-matcher symbol (<clause> ...) <expr> ...)  ==>  unspecific
+; (let-matcher symbol (<clause> ...) <expr> ...)  ==>  object
 ;
 ; (load-from-library "matcher.scm")
 ;
@@ -62,8 +62,7 @@
 ;              (how-many 1 2 3 4 5))                  ==> 5
 ;
 ;            (let-matcher appnd
-;              ((x ()      => x)
-;               (() x      => x)
+;              ((() x      => x)
 ;               ((h . t) x => (cons h (appnd t x))))
 ;              (appnd '(a b c) '(d e f)))             ==>  (a b c d e f)
 
@@ -241,4 +240,20 @@
 
 (define-syntax (define-matcher name . clauses)
   `(define ,name ,(apply make-matcher name clauses)))
+
+#|
+(define-syntax (case x . cases)
+  (let-matcher do-cases
+    ((k
+       => '(if #f #f))
+     (k ((x . xs) . exprs) @ clauses
+       => `(if (memv ,k '(,x ,@xs))
+               (begin ,@exprs)
+               ,(apply do-cases k clauses)))
+     (k (else . exprs)
+       => `(begin ,@exprs)))
+    (let ((k (gensym)))
+      `(let ((,k ,x))
+         ,(apply do-cases k cases)))))
+|#
 

@@ -92,7 +92,6 @@
 (load-from-library "memp.scm")
 (load-from-library "hash-table.scm")
 (load-from-library "keyword-value.scm")
-(load-from-library "id.scm")
 
 (define (t-sort p goal lookup . opts)
   (let/cc exit
@@ -108,7 +107,7 @@
         ((find-dep
            (lambda (x)
              (cond ((lookup x)
-                     => id)
+                     => (lambda (x) x))
                    (strict
                      (exit (if check
                                `(undefined . ,dep)

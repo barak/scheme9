@@ -236,6 +236,7 @@ ln -fs memq memv
 ln -fs minus slash
 ln -fs module using
 ln -fs numberp integerp
+ln -fs numberp realp
 ln -fs parse-optionsb display-usage
 ln -fs parse-optionsb opt-argp
 ln -fs parse-optionsb opt-char
