@@ -7,7 +7,7 @@
  */
 
 /*
- * Functions and macros with a "_real_" prefix expect data
+ * Functions and macros with a "x_real_" prefix expect data
  * objects of the primitive "real" type. Passing bignums to
  * them will result in mayhem.
  *
@@ -215,7 +215,7 @@ cell read_real_number(int inexact) {
 	if (integer_p(n)) {
 		if (!inexact)
 			return n;
-		flags = _bignum_negative_p(n)? REAL_NEGATIVE: 0;
+		flags = x_bignum_negative_p(n)? REAL_NEGATIVE: 0;
 		m = bignum_abs(n);
 		n = make_real(flags, 0, cdr(m));
 		return real_normalize(n, "numeric literal");
@@ -321,18 +321,18 @@ int print_real(cell n) {
 
 	if (!real_p(n))
 		return 0;
-	m = _real_mantissa(n);
+	m = x_real_mantissa(n);
 	n_digits = count_digits(m);
-	e = _real_exponent(n);
+	e = x_real_exponent(n);
 	if (n_digits == MANTISSA_SIZE && e < 0) {
-		print_real(round_last(m, e, n_digits, _real_flags(n)));
+		print_real(round_last(m, e, n_digits, x_real_flags(n)));
 		return 1;
 	}
 	if (e+n_digits > -4 && e+n_digits <= 6) {
-		print_expanded_real(m, e, n_digits, _real_negative_flag(n));
+		print_expanded_real(m, e, n_digits, x_real_negative_flag(n));
 		return 1;
 	}
-	if (_real_negative_flag(n))
+	if (x_real_negative_flag(n))
 		pr("-");
 	ntoa(buf, car(m), 0);
 	pr_raw(buf, 1);
@@ -396,8 +396,8 @@ cell real_normalize(cell x, char *who) {
 	char	buf[50];
 
 	save(x);
-	e = _real_exponent(x);
-	m = new_atom(T_INTEGER, _real_mantissa(x));
+	e = x_real_exponent(x);
+	m = new_atom(T_INTEGER, x_real_mantissa(x));
 	save(m);
 	dgs = count_digits(cdr(m));
 	while (dgs > MANTISSA_SIZE) {
@@ -407,15 +407,15 @@ cell real_normalize(cell x, char *who) {
 		dgs--;
 		e++;
 	}
-	while (!_bignum_zero_p(m)) {
+	while (!x_bignum_zero_p(m)) {
 		r = bignum_shift_right(m);
-		if (!_bignum_zero_p(cdr(r)))
+		if (!x_bignum_zero_p(cdr(r)))
 			break;
 		m = car(r);
 		car(Stack) = m;
 		e++;
 	}
-	if (_bignum_zero_p(m))
+	if (x_bignum_zero_p(m))
 		e = 0;
 	r = new_atom(e, NIL);
 	unsave(2);
@@ -424,7 +424,7 @@ cell real_normalize(cell x, char *who) {
 			who? who: "internal");
 		error(buf, NOEXPR);
 	}
-	return make_real(_real_flags(x), e, cdr(m));
+	return make_real(x_real_flags(x), e, cdr(m));
 }
 
 cell bignum_to_real(cell a) {
@@ -442,7 +442,7 @@ cell bignum_to_real(cell a) {
 			d--;
 		}
 	}
-	flags = _bignum_negative_p(a)? REAL_NEGATIVE: 0;
+	flags = x_bignum_negative_p(a)? REAL_NEGATIVE: 0;
 	n = make_real(flags, e, cdr(m));
 	return real_normalize(n, NULL);
 }
@@ -450,32 +450,32 @@ cell bignum_to_real(cell a) {
 cell real_negate(cell a) {
 	if (integer_p(a))
 		return bignum_negate(a);
-	return _real_negate(a);
+	return x_real_negate(a);
 }
 
 cell real_negative_p(cell a) {
 	if (integer_p(a))
-		return _bignum_negative_p(a);
-	return _real_negative_p(a);
+		return x_bignum_negative_p(a);
+	return x_real_negative_p(a);
 }
 
 cell real_positive_p(cell a) {
 	if (integer_p(a))
-		return _bignum_positive_p(a);
-	return _real_positive_p(a);
+		return x_bignum_positive_p(a);
+	return x_real_positive_p(a);
 }
 
 cell real_zero_p(cell a) {
 	if (integer_p(a))
-		return _bignum_zero_p(a);
-	return _real_zero_p(a);
+		return x_bignum_zero_p(a);
+	return x_real_zero_p(a);
 }
 
 cell real_abs(cell a) {
 	if (integer_p(a))
 		return bignum_abs(a);
-	if (_real_negative_p(a))
-		return _real_negate(a);
+	if (x_real_negative_p(a))
+		return x_real_negate(a);
 	return a;
 }
 
@@ -491,14 +491,14 @@ int real_equal_p(cell a, cell b) {
 		b = bignum_to_real(b);
 		unsave(1);
 	}
-	if (_real_exponent(a) != _real_exponent(b))
+	if (x_real_exponent(a) != x_real_exponent(b))
 		return 0;
-	if (_real_zero_p(a) && _real_zero_p(b))
+	if (x_real_zero_p(a) && x_real_zero_p(b))
 		return 1;
-	if (_real_negative_p(a) != _real_negative_p(b))
+	if (x_real_negative_p(a) != x_real_negative_p(b))
 		return 0;
-	ma = _real_mantissa(a);
-	mb = _real_mantissa(b);
+	ma = x_real_mantissa(a);
+	mb = x_real_mantissa(b);
 	while (ma != NIL && mb != NIL) {
 		if (car(ma) != car(mb))
 			return 0;
@@ -523,29 +523,29 @@ cell scale_mantissa(cell r, cell desired_e, int max_size) {
 	int	dgs;
 	cell	n, e;
 
-	dgs = count_digits(_real_mantissa(r));
-	if (max_size && (max_size - dgs < _real_exponent(r) - desired_e))
+	dgs = count_digits(x_real_mantissa(r));
+	if (max_size && (max_size - dgs < x_real_exponent(r) - desired_e))
 		return NIL;
-	n = new_atom(T_INTEGER, flat_copy(_real_mantissa(r), NULL));
+	n = new_atom(T_INTEGER, flat_copy(x_real_mantissa(r), NULL));
 	save(n);
-	e = _real_exponent(r);
+	e = x_real_exponent(r);
 	while (e > desired_e) {
 		n = bignum_shift_left(n, 0);
 		car(Stack) = n;
 		e--;
 	}
 	unsave(1);
-	return make_real(_real_flags(r), e, cdr(n));
+	return make_real(x_real_flags(r), e, cdr(n));
 }
 
 void autoscale(cell *pa, cell *pb) {
-	if (_real_exponent(*pa) < _real_exponent(*pb)) {
-		*pb = scale_mantissa(*pb, _real_exponent(*pa),
+	if (x_real_exponent(*pa) < x_real_exponent(*pb)) {
+		*pb = scale_mantissa(*pb, x_real_exponent(*pa),
 					MANTISSA_SIZE*2);
 		return;
 	}
-	if (_real_exponent(*pa) > _real_exponent(*pb)) {
-		*pa = scale_mantissa(*pa, _real_exponent(*pb),
+	if (x_real_exponent(*pa) > x_real_exponent(*pb)) {
+		*pa = scale_mantissa(*pa, x_real_exponent(*pb),
 					MANTISSA_SIZE*2);
 	}
 }
@@ -564,13 +564,13 @@ int real_less_p(cell a, cell b) {
 		b = bignum_to_real(b);
 		unsave(1);
 	}
-	if (_real_negative_p(a) && !_real_negative_p(b)) return 1;
-	if (_real_negative_p(b) && !_real_negative_p(a)) return 0;
-	if (_real_zero_p(a) && _real_positive_p(b)) return 1;
-	if (_real_zero_p(b) && _real_positive_p(a)) return 0;
-	neg = _real_negative_p(a);
-	dpa = count_digits(_real_mantissa(a)) + _real_exponent(a);
-	dpb = count_digits(_real_mantissa(b)) + _real_exponent(b);
+	if (x_real_negative_p(a) && !x_real_negative_p(b)) return 1;
+	if (x_real_negative_p(b) && !x_real_negative_p(a)) return 0;
+	if (x_real_zero_p(a) && x_real_positive_p(b)) return 1;
+	if (x_real_zero_p(b) && x_real_positive_p(a)) return 0;
+	neg = x_real_negative_p(a);
+	dpa = count_digits(x_real_mantissa(a)) + x_real_exponent(a);
+	dpb = count_digits(x_real_mantissa(b)) + x_real_exponent(b);
 	if (dpa < dpb) return neg? 0: 1;
 	if (dpa > dpb) return neg? 1: 0;
 	Tmp = b;
@@ -581,8 +581,8 @@ int real_less_p(cell a, cell b) {
 	unsave(2);
 	if (a == NIL) return neg? 1: 0;
 	if (b == NIL) return neg? 0: 1;
-	ma = _real_mantissa(a);
-	mb = _real_mantissa(b);
+	ma = x_real_mantissa(a);
+	mb = x_real_mantissa(b);
 	ka = length(ma);
 	kb = length(mb);
 	if (ka < kb) return 1;
@@ -608,11 +608,11 @@ cell real_add(cell a, cell b) {
 	if (integer_p(b))
 		b = bignum_to_real(b);
 	save(b);
-	if (_real_zero_p(a)) {
+	if (x_real_zero_p(a)) {
 		unsave(2);
 		return b;
 	}
-	if (_real_zero_p(b)) {
+	if (x_real_zero_p(b)) {
 		unsave(2);
 		return a;
 	}
@@ -628,20 +628,20 @@ cell real_add(cell a, cell b) {
 	}
 	cadr(Stack) = a;
 	car(Stack) = b;
-	e = _real_exponent(a);
-	nega = _real_negative_p(a);
-	negb = _real_negative_p(b);
-	a = new_atom(T_INTEGER, _real_mantissa(a));
+	e = x_real_exponent(a);
+	nega = x_real_negative_p(a);
+	negb = x_real_negative_p(b);
+	a = new_atom(T_INTEGER, x_real_mantissa(a));
 	if (nega)
 		a = bignum_negate(a);
 	cadr(Stack) = a;
-	b = new_atom(T_INTEGER, _real_mantissa(b));
+	b = new_atom(T_INTEGER, x_real_mantissa(b));
 	if (negb)
 		b = bignum_negate(b);
 	car(Stack) = b;
 	m = bignum_add(a, b);
 	unsave(2);
-	flags = _bignum_negative_p(m)? REAL_NEGATIVE: 0;
+	flags = x_bignum_negative_p(m)? REAL_NEGATIVE: 0;
 	r = make_real(flags, e, cdr(bignum_abs(m)));
 	return real_normalize(r, "+");
 }
@@ -652,7 +652,7 @@ cell real_subtract(cell a, cell b) {
 	if (integer_p(b))
 		b = bignum_negate(b);
 	else
-		b = _real_negate(b);
+		b = x_real_negate(b);
 	save(b);
 	r = real_add(a, b);
 	unsave(1);
@@ -670,12 +670,12 @@ cell real_multiply(cell a, cell b) {
 	if (integer_p(b))
 		b = bignum_to_real(b);
 	save(b);
-	neg = _real_negative_flag(a) != _real_negative_flag(b);
-	ea = _real_exponent(a);
-	eb = _real_exponent(b);
-	ma = new_atom(T_INTEGER, _real_mantissa(a));
+	neg = x_real_negative_flag(a) != x_real_negative_flag(b);
+	ea = x_real_exponent(a);
+	eb = x_real_exponent(b);
+	ma = new_atom(T_INTEGER, x_real_mantissa(a));
 	cadr(Stack) = ma;
-	mb = new_atom(T_INTEGER, _real_mantissa(b));
+	mb = new_atom(T_INTEGER, x_real_mantissa(b));
 	car(Stack) = mb;
 	e = ea + eb;
 	m = bignum_multiply(ma, mb);
@@ -690,21 +690,21 @@ cell real_divide(cell x, cell a, cell b) {
 
 	if (integer_p(a))
 		a = bignum_to_real(a);
-	if (_real_zero_p(a)) {
+	if (x_real_zero_p(a)) {
 		return make_real(0, 0, cdr(make_integer(0)));
 	}
 	save(a);
 	if (integer_p(b))
 		b = bignum_to_real(b);
 	save(b);
-	neg = _real_negative_flag(a) != _real_negative_flag(b);
-	ea = _real_exponent(a);
-	eb = _real_exponent(b);
-	ma = new_atom(T_INTEGER, _real_mantissa(a));
+	neg = x_real_negative_flag(a) != x_real_negative_flag(b);
+	ea = x_real_exponent(a);
+	eb = x_real_exponent(b);
+	ma = new_atom(T_INTEGER, x_real_mantissa(a));
 	cadr(Stack) = ma;
-	mb = new_atom(T_INTEGER, _real_mantissa(b));
+	mb = new_atom(T_INTEGER, x_real_mantissa(b));
 	car(Stack) = mb;
-	if (_bignum_zero_p(mb)) {
+	if (x_bignum_zero_p(mb)) {
 		unsave(2);
 		return NAN;
 	}
@@ -727,12 +727,12 @@ cell real_to_bignum(cell r) {
 	cell	n;
 	int	neg;
 
-	if (_real_exponent(r) >= 0) {
-		neg = _real_negative_p(r);
+	if (x_real_exponent(r) >= 0) {
+		neg = x_real_negative_p(r);
 		n = scale_mantissa(r, 0, 0);
 		if (n == NIL)
 			return NIL;
-		n = new_atom(T_INTEGER, _real_mantissa(n));
+		n = new_atom(T_INTEGER, x_real_mantissa(n));
 		if (neg)
 			n = bignum_negate(n);
 		return n;
@@ -782,7 +782,7 @@ cell pp_exact_to_inexact(cell x) {
 
 	x = cadr(x);
 	if (integer_p(x)) {
-		flags = _bignum_negative_p(x)? REAL_NEGATIVE: 0;
+		flags = x_bignum_negative_p(x)? REAL_NEGATIVE: 0;
 		n = make_real(flags, 0, cdr(bignum_abs(x)));
 		return real_normalize(n, "exact->inexact");
 	}
@@ -796,17 +796,17 @@ cell pp_exact_p(cell x) {
 cell pp_exponent(cell x) {
 	if (integer_p(cadr(x)))
 		return make_integer(0);
-	return make_integer(_real_exponent(cadr(x)));
+	return make_integer(x_real_exponent(cadr(x)));
 }
 
 cell pp_floor(cell x) {
 	cell	n, m, e;
 
 	x = cadr(x);
-	e = _real_exponent(x);
+	e = x_real_exponent(x);
 	if (e >= 0)
 		return x;
-	m = new_atom(T_INTEGER, _real_mantissa(x));
+	m = new_atom(T_INTEGER, x_real_mantissa(x));
 	save(m);
 	while (e < 0) {
 		m = bignum_shift_right(m);
@@ -814,12 +814,12 @@ cell pp_floor(cell x) {
 		car(Stack) = m;
 		e++;
 	}
-	if (_real_negative_p(x)) {
+	if (x_real_negative_p(x)) {
 		/* sign not in mantissa! */
 		m = bignum_add(m, make_integer(1));
 	}
 	unsave(1);
-	n = make_real(_real_flags(x), e, cdr(m));
+	n = make_real(x_real_flags(x), e, cdr(m));
 	return real_normalize(n, "floor");
 }
 
@@ -844,8 +844,8 @@ cell pp_mantissa(cell x) {
 
 	if (integer_p(cadr(x)))
 		return cadr(x);
-	m = new_atom(T_INTEGER, _real_mantissa(cadr(x)));
-	if (_real_negative_p(cadr(x)))
+	m = new_atom(T_INTEGER, x_real_mantissa(cadr(x)));
+	if (x_real_negative_p(cadr(x)))
 		m = bignum_negate(m);
 	return m;
 }

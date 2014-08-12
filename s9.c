@@ -2,7 +2,7 @@
 
 /*
  * Scheme 9 from Empty Space
- * By Nils M Holm, 2007-2013
+ * By Nils M Holm, 2007-2014
  * Placed in the Public Domain
  */
 
@@ -13,7 +13,7 @@
  *     (also add "s9-real.scm" to the heap image).
  */
 
-#define VERSION "2014-01-11"
+#define VERSION "2014-08-04"
 
 #define EXTERN
  #include "s9.h"
@@ -207,6 +207,7 @@ cell error(char *msg, cell expr) {
 }
 
 void fatal(char *msg) {
+	Output_port = Quiet_mode? 2: 1;
 	pr("fatal ");
 	Error_flag = 0;
 	error(msg, NOEXPR);
@@ -567,7 +568,10 @@ cell read_list(int flags, int delim) {
 	int	c;	/* Member counter */
 	cell	new;
 	char	badpair[] = "malformed pair";
+	char	msg[80];
 
+	if (!Level)
+		Opening_line = Line_no;
 	if (++Level > MAX_IO_DEPTH) {
 		error("reader: too many nested lists or vectors", NOEXPR);
 		return NIL;
@@ -587,7 +591,9 @@ cell read_list(int flags, int delim) {
 				unsave(1);
 				return END_OF_FILE;
 			}
-			error("missing ')'", NOEXPR);
+			sprintf(msg, "missing ')', started in line %d",
+					Opening_line);
+			error(msg, NOEXPR);
 		}
 		if (n == DOT) {
 			if (c < 1) {
@@ -654,10 +660,10 @@ cell quote(cell n, cell quotation) {
  #define real_less_p		bignum_less_p
  #define real_multiply		bignum_multiply
  #define real_negate		bignum_negate
- #define real_negative_p	_bignum_negative_p
- #define real_positive_p	_bignum_positive_p
+ #define real_negative_p	x_bignum_negative_p
+ #define real_positive_p	x_bignum_positive_p
  #define real_subtract		bignum_subtract
- #define real_zero_p		_bignum_zero_p
+ #define real_zero_p		x_bignum_zero_p
 
  int string_numeric_p(char *s) {
 	int	i;
@@ -728,6 +734,18 @@ int strcmp_ci(char *s1, char *s2) {
 		c1 = tolower((int) *s1++);
 		c2 = tolower((int) *s2++);
 		if (!c1 || !c2 || c1 != c2)
+			break;
+	}
+	return c1<c2? -1: c1>c2? 1: 0;
+}
+
+int memcmp_ci(char *s1, char *s2, int k) {
+	int	c1 = 0, c2 = 0;
+
+	while (k--) {
+		c1 = tolower((int) *s1++);
+		c2 = tolower((int) *s2++);
+		if (c1 != c2)
 			break;
 	}
 	return c1<c2? -1: c1>c2? 1: 0;
@@ -844,8 +862,8 @@ cell unreadable(void) {
 	 (c) == ']'  || (c) == EOF)
 
 #define is_symbolic(c) \
-	(isalpha(c) ||				\
-	 isdigit(c) ||				\
+	(isalpha(c) || \
+	 isdigit(c) || \
 	 strchr(SYM_CHARS, (c)))
 
 cell funny_char(char *msg, int c) {
@@ -1270,7 +1288,7 @@ int print_primitive(cell n) {
 	if (!primitive_p(n))
 		return 0;
 	pr("#<primitive ");
-	p = (PRIM *) cadr(n);
+	p = &Primitives[cadr(n)];
 	pr(p->name);
 	pr(">");
 	return 1;
@@ -1313,7 +1331,7 @@ int print_port(cell n) {
 	return 1;
 }
 
-void _print_form(cell n, int depth) {
+void x_print_form(cell n, int depth) {
 	if (Ports[Output_port] == NULL) {
 		error("output port is not open", NOEXPR);
 		return;
@@ -1363,12 +1381,12 @@ void _print_form(cell n, int depth) {
 			if (Error_flag) return;
 			if (Printer_limit && Printer_count > Printer_limit)
 				return;
-			_print_form(car(n), depth+1);
+			x_print_form(car(n), depth+1);
 			if (Error_flag) return;
 			n = cdr(n);
 			if (n != NIL && atom_p(n)) {
 				pr(" . ");
-				_print_form(n, depth+1);
+				x_print_form(n, depth+1);
 				n = NIL;
 			}
 			if (n != NIL) pr(" ");
@@ -1378,7 +1396,7 @@ void _print_form(cell n, int depth) {
 }
 
 void print_form(cell n) {
-	_print_form(n, 0);
+	x_print_form(n, 0);
 }
 
 /*
@@ -1575,11 +1593,11 @@ cell lookup(cell v, cell env, int req) {
 	return NIL;
 }
 
-cell too_few_args(int n) {
+cell too_few_args(cell n) {
 	return error("too few arguments", n);
 }
 
-cell too_many_args(int n) {
+cell too_many_args(cell n) {
 	return error("too many arguments", n);
 }
 
@@ -1664,7 +1682,7 @@ cell make_temporaries(cell x) {
 }
 
 /*
- * Return (begin (set! x0 t0)
+ * Return (begin (set! x1 t1)
  *               ...
  *               (set! xN tN))
  */
@@ -1697,12 +1715,12 @@ cell make_undefineds(cell x) {
 	return n;
 }
 
-/* Return ((lambda (v0 ...)
- *           ((lambda (t0 ...)
- *              (begin (set! v0 t0)
+/* Return ((lambda (v1 ...)
+ *           ((lambda (t1 ...)
+ *              (begin (set! v1 t1)
  *                     ...
  *                     body))
- *            a0 ...))
+ *            a1 ...))
  *         #<undefined>
  *         ...)
  */
@@ -1771,7 +1789,7 @@ cell extract_from_defines(cell x, int part, cell *restp) {
  * This is semantically equivalent to:
  *
  * (lambda ()        --->  (lambda ()
- *   (define v0 a0)          (letrec ((v0 a0)
+ *   (define v1 a1)          (letrec ((v1 a1)
  *   ...                              ...)
  *   body)                     body)
  */
@@ -1906,8 +1924,8 @@ cell apply_special(cell x, int *pc, int *ps) {
 	else if (sf == S_and) return sf_and(x, pc, ps);
 	else if (sf == S_or) return sf_or(x, pc, ps);
 	else if (sf == S_cond) return sf_cond(x, pc, ps);
-	else if (sf == S_lambda) return sf_lambda(x);
 	else if (sf == S_begin) return sf_begin(x, pc, ps);
+	else if (sf == S_lambda) return sf_lambda(x);
 	else if (sf == S_set_b) return sf_set_b(x, pc, ps);
 	else if (sf == S_define) return sf_define(0, x, pc, ps);
 	else if (sf == S_define_syntax) return sf_define(1, x, pc, ps);
@@ -1970,12 +1988,12 @@ cell reverse_segments(cell n) {
 cell bignum_add(cell a, cell b);
 cell bignum_subtract(cell a, cell b);
 
-cell _bignum_add(cell a, cell b) {
+cell x_bignum_add(cell a, cell b) {
 	cell	fa, fb, result, r;
 	int	carry;
 
-	if (_bignum_negative_p(a)) {
-		if (_bignum_negative_p(b)) {
+	if (x_bignum_negative_p(a)) {
+		if (x_bignum_negative_p(b)) {
 			/* -A+-B --> -(|A|+|B|) */
 			a = bignum_abs(a);
 			save(a);
@@ -1988,7 +2006,7 @@ cell _bignum_add(cell a, cell b) {
 			return bignum_subtract(b, bignum_abs(a));
 		}
 	}
-	else if (_bignum_negative_p(b)) {
+	else if (x_bignum_negative_p(b)) {
 		/* A+-B --> A-|B| */
 		return bignum_subtract(a, bignum_abs(b));
 	}
@@ -2023,7 +2041,7 @@ cell bignum_add(cell a, cell b) {
 	save(a);
 	save(b);
 	Tmp = NIL;
-	a = _bignum_add(a, b);
+	a = x_bignum_add(a, b);
 	unsave(2);
 	return a;
 }
@@ -2031,8 +2049,8 @@ cell bignum_add(cell a, cell b) {
 int bignum_less_p(cell a, cell b) {
 	int	ka, kb, neg_a, neg_b;
 
-	neg_a = _bignum_negative_p(a);
-	neg_b = _bignum_negative_p(b);
+	neg_a = x_bignum_negative_p(a);
+	neg_b = x_bignum_negative_p(b);
 	if (neg_a && !neg_b) return 1;
 	if (!neg_a && neg_b) return 0;
 	ka = length(a);
@@ -2068,12 +2086,12 @@ int bignum_equal_p(cell a, cell b) {
 	return a == NIL && b == NIL;
 }
 
-cell _bignum_subtract(cell a, cell b) {
+cell x_bignum_subtract(cell a, cell b) {
 	cell	fa, fb, result, r;
 	int	borrow;
 
-	if (_bignum_negative_p(a)) {
-		if (_bignum_negative_p(b)) {
+	if (x_bignum_negative_p(a)) {
+		if (x_bignum_negative_p(b)) {
 			/* -A--B --> -A+|B| --> |B|-|A| */
 			a = bignum_abs(a);
 			save(a);
@@ -2086,7 +2104,7 @@ cell _bignum_subtract(cell a, cell b) {
 			return bignum_negate(bignum_add(bignum_abs(a), b));
 		}
 	}
-	else if (_bignum_negative_p(b)) {
+	else if (x_bignum_negative_p(b)) {
 		/* A--B --> A+|B| */
 		return bignum_add(a, bignum_abs(b));
 	}
@@ -2126,7 +2144,7 @@ cell bignum_subtract(cell a, cell b) {
 	save(a);
 	save(b);
 	Tmp = NIL;
-	a = _bignum_subtract(a, b);
+	a = x_bignum_subtract(a, b);
 	unsave(2);
 	return a;
 }
@@ -2194,14 +2212,14 @@ cell bignum_multiply(cell a, cell b) {
 	int	neg;
 	cell	r, i, result;
 
-	neg = _bignum_negative_p(a) != _bignum_negative_p(b);
+	neg = x_bignum_negative_p(a) != x_bignum_negative_p(b);
 	a = bignum_abs(a);
 	save(a);
 	b = bignum_abs(b);
 	save(b);
 	result = make_integer(0);
 	save(result);
-	while (!_bignum_zero_p(a)) {
+	while (!x_bignum_zero_p(a)) {
 		if (Error_flag)
 			break;
 		r = bignum_shift_right(a);
@@ -2251,14 +2269,14 @@ cell bignum_equalize(cell a, cell b) {
 }
 
 /* Result: (a/b . a%b) */
-cell _bignum_divide(cell a, cell b) {
+cell x_bignum_divide(cell a, cell b) {
 	int	neg, neg_a;
 	cell	result, f;
 	int	i;
 	cell	c, c0;
 
-	neg_a = _bignum_negative_p(a);
-	neg = neg_a != _bignum_negative_p(b);
+	neg_a = x_bignum_negative_p(a);
+	neg = neg_a != x_bignum_negative_p(b);
 	a = bignum_abs(a);
 	save(a);
 	b = bignum_abs(b);
@@ -2283,7 +2301,7 @@ cell _bignum_divide(cell a, cell b) {
 	save(f);	/* cadr */
 	result = make_integer(0);
 	save(result);	/* car */
-	while (!_bignum_zero_p(f)) {
+	while (!x_bignum_zero_p(f)) {
 		if (Error_flag)
 			break;
 		c = make_integer(0);
@@ -2317,13 +2335,13 @@ cell _bignum_divide(cell a, cell b) {
 }
 
 cell bignum_divide(cell x, cell a, cell b) {
-	if (_bignum_zero_p(b))
+	if (x_bignum_zero_p(b))
 		return error("divide by zero", x);
 	Tmp = b;
 	save(a);
 	save(b);
 	Tmp = NIL;
-	a = _bignum_divide(a, b);
+	a = x_bignum_divide(a, b);
 	unsave(2);
 	return a;
 }
@@ -2547,9 +2565,9 @@ cell cxr(char *op, cell x) {
 	cell	n = cadr(x);
 	char	buf[64];
 
-	for (p = &op[1]; *p != 'c'; p++) {
+	for (p = op; *p; p++) {
 		if (!pair_p(n)) {
-			sprintf(buf, "%s: unsuitable type for operation",
+			sprintf(buf, "c%sr: unsuitable type for operation",
 				rev_cxr_name(op));
 			error(buf, cadr(x));
 		}
@@ -2561,34 +2579,34 @@ cell cxr(char *op, cell x) {
 	return n;
 }
 
-cell pp_caar(cell x)   { return cxr("raac", x); }
-cell pp_cadr(cell x)   { return cxr("rdac", x); }
-cell pp_cdar(cell x)   { return cxr("radc", x); }
-cell pp_cddr(cell x)   { return cxr("rddc", x); }
-cell pp_caaar(cell x)  { return cxr("raaac", x); }
-cell pp_caadr(cell x)  { return cxr("rdaac", x); }
-cell pp_cadar(cell x)  { return cxr("radac", x); }
-cell pp_caddr(cell x)  { return cxr("rddac", x); }
-cell pp_cdaar(cell x)  { return cxr("raadc", x); }
-cell pp_cdadr(cell x)  { return cxr("rdadc", x); }
-cell pp_cddar(cell x)  { return cxr("raddc", x); }
-cell pp_cdddr(cell x)  { return cxr("rdddc", x); }
-cell pp_caaaar(cell x) { return cxr("raaaac", x); }
-cell pp_caaadr(cell x) { return cxr("rdaaac", x); }
-cell pp_caadar(cell x) { return cxr("radaac", x); }
-cell pp_caaddr(cell x) { return cxr("rddaac", x); }
-cell pp_cadaar(cell x) { return cxr("raadac", x); }
-cell pp_cadadr(cell x) { return cxr("rdadac", x); }
-cell pp_caddar(cell x) { return cxr("raddac", x); }
-cell pp_cadddr(cell x) { return cxr("rdddac", x); }
-cell pp_cdaaar(cell x) { return cxr("raaadc", x); }
-cell pp_cdaadr(cell x) { return cxr("rdaadc", x); }
-cell pp_cdadar(cell x) { return cxr("radadc", x); }
-cell pp_cdaddr(cell x) { return cxr("rddadc", x); }
-cell pp_cddaar(cell x) { return cxr("raaddc", x); }
-cell pp_cddadr(cell x) { return cxr("rdaddc", x); }
-cell pp_cdddar(cell x) { return cxr("radddc", x); }
-cell pp_cddddr(cell x) { return cxr("rddddc", x); }
+cell pp_caar(cell x)   { return cxr("aa", x); }
+cell pp_cadr(cell x)   { return cxr("da", x); }
+cell pp_cdar(cell x)   { return cxr("ad", x); }
+cell pp_cddr(cell x)   { return cxr("dd", x); }
+cell pp_caaar(cell x)  { return cxr("aaa", x); }
+cell pp_caadr(cell x)  { return cxr("daa", x); }
+cell pp_cadar(cell x)  { return cxr("ada", x); }
+cell pp_caddr(cell x)  { return cxr("dda", x); }
+cell pp_cdaar(cell x)  { return cxr("aad", x); }
+cell pp_cdadr(cell x)  { return cxr("dad", x); }
+cell pp_cddar(cell x)  { return cxr("add", x); }
+cell pp_cdddr(cell x)  { return cxr("ddd", x); }
+cell pp_caaaar(cell x) { return cxr("aaaa", x); }
+cell pp_caaadr(cell x) { return cxr("daaa", x); }
+cell pp_caadar(cell x) { return cxr("adaa", x); }
+cell pp_caaddr(cell x) { return cxr("ddaa", x); }
+cell pp_cadaar(cell x) { return cxr("aada", x); }
+cell pp_cadadr(cell x) { return cxr("dada", x); }
+cell pp_caddar(cell x) { return cxr("adda", x); }
+cell pp_cadddr(cell x) { return cxr("ddda", x); }
+cell pp_cdaaar(cell x) { return cxr("aaad", x); }
+cell pp_cdaadr(cell x) { return cxr("daad", x); }
+cell pp_cdadar(cell x) { return cxr("adad", x); }
+cell pp_cdaddr(cell x) { return cxr("ddad", x); }
+cell pp_cddaar(cell x) { return cxr("aadd", x); }
+cell pp_cddadr(cell x) { return cxr("dadd", x); }
+cell pp_cdddar(cell x) { return cxr("addd", x); }
+cell pp_cddddr(cell x) { return cxr("dddd", x); }
 
 cell pp_car(cell x) {
 	return caadr(x);
@@ -2603,22 +2621,14 @@ cell pp_cons(cell x) {
 }
 
 cell pp_length(cell x) {
-	int	k, c1;
+	int	k = 0;
 
-	c1 = make_integer(1);
-	save(c1);
-	k = make_integer(0);
-	save(k);
 	for (x = cadr(x); x != NIL; x = cdr(x)) {
-		if (!pair_p(x)) {
-			unsave(2);
-			return error("length: improper list", x);
-		}
-		k = bignum_add(k, c1);
-		car(Stack) = k;
+		if (!pair_p(x))
+			return error("length: improper list", cadr(x));
+		k++;
 	}
-	unsave(2);
-	return k;
+	return make_integer(k);
 }
 
 cell pp_list(cell x) {
@@ -2626,24 +2636,17 @@ cell pp_list(cell x) {
 }
 
 cell pp_list_tail(cell x) {
-	cell	c1, p, k = caddr(x);
+	cell	p, k;
 
-	c1 = make_integer(1);
-	save(c1);
-	save(k);
-	for (p = cadr(x); p != NIL; p = cdr(p)) {
-		if (!pair_p(p)) {
-			unsave(2);
-			return error("list-tail: improper list", p);
-		}
-		if (_bignum_zero_p(k))
+	k = integer_value("list-tail", caddr(x));
+	for (p = cadr(x); p != NIL; p = cdr(p), k--) {
+		if (!pair_p(p))
+			return error("list-tail: improper list", cadr(x));
+		if (k <= 0)
 			break;
-		k = bignum_subtract(k, c1);
-		car(Stack) = k;
 	}
-	unsave(2);
-	if (!_bignum_zero_p(k))
-		return error("list-tail: index out of range", cadr(x));
+	if (k != 0)
+		return error("list-tail: index out of range", caddr(x));
 	return p;
 }
 
@@ -2654,7 +2657,7 @@ int memqv(char *who, int v, cell x, cell a) {
 	for (p = a; p != NIL; p = cdr(p)) {
 		if (!pair_p(p)) {
 			sprintf(buf, "%s: improper list", who);
-			return error(buf, p);
+			return error(buf, a);
 		}
 		if (!v && x == car(p))
 			return p;
@@ -2678,7 +2681,7 @@ cell pp_reverse(cell x) {
 	m = NIL;
 	for (n = cadr(x); n != NIL; n = cdr(n)) {
 		if (!pair_p(n))
-			return error("reverse: expected list, got", cadr(x));
+			return error("reverse: improper list", cadr(x));
 		m = cons(car(n), m);
 	}
 	return m;
@@ -2796,7 +2799,7 @@ cell limit(char *msg, int(*pred)(cell,cell), cell x) {
 			return error(msg, (car(p)));
 		if (real_p(car(p)))
 			exact = 0;
-		if (pred(k, car(p)))
+		if (pred(car(p), k))
 			k = car(p);
 	}
 	if (exact)
@@ -2806,8 +2809,16 @@ cell limit(char *msg, int(*pred)(cell,cell), cell x) {
 	return k;
 }
 
+int real_greater_p(cell x, cell y) {
+	return real_less_p(y, x);
+}
+
 cell pp_max(cell x) {
-	return limit("max: expected number, got", real_less_p, x);
+	return limit("max: expected number, got", real_greater_p, x);
+}
+
+cell pp_min(cell x) {
+	return limit("min: expected number, got", real_less_p, x);
 }
 
 cell pp_minus(cell x) {
@@ -2830,14 +2841,6 @@ cell pp_minus(cell x) {
 	}
 	unsave(1);
 	return a;
-}
-
-int real_greater_p(cell x, cell y) {
-	return real_less_p(y, x);
-}
-
-cell pp_min(cell x) {
-	return limit("max: expected number, got", real_greater_p, x);
 }
 
 cell pp_negative_p(cell x) {
@@ -2872,10 +2875,10 @@ cell pp_plus(cell x) {
 }
 
 cell pp_quotient(cell x) {
-        char    *name = "quotient";
+        char    *name;
         cell    a, b;
 
-	name = name; /*LINT*/
+	name = "quotient";
         a = integer_argument(name, cadr(x));
         save(a);
         b = integer_argument(name, caddr(x));
@@ -2885,16 +2888,11 @@ cell pp_quotient(cell x) {
         return car(bignum_divide(x, a, b));
 }
 
-cell pp_positive_p(cell x) {
-	x = cadr(x);
-	return real_positive_p(x)? TRUE: FALSE;
-}
-
 cell pp_remainder(cell x) {
-        char    *name = "remainder";
+        char    *name;
         cell    a, b;
 
-	name = name; /*LINT*/
+	name = "remainder"; /*LINT*/
         a = integer_argument(name, cadr(x));
         save(a);
         b = integer_argument(name, caddr(x));
@@ -2902,6 +2900,10 @@ cell pp_remainder(cell x) {
 	if (a == NIL || b == NIL)
 		return UNDEFINED;
         return cdr(bignum_divide(x, a, b));
+}
+
+cell pp_positive_p(cell x) {
+	return real_positive_p(cadr(x))? TRUE: FALSE;
 }
 
 cell pp_times(cell x) {
@@ -3038,7 +3040,7 @@ cell pp_string_to_list(cell x) {
 }
 
 cell pp_string_to_symbol(cell x) {
-	cell	y, n;
+	cell	y, n, k;
 
 	y = find_symbol(string(cadr(x)));
 	if (y != NIL)
@@ -3047,8 +3049,9 @@ cell pp_string_to_symbol(cell x) {
 	 * Cannot pass name to make_symbol(), because
 	 * string(cadr(x)) may move during GC.
 	 */
-	n = make_symbol("", string_len(cadr(x))-1);
-	strcpy(symbol_name(n), string(cadr(x)));
+	k = string_len(cadr(x));
+	n = make_symbol("", k-1);
+	memcpy(symbol_name(n), string(cadr(x)), k);
 	Symbols = cons(n, Symbols);
 	return car(Symbols);
 }
@@ -3058,15 +3061,16 @@ cell pp_string_p(cell x) {
 }
 
 cell pp_symbol_to_string(cell x) {
-	cell	n;
+	cell	n, k;
 
 	/*
 	 * Cannot pass name to make_string(), because
 	 * symbol_name(cadr(x)) may move during GC.
 	 */
-	n = make_string("", symbol_len(cadr(x))-1);
+ 	k = symbol_len(cadr(x));
+	n = make_string("", k-1);
 	Tag[n] |= CONST_TAG;
-	strcpy(string(n), symbol_name(cadr(x)));
+	memcpy(string(n), symbol_name(cadr(x)), k);
 	return n;
 }
 
@@ -3206,7 +3210,7 @@ cell pp_string(cell x) {
 
 cell pp_string_append(cell x) {
 	cell	p, n;
-	int	k;
+	int	k, m;
 	char	*s;
 
 	k = 0;
@@ -3220,21 +3224,23 @@ cell pp_string_append(cell x) {
 	s = string(n);
 	k = 0;
 	for (p = cdr(x); p != NIL; p = cdr(p)) {
-		strcpy(&s[k], string(car(p)));
+		m = string_len(car(p));
+		memcpy(&s[k], string(car(p)), m);
 		k += string_len(car(p))-1;
 	}
 	return n;
 }
 
 cell pp_string_copy(cell x) {
-	cell	n;
+	cell	n, k;
 
 	/*
 	 * Cannot pass name to make_string(), because
 	 * string(cadr(x)) may move during GC.
 	 */
-	n = make_string("", string_len(cadr(x))-1);
-	strcpy(string(n), string(cadr(x)));
+	k = string_len(cadr(x));
+	n = make_string("", k-1);
+	memcpy(string(n), string(cadr(x)), k);
 	return n;
 }
 
@@ -3277,20 +3283,28 @@ cell pp_string_set_b(cell x) {
 	return UNSPECIFIC;
 }
 
-int string_ci_le(char *s1, char *s2) { return strcmp_ci(s1, s2) <= 0; }
-int string_ci_lt(char *s1, char *s2) { return strcmp_ci(s1, s2) <  0; }
-int string_ci_eq(char *s1, char *s2) { return strcmp_ci(s1, s2) == 0; }
-int string_ci_ge(char *s1, char *s2) { return strcmp_ci(s1, s2) >= 0; }
-int string_ci_gt(char *s1, char *s2) { return strcmp_ci(s1, s2) >  0; }
+#define RT	k=0; return
 
-int string_le(char *s1, char *s2) { return strcmp(s1, s2) <= 0; }
-int string_lt(char *s1, char *s2) { return strcmp(s1, s2) <  0; }
-int string_eq(char *s1, char *s2) { return strcmp(s1, s2) == 0; }
-int string_ge(char *s1, char *s2) { return strcmp(s1, s2) >= 0; }
-int string_gt(char *s1, char *s2) { return strcmp(s1, s2) >  0; }
+int string_ci_le(char *s1, char *s2, int k) { RT strcmp_ci(s1, s2) <= 0; }
+int string_ci_lt(char *s1, char *s2, int k) { RT strcmp_ci(s1, s2) <  0; }
+int string_ci_ge(char *s1, char *s2, int k) { RT strcmp_ci(s1, s2) >= 0; }
+int string_ci_gt(char *s1, char *s2, int k) { RT strcmp_ci(s1, s2) >  0; }
+int string_ci_eq(char *s1, char *s2, int k) {
+	return memcmp_ci(s1, s2, k) == 0;
+}
 
-cell string_predicate(char *name, int (*p)(char *s1, char *s2), cell x) {
+int string_le(char *s1, char *s2, int k) { RT strcmp(s1, s2) <= 0; }
+int string_lt(char *s1, char *s2, int k) { RT strcmp(s1, s2) <  0; }
+int string_ge(char *s1, char *s2, int k) { RT strcmp(s1, s2) >= 0; }
+int string_gt(char *s1, char *s2, int k) { RT strcmp(s1, s2) >  0; }
+int string_eq(char *s1, char *s2, int k) {
+	return memcmp(s1, s2, k) == 0;
+}
+
+cell string_predicate(char *name, int (*p)(char *s1, char *s2, int k), cell x)
+{
 	char	msg[100];
+	int	k = 0;
 
 	x = cdr(x);
 	while (cdr(x) != NIL) {
@@ -3298,11 +3312,12 @@ cell string_predicate(char *name, int (*p)(char *s1, char *s2), cell x) {
 			sprintf(msg, "%s: expected string, got", name);
 			return error(msg, cadr(x));
 		}
-		if (	(p == string_eq || p == string_ci_eq) &&
-			string_len(car(x)) != string_len(cadr(x))
-		)
-			return FALSE;
-		if (!p(string(car(x)), string(cadr(x))))
+		if (p == string_eq || p == string_ci_eq) {
+			k = string_len(car(x));
+			if (k != string_len(cadr(x)))
+				return FALSE;
+		}
+		if (!p(string(car(x)), string(cadr(x)), k))
 			return FALSE;
 		x = cdr(x);
 	}
@@ -3353,7 +3368,7 @@ cell pp_make_vector(cell x) {
 
 	k = integer_value("make-vector", cadr(x));
 	if (k < 0)
-		return error("make-vector: got negative length", x);
+		return error("make-vector: got negative length", cadr(x));
 	n = new_vec(T_VECTOR, k * sizeof(cell));
 	v = vector(n);
 	m = cddr(x) == NIL? FALSE: caddr(x);
@@ -3694,7 +3709,7 @@ cell pp_write_char(cell x) {
 }
 
 /*
- * S9fES Extentions
+ * S9fES Extensions
  */
 
 cell pp_bit_op(cell x) {
@@ -3721,7 +3736,7 @@ cell pp_bit_op(cell x) {
 		case  0: a =  0;        break;
 		case  1: a =   a &  b;  break;
 		case  2: a =   a & ~b;  break;
-		case  3: a =   a;       break;
+		case  3: /* a =   a; */ break;
 		case  4: a =  ~a &  b;  break;
 		case  5: a =        b;  break;
 		case  6: a =   a ^  b;  break;
@@ -3779,6 +3794,10 @@ cell pp_error(cell x) {
 	return error(string(cadr(x)), length(x) > 2? caddr(x): NOEXPR);
 }
 
+cell pp_eval(cell x) {
+	return eval(cadr(x));
+}
+
 cell pp_file_exists_p(cell x) {
 	FILE	*f;
 
@@ -3799,6 +3818,7 @@ cell gensym(char *prefix) {
 	} while (find_symbol(s) != NIL);
 	return symbol_ref(s);
 }
+
 cell pp_gensym(cell x) {
 	char	pre[101];
 	int	k;
@@ -3980,13 +4000,14 @@ cell pp_system(cell x) {
 	r = system(string(cadr(x)));
 	return make_integer(r >> 8);
 }
+
 #endif
 
 /*
  * Evaluator
  */
 
-PRIM Primitives[] = {
+PRIM Core_primitives[] = {
  { "abs",                 pp_abs,                 1,  1, { REA,___,___ } },
  { "append2",             pp_append2,             2,  2, { LST,___,___ } },
  { "apply",               pp_apply,               2, -1, { PRC,___,___ } },
@@ -4056,6 +4077,7 @@ PRIM Primitives[] = {
  { "eq?",                 pp_eq_p,                2,  2, { ___,___,___ } },
  { "=",                   pp_equal,               2, -1, { REA,___,___ } },
  { "eqv?",                pp_eqv_p,               2,  2, { ___,___,___ } },
+ { "eval",                pp_eval,                1,  2, { ___,___,___ } },
  { "even?",               pp_even_p,              1,  1, { REA,___,___ } },
  { "error",               pp_error,               1,  2, { STR,___,___ } },
  { "file-exists?",        pp_file_exists_p,       1,  1, { STR,___,___ } },
@@ -4168,7 +4190,7 @@ cell expected(cell who, char *what, cell got) {
 	char	msg[100];
 	PRIM	*p;
 
-	p = (PRIM *) cadr(who);
+	p = &Primitives[cadr(who)];
 	sprintf(msg, "%s: expected %s, got", p->name, what);
 	return error(msg, got);
 }
@@ -4178,7 +4200,7 @@ cell apply_primitive(cell x) {
 	cell	a;
 	int	k, na, i;
 
-	p = (PRIM *) cadar(x);
+	p = &Primitives[cadar(x)];
 	k = length(x);
 	if (k-1 < p->min_args)
 		return too_few_args(x);
@@ -4267,7 +4289,7 @@ int uses_transformer_p(cell x) {
 	return 0;
 }
 
-cell _eval(cell x, int cbn);
+cell xeval(cell x, int cbn);
 
 cell expand_syntax_1(cell x) {
 	cell	y, m, n, a, app;
@@ -4280,7 +4302,7 @@ cell expand_syntax_1(cell x) {
 			save(x);
 			app = cons(cdr(binding_value(y)), cdr(x));
 			unsave(1);
-			return _eval(app, 1);
+			return xeval(app, 1);
 		}
 	}
 	/*
@@ -4401,7 +4423,7 @@ void trace(cell name, cell expr) {
 	}
 }
 
-cell _eval(cell x, int cbn) {
+cell xeval(cell x, int cbn) {
 	cell	m2,	/* Root of result list */
 		a,	/* Used to append to result */
 		rib;	/* Temp storage for args */
@@ -4491,9 +4513,9 @@ cell _eval(cell x, int cbn) {
 				if (Trace_list != NIL)
 					trace(name, Acc);
 				if (primitive_p(car(Acc))) {
-					if ((PRIM *) cadar(Acc) == Apply_magic)
+					if (cadar(Acc) == Apply_magic)
 						c = cbn = 1;
-					if ((PRIM *) cadar(Acc) == Call_magic)
+					if (cadar(Acc) == Callcc_magic)
 						c = cbn = 1;
 					Cons_stats = 1;
 					Acc = x = apply_primitive(Acc);
@@ -4683,7 +4705,7 @@ cell eval(cell x) {
 	save(x);
 	x = expand_syntax(x);
 	unsave(1);
-	x = _eval(x, 0);
+	x = xeval(x, 0);
 	return x;
 }
 
@@ -4770,9 +4792,8 @@ struct magic {
 	char	version[10];		/* "yyyy-mm-dd"	*/
 	char	cell_size[1];		/* size + '0'	*/
 	char    mantissa_size[1];	/* size + '0'	*/
-	char	_pad[2];		/* "__"		*/
 	char	byte_order[8];		/* e.g. "4321"	*/
-	char	binary_id[8];		/* see code	*/
+	char	prim_slots[8];		/* see code	*/
 };
 
 void dump_image(char *p) {
@@ -4793,10 +4814,14 @@ void dump_image(char *p) {
 	strncpy(m.version, VERSION, sizeof(m.version));
 	m.cell_size[0] = sizeof(cell)+'0';
 	m.mantissa_size[0] = MANTISSA_SEGMENTS+'0';
+#ifdef BITS_PER_WORD_64
+	n = 0x3132333435363738L;
+#else
 	n = 0x31323334L;
+#endif
 	memcpy(m.byte_order, &n, sizeof(n)>8? 8: sizeof(n));
-	n = (cell) &Primitives;
-	memcpy(m.binary_id, &n, sizeof(n)>8? 8: sizeof(n));
+	n = Last_prim;
+	memcpy(m.prim_slots, &n, sizeof(n)>8? 8: sizeof(n));
 	fwrite(&m, sizeof(m), 1, f);
 	i = Cons_pool_size;
 	fwrite(&i, sizeof(int), 1, f);
@@ -4829,6 +4854,14 @@ void dump_image(char *p) {
 	}
 }
 
+int xfread(cell name, void *buf, int siz, int n, FILE *f) {
+	if (fread(buf, siz, n, f) != n) {
+		error("image file read error", name);
+		return -1;
+	}
+	return 0;
+}
+
 int load_image(char *p) {
 	FILE		*f;
 	cell		n, **v;
@@ -4842,7 +4875,7 @@ int load_image(char *p) {
 	f = fopen(p, "rb");
 	if (f == NULL)
 		return -1;
-	fread(&m, sizeof(m), 1, f);
+	if (xfread(name, &m, sizeof(m), 1, f)) return -1;
 	if (memcmp(m.id, "S9", 2)) {
 		error("error in image file (magic match failed)", name);
 		ok = 0;
@@ -4860,18 +4893,23 @@ int load_image(char *p) {
 		ok = 0;
 	}
 	memcpy(&n, m.byte_order, sizeof(cell));
+#ifdef BITS_PER_WORD_64
+	if (n != 0x3132333435363738L) {
+#else
 	if (n != 0x31323334L) {
+#endif
 		error("error in image file (wrong architecture)", name);
 		ok = 0;
 	}
-	memcpy(&n, m.binary_id, sizeof(cell));
-	if (n != (cell) &Primitives) {
-		error("error in image file (wrong interpreter)", name);
+	memcpy(&n, m.prim_slots, sizeof(cell));
+	if (n != Last_prim) {
+		error("error in image file (wrong number of primitives)",
+			name);
 		ok = 0;
 	}
 	memset(Tag, 0, Cons_pool_size);
-	fread(&image_nodes, sizeof(int), 1, f);
-	fread(&image_vcells, sizeof(int), 1, f);
+	if (xfread(name, &image_nodes, sizeof(int), 1, f)) return -1;
+	if (xfread(name, &image_vcells, sizeof(int), 1, f)) return -1;
 	while (image_nodes > Cons_pool_size) {
 		if (	Memory_limit_kn &&
 			Cons_pool_size + Cons_segment_size > Memory_limit_kn
@@ -4895,7 +4933,7 @@ int load_image(char *p) {
 	v = Image_vars;
 	i = 0;
 	while (v[i]) {
-		fread(v[i], sizeof(cell), 1, f);
+		if (xfread(name, v[i], sizeof(cell), 1, f)) return -1;
 		i++;
 	}
 	if (	ok &&
@@ -4996,9 +5034,16 @@ void load_rc(void) {
 	if (home == NULL)
 		return;
 	if (strlen(home) + strlen(rcfile) + 1 >= sizeof(rcpath)-1)
-		fatal("path too long in HOME");
+		fatal("path too long in $HOME");
 	sprintf(rcpath, "%s/%s", home, rcfile);
 	load(rcpath);
+}
+
+void grow_primitives(void) {
+	Max_prims += PRIM_SEG_SIZE;
+	Primitives = (PRIM *) realloc(Primitives, sizeof(PRIM) * Max_prims);
+	if (Primitives == NULL)
+		fatal("grow_primitives: out of physical memory");
 }
 
 void add_primitives(char *name, PRIM *p) {
@@ -5011,13 +5056,17 @@ void add_primitives(char *name, PRIM *p) {
 		box_value(S_extensions) = new;
 	}
 	for (i=0; p && p && p[i].name; i++) {
-		if (Apply_magic == NULL && !strcmp(p[i].name, "apply"))
-			Apply_magic = &p[i];
-		if (Call_magic == NULL && !strcmp(p[i].name, "call/cc"))
-			Call_magic = &p[i];
+		if (Apply_magic < 0 && !strcmp(p[i].name, "apply"))
+			Apply_magic = Last_prim;
+		if (Callcc_magic < 0 && !strcmp(p[i].name, "call/cc"))
+			Callcc_magic = Last_prim;
 		v = symbol_ref(p[i].name);
-		n = new_atom((cell) &p[i], NIL);
+		n = new_atom(Last_prim, NIL);
 		n = new_atom(T_PRIMITIVE, n);
+		if (Last_prim >= Max_prims)
+			grow_primitives();
+		memcpy(&Primitives[Last_prim], &p[i], sizeof(PRIM));
+		Last_prim++;
 		Environment = extend(v, n, Environment);
 	}
 }
@@ -5040,9 +5089,12 @@ void make_initial_env(void) {
 	box_value(S_library_path) = new;
 	Environment = extend(symbol_ref("*loading*"), FALSE, Environment);
 	S_loading = cadr(Environment);
-	Apply_magic = NULL;
-	Call_magic = NULL;
-	add_primitives(NULL, Primitives);
+	Apply_magic = -1;
+	Callcc_magic = -1;
+	Last_prim = 0;
+	Max_prims = 0;
+	grow_primitives();
+	add_primitives(NULL, Core_primitives);
 	EXTENSIONS;
 #ifdef REALNUM
 	add_primitives("realnums", NULL);

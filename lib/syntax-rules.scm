@@ -56,8 +56,8 @@
 
 ; Give a unique name to each variable that is bound in FORM.
 ; BOUND is a list of initially bound variables. This function
-; also renames variables of (named) LET, LET*, and LETREC, and
-; DO, e.g.:
+; also renames variables of (named) LET, LET*, LETREC, and DO,
+; e.g.:
 ;
 ; (ALPHA-CONV '(LET ((X Y)) X) '()) => (LET ((G123 Y)) G123)
 

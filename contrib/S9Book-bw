@@ -17,7 +17,7 @@ export	@Pa @Br @Sp
 	@Quote
 	@BBox @Box @SolidBox
 	@Indent @EI
-	@Leaders @Dots
+	@Leaders @Dots @SoftBreak
 	@Chapter @Section @SubSection
 	@Header @HeaderText
 	@X
@@ -31,9 +31,9 @@ def @BookSetup
 	named @BaseColor	{ 0 0 0 setrgbcolor }
 	named @Spacing		{ 1.15fx }
 	named @BaseLanguage	{ English }
-	named @BaseFont		{ Times Roman 10p }
-	named @HeadingFont	{ AvantGarde Bold 20p }
-	named @SubHeadingFont	{ AvantGarde Bold 14p }
+	named @BaseFont		{ Helvetica Roman 10p }
+	named @HeadingFont	{ Helvetica Bold 20p }
+	named @SubHeadingFont	{ Helvetica Bold 14p }
 	named @DocumentWidth	{ 8i }
 	named @DocumentHeight	{ 11i }
 	named @InnerMargin	{ 1i }
@@ -56,22 +56,24 @@ macro @Br { //1vx }
 
 macro @Sp { //2vx }
 
-def @S_o right x { { 0.30 0.30 0.30 setrgbcolor } @SetColor {x}}
-def @S_p right x { { 0.30 0.30 0.30 setrgbcolor } @SetColor {x}}
+macro @SoftBreak { //11i @Null // }
+
+def @S_o right x { { 0.10 0.10 0.10 setrgbcolor } @SetColor {x}}
+def @S_p right x { { 0.10 0.10 0.10 setrgbcolor } @SetColor {x}}
 def @S_s right x { { 0.00 0.00 0.00 setrgbcolor } @SetColor {x}}
 def @S_c right x { { 0.00 0.00 0.00 setrgbcolor } @SetColor {x}}
 def @S_r right x { { 0.00 0.00 0.00 setrgbcolor } @SetColor {x}}
 def @S_y right x { { 0.00 0.00 0.00 setrgbcolor } @SetColor {x}}
-def @S_x right x { { 0.30 0.30 0.00 setrgbcolor } @SetColor {x}}
-def @S_z right x { { 0.30 0.30 0.00 setrgbcolor } @SetColor {x}}
+def @S_x right x { { 0.10 0.10 0.00 setrgbcolor } @SetColor {x}}
+def @S_z right x { { 0.10 0.10 0.00 setrgbcolor } @SetColor {x}}
 
-def @C_co right x { { 0.30 0.30 0.30 setrgbcolor } @SetColor {x}}
-def @C_cp right x { { 0.30 0.30 0.30 setrgbcolor } @SetColor {x}}
+def @C_co right x { { 0.10 0.10 0.10 setrgbcolor } @SetColor {x}}
+def @C_cp right x { { 0.10 0.10 0.10 setrgbcolor } @SetColor {x}}
 def @C_cs right x { { 0.00 0.00 0.00 setrgbcolor } @SetColor {x}}
 def @C_cc right x { { 0.00 0.00 0.00 setrgbcolor } @SetColor {x}}
 def @C_cr right x { { 0.00 0.00 0.00 setrgbcolor } @SetColor {x}}
 def @C_cl right x { { 0.00 0.00 0.00 setrgbcolor } @SetColor {x}}
-def @C_cx right x { { 0.30 0.30 0.30 setrgbcolor } @SetColor {x}}
+def @C_cx right x { { 0.10 0.10 0.10 setrgbcolor } @SetColor {x}}
 
 def @B right x { Bold @Font x }
 
@@ -79,7 +81,7 @@ def @I right x { Italic @Font x }
 
 def @A right x { { AvantGarde Roman } @Font x }
 
-def @T right x { { Courier Roman } @Font x }
+def @T right x { { Courier Roman 12p } @Font x }
 
 def @H right x { { 0.5 setgray } @SetColor x }
 

@@ -12,6 +12,7 @@ char-plot.scm|-|Character-based graph plotter|-
 assp.scm|assp|-|Find first member of an alist satisfying a predicate
 basename.scm|basename|-|Extract the base name from a path
 bitwise-ops.scm|-|Bitwise logic operators|-
+bottles.scm|bottles|-|Generate the 99-bottles lyrics using syntax-rules
 c2html.scm|c2html|-|Render C code in HTML
 c2html1.scm|-|C2HTML command line wrapper|-
 catch.scm|catch / throw|-|Handle exceptions
@@ -93,6 +94,7 @@ partition.scm|partition|-|Partition lists
 permute.scm|permute|-|Generate permutations of sets
 position.scm|-|Find positions of list elements|-
 pretty-print.scm|-|Pretty printer|-
+procedures.scm|-|Collect procedure names from help files|-
 programp.scm|program?|-|Check Scheme program syntax
 prolog-test.scm|-|Tiny PROLOG sample program|-
 prolog.scm|-|Tiny PROLOG interpreter|-
@@ -128,8 +130,6 @@ sieve.scm|sieve|-|Find prime numbers
 simple-modules.scm|-|Simple module syntax|-
 soccat.scm|-|Connect to remote systems|-
 sort.scm|sort|-|Sort lists
-s9e.scm|-|The Scheme 9 Editor|-
-s9e1.scm|-|S9E command line wrapper|-
 s9sos.scm|-|S9fES Simple Object System|-
 s9symbols.scm|-|Extract S9 symbols from help pages|-
 spawn-command.scm|spawn-command|-|Spawn a child process

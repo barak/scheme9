@@ -1,5 +1,5 @@
 ; Scheme 9 from Empty Space, Function Library
-; By Nils M Holm, 2009-2012
+; By Nils M Holm, 2009-2014
 ; Placed in the Public Domain
 ;
 ; (help)                     ==>  unspecific
@@ -105,13 +105,16 @@
             (string<=? (symbol->string a)
                        (symbol->string b)))
           (remp null?
-                  (map (lambda (x)
-                         (let ((s (symbol->string x)))
-                           (if (and (string-find name s)
-                                    (locate-file
-                                      (string-append
-                                        "help/"
-                                        (name->file-name s))))
-                               x
-                               '())))
-                       (symbols))))))))
+                (map (lambda (x)
+                       (let ((s (symbol->string x)))
+                         (if (and (string-find name s)
+                                  (locate-file
+                                    (string-append
+                                      "help/"
+                                      (name->file-name s))))
+                             x
+                             '())))
+                       (let ((index (locate-file "help/INDEX")))
+                         (if index
+                             (with-input-from-file index read)
+                             (error "help index not found"))))))))))

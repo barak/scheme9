@@ -2,7 +2,7 @@
 
 ;;
 ;; Scheme 9 from Empty Space, real number arithmetics
-;; By Nils M Holm, 2007-2010
+;; By Nils M Holm, 2007-2014
 ;; Placed in the Public Domain
 ;;
 
@@ -42,49 +42,42 @@
 (define (truncate x)
   ((if (< x 0) ceiling floor) x))
 
-; used by SIN, COS, ATAN, and EXP
-(define (fact2 n m)
-  (if (< n 2)
-      m
-      (let ((k (quotient n 2)))
-        (* (fact2 k m)
-           (fact2 (- n k) (+ m k))))))
-
-(define exp
-  (let ((fact2 fact2))
-    (lambda (x)
-      (letrec
-        ((e-series
-           (lambda (x y r last)
-             (if (= r last)
-                 r
-                 (e-series x
-                           (+ 1 y)
-                           (+ r (/ (expt x y)
-                                   (fact2 y 1)))
-                           r)))))
+(define (exp x)
+  (letrec
+    ((e-series
+       (lambda (x i x^y y! r last)
+         (if (= r last)
+             r
+             (e-series x
+                       (+ 1 i)
+                       (* x^y x)
+                       (* y! (+ 1 i))
+                       (+ r (/ x^y y!))
+                       r)))))
     (if (>= x 2.0)
         (let ((e^x/2 (exp (/ x 2))))
           (* e^x/2 e^x/2))
-        (+ 1 x (e-series x 2 0.0 1.0)))))))
+        (+ 1 (e-series x 1 x 1 0.0 1.0)))))
 
 (define (log x)
   (letrec
-    ((l-series
-       (lambda (x y r last lim)
+    ((l-series6
+       (lambda (x y x^y r last lim)
          (cond ((and lim (zero? lim))
                  r)
                ((= r last)
                  (* 2 r))
                (else
-                 (l-series x
+                 (l-series6 x
                            (+ 2 y)
-                           (+ r (/ (expt (/ (- x 1)
-                                            (+ x 1))
-                                         y)
-                                   y))
+                           (* x^y x x)
+                           (+ r (/ x^y y))
                            r
-                           (if lim (- lim 1) lim)))))))
+                           (if lim (- lim 1) lim))))))
+     (l-series
+       (lambda (x y r last lim)
+         (let ((x (/ (- x 1) (+ x 1))))
+           (l-series6 x y x r last lim)))))
     (cond ((negative? x)
             (/ 1.0 0))
           ((< 0.1 x 5)
@@ -114,6 +107,14 @@
          (if (negative? x)
              (- 2pi x+)
              x+)))))
+
+; used by SIN, COS, ATAN, and EXP
+(define (fact2 n m)
+  (if (< n 2)
+      m
+      (let ((k (quotient n 2)))
+        (* (fact2 k m)
+           (fact2 (- n k) (+ m k))))))
 
 (define sine-series 
   (let ((fact2 fact2))
@@ -376,23 +377,23 @@
                            FAILED)))
                    (else
                      (conv lst rdx)))))
-         (make-frag
+         (make-fract
            (lambda (x)
              (let ((d (number-of-digits x -1)))  ; 123 --> 0.123
                (- (/ x (expt 10.0 d)) 1.0))))
          (make-real
-           (lambda (int frag expn)
-             (let ((v (* (+ 0.0 (abs int) (make-frag frag))
+           (lambda (int fract expn)
+             (let ((v (* (+ 0.0 (abs int) (make-fract fract))
                          (expt 10.0 expn))))
                (if (negative? int) (- v) v))))
          (conv-exponent
-           (lambda (int frag lst)
+           (lambda (int fract lst)
              (if (null? lst)
                  FAILED
                  (let ((exp-part (conv-int lst 10)))
                    (if (failed? exp-part)
                        FAILED
-                       (make-result (make-real int frag (value exp-part))
+                       (make-result (make-real int fract (value exp-part))
                                     (rest exp-part)))))))
          (conv-decimals
            (lambda (int lst)
@@ -401,14 +402,14 @@
                    ((exponent-mark (car lst))
                      (conv-exponent int 10 (cdr lst)))
                    (else
-                     (let ((frag-part (conv3 lst 1 10)))
-                       (if (null? (rest frag-part))
-                           (make-result (make-real int (value frag-part) 0)
+                     (let ((fract-part (conv3 lst 1 10)))
+                       (if (null? (rest fract-part))
+                           (make-result (make-real int (value fract-part) 0)
                                         '())
-                           (if (exponent-mark (car (rest frag-part)))
+                           (if (exponent-mark (car (rest fract-part)))
                                (conv-exponent int
-                                              (value frag-part)
-                                              (cdr (rest frag-part)))
+                                              (value fract-part)
+                                              (cdr (rest fract-part)))
                                FAILED)))))))
          (assert-radix-ten
            (lambda (rdx)

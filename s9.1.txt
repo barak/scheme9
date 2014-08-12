@@ -134,6 +134,12 @@ S9 Interpreter                  Page 2                           S9(1)
 S9(1)                  Scheme 9 from Empty Space                 S9(1)
 
 
+          (eval object1)          ==>  object
+          (eval object1 object2)  ==>  object
+              Evaluate  object1  in the current environment and return
+              its normal form.  If object2 is also  specified,  it  is
+              ignored.
+
           (exponent real)  ==>  integer
               Extract the exponent part from a real number.
 
@@ -187,12 +193,6 @@ S9(1)                  Scheme 9 from Empty Space                 S9(1)
           (reverse! list)  ==>  list
               Reverse  list destructively and return the reverse list.
 
-          (set-input-port! input-port)  ==>  unspecific
-              Destructively set the current input port.
-
-          (set-output-port! output-port)  ==>  unspecific
-              Destructively set the current output port.
-
 
 S9 Interpreter                  Page 3                           S9(1)
 
@@ -200,6 +200,12 @@ S9 Interpreter                  Page 3                           S9(1)
 S9(1)                  Scheme 9 from Empty Space                 S9(1)
 
 
+
+          (set-input-port! input-port)  ==>  unspecific
+              Destructively set the current input port.
+
+          (set-output-port! output-port)  ==>  unspecific
+              Destructively set the current output port.
 
           (stats form)  ==>  form
               Evaluate the given form and return a list containing its
@@ -251,12 +257,6 @@ S9(1)                  Scheme 9 from Empty Space                 S9(1)
               Return an unspecific value.
 
           Refer  to  the  help  pages for descriptions of the Scheme 9
-          extension procedures.
-
-SPECIAL VARIABLES
-          These variables are  predefined  in  the  dynamic  top-level
-          scope of the interpreter.
-
 
 
 
@@ -265,6 +265,12 @@ S9 Interpreter                  Page 4                           S9(1)
 
 S9(1)                  Scheme 9 from Empty Space                 S9(1)
 
+
+          extension procedures.
+
+SPECIAL VARIABLES
+          These variables are  predefined  in  the  dynamic  top-level
+          scope of the interpreter.
 
           ** (form)
               The   normal   form  of  the  expression  most  recently
@@ -317,13 +323,7 @@ MACROS
 
           The body of define-syntax may be a syntax-rules transformer,
           as described in R4RS, if the syntax-rules extension has been
-          loaded.
 
-TECHNICAL DETAILS
-          S9fES is a tree-walking interpreter using deep  binding  and
-          hashed  environments.  It  employs  an extremely reliable[1]
-          constant-space mark and sweep garbage collector with in-situ
-          string  and  vector  pool  compaction.  Memory pools grow on
 
 
 S9 Interpreter                  Page 5                           S9(1)
@@ -332,6 +332,13 @@ S9 Interpreter                  Page 5                           S9(1)
 S9(1)                  Scheme 9 from Empty Space                 S9(1)
 
 
+          loaded.
+
+TECHNICAL DETAILS
+          S9fES is a tree-walking interpreter using deep  binding  and
+          hashed  environments.  It  employs  an extremely reliable[1]
+          constant-space mark and sweep garbage collector with in-situ
+          string  and  vector  pool  compaction.  Memory pools grow on
           demand. The  interpreter  uses  arbitrary-precision  integer
           arithmetics   and   (optional)   decimal-based  real  number
           arithmetics.
@@ -384,13 +391,6 @@ ALLOCATION STRATEGY
           units of 1024 nodes (or  in  units  of  1024*1024  nodes  by
           appending an m suffix).
 
-          Note that computations may abort before the limit is reached
-          due to the way the pool  grows.  Use  the  -g  command  line
-          option to experiment with pool sizes.
-          Specifying  a  limit  of  zero  disables  the  memory  limit
-          completely and the interpreter will allocate as much  memory
-
-
 
 S9 Interpreter                  Page 6                           S9(1)
 
@@ -398,6 +398,11 @@ S9 Interpreter                  Page 6                           S9(1)
 S9(1)                  Scheme 9 from Empty Space                 S9(1)
 
 
+          Note that computations may abort before the limit is reached
+          due to the way the pool  grows.  Use  the  -g  command  line
+          option to experiment with pool sizes.
+          Specifying  a  limit  of  zero  disables  the  memory  limit
+          completely and the interpreter will allocate as much  memory
           as it can get.  This option should be used with care.
 
 LIMITATIONS
@@ -411,9 +416,9 @@ BUGS
           You  may  not quasiquote quasiquote unless in unquote (e.g.:
           ``x does not work, but `,`x does).
           Syntax-rules is not fully hygienic.
-          Multiple call/cc's in the arguments of the same  lambda  (or
-          derived   binding  syntax,  such  as  let)  will  break  the
-          evaluator.
+          Call/cc must be the only argument when used  in  lambda  (or
+          derived  binding  syntax,  such as let).  Not observing this
+          rule will break the interpreter.
 
 FILES
           $HOME/.s9fes/rc
@@ -452,11 +457,6 @@ FOOTNOTES
               <vhtzl9lupyp.fsf@maharal.csail.mit.edu>
               (Thu, 27 Aug 2009 13:27:42 -0400) and its follow-ups.
 
-REFERENCES
-          The Revised^4 Report on the Algorithmic Language Scheme.
-              http://www-swiss.ai.mit.edu/~jaffer/r4rs_toc.html
-
-
 
 S9 Interpreter                  Page 7                           S9(1)
 
@@ -464,17 +464,17 @@ S9 Interpreter                  Page 7                           S9(1)
 S9(1)                  Scheme 9 from Empty Space                 S9(1)
 
 
+
+REFERENCES
+          The Revised^4 Report on the Algorithmic Language Scheme.
+              http://www-swiss.ai.mit.edu/~jaffer/r4rs_toc.html
+
           Scheme  9 from Empty Space -- A Guide to Implementing Scheme
           in C.
               Available at Lulu.com, see http://www.t3x.org
 
 AUTHOR
           Nils M Holm
-
-
-
-
-
 
 
 
