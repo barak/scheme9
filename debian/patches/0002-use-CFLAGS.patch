@@ -5,24 +5,15 @@ Subject: use CFLAGS
 Don't specify -O2 and -g (on by default) so they can be overwritten
 by builder, e.g., dpkg-buildflags.
 ---
- Makefile | 4 ++--
- 1 file changed, 2 insertions(+), 2 deletions(-)
+ Makefile | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
 
 diff --git a/Makefile b/Makefile
-index 18a4a94..c225941 100644
+index 24a08ac..ac13204 100644
 --- a/Makefile
 +++ b/Makefile
-@@ -8,7 +8,7 @@ PREFIX=$(prefix)
- 
- # Override default compiler and flags
- CC=	gcc
--CFLAGS=	-g -Wall -ansi -pedantic -O2
-+CFLAGS+=	-Wall -ansi -pedantic
- 
- # You may try one of the following, if you get "wrong interpreter" errors
- #LDFLAGS+=	-Wl,-no_pie
-@@ -77,7 +77,7 @@ all:	default s9e
- s9e:	s9e-core.image
+@@ -75,7 +75,7 @@ default:	s9 s9.image s9.1 lib/syntax-rules.scm \
+ all:	default
  
  s9:	s9.o s9.h $(EXTRA_OBJS)
 -	$(CC) -o s9 $(LDFLAGS) s9.o $(EXTRA_OBJS) $(EXTRA_LIBS)

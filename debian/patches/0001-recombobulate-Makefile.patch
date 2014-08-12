@@ -7,7 +7,7 @@ Subject: recombobulate Makefile
  1 file changed, 21 insertions(+), 8 deletions(-)
 
 diff --git a/Makefile b/Makefile
-index 698929c..18a4a94 100644
+index f684093..24a08ac 100644
 --- a/Makefile
 +++ b/Makefile
 @@ -4,7 +4,7 @@
@@ -17,8 +17,8 @@ index 698929c..18a4a94 100644
 -PREFIX= /u
 +PREFIX=$(prefix)
  
- # Override default compiler and flags
- CC=	gcc
+ # Base version and Release
+ BASE=		20140708
 @@ -55,14 +55,21 @@ DEFS=	$(OSDEF) \
  	-DCURSES_RESET
  
@@ -42,10 +42,10 @@ index 698929c..18a4a94 100644
  
 -default:	s9 s9.image s9.1.gz s9.1.txt lib/syntax-rules.scm \
 +default:	s9 s9.image s9.1 lib/syntax-rules.scm \
- 		lib/matcher.scm
+ 		lib/matcher.scm contrib/bottles.scm
  
- all:	default s9e
-@@ -79,8 +86,14 @@ s9.o:	s9.c s9-real.c s9.h
+ all:	default
+@@ -77,8 +84,14 @@ s9.o:	s9.c s9-real.c s9.h
  s9.image:	s9 s9.scm s9-real.scm ext/unix.scm ext/curses.scm config.scm
  	$(BUILD_ENV) ./s9 -i - -n $(EXTRA_SCM) -l config.scm -d s9.image
  
@@ -62,7 +62,7 @@ index 698929c..18a4a94 100644
  
  unix.o:	ext/unix.c s9.h
  	$(CC) $(CFLAGS) $(DEFS) -I . -o unix.o -c ext/unix.c
-@@ -129,7 +142,7 @@ install-s9:	s9 s9.scm s9.image s9.1.gz
+@@ -121,7 +134,7 @@ install-s9:	s9 s9.scm s9.image s9.1.gz
  	install -d -m 0755 $(LIBDIR)/help
  	install -d -m 0755 $(MANDIR)
  	install $C -m 0755 s9 $(BINDIR)
