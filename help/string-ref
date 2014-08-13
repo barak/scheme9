@@ -1,4 +1,0 @@
-R4RS 6.7 (string-ref string k) ==> char
-
-K must be a valid index of STRING. STRING-REF returns character
-K of STRING using zero-origin indexing.

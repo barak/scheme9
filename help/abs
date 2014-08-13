@@ -1,5 +1,0 @@
-R4RS 6.5.5 (abs x) ==> integer
-
-ABS returns the magnitude of its argument.
-
-(abs -7)  ==>  7

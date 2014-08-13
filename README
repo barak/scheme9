@@ -1,144 +1,38 @@
 
+Scheme 9 from Empty Space
+An Interpreter for a Subset of Scheme
+Copyright (C) 2007 Nils M Holm
 
-	Scheme 9 from Empty Space
-	A Simple and Comprehensible Scheme Interpreter
-	By Nils M Holm, 2007,2008,2009
+S9fES is an interpreter for a broad subset of R5RS Scheme.
+For details about to dos and omissions see the manual page.
 
-	WWW: http://www.t3x.org/s9fes/
+To compile S9fES, run make test (this will also run the test
+suite to make sure that the interpreter works properly).
 
-	S9fES is an interpreter for a broad subset of R4RS Scheme.
-	For details about omissions see the manual page.
+To install S9fES, copy the s9 binary to a location where it can
+be executed (i.e. /usr/local/bin) and the library s9.scm to a
+publically readable directory (i.e. /usr/local/share/s9fes).
 
+The nroff source code of the manual page is in the file s9.1.
+You may want to install it in your manual section 1. In case
+you are not running Unix, there is a pre-formatted copy in the
+file s9.1.txt.
 
-	QUICK START
+You can install S9fES by typing "make install" as root but if
+you do so, please edit the *DIR variables at the beginning of
+Makefile first.
 
-	You can run the interpreter in its build directory without
-	installing it. Just run "make" and then "./s9".
+Finally make the environment variable S9FES_LIBRARY_PATH point
+to the directory containing s9.scm. The variable may contain a
+single directory or a colon-separated list of directories which
+will be searched in sequence.
 
-	On most systems of the Unix family (plus CygWin and MINGW),
-	you can compile and install S9fES by running "make install".
+Optionally, you can set up an rc file in your home directory
+($HOME/.s9fes/rc). This is an ordinary Scheme source file that
+will be read after loading the library, but before running any
+programs.
 
-	Once installed, entering "s9" starts the interpreter.
+Bug reports, patches, suggestions, questions, etc are welcome.
 
-	(load-from-library "help.scm") loads the online help system.
-	(help) explains the online help system.
-	(apropos) returns a list of all help topics.
-
-
-	COMPILING AND INSTALLING
-
-	Unix
-
-	To compile S9fES, run "make test" (this will also run the test
-	suite to make sure that the interpreter works properly).
-
-	On 64-bit systems, you may want to add the -DBITS_PER_WORD_64
-	define to the Makefile. Not doing so will probably still work,
-	but result in slightly worse bignum performance.
-
-	You can install S9fES (including the goodies) on a Unix system
-	by typing "make install" as root, but if you do so, please edit
-	the *DIR variables at the beginning of Makefile first.
-
-	Plan 9
-
-	To compile S9fES on Plan 9 from Bell Labs, just type "mk", but
-	note that the Plan 9 port is rather experimental at this stage.
-	Above all, there is currently no installation procedure.
-
-	Manual Installation
-
-	To install S9fES manually,
-
-	- Copy the "s9" binary to a location where it can be executed
-	  (e.g. /usr/local/bin)
-
-	- Copy the file "s9.scm" to a publically readable directory
-	  (default: /usr/local/share/s9fes). This directory will be
-	  referred to as LIBDIR in the following instructions.
-
-	- Compile a heap image and copy it to LIBDIR. Typing
-	  "s9 -d s9.image" will compile an image. You must name the
-	  image "s9.image" or S9 will not load it. An image loads
-	  significantly faster than source code.
-
-	Optionally:
-
-	- Copy the content of the "lib" directory to LIBDIR. This
-	  directory contains lots of useful Scheme functions.
-
-	- Create a subdirectory named "help" in LIBDIR and copy the
-	  content of the "help" directory to LIBDIR/help. These files
-	  are part of the interactive help system.
-
-	- Copy the nroff(1) source code of the manual page "s9.1" to
-	  section 1 of your online manual (e.g. /usr/local/man/man1).
-	  In case you are not running Unix, there is a pre-formatted
-	  copy in the file "s9.1.txt".
-
-
-	CONFIGURATION
-
-	You may create the S9FES_LIBRARY_PATH environment variable and
-	make it point to LIBDIR as well as other directories that
-	contain Scheme functions. The variable may contain a single
-	directory or a colon-separated list of directories that will be
-	searched in sequence for image files, library files and help
-	pages (in "help" subdirectories of the given paths).
-
-	If you set up an rc file in your home directory ($HOME/.s9fes/rc),
-	this file will be loaded after the library image file but before
-	running any programs. It is an ordinary Scheme source file.
-
-	To create an image file containing additional functionality,
-	use the -f command line option in combination with -d. For
-	example, the following command will compile an image containing
-	the online help system and the pretty-printer:
-
-	s9 -i -f lib/help.scm -f lib/pretty-print.scm -d s9.image
-
-
-	GETTING STARTED
-
-	Typing "s9" will drop you into the read-eval-print loop of the
-	interpreter. You can run Scheme programs non-interactively by
-	typing "s9 -f program.scm" at your shell prompt.
-
-	If you installed the extension library functions in LIBDIR,
-	they can be loaded by the LOAD-FROM-LIBRARY procedure:
-
-	> (load-from-library "draw-tree.scm")
-	; loading from /usr/local/share/s9fes/draw-tree.scm
-	> (draw-tree '(a b c))
-	[o|o]---[o|o]---[o|/]
-	 |       |       |      
-	 a       b       c      
-	> _
-
-	Feel free to explore them.
-
-	The extension library contains an online help system that can
-	also be loaded with LOAD-FROM-LIBRARY. It contains descriptions
-	of all R4RS procedures and all additional procedures implemented
-	by S9fES:
-
-	> (load-from-library "help.scm")
-	; loading from /usr/local/share/s9fes/help.scm
-	> (help)
-	  ... HELP explains itself ...
-
-
-	EXTENDED INTERPRETER
-
-	There is an experimental extension containing some Unix system
-	procedures. See the S9E(1) man page for details. To (attempt to)
-	compile this extension, run "make s9e.image". To install the
-	extended interpreter, type "make install-s9e" (as root).
-
-
-	CONTACT
-
-	Bug reports, patches, suggestions, questions, etc are welcome.
-
-	Nils M Holm <nmh@t3x.org>
+Nils M Holm <nmh@t3x.org>
 

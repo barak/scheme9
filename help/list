@@ -1,6 +1,0 @@
-R4RS 6.3 (list obj ...) ==> list
-
-Returns a newly allocated list of its arguments.
-
-(list 'a (+ 3 4) 'c)  ==>  (a 7 c)
-(list)                ==>  ()

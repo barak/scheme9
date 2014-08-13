@@ -1,3 +1,0 @@
-R4RS 6.6 (char? obj) ==> boolean
-
-Returns #t if obj is a character, otherwise returns #f.

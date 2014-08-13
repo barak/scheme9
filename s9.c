@@ -1,129 +1,291 @@
 /*
  * Scheme 9 from Empty Space
- * By Nils M Holm <nmh@t3x.org>, 2007,2008,2009
+ * Copyright (C) 2007 Nils M Holm <nmh@t3x.org>
  */
 
 /*
  * Use -DNO_SIGNALS to disable POSIX signal handlers.
- * Use -DBITS_PER_WORD_64 on 64-bit systems.
  */
 
-#define VERSION "2009-02-09"
-
-#define EXTERN
-#include "s9.h"
-#undef EXTERN
-
-#ifndef EXTENSIONS
- #define EXTENSIONS
-#endif
+/*----- Miscellanea -----*/
 
 int	Debug_GC = 0;
 
-PRIM	*Apply_magic;
+#define VERSION	"2007-07-06 (with errata of 2008)"
 
-cell	*GC_root[] = { &Program, &Symbols, &Environment, &Tmp,
-			&Tmp_car, &Tmp_cdr, &Stack, &Stack_bottom,
-			&State_stack, &Acc, NULL };
+/*
+ * Tell later MSC compilers to let us use the standard CLIB API.
+ * Blake McBride <blake@mcbride.name>
+ */
+#ifdef _MSC_VER
+ #if _MSC_VER > 1200
+  #ifndef _CRT_SECURE_NO_DEPRECATE
+   #define _CRT_SECURE_NO_DEPRECATE
+  #endif
+ #endif
+ #ifndef _POSIX_
+  #define _POSIX_
+ #endif
+#endif
 
-/*----- Output -----*/
+#include <stdlib.h>
+#include <stdio.h>
+#include <string.h>
+#include <ctype.h>
+#include <limits.h>
+#ifdef NO_SIGNALS
+ #define signal(sig, fn)
+#else
+ #include <signal.h>
+ #ifdef _MSC_VER
+  #ifndef SIGQUIT
+   #define SIGQUIT SIGINT
+  #endif
+ #endif
+#endif
 
-cell error(char *msg, cell expr);
+#define TEXT_LEN	1024
+#define MAX_PORTS	32
+#define SEGMENT_LEN	32768
+#define HASH_THRESHOLD	64
 
-void flush(void) {
-	fflush(Ports[Output_port]);
-}
+/* Hard memory limit in K-Nodes, 0 = none */
+#define MEMORY_LIMIT_KN	1024
 
-void pr_raw(char *s, int k) {
-	fwrite(s, 1, k, Ports[Output_port]);
-	if (Output_port == 1 && s[k-1] == '\n') flush();
-}
+#if INT_MAX >= 1000000000000000000		/* 64-bit */
+ #define DIGITS_PER_WORD	18
+ #define INT_SEG_LIMIT		1000000000000000000
+#elif INT_MAX >= 1000000000 			/* 32-bit */
+ #define DIGITS_PER_WORD	9
+ #define INT_SEG_LIMIT		1000000000
+#elif INT_MAX >= 10000				/* 16-bit */
+ #define DIGITS_PER_WORD	4
+ #define INT_SEG_LIMIT		10000
+#endif
+
+/* GC flags */
+#define	AFLAG	0x01	/* Atom, Car = type, CDR = next */
+#define	MFLAG	0x02	/* Mark */
+#define SFLAG	0x04	/* State */
+#define VFLAG	0x08	/* Vector, Car = type, CDR = content */
+#define UFLAG	0x10	/* Port: used flag */
+#define LFLAG	0x20	/* Port: locked (do not close) */
+
+enum EVAL_STATES {
+	MATOM,	/* Processing atom */
+	MARGS,	/* Processing argument list */
+	MBETA,	/* Beta-reducing */
+	MIFPR,	/* Processing predicate of IF */
+	MSETV,	/* Processing value of SET! */
+	MDEFN,	/* Processing value of DEFINE */
+	MDSYN,	/* Processing value of DEFINE-SYNTAX */
+	MBEGN,	/* Processing BEGIN */
+	MCONJ,	/* Processing arguments of AND */
+	MDISJ, 	/* Processing arguments of OR */
+	MCOND	/* Processing clauses of COND */
+};
+
+#define special_value_p(x)	((x) < 0)
+#define NIL		(-1)
+#define TRUE		(-2)
+#define FALSE		(-3)
+#define ENDOFFILE	(-4)
+#define UNDEFINED	(-5)
+#define UNSPECIFIC	(-6)
+#define	DOT		(-7)
+#define	RPAREN		(-8)
+#define NOEXPR		(-9)
+
+int	Pool_size = 0,
+	Vpool_size = 0;
+int	*Car = NULL,
+	*Cdr = NULL;
+char	*Tag = NULL;
+int	*Vectors = NULL;
+int	Free_vecs = 0;
+int	Stack = NIL,
+	Stack_bottom = NIL;
+int	State_stack = NIL;
+int	Tmp_car = NIL,
+	Tmp_cdr = NIL,
+	Tmp = NIL;
+int	Free_list = NIL;
+int	Symbols = NIL;
+int	Program = NIL;
+int	Environment = NIL;
+int	Acc = NIL;
+FILE	*Ports[MAX_PORTS];
+char	Port_flags[MAX_PORTS];
+int	Input_port = 0,
+	Output_port = 1;
+int	Level = 0;
+int	Error_flag = 0;
+int	Load_level = 0;
+int	Displaying = 0;
+int	Quiet_mode = 0;
+
+int	S_char, S_else, S_input_port, S_integer, S_latest,
+	S_output_port, S_primitive, S_procedure, S_quasiquote,
+	S_quote, S_string, S_symbol, S_syntax, S_unquote,
+	S_unquote_splicing, S_vector;
+int	S_and, S_begin, S_cond, S_define, S_define_syntax, S_if,
+	S_lambda, S_let, S_letrec, S_or, S_quote, S_set_b,
+	S_syntax_rules;
+
+int	*GC_root[] = { &Program, &Symbols, &Environment, &Tmp, &Tmp_car,
+			&Tmp_cdr, &Stack, &Stack_bottom, &State_stack,
+			&Acc, NULL };
+
+#define nl()		pr("\n")
+#define reject(c)	ungetc(c, Ports[Input_port])
+#define string(n)	((char *) &Vectors[Cdr[n]])
+#define string_len(n)	(Vectors[Cdr[n] - 1])
+#define vector_size(k)	(((k) + sizeof(int)-1) / sizeof(int) + 2)
+#define vector(n)	(&Vectors[Cdr[n]])
+#define vector_len(n)	(vector_size(string_len(n)) - 2)
+#define port_no(n)	(cadr(n))
+#define char_value(n)	(cadr(n))
+
+#define caar(x)		(Car[Car[x]])
+#define cadr(x)		(Car[Cdr[x]])
+#define cdar(x)		(Cdr[Car[x]])
+#define cddr(x)		(Cdr[Cdr[x]])
+#define caaar(x)	(Car[Car[Car[x]]])
+#define caadr(x)	(Car[Car[Cdr[x]]])
+#define cadar(x)	(Car[Cdr[Car[x]]])
+#define caddr(x)	(Car[Cdr[Cdr[x]]])
+#define cdadr(x)	(Cdr[Car[Cdr[x]]])
+#define cddar(x)	(Cdr[Cdr[Car[x]]])
+#define cdddr(x)	(Cdr[Cdr[Cdr[x]]])
+#define caaddr(x)	(Car[Car[Cdr[Cdr[x]]]])
+#define caddar(x)	(Car[Cdr[Cdr[Car[x]]]])
+#define cadadr(x)	(Car[Cdr[Car[Cdr[x]]]])
+#define cadddr(x)	(Car[Cdr[Cdr[Cdr[x]]]])
+#define cdddar(x)	(Cdr[Cdr[Cdr[Car[x]]]])
+#define cddddr(x)	(Cdr[Cdr[Cdr[Cdr[x]]]])
+
+#define null_p(n)	((n) == NIL)
+#define eof_p(n)	((n) == ENDOFFILE)
+#define undefined_p(n)	((n) == UNDEFINED)
+#define unspecific_p(n)	((n) == UNSPECIFIC)
+
+#define boolean_p(n)	((n) == TRUE || (n) == FALSE)
+
+#define integer_p(n) \
+	(!special_value_p(n) && (Tag[n] & AFLAG) && Car[n] == S_integer)
+#define primitive_p(n) \
+	(!special_value_p(n) && (Tag[n] & AFLAG) && Car[n] == S_primitive)
+#define procedure_p(n) \
+	(!special_value_p(n) && (Tag[n] & AFLAG) && Car[n] == S_procedure)
+#define special_p(n)	((n) == S_and    || \
+			 (n) == S_begin  || \
+			 (n) == S_cond   || \
+			 (n) == S_define || \
+			 (n) == S_define_syntax || \
+			 (n) == S_if     || \
+			 (n) == S_lambda || \
+			 (n) == S_let    || \
+			 (n) == S_letrec || \
+			 (n) == S_or     || \
+			 (n) == S_quote  || \
+			 (n) == S_syntax_rules  || \
+			 (n) == S_set_b)
+#define char_p(n) \
+	(!special_value_p(n) && (Tag[n] & AFLAG) && Car[n] == S_char)
+#define syntax_p(n) \
+	(!special_value_p(n) && (Tag[n] & AFLAG) && Car[n] == S_syntax)
+#define input_port_p(n)	\
+	(!special_value_p(n) && (Tag[n] & AFLAG) && Car[n] == S_input_port)
+#define output_port_p(n) \
+	(!special_value_p(n) && (Tag[n] & AFLAG) && Car[n] == S_output_port)
+
+#define symbol_p(n) \
+	(!special_value_p(n) && (Tag[n] & VFLAG) && Car[n] == S_symbol)
+#define vector_p(n) \
+	(!special_value_p(n) && (Tag[n] & VFLAG) && Car[n] == S_vector)
+#define string_p(n) \
+	(!special_value_p(n) && (Tag[n] & VFLAG) && Car[n] == S_string)
+
+#define auto_quoting_p(n) \
+	(boolean_p(n)    || \
+	 char_p(n)       || \
+	 eof_p(n)        || \
+	 integer_p(n)    || \
+	 string_p(n)     || \
+	 undefined_p(n)  || \
+	 unspecific_p(n) || \
+	 vector_p(n))
+
+#define rib_args(x)	(Car[x])
+#define rib_append(x)	(cadr(x))
+#define rib_result(x)	(caddr(x))
+#define rib_source(x)	(cadddr(x))
+
+#define atom_p(n) \
+	(special_value_p(n) || (Tag[n] & AFLAG) || (Tag[n] & VFLAG))
+
+#define pair_p(x) (!atom_p(x))
+
+int error(char *msg, int expr);
 
 void pr(char *s) {
 	if (Ports[Output_port] == NULL)
 		error("output port is not open", NOEXPR);
 	else
-		pr_raw(s, strlen(s));
+		fwrite(s, 1, strlen(s), Ports[Output_port]);
 }
 
-/*----- Error Handler -----*/
+void print(int n);
 
-void print_form(cell n);
-
-void print_calltrace(void) {
-	int	i, j;
-
-	for (i=0; i<MAX_CALL_TRACE; i++)
-		if (Called_procedures[i] != NIL)
-			break;
-	if (i == MAX_CALL_TRACE) return;
-	pr("call trace:");
-	i = Proc_ptr;
-	for (j=0; j<MAX_CALL_TRACE; j++) {
-		if (i >= MAX_CALL_TRACE) i = 0;
-		if (Called_procedures[i] != NIL) {
-			pr(" ");
-			print_form(Called_procedures[i]);
-		}
-		i += 1;
-	}
-	nl();
-}
-
-cell error(char *msg, cell expr) {
+int error(char *msg, int expr) {
 	int	oport;
 
 	if (Error_flag) return UNSPECIFIC;
 	oport = Output_port;
 	Output_port = 1;
 	Error_flag = 1;
-	pr("error: ");
-	pr(msg);
+	printf("error: %s", msg);
 	if (expr != NOEXPR) {
 		pr(": ");
-		print_form(expr);
+		print(expr);
 	}
 	nl();
-	print_calltrace();
 	Output_port = oport;
 	if (Quiet_mode) exit(1);
 	return UNSPECIFIC;
 }
 
-void fatal(char *msg) {
-	pr("fatal ");
-	Error_flag = 0;
+int fatal(char *msg) {
+	printf("fatal ");
 	error(msg, NOEXPR);
 	exit(2);
 }
 
-/*----- Allocator -----*/
+/*----- GC -----*/
 
 void new_segment(void) {
-	Car = realloc(Car, sizeof(cell) * (Pool_size + Segment_size));
-	Cdr = realloc(Cdr, sizeof(cell) * (Pool_size + Segment_size));
-	Tag = realloc(Tag, Pool_size + Segment_size);
-	Vectors = realloc(Vectors, sizeof(cell) * (Vpool_size + Segment_size));
+	Car = realloc(Car, sizeof(int) * (Pool_size + SEGMENT_LEN));
+	Cdr = realloc(Cdr, sizeof(int) * (Pool_size + SEGMENT_LEN));
+	Tag = realloc(Tag, Pool_size + SEGMENT_LEN);
+	Vectors = realloc(Vectors, sizeof(int) * (Vpool_size + SEGMENT_LEN));
 	if (	Car == NULL || Cdr == NULL || Tag == NULL ||
 		Vectors == NULL
 	) {
-		fatal("out of physical memory");
+		fatal("out of memory");
 	}
-	memset(&Car[Pool_size], 0, Segment_size * sizeof(cell));
-	memset(&Cdr[Pool_size], 0, Segment_size * sizeof(cell));
-	memset(&Tag[Pool_size], 0, Segment_size);
-	memset(&Vectors[Vpool_size], 0, Segment_size * sizeof(cell));
-	Pool_size += Segment_size;
-	Vpool_size += Segment_size;
-	Segment_size = Segment_size * 3 / 2;
+	memset(&Car[Pool_size], 0, SEGMENT_LEN * sizeof(int));
+	memset(&Cdr[Pool_size], 0, SEGMENT_LEN * sizeof(int));
+	memset(&Tag[Pool_size], 0, SEGMENT_LEN);
+	memset(&Vectors[Pool_size], 0, SEGMENT_LEN * sizeof(int));
+	Pool_size += SEGMENT_LEN;
+	Vpool_size += SEGMENT_LEN;
 }
 
-void mark(cell n);
+void mark(int n);
 
 /* Mark object at offset N in the Vectors */
-void mark_vector(cell n, int type) {
-	cell	*p;
-	int	k;
+void mark_vector(int n, int type) {
+	int	*p, k;
 
 	p = &Vectors[Cdr[n] - 2];
 	*p = n;
@@ -145,19 +307,19 @@ void mark_vector(cell n, int type) {
  * S1: M==1 S==1 CAR visited, process CDR
  * S2: M==1 S==0 completely visited, return to parent
  */
-void mark(cell n) {
-	cell	p, parent;
+void mark(int n) {
+	int	p, parent;
 
 	parent = NIL;	/* Initially, there is no parent node */
 	while (1) {
-		if (special_value_p(n) || Tag[n] & MARK_TAG) {
+		if (special_value_p(n) || Tag[n] & MFLAG) {
 			if (parent == NIL) break;
-			if (Tag[parent] & STATE_TAG) {	/* S1 --> S2 */
+			if (Tag[parent] & SFLAG) {	/* S1 --> S2 */
 				p = Cdr[parent];
 				Cdr[parent] = Car[parent];
 				Car[parent] = n;
-				Tag[parent] &= ~STATE_TAG;
-				Tag[parent] |=  MARK_TAG;
+				Tag[parent] &= ~SFLAG;
+				Tag[parent] |=  MFLAG;
 				n = p;
 			}
 			else {				/* S2 --> done */
@@ -168,28 +330,28 @@ void mark(cell n) {
 			}
 		}
 		else {	
-			if (Tag[n] & VECTOR_TAG) {	/* S0 --> done */
-				Tag[n] |= MARK_TAG;
-				/* Tag[n] &= ~STATE_TAG; */
+			if (Tag[n] & VFLAG) {		/* S0 --> done */
+				Tag[n] |= MFLAG;
+				/* Tag[n] &= ~SFLAG; */
 				mark_vector(n, Car[n]);
 			}
-			else if (Tag[n] & ATOM_TAG) {	/* S0 --> S2 */
+			else if (Tag[n] & AFLAG) {	/* S0 --> S2 */
 				if (input_port_p(n) || output_port_p(n))
-					Port_flags[port_no(n)] |= USED_TAG;
+					Port_flags[port_no(n)] |= UFLAG;
 				p = Cdr[n];
 				Cdr[n] = parent;
-				/*Tag[n] &= ~STATE_TAG;*/
+				/*Tag[n] &= ~SFLAG;*/
 				parent = n;
 				n = p;
-				Tag[parent] |= MARK_TAG;
+				Tag[parent] |= MFLAG;
 			}
 			else {				/* S0 --> S1 */
 				p = Car[n];
 				Car[n] = parent;
-				Tag[n] |= MARK_TAG;
+				Tag[n] |= MFLAG;
 				parent = n;
 				n = p;
-				Tag[parent] |= STATE_TAG;
+				Tag[parent] |= SFLAG;
 			}
 		}
 	}
@@ -211,44 +373,39 @@ void unmark_vectors(void) {
 /* Mark and Sweep GC. */
 int gc(void) {
 	int	i, k;
-	char	buf[100];
 
+	if (Debug_GC) pr("GC called: ");
 	for (i=0; i<MAX_PORTS; i++)
-		if (Port_flags[i] & LOCK_TAG)
-			Port_flags[i] |= USED_TAG;
+		if (Port_flags[i] & LFLAG)
+			Port_flags[i] |= UFLAG;
 		else
-			Port_flags[i] &= ~USED_TAG;
+			Port_flags[i] &= ~UFLAG;
 	for (i=0; GC_root[i] != NULL; i++) mark(GC_root[i][0]);
 	k = 0;
 	Free_list = NIL;
 	for (i=0; i<Pool_size; i++) {
-		if (!(Tag[i] & MARK_TAG)) {
+		if (!(Tag[i] & MFLAG)) {
 			Cdr[i] = Free_list;
 			Free_list = i;
 			k = k+1;
 		}
 		else {
-			Tag[i] &= ~MARK_TAG;
+			Tag[i] &= ~MFLAG;
 		}
 	}
 	for (i=0; i<MAX_PORTS; i++) {
-		if (!(Port_flags[i] & USED_TAG) && Ports[i] != NULL) {
+		if (!(Port_flags[i] & UFLAG) && Ports[i] != NULL) {
 			fclose(Ports[i]);
 			Ports[i] = NULL;
 		}
 	}
-	if (Debug_GC > 1) {
-		sprintf(buf, "GC: %d nodes reclaimed", k);
-		pr(buf); nl();
-	}
+	if (Debug_GC) printf("%d nodes reclaimed\n", k);
 	return k;
 }
 
 /* Allocate a fresh node and initialize with PCAR,PCDR,PTAG. */
-cell alloc3(cell pcar, cell pcdr, int ptag) {
-	cell	n;
-	int	k;
-	char	buf[100];
+int alloc3(int pcar, int pcdr, int ptag) {
+	int	n, k;
 
 	if (Free_list == NIL) {
 		if (ptag == 0) Tmp_car = pcar;
@@ -259,28 +416,22 @@ cell alloc3(cell pcar, cell pcdr, int ptag) {
 		 * do not wait for the pool to run dry.
 		 */
 		if (k < Pool_size / 10) {
-			if (	Memory_limit_kn &&
-				Pool_size + Segment_size > Memory_limit_kn
+			if (	MEMORY_LIMIT_KN &&
+				Pool_size + SEGMENT_LEN > MEMORY_LIMIT_KN*1024
 			) {
-				error("hit memory limit", NOEXPR);
+				if (Free_list == NIL)
+					fatal("alloc3(): hit memory limit");
 			}
 			else {
 				new_segment();
-				if (Debug_GC) {
-					sprintf(buf, "GC: new segment,"
-						       " nodes = %d,"
-						       " next segment = %d",
-							Pool_size,
-							Segment_size);
-					pr(buf); nl();
-				}
 				gc();
+				if (Debug_GC)
+					printf("Alloc3: new segment,"
+					       " nodes = %d\n",
+							Pool_size);
 			}
 		}
 		Tmp_car = Tmp_cdr = NIL;
-	}
-	if (Free_list == NIL) {
-		fatal("alloc3: failed to recover from low memory condition");
 	}
 	n = Free_list;
 	Free_list = Cdr[Free_list];
@@ -290,13 +441,15 @@ cell alloc3(cell pcar, cell pcdr, int ptag) {
 	return n;
 }
 
+#define alloc(pcar, pcdr) alloc3((pcar), (pcdr), 0)
+
 /* In situ vector pool garbage collection and compaction */
 int gcv(void) {
 	int	v, k, to, from;
-	char	buf[100];
 
 	unmark_vectors();
 	gc();		/* re-mark live vectors */
+	if (Debug_GC) printf("GCV called: ");
 	to = from = 0;
 	while (from < Free_vecs) {
 		v = Vectors[from+1];
@@ -304,7 +457,7 @@ int gcv(void) {
 		if (Vectors[from] != NIL) {
 			if (to != from) {
 				memmove(&Vectors[to], &Vectors[from],
-					k * sizeof(cell));
+					k * sizeof(int));
 				Cdr[Vectors[to]] = to + 2;
 			}
 			to += k;
@@ -312,19 +465,14 @@ int gcv(void) {
 		from += k;
 	}
 	k = Free_vecs - to;
-	if (Debug_GC > 1) {
-		sprintf(buf, "gcv: %d cells reclaimed", k);
-		pr(buf); nl();
-	}
+	if (Debug_GC) printf("%d cells reclaimed\n", k);
 	Free_vecs = to;
 	return k;
 }
 
 /* Allocate vector from pool */
-cell allocv(cell type, int size) {
-	cell	n;
-	int	v, wsize, k;
-	char	buf[100];
+int allocv(int type, int size) {
+	int	v, n, wsize, k;
 
 	wsize = vector_size(size);
 	if (Free_vecs + wsize >= Vpool_size) {
@@ -332,41 +480,38 @@ cell allocv(cell type, int size) {
 		if (	Free_vecs + wsize >=
 			Vpool_size - Vpool_size / 2
 		) {
-			if (	Memory_limit_kn &&
-				Pool_size + Segment_size > Memory_limit_kn
+			if (	MEMORY_LIMIT_KN &&
+				Pool_size + SEGMENT_LEN > MEMORY_LIMIT_KN*1024
 			) {
-				error("hit memory limit", NOEXPR);
+				if (Free_list == NIL)
+					fatal("allocv(): hit memory limit");
 			}
 			else {
 				new_segment();
 				gcv();
-				if (Debug_GC) {
-					sprintf(buf,
-						"allocv: new segment,"
-					    	" nodes = %d",
-							Vpool_size);
-					pr(buf); nl();
-				}
+				if (Debug_GC)
+					printf("Allocv: new segment,"
+					    	" nodes = %d\n",
+							Pool_size);
 			}
 		}
 	}
-	if (Free_vecs + wsize >= Vpool_size) {
-		fatal("allocv: failed to recover from low memory condition");
-	}
 	v = Free_vecs;
 	Free_vecs += wsize;
-	n = alloc3(type, v+2, VECTOR_TAG);
+	n = alloc3(type, v+2, VFLAG);
 	Vectors[v] = n;
 	Vectors[v+1] = size;
 	return n;
 }
 
+#define save(n) (Stack = alloc((n), Stack))
+
 /* Pop K nodes off the Stack, return last one. */
-cell unsave(int k) {
-	cell	n = NIL; /*LINT*/
+int unsave(int k) {
+	int	n = NIL; /*LINT*/
 
 	while (k) {
-		if (Stack == NIL) fatal("unsave: stack underflow");
+		if (Stack == NIL) fatal("unsave(): stack underflow");
 		n = Car[Stack];
 		Stack = Cdr[Stack];
 		k = k-1;
@@ -376,8 +521,8 @@ cell unsave(int k) {
 
 /*----- Reader -----*/
 
-cell find_symbol(char *s) {
-	cell	y;
+int find_symbol(char *s) {
+	int	y;
 
 	y = Symbols;
 	while (y != NIL) {
@@ -388,35 +533,40 @@ cell find_symbol(char *s) {
 	return NIL;
 }
 
-cell make_symbol(char *s, int k) {
-	cell	n;
+int make_symbol(char *s, int k) {
+	int	n;
 
 	n = allocv(S_symbol, k+1);
 	strcpy(string(n), s);
 	return n;
 }
 
-cell add_symbol(char *s) {
-	cell	y, new;
+int add_symbol(char *s) {
+	int	y, new;
 
 	y = find_symbol(s);
 	if (y != NIL) return y;
 	Symbols = alloc(NIL, Symbols);
-	new = make_symbol(s, (int) strlen(s));
+	new = make_symbol(s, strlen(s));
 	Car[Symbols] = new;
 	return Car[Symbols];
 }
 
-cell read_form(void);
+#define read_c() getc(Ports[Input_port])
 
-cell read_list(void) {
-	cell	n,	/* Node read */
+#define read_c_ci() tolower(read_c())
+
+int read_form(void);
+
+int read_list(void) {
+	int	n,	/* Node read */
 		m,	/* List */
-		a;	/* Used to append nodes to m */
-	int	c;	/* Member counter */
-	cell	new;
-	char	badpair[] = "bad pair";
+		a,	/* Used to append nodes to m */
+		c;	/* Member counter */
+	int	new;
+	char	*badpair;
 
+	badpair = "bad pair";
 	Level = Level+1;
 	m = alloc(NIL, NIL);	/* root */
 	save(m);
@@ -466,8 +616,8 @@ cell read_list(void) {
 	return c? m: NIL;
 }
 
-cell quote(cell n, cell quotation) {
-	cell	q;
+int quote(int n, int quotation) {
+	int	q;
 
 	q = alloc(n, NIL);
 	return alloc(quotation, q);
@@ -486,9 +636,8 @@ int str_numeric_p(char *s) {
 	return 1;
 }
 
-cell string_to_bignum(char *s) {
-	cell	n;
-	int	k, j, v, sign;
+int string_to_bignum(char *s) {
+	int	k, j, n, v, sign;
 
 	sign = 1;
 	if (s[0] == '-') {
@@ -498,7 +647,7 @@ cell string_to_bignum(char *s) {
 	else if (s[0] == '+') {
 		s++;
 	}
-	k = (int) strlen(s);
+	k = strlen(s);
 	n = NIL;
 	while (k) {
 		j = k <= DIGITS_PER_WORD? k: DIGITS_PER_WORD;
@@ -506,32 +655,21 @@ cell string_to_bignum(char *s) {
 		s[k-j] = 0;
 		k -= j;
 		if (k == 0) v *= sign;
-		n = alloc3(v, n, ATOM_TAG);
+		n = alloc3(v, n, AFLAG);
 	}
-	return alloc3(S_integer, n, ATOM_TAG);
+	return alloc3(S_integer, n, AFLAG);
 }
 
 /* Create a character literal. */
-cell make_char(int x) {
-	cell n;
+int make_char(int x) {
+	int	n;
 
-	n = alloc3(x, NIL, ATOM_TAG);
-	return alloc3(S_char, n, ATOM_TAG);
-}
-
-int strcmp_ci(char *s1, char *s2) {
-	int	c1, c2;
-
-	for (;;) {
-		c1 = tolower(*s1++);
-		c2 = tolower(*s2++);
-		if (!c1 || !c2 || c1 != c2) break;
-	}
-	return c1<c2? -1: c1>c2? 1: 0;
+	n = alloc3(x, NIL, AFLAG);
+	return alloc3(S_char, n, AFLAG);
 }
 
 /* Read a character literal. */
-cell character(void) {
+int character(void) {
 	char	buf[10];
 	int	i, c;
 
@@ -544,8 +682,9 @@ cell character(void) {
 	buf[i] = 0;
 	if (i == 0) c = ' ';
 	else if (i == 1) c = buf[0];
-	else if (!strcmp_ci(buf, "space")) c = ' ';
-	else if (!strcmp_ci(buf, "newline")) c = '\n';
+	else if (!strcmp(buf, "space")) c = ' ';
+	else if (!strcmp(buf, "newline")) c = '\n';
+	else if (!strcmp(buf, "linefeed")) c = '\n';
 	else {
 		error("bad # syntax", NOEXPR);
 		c = 0;
@@ -554,8 +693,8 @@ cell character(void) {
 }
 
 /* Create a string; K = length */
-cell make_string(char *s, int k) {
-	cell	n;
+int make_string(char *s, int k) {
+	int	n;
 
 	n = allocv(S_string, k+1);
 	strcpy(string(n), s);
@@ -567,8 +706,8 @@ cell make_string(char *s, int k) {
  * may get relocated during vector pool compaction.
  * Hence this routine must be used instead of make_string().
  */
-cell clone_string(cell s, int k) {
-	cell	n;
+int clone_string(int s, int k) {
+	int	n;
 
 	save(s);
 	n = allocv(S_string, k+1);
@@ -578,10 +717,9 @@ cell clone_string(cell s, int k) {
 }
 
 /* Read a string literal. */
-cell string_literal(void) {
-	char	s[TOKEN_LENGTH+1];
-	cell	n;
-	int	c, i, q;
+int string_literal(void) {
+	char	s[TEXT_LEN+1];
+	int	c, i, n, q;
 	int	inv;
 
 	i = 0;
@@ -589,10 +727,8 @@ cell string_literal(void) {
 	c = read_c();
 	inv = 0;
 	while (q || c != '"') {
-		if (c == '\n')
-			error("Missing '\"' in string literal", NOEXPR);
 		if (Error_flag) break;
-		if (i >= TOKEN_LENGTH-2) {
+		if (i >= TEXT_LEN-2) {
 			error("string literal too long", NOEXPR);
 			i = i-1;
 		}
@@ -612,9 +748,9 @@ cell string_literal(void) {
 }
 
 /* Report unreadable object */
-cell unreadable(void) {
+int unreadable(void) {
 	int	c, i;
-	char	buf[TOKEN_LENGTH];
+	char	buf[TEXT_LEN];
 	int	d;
 
 	strcpy(buf, "#<");
@@ -622,7 +758,7 @@ cell unreadable(void) {
 	while (1) {
 		c = read_c_ci();
 		if (c == '>' || c == '\n') break;
-		if (i < TOKEN_LENGTH-2) buf[i++] = c;
+		if (i < TEXT_LEN-2) buf[i++] = c;
 	}
 	buf[i++] = '>';
 	buf[i] = 0;
@@ -640,13 +776,13 @@ cell unreadable(void) {
 	 (c) == '`'  || (c) == ','  || (c) == '"'  || \
 	 (c) == EOF)
 
-cell symbol_or_number(int c) {
-	char	s[TOKEN_LENGTH];
+int symbol_or_number(int c) {
+	char	s[TEXT_LEN];
 	int	i;
 
 	i = 0;
 	while (!separator(c)) {
-		if (i >= TOKEN_LENGTH-2) {
+		if (i >= TEXT_LEN-2) {
 			error("symbol too long", NOEXPR);
 			i = i-1;
 		}
@@ -660,17 +796,33 @@ cell symbol_or_number(int c) {
 	return add_symbol(s);
 }
 
-cell list_to_vector(cell m, char *msg) {
-	cell	n, vec;
-	int	k;
-	cell	*p;
+int nested_comment(void) {
+	int	p, c, k;
+
+	k = 1;
+	p = 0;
+	c = read_c();
+	while (k) {
+		if (c == EOF) fatal("end of input in nested comment");
+		if (p == '#' && c == '|') { k++; c = 0; }
+		if (p == '|' && c == '#') { k--; c = 0; }
+		p = c;
+		c = read_c();
+	}
+	return c;
+}
+
+static int list_to_vector(int m, char *msg) {
+	int	n;
+	int	vec, k;
+	int	*p;
 
 	k = 0;
 	for (n = m; n != NIL; n = Cdr[n]) {
 		if (atom_p(n)) return error(msg, m);
 		k++;
 	}
-	vec = allocv(S_vector, k*sizeof(cell));
+	vec = allocv(S_vector, k*sizeof(int));
 	p = vector(vec);
 	for (n = m; n != NIL; n = Cdr[n]) {
 		*p = Car[n];
@@ -679,8 +831,8 @@ cell list_to_vector(cell m, char *msg) {
 	return vec;
 }
 
-cell read_vector(void) {
-	cell	n;
+static int read_vector(void) {
+	int	n;
 
 	n = read_list();
 	save(n);
@@ -689,7 +841,7 @@ cell read_vector(void) {
 	return n;
 }
 
-cell read_form(void) {
+int read_form(void) {
 	int	c, c2;
 
 	c = read_c_ci();
@@ -700,6 +852,15 @@ cell read_form(void) {
 		}
 		if (c == '#') {
 			c = read_c_ci();
+			if (c == '|') {
+				c = nested_comment();
+				continue;
+			}
+			if (c == ';') {
+				read_form();
+				c = read_c_ci();
+				continue;
+			}
 			if (c != '!') {
 				reject(c);
 				c = '#';
@@ -760,7 +921,7 @@ cell read_form(void) {
 	}
 }
 
-cell xread(void) {
+int xread(void) {
 	if (Ports[Input_port] == NULL)
 		return error("input port is not open", NOEXPR);
 	Level = 0;
@@ -769,86 +930,61 @@ cell xread(void) {
 
 /*----- Printer -----*/
 
-char *ntoa(char *b, cell x, int w) {
-	char	buf[40];
-	int	i = 0, neg = 0;
-	char	*p = &buf[39];
-
-	if (x < 0) {
-		x = -x;
-		neg = 1;
-	}
-	*p = 0;
-	while (x || i == 0) {
-		i += 1;
-		if (i >= 39) fatal("ntoa: number too big");
-		p -= 1;
-		*p = x % 10 + '0';
-		x = x / 10;
-	}
-	while (i < (w-neg) && i < 39) {
-		i += 1;
-		p -= 1;
-		*p = '0';
-	}
-	if (neg) {
-		if (i >= 39) fatal("ntoa: number too big");
-		p -= 1;
-		*p = '-';
-	}
-	strcpy(b, p);
-	return b;
-}
-
 /* Print bignum integer. */
-int print_integer(cell n) {
+int print_integer(int n) {
 	int	first;
 	char	buf[DIGITS_PER_WORD+2];
 
-	if (!integer_p(n)) return 0;
+	if (Car[n] != S_integer) return 0;
 	n = Cdr[n];
 	first = 1;
 	while (1) {
 		if (n == NIL) break;
-		pr(ntoa(buf, Car[n], first? 0: DIGITS_PER_WORD));
+		if (first)
+			sprintf(buf, "%d", Car[n]);
+		else
+			sprintf(buf, "%0*d", DIGITS_PER_WORD, Car[n]);
+		pr(buf);
 		n = Cdr[n];
 		first = 0;
 	}
 	return -1;
 }
 
+void print(int n);
+
 /* Print expressions of the form (QUOTE X) as 'X. */
-int print_quoted(cell n) {
+int print_quoted(int n) {
 	if (	Car[n] == S_quote &&
 		Cdr[n] != NIL &&
 		cddr(n) == NIL
 	) {
 		pr("'");
-		print_form(cadr(n));
+		print(cadr(n));
 		return 1;
 	}
 	return 0;
 }
 
-int print_procedure(cell n) {
-	if (procedure_p(n)) {
+int print_procedure(int n) {
+	if (Car[n] == S_procedure) {
 		pr("#<procedure ");
-		print_form(cadr(n));
+		print(cadr(n));
 	/*	pr(" ");		*/
-	/*	print_form(caddr(n));	*/
+	/*	print(caddr(n));	*/
 	/*	pr(" ");		*/
-	/*	print_form(cdddr(n));	*/
+	/*	print(cdddr(n));	*/
 		pr(">");
 		return -1;
 	}
 	return 0;
 }
 
-int print_char(cell n) {
-	char	b[1];
+int print_char(int n) {
+	char	b[2];
 	int	c;
 
-	if (!char_p(n)) return 0;
+	if (Car[n] != S_char) return 0;
 	if (!Displaying) pr("#\\");
 	c = cadr(n);
 	if (!Displaying && c == ' ') {
@@ -858,41 +994,43 @@ int print_char(cell n) {
 		pr("newline");
 	}
 	else {
+		b[1] = 0;
 		b[0] = c;
-		pr_raw(b, 1);
+		pr(b);
 	}
 	return -1;
 }
 
-int print_string(cell n) {
-	char	b[1];
+int print_string(int n) {
+	char	b[2];
 	int	k;
 	char	*s;
 
-	if (!string_p(n)) return 0;
+	if (Car[n] != S_string) return 0;
 	if (!Displaying) pr("\"");
 	s = string(n);
-	k = string_len(n)-1;
+	k = string_len(n);
+	b[1] = 0;
 	while (k) {
 		b[0] = *s++;
 		if (!Displaying)
 			if (b[0] == '"' || b[0] == '\\')
 				pr("\\");
-		pr_raw(b, 1);
+		pr(b);
 		k = k-1;
 	}
 	if (!Displaying) pr("\"");
 	return -1;
 }
 
-int print_symbol(cell n) {
+int print_symbol(int n) {
 	char	b[2];
 	int	k;
 	char	*s;
 
-	if (!symbol_p(n)) return 0;
+	if (Car[n] != S_symbol) return 0;
 	s = string(n);
-	k = string_len(n)-1;
+	k = string_len(n);
 	b[1] = 0;
 	while (k) {
 		b[0] = *s++;
@@ -902,52 +1040,49 @@ int print_symbol(cell n) {
 	return -1;
 }
 
-int print_primitive(cell n) {
-	PRIM	*p;
-
-	if (!primitive_p(n)) return 0;
+int print_primitive(int n) {
+	if (Car[n] != S_primitive) return 0;
 	pr("#<primitive ");
-	p = (PRIM *) cadr(n);
-	pr(p->name);
+	print(cddr(n));
 	pr(">");
 	return -1;
 }
 
-int print_syntax(cell n) {
-	if (!syntax_p(n)) return 0;
+int print_syntax(int n) {
+	if (Car[n] != S_syntax) return 0;
 	pr("#<syntax>");
 	return -1;
 }
 
-int print_vector(cell n) {
-	cell	*p;
+int print_vector(int n) {
+	int	*p;
 	int	k;
 
-	if (!vector_p(n)) return 0;
 	if (Car[n] != S_vector) return 0;
 	pr("#(");
 	p = vector(n);
 	k = vector_len(n);
 	while (k--) {
-		print_form(*p++);
+		print(*p++);
 		if (k) pr(" ");
 	}
 	pr(")");
 	return -1;
 }
 
-int print_port(cell n) {
-	char	buf[100], nbuf[40];
+int print_port(int n) {
+	char	buf[100];
 
-	if (!input_port_p(n) && !output_port_p(n)) return 0;
-	sprintf(buf, "#<%s-port %s>",
+	if (Car[n] != S_input_port && Car[n] != S_output_port)
+		return 0;
+	sprintf(buf, "#<%s-port %d>",
 		Car[n] == S_input_port? "input": "output",
-		ntoa(nbuf, cadr(n), 0));
+		cadr(n));
 	pr(buf);
 	return -1;
 }
 
-void print_form(cell n) {
+void print(int n) {
 	if (Ports[Output_port] == NULL) {
 		error("output port is not open", NOEXPR);
 		return;
@@ -983,11 +1118,11 @@ void print_form(cell n) {
 		if (print_port(n)) return;
 		pr("(");
 		while (n != NIL) {
-			print_form(Car[n]);
+			print(Car[n]);
 			n = Cdr[n];
 			if (n != NIL && atom_p(n)) {
 				pr(" . ");
-				print_form(n);
+				print(n);
 				n = NIL;
 			}
 			if (n != NIL) pr(" ");
@@ -998,7 +1133,7 @@ void print_form(cell n) {
 
 /*----- Miscellanea -----*/
 
-int length(cell n) {
+int length(int n) {
 	int	k = 0;
 
 	while (n != NIL) {
@@ -1008,8 +1143,8 @@ int length(cell n) {
 	return k;
 }
 
-cell appendb(cell a, cell b) {
-	cell	p, last = NIL;
+int appendb(int a, int b) {
+	int	p, last = NIL;
 
 	if (a == NIL) return b;
 	p = a;
@@ -1022,8 +1157,8 @@ cell appendb(cell a, cell b) {
 	return a;
 }
 
-cell flat_copy(cell n, cell *lastp) {
-	cell	a, m, last, new;
+int flat_copy(int n, int *lastp) {
+	int     a, m, last, new;
 
 	if (n == NIL) {
 		lastp[0] = NIL;
@@ -1048,7 +1183,7 @@ cell flat_copy(cell n, cell *lastp) {
 	return m;
 }
 
-int argument_list_p(cell n) {
+int argument_list_p(int n) {
 	if (n == NIL || symbol_p(n)) return 1;
 	if (atom_p(n)) return 0;
 	while (!atom_p(n)) {
@@ -1058,47 +1193,44 @@ int argument_list_p(cell n) {
 	return n == NIL || symbol_p(n);
 }
 
-int list_of_symbols_p(cell n) {
+int list_of_symbols_p(int n) {
 	return !symbol_p(n) && argument_list_p(n);
 }
 
-void rehash(cell e) {
-	uint	i;
-	cell	p, *v, new;
-	uint	h, k = length(e);
-	char	*s;
+void rehash(int e) {
+	int		i, p, *v;
+	unsigned int	h, k = length(e)-1;
+	char		*s;
+	int		new;
 
 	if (Program == NIL || k < HASH_THRESHOLD) return;
-	new = allocv(S_vector, k * sizeof(cell));
+	new = allocv(S_vector, k * sizeof(int));
 	Car[e] = new;
 	v = vector(Car[e]);
 	for (i=0; i<k; i++) v[i] = NIL;
 	p = Cdr[e];
-	v = vector(Car[e]);
-	while (p != NIL) {
+	for (i=1; i<k; i++) {
 		s = string(caar(p));
 		h = 0;
-		while (*s) h = (h<<1) + *s++;
-		new = alloc(Car[p], v[h%k]);
-		v = vector(Car[e]);
-		v[h%k] = new;
+		while (*s) h = (h<<8) + *s++;
+		v[h%k] = Car[p];
 		p = Cdr[p];
 	}
 }
 
-cell extend(cell v, cell a, cell e) {
-	cell	n, new;
+int extend(int v, int a, int e) {
+	int	n, new;
 
 	n = alloc(a, NIL);
 	n = alloc(v, n);
 	new = alloc(n, Cdr[e]);
 	Cdr[e] = new;
-	if (Car[S_loading] == FALSE) rehash(e);
+	rehash(e);
 	return e;
 }
 
-cell make_env(cell rib, cell env) {
-	cell	e;
+int make_env(int rib, int env) {
+	int	e;
 
 	Tmp = env;
 	rib = alloc(NIL, rib);
@@ -1112,35 +1244,38 @@ cell make_env(cell rib, cell env) {
 	return e;
 }
 
-cell try_hash(cell v, cell e) {
-	cell	*hv, p;
-	uint	h, k;
-	char	*s;
+/* hash stats */
+int coll = 0, hits = 0;
+
+int try_hash(int v, int e) {
+	int		*hv, p;
+	unsigned int	h, k;
+	char		*s;
 
 	if (e == NIL || Car[e] == NIL) return NIL;
 	hv = vector(Car[e]);
 	k = vector_len(Car[e]);
 	s = string(v);
 	h = 0;
-	while (*s) h = (h<<1) + *s++;
+	while (*s) h = (h<<8) + *s++;
 	p = hv[h%k];
-	while (p != NIL) {
-		if (caar(p) == v) return Car[p];
-		p = Cdr[p];
+	if (p != NIL && Car[p] == v) {
+		hits++;
+		return p;
 	}
+	coll++;
 	return NIL;
 }
 
 /*----- Evaluator -----*/
 
-cell lookup(cell v, cell env) {
-	cell	e, n;
+int lookup(int v, int env) {
+	int	e, n;
 
 	while (env != NIL) {
 		e = Car[env];
 		n = try_hash(v, e);
 		if (n != NIL) return n;
-		if (e != NIL) e = Cdr[e];
 		while (e != NIL) {
 			if (v == caar(e)) return Car[e];
 			e = Cdr[e];
@@ -1150,8 +1285,8 @@ cell lookup(cell v, cell env) {
 	return NIL;
 }
 
-cell location_of(cell v, cell env) {
-	cell	n;
+int location_of(int v, int env) {
+	int	n;
 
 	n = lookup(v, env);
 	if (n == NIL) {
@@ -1164,27 +1299,25 @@ cell location_of(cell v, cell env) {
 	return Cdr[n];
 }
 
-cell value_of(cell v, cell env) {
-	cell	n;
+int value_of(int v, int env) {
+	int	n;
 
 	n = location_of(v, env);
-	n = n == NIL? NIL: Car[n];
-	if (n == UNDEFINED) error("symbol not bound", v);
-	return n;
+	return n == NIL? NIL: Car[n];
 }
 
 /*----- Specials -----*/
 
-cell too_few_args(int n) {
+int too_few_args(int n) {
 	return error("too few arguments", n);
 }
 
-cell too_many_args(int n) {
+int too_many_args(int n) {
 	return error("too many arguments", n);
 }
 
 /* Set up sequence for AND, BEGIN, OR. */
-cell make_sequence(int state, cell neutral, cell x, int *pc, int *ps) {
+int make_sequence(int state, int neutral, int x, int *pc, int *ps) {
 	if (Cdr[x] == NIL) {
 		return neutral;
 	}
@@ -1201,18 +1334,18 @@ cell make_sequence(int state, cell neutral, cell x, int *pc, int *ps) {
 }
 
 #define sf_and(x, pc, ps) \
-	make_sequence(EV_AND, TRUE, x, pc, ps)
+	make_sequence(MCONJ, TRUE, x, pc, ps)
 
 #define sf_begin(x, pc, ps) \
-	make_sequence(EV_BEGIN, UNSPECIFIC, x, pc, ps)
+	make_sequence(MBEGN, UNSPECIFIC, x, pc, ps)
 
-cell sf_cond(cell x, int *pc, int *ps) {
-	cell	clauses, p;
+int sf_cond(int x, int *pc, int *ps) {
+	int	clauses, p;
 
 	clauses = Cdr[x];
 	p = clauses;
 	while (p != NIL) {
-		if (atom_p(p) || atom_p(Car[p]))
+		if (atom_p(p) || atom_p(Car[p]) || atom_p(cdar(p)))
 			return error("cond: bad syntax", p);
 		p = Cdr[p];
 	}
@@ -1223,31 +1356,28 @@ cell sf_cond(cell x, int *pc, int *ps) {
 	}
 	save(clauses);
 	*pc = 2;
-	*ps = EV_COND;
+	*ps = MCOND;
 	return caar(clauses);
 }
 
-cell sf_if(cell x, int *pc, int *ps) {
-	cell	m, new;
+int sf_if(int x, int *pc, int *ps) {
+	int	m;
 
 	m = Cdr[x];
 	if (m == NIL || Cdr[m] == NIL)
 		return too_few_args(x);
 	if (cddr(m) != NIL && cdddr(m) != NIL)
 		return too_many_args(x);
-	if (cddr(m) == NIL) {
-		new = alloc(UNSPECIFIC, NIL);
-		cddr(m) = new;
-	}
+	if (cddr(m) == NIL)
+		cddr(m) = alloc(UNSPECIFIC, NIL);
 	save(m);
 	*pc = 2;
-	*ps = EV_IF_PRED;
+	*ps = MIFPR;
 	return Car[m];
 }
 
-cell make_temporaries(int x) {
-	cell	n, v;
-	int	k = 0;
+int make_temporaries(int x) {
+	int	n, v, k = 0;
 	char	buf[10];
 
 	n = NIL;
@@ -1264,8 +1394,8 @@ cell make_temporaries(int x) {
 	return n;
 }
 
-cell make_assignments(cell x, cell t) {
-	cell	n, asg;
+int make_assignments(int x, int t) {
+	int	n, asg;
 
 	n = NIL;
 	save(n);
@@ -1282,8 +1412,8 @@ cell make_assignments(cell x, cell t) {
 	return alloc(S_begin, n);
 }
 
-cell make_undefineds(int x) {
-	cell	n;
+int make_undefineds(int x) {
+	int	n;
 
 	n = NIL;
 	while (x != NIL) {
@@ -1301,8 +1431,8 @@ cell make_undefineds(int x) {
  *             a0 ...))
  *          #<undefined> ...)
  */
-cell make_recursive_lambda(int v, int a, int body) {
-	cell	t, n;
+int make_recursive_lambda(int v, int a, int body) {
+	int	t, n;
 
 	t = make_temporaries(v);
 	save(t);
@@ -1320,18 +1450,38 @@ cell make_recursive_lambda(int v, int a, int body) {
 	return n;
 }
 
-enum { VARS, ARGS };
+#define VARS 1
+#define ARGS 2
+
+/* Extract variables or arguments from LET/LETREC. */
+int extract_from_let(int caller, int x, int part) {
+	int	a, n;
+	char	*err;
+
+	err = caller == S_let? "let: bad syntax":
+				"letrec: bad syntax";
+	a = NIL;
+	while (x != NIL) {
+		if (atom_p(x)) return error(err, x);
+		n = Car[x];
+		if (atom_p(n) || Cdr[n] == NIL || cddr(n) != NIL)
+			return error(err, x);
+		a = alloc(part==VARS? caar(x): cadar(x), a);
+		x = Cdr[x];
+	}
+	return a;
+}
 
 /* Extract variables or arguments from a set of DEFINEs. */
-cell extract_from_defines(cell x, int part, cell *restp) {
-	cell	a, n, new;
+int extract_from_defines(int x, int part, int *restp) {
+	int	a, n, new;
 
 	a = NIL;
 	while (x != NIL) {
 		if (atom_p(x) || atom_p(Car[x]) || caar(x) != S_define)
 			break;
 		n = Car[x];
-		if (length(n) < 3)
+		if (length(n) != 3)
 			return error("define: bad syntax", n);
 		if (pair_p(cadr(n))) {
 			/* (define (proc vars) ...) */
@@ -1357,8 +1507,8 @@ cell extract_from_defines(cell x, int part, cell *restp) {
 }
 
 /* Rewrite local defines using LAMBDA and SET! */
-cell resolve_local_defines(int x) {
-	cell	v, a, n, rest;
+int resolve_local_defines(int x) {
+	int	v, a, n, rest;
 
 	a = extract_from_defines(x, ARGS, &rest);
 	if (Error_flag) return NIL;
@@ -1372,9 +1522,8 @@ cell resolve_local_defines(int x) {
 	return n;
 }
 
-cell sf_lambda(cell x) {
-	cell	n;
-	int	k;
+int sf_lambda(int x) {
+	int	n, k;
 
 	k = length(x);
 	if (k < 3) return too_few_args(x);
@@ -1388,10 +1537,48 @@ cell sf_lambda(cell x) {
 		n = caddr(x);
 	n = alloc(n, Environment);
 	n = alloc(cadr(x), n);
-	return alloc3(S_procedure, n, ATOM_TAG);
+	return alloc3(S_procedure, n, AFLAG);
 }
 
-cell sf_quote(cell x) {
+/* Transform LET to LAMBDA */
+int sf_let(int x, int *pc) {
+	int	v, a, b;
+	int	n, e;
+
+	if (length(x) < 3) too_few_args(x);
+	e = cadr(x);
+	a = extract_from_let(S_let, e, ARGS);
+	if (Error_flag) return NIL;
+	save(a);
+	v = extract_from_let(S_let, e, VARS);
+	b = cddr(x);
+	n = alloc(v, b);
+	n = alloc(S_lambda, n);
+	n = alloc(n, a);
+	unsave(1);
+	*pc = 1;
+	return n;
+}
+
+/* Transform LETREC to LAMBDA and SET! */
+int sf_letrec(int x, int *pc) {
+	int	v, a;
+	int	n, e;
+
+	if (length(x) < 3) too_few_args(x);
+	e = cadr(x);
+	a = extract_from_let(S_letrec, e, ARGS);
+	if (Error_flag) return NIL;
+	save(a);
+	v = extract_from_let(S_letrec, e, VARS);
+	save(v);
+	n = make_recursive_lambda(v, a, cddr(x));
+	unsave(2);
+	*pc = 1;
+	return n;
+}
+
+int sf_quote(int x) {
 	int	k = length(x);
 
 	if (k < 2) return too_few_args(x);
@@ -1400,11 +1587,10 @@ cell sf_quote(cell x) {
 }
 
 #define sf_or(x, pc, ps) \
-	make_sequence(EV_OR, FALSE, x, pc, ps)
+	make_sequence(MDISJ, FALSE, x, pc, ps)
 
-cell sf_set_b(cell x, int *pc, int *ps) {
-	cell	n;
-	int	k;
+int sf_set_b(int x, int *pc, int *ps) {
+	int	n, k;
 
 	k = length(x);
 	if (k < 3) return too_few_args(x);
@@ -1415,13 +1601,11 @@ cell sf_set_b(cell x, int *pc, int *ps) {
 	if (Error_flag) return NIL;
 	save(n);
 	*pc = 2;
-	*ps = EV_SET_VAL;
+	*ps = MSETV;
 	return caddr(x);
 }
 
-cell find_local_variable(cell v, cell e) {
-	if (e == NIL) return NIL;
-	e = Cdr[e];
+int find_local_variable(int v, int e) {
 	while (e != NIL) {
 		if (v == caar(e)) return Car[e];
 		e = Cdr[e];
@@ -1429,11 +1613,10 @@ cell find_local_variable(cell v, cell e) {
 	return NIL;
 }
 
-cell sf_define(cell x, int *pc, int *ps) {
-	cell	v, a, n, new;
-	int	k;
+int sf_define(int x, int *pc, int *ps) {
+	int	v, a, n, k, new;
 
-	if (Car[State_stack] == EV_ARGS)
+	if (Car[State_stack] == MARGS)
 		return error("define: bad local context", x);
 	k = length(x);
 	if (k < 3) return too_few_args(x);
@@ -1444,11 +1627,10 @@ cell sf_define(cell x, int *pc, int *ps) {
 		a = cddr(x);
 		a = alloc(cdadr(x), a);
 		a = alloc(S_lambda, a);
-		save(a);
+		Tmp = a;
 		n = caadr(x);
 	}
 	else {
-		save(NIL);
 		a = caddr(x);
 		n = cadr(x);
 	}
@@ -1458,58 +1640,67 @@ cell sf_define(cell x, int *pc, int *ps) {
 		Car[Environment] = new;
 		v = cadar(Environment);
 	}
-	Car[Stack] = Cdr[v]; /* unsave(1); save(Cdr[v]); */
+	save(Cdr[v]);
 	*pc = 2;
 	if (!atom_p(a) && Car[a] == S_lambda)
-		*ps = EV_DEFINE;	/* use dynamic scoping */
+		*ps = MDEFN;	/* use dynamic scoping */
 	else
-		*ps = EV_SET_VAL;
+		*ps = MSETV;
+	Tmp = NIL;
 	return a;
 }
 
-cell sf_define_macro(cell x, int *pc, int *ps) {
-        cell	a, n, v, new;
-	int	k = length(x);
+int sf_define_syntax(int x, int *pc, int *ps) {
+	int	a, n, v, new, k = length(x);
 
-        if (k < 3) return too_few_args(x);
-        if (k > 3) return too_many_args(x);
-	if (!argument_list_p(cadr(x)))
-		return error("define-macro: expected symbol or list, got",
-				cadr(x));
-	if (!symbol_p(cadr(x))) {
-		a = cddr(x);
-		a = alloc(cdadr(x), a);
-		a = alloc(S_lambda, a);
-		save(a);
-		n = caadr(x);
-	}
-	else {
-		save(NIL);
-		a = caddr(x);
-		n = cadr(x);
-	}
-        v = lookup(n, Environment);
-        if (v == NIL) {
+	if (k < 3) return too_few_args(x);
+	if (k > 3) return too_many_args(x);
+	if (!symbol_p(cadr(x)))
+		return error("define-syntax: expected symbol, got", cadr(x));
+	a = caddr(x);
+	n = cadr(x);
+	v = lookup(n, Environment);
+	if (v == NIL) {
 		new = extend(n, UNDEFINED, Car[Environment]);
-                Car[Environment] = new;
-                v = cadar(Environment);
-        }
-	Car[Stack] = Cdr[v]; /* unsave(1); save(Cdr[v]); */
-        *pc = 2;
-        *ps = EV_MACRO;
-        return a;
+		Car[Environment] = new;
+		v = cadar(Environment);
+	}
+	save(Cdr[v]);
+	*pc = 2;
+	*ps = MDSYN;
+	return a;
+}
+
+int sf_syntax_rules(int x) {
+	int	m, cl, k = length(x);
+
+	m = Cdr[x];
+	if (k < 3) return too_few_args(x);
+	if (!list_of_symbols_p(Car[m]))
+		return error("syntax-rules: expected list of symbols, got",
+			Car[m]);
+	cl = Cdr[m];
+	while (cl != NIL) {
+		if (atom_p(cl))
+			return error("syntax-rules: improper list of rules",
+				Cdr[m]);
+		if (atom_p(Car[cl]) || atom_p(cdar(cl)))
+			return error("syntax-rules: bad clause", Car[cl]);
+		cl = Cdr[cl];
+	}
+	return alloc3(S_syntax, m, AFLAG);
 }
 
 /*----- Bignums -----*/
 
-cell make_integer(int i) {
-	cell	n;
+int make_integer(int i) {
+	int	n;
 
-	n = alloc3(i, NIL, ATOM_TAG);
-	return alloc3(S_integer, n, ATOM_TAG);
+	n = alloc3(i, NIL, AFLAG);
+	return alloc3(S_integer, n, AFLAG);
 }
 
-int integer_value(char *src, cell x) {
+int integer_value(char *src, int x) {
 	char	msg[100];
 
 	if (cddr(x) != NIL) {
@@ -1520,37 +1711,44 @@ int integer_value(char *src, cell x) {
 	return cadr(x);
 }
 
-cell bignum_abs(cell a) {
-	cell	n;
+int bignum_abs(int a) {
+	int	n;
 
-	n = alloc3(abs(cadr(a)), cddr(a), ATOM_TAG);
-	return alloc3(S_integer, n, ATOM_TAG);
+	n = alloc3(abs(cadr(a)), cddr(a), AFLAG);
+	return alloc3(S_integer, n, AFLAG);
 }
 
-cell bignum_negate(cell a) {
-	cell	n;
+int bignum_negate(int a) {
+	int	n;
 
-	n = alloc3(-cadr(a), cddr(a), ATOM_TAG);
-	return alloc3(S_integer, n, ATOM_TAG);
+	n = alloc3(-cadr(a), cddr(a), AFLAG);
+	return alloc3(S_integer, n, AFLAG);
 }
 
-cell reverse_segments(cell n) {
-	cell	m;
+#define bignum_negative_p(a) ((cadr(a)) < 0)
+
+#define bignum_zero_p(a) ((cadr(a) == 0) && (cddr(a)) == NIL)
+
+int reverse_segments(int n) {
+	int	m;
 
 	m = NIL;
+	save(m);
 	while (n != NIL) {
-		m = alloc3(Car[n], m, ATOM_TAG);
+		m = alloc3(Car[n], m, AFLAG);
+		Car[Stack] = m;
 		n = Cdr[n];
 	}
+	unsave(1);
 	return m;
 }
 
-cell bignum_add(cell a, cell b);
-cell bignum_subtract(cell a, cell b);
+int bignum_add(int a, int b);
+int bignum_subtract(int a, int b);
 
-cell _bignum_add(cell a, cell b) {
-	cell	fa, fb, result;
-	int	carry, r;
+int _bignum_add(int a, int b) {
+	int	fa, fb, carry, r;
+	int	result;
 
 	if (bignum_negative_p(a)) {
 		if (bignum_negative_p(b)) {
@@ -1597,16 +1795,16 @@ cell _bignum_add(cell a, cell b) {
 			r -= INT_SEG_LIMIT;
 			carry = 1;
 		}
-		result = alloc3(r, result, ATOM_TAG);
+		result = alloc3(r, result, AFLAG);
 		Car[Stack] = result;
 		if (a != NIL) a = Cdr[a];
 		if (b != NIL) b = Cdr[b];
 	}
 	unsave(3);
-	return alloc3(S_integer, result, ATOM_TAG);
+	return alloc3(S_integer, result, AFLAG);
 }
 
-cell bignum_add(cell a, cell b) {
+int bignum_add(int a, int b) {
 	Tmp = b;
 	save(a);
 	save(b);
@@ -1616,7 +1814,7 @@ cell bignum_add(cell a, cell b) {
 	return a;
 }
 
-cell bignum_less_p(cell a, cell b) {
+int bignum_less_p(int a, int b) {
 	int	ka, kb, neg_a, neg_b;
 
 	neg_a = bignum_negative_p(a);
@@ -1644,7 +1842,7 @@ cell bignum_less_p(cell a, cell b) {
 	return 0;
 }
 
-cell bignum_equal_p(cell a, cell b) {
+int bignum_equal_p(int a, int b) {
 	a = Cdr[a];
 	b = Cdr[b];
 	while (a != NIL && b != NIL) {
@@ -1655,9 +1853,9 @@ cell bignum_equal_p(cell a, cell b) {
 	return a == NIL && b == NIL;
 }
 
-cell _bignum_subtract(cell a, cell b) {
-	cell	fa, fb, result;
-	int	borrow, r;
+int _bignum_subtract(int a, int b) {
+	int	fa, fb, borrow, r;
+	int	result;
 
 	if (bignum_negative_p(a)) {
 		if (bignum_negative_p(b)) {
@@ -1707,7 +1905,7 @@ cell _bignum_subtract(cell a, cell b) {
 			r += INT_SEG_LIMIT;
 			borrow = 1;
 		}
-		result = alloc3(r, result, ATOM_TAG);
+		result = alloc3(r, result, AFLAG);
 		Car[Stack] = result;
 		if (a != NIL) a = Cdr[a];
 		if (b != NIL) b = Cdr[b];
@@ -1715,10 +1913,10 @@ cell _bignum_subtract(cell a, cell b) {
 	unsave(3);
 	while (Car[result] == 0 && Cdr[result] != NIL)
 		result = Cdr[result];
-	return alloc3(S_integer, result, ATOM_TAG);
+	return alloc3(S_integer, result, AFLAG);
 }
 
-cell bignum_subtract(cell a, cell b) {
+int bignum_subtract(int a, int b) {
 	Tmp = b;
 	save(a);
 	save(b);
@@ -1728,9 +1926,9 @@ cell bignum_subtract(cell a, cell b) {
 	return a;
 }
 
-cell bignum_shift_left(cell a, int fill) {
-	cell	r, carry, c;
-	cell	result;
+int bignum_shift_left(int a, int fill) {
+	int	r, carry, c;
+	int	result;
 
 	a = reverse_segments(Cdr[a]);
 	save(a);
@@ -1748,19 +1946,19 @@ cell bignum_shift_left(cell a, int fill) {
 			r = Car[a] * 10 + carry;
 			carry = 0;
 		}
-		result = alloc3(r, result, ATOM_TAG);
+		result = alloc3(r, result, AFLAG);
 		Car[Stack] = result;
 		a = Cdr[a];
 	}
-	if (carry) result = alloc3(carry, result, ATOM_TAG);
+	if (carry) result = alloc3(carry, result, AFLAG);
 	unsave(2);
-	return alloc3(S_integer, result, ATOM_TAG);
+	return alloc3(S_integer, result, AFLAG);
 }
 
 /* Result: (a/10 . a%10) */
-cell bignum_shift_right(cell a) {
-	cell	r, carry, c;
-	cell	result;
+int bignum_shift_right(int a) {
+	int	r, carry, c;
+	int	result;
 
 	a = Cdr[a];
 	save(a);
@@ -1772,22 +1970,21 @@ cell bignum_shift_right(cell a) {
 		r = Car[a] / 10;
 		r += carry * (INT_SEG_LIMIT/10);
 		carry = c;
-		result = alloc3(r, result, ATOM_TAG);
+		result = alloc3(r, result, AFLAG);
 		Car[Stack] = result;
 		a = Cdr[a];
 	}
 	result = reverse_segments(result);
 	if (Car[result] == 0 && Cdr[result] != NIL) result = Cdr[result];
-	result = alloc3(S_integer, result, ATOM_TAG);
+	result = alloc3(S_integer, result, AFLAG);
 	Car[Stack] = result;
 	carry = make_integer(carry);
 	unsave(2);
 	return alloc(result, carry);
 }
 
-cell bignum_multiply(cell a, cell b) {
-	int	neg;
-	cell	r, i, result;
+int bignum_multiply(int a, int b) {
+	int	neg, result, r, i;
 
 	neg = bignum_negative_p(a) != bignum_negative_p(b);
 	a = bignum_abs(a);
@@ -1814,8 +2011,8 @@ cell bignum_multiply(cell a, cell b) {
 	return result;
 }
 
-cell bignum_equalize(cell a, cell b) {
-	cell	r, f, r0, f0;
+int bignum_equalize(int a, int b) {
+	int	r, f, r0, f0;
 
 	r0 = a;
 	save(r0);
@@ -1838,11 +2035,9 @@ cell bignum_equalize(cell a, cell b) {
 }
 
 /* Result: (a/b . a%b) */
-cell _bignum_divide(cell a, cell b) {
-	int	neg, neg_a;
-	cell	result, f;
-	int	i;
-	cell	c, c0;
+int _bignum_divide(int a, int b) {
+	int	neg, neg_a, result, f;
+	int	i, c, c0;
 
 	neg_a = bignum_negative_p(a);
 	neg = neg_a != bignum_negative_p(b);
@@ -1852,9 +2047,8 @@ cell _bignum_divide(cell a, cell b) {
 	save(b);
 	if (bignum_less_p(a, b)) {
 		if (neg_a) a = bignum_negate(a);
-		f = make_integer(0);
 		unsave(2);
-		return alloc(f, a);
+		return alloc(make_integer(0), a);
 	}
 	b = bignum_equalize(b, a);
 	cadr(Stack) = b; /* cadddddr */
@@ -1896,7 +2090,7 @@ cell _bignum_divide(cell a, cell b) {
 	return alloc(result, a);
 }
 
-cell bignum_divide(cell x, cell a, cell b) {
+int bignum_divide(int x, int a, int b) {
 	if (bignum_zero_p(b))
 		return error("divide by zero", x);
 	Tmp = b;
@@ -1910,8 +2104,8 @@ cell bignum_divide(cell x, cell a, cell b) {
 
 /*----- Primitives -----*/
 
-cell pp_apply(cell x) {
-	cell	m, p, q, last;
+int pp_apply(int x) {
+	int	m, p, q, last;
 	char	*err = "apply: improper argument list";
 
 	m = Cdr[x];
@@ -1939,27 +2133,27 @@ cell pp_apply(cell x) {
 	return alloc(Car[m], p);
 }
 
-cell pp_boolean_p(cell x) {
+int pp_boolean_p(int x) {
 	return boolean_p(cadr(x))? TRUE: FALSE;
 }
 
-cell pp_car(cell x) {
+int pp_car(int x) {
 	return caadr(x);
 }
 
-cell pp_cdr(cell x) {
+int pp_cdr(int x) {
 	return cdadr(x);
 }
 
-cell pp_char_p(cell x) {
+int pp_char_p(int x) {
 	return char_p(cadr(x))? TRUE: FALSE;
 }
 
-cell pp_char_to_integer(cell x) {
+int pp_char_to_integer(int x) {
 	return make_integer(cadadr(x));
 }
 
-cell pp_char_alphabetic_p(cell x) {
+int pp_char_alphabetic_p(int x) {
 	return isalpha(char_value(cadr(x)))? TRUE: FALSE;
 }
 
@@ -1976,7 +2170,7 @@ int char_eq(int c1, int c2) { return c1 == c2; }
 int char_ge(int c1, int c2) { return c1 >= c2; }
 int char_gt(int c1, int c2) { return c1 >  c2; }
 
-cell char_predicate(char *name, int (*p)(int c1, int c2), cell x) {
+int char_predicate(char *name, int (*p)(int c1, int c2), int x) {
 	char	msg[100];
 
 	x = Cdr[x];
@@ -1993,39 +2187,39 @@ cell char_predicate(char *name, int (*p)(int c1, int c2), cell x) {
 }
 
 #define R return
-cell pp_char_ci_le_p(cell x) { R char_predicate("char-ci<=?", char_ci_le, x); }
-cell pp_char_ci_lt_p(cell x) { R char_predicate("char-ci<?",  char_ci_lt, x); }
-cell pp_char_ci_eq_p(cell x) { R char_predicate("char-ci=?",  char_ci_eq, x); }
-cell pp_char_ci_ge_p(cell x) { R char_predicate("char-ci>=?", char_ci_ge, x); }
-cell pp_char_ci_gt_p(cell x) { R char_predicate("char-ci>?",  char_ci_gt, x); }
+int pp_char_ci_le_p(int x) { R char_predicate("char-ci<=?", char_ci_le, x); }
+int pp_char_ci_lt_p(int x) { R char_predicate("char-ci<?",  char_ci_lt, x); }
+int pp_char_ci_eq_p(int x) { R char_predicate("char-ci=?",  char_ci_eq, x); }
+int pp_char_ci_ge_p(int x) { R char_predicate("char-ci>=?", char_ci_ge, x); }
+int pp_char_ci_gt_p(int x) { R char_predicate("char-ci>?",  char_ci_gt, x); }
 
-cell pp_char_le_p(cell x) { R char_predicate("char<=?", char_le, x); }
-cell pp_char_lt_p(cell x) { R char_predicate("char<?",  char_lt, x); }
-cell pp_char_eq_p(cell x) { R char_predicate("char=?",  char_eq, x); }
-cell pp_char_ge_p(cell x) { R char_predicate("char>=?", char_ge, x); }
-cell pp_char_gt_p(cell x) { R char_predicate("char>?",  char_gt, x); }
+int pp_char_le_p(int x) { R char_predicate("char<=?", char_le, x); }
+int pp_char_lt_p(int x) { R char_predicate("char<?",  char_lt, x); }
+int pp_char_eq_p(int x) { R char_predicate("char=?",  char_eq, x); }
+int pp_char_ge_p(int x) { R char_predicate("char>=?", char_ge, x); }
+int pp_char_gt_p(int x) { R char_predicate("char>?",  char_gt, x); }
 
-cell pp_char_downcase(cell x) {
+int pp_char_downcase(int x) {
 	return make_char(tolower(char_value(cadr(x))));
 }
 
-cell pp_char_lower_case_p(cell x) {
+int pp_char_lower_case_p(int x) {
 	return islower(char_value(cadr(x)))? TRUE: FALSE;
 }
 
-cell pp_char_numeric_p(cell x) {
+int pp_char_numeric_p(int x) {
 	return isdigit(char_value(cadr(x)))? TRUE: FALSE;
 }
 
-cell pp_char_upcase(cell x) {
+int pp_char_upcase(int x) {
 	return make_char(toupper(char_value(cadr(x))));
 }
 
-cell pp_char_upper_case_p(cell x) {
+int pp_char_upper_case_p(int x) {
 	return isupper(char_value(cadr(x)))? TRUE: FALSE;
 }
 
-cell pp_char_whitespace_p(cell x) {
+int pp_char_whitespace_p(int x) {
 	int	c = char_value(cadr(x));
 
 	return (c == ' '  || c == '\t' || c == '\n' ||
@@ -2034,17 +2228,14 @@ cell pp_char_whitespace_p(cell x) {
 
 void close_port(int port) {
 	if (port < 0 || port >= MAX_PORTS) return;
-	if (Ports[port] == NULL) {
-		Port_flags[port] = 0;
-		return;
-	}
+	if (Ports[port] == NULL) return;
 	if (fclose(Ports[port]))
-		fatal("close_port: fclose() failed");
+		fatal("close_port(): fclose() failed");
 	Ports[port] = NULL;
 	Port_flags[port] = 0;
 }
 
-cell pp_close_input_port(cell x) {
+int pp_close_input_port(int x) {
 	if (port_no(cadr(x)) < 2)
 		return error("please do not close the standard input port",
 				NOEXPR);
@@ -2052,7 +2243,7 @@ cell pp_close_input_port(cell x) {
 	return UNSPECIFIC;
 }
 
-cell pp_close_output_port(cell x) {
+int pp_close_output_port(int x) {
 	if (port_no(cadr(x)) < 2)
 		return error("please do not close the standard output port",
 				NOEXPR);
@@ -2060,49 +2251,43 @@ cell pp_close_output_port(cell x) {
 	return UNSPECIFIC;
 }
 
-cell pp_cons(cell x) {
+int pp_cons(int x) {
 	return alloc(cadr(x), caddr(x));
 }
 
-cell make_port(int portno, cell type) {
-	cell	n;
+int make_port(int port_no, int type) {
+	int	n;
 
-	n = alloc3(portno, NIL, ATOM_TAG);
-	return alloc3(type, n, ATOM_TAG|PORT_TAG);
+	n = alloc3(port_no, NIL, AFLAG);
+	return alloc3(type, n, AFLAG);
 }
 
-cell pp_current_input_port(cell x) {
+int pp_current_input_port(int x) {
 	return make_port(Input_port, S_input_port);
 }
 
-cell pp_current_output_port(cell x) {
+int pp_current_output_port(int x) {
 	return make_port(Output_port, S_output_port);
 }
 
-cell pp_write(cell x);
+int pp_write(int x);
 
-cell pp_display(cell x) {
+int pp_display(int x) {
 	Displaying = 1;
 	pp_write(x);
 	Displaying = 0;
 	return UNSPECIFIC;
 }
 
-cell pp_delete_file(cell x) {
-	if (remove(string(cadr(x))) < 0)
-		error("delete-file: file does not exist", cadr(x));
-	return UNSPECIFIC;
-}
-
-cell pp_eof_object_p(cell x) {
+int pp_eof_object_p(int x) {
 	return cadr(x) == ENDOFFILE? TRUE: FALSE;
 }
 
-cell pp_eq_p(cell x) {
+int pp_eq_p(int x) {
 	return cadr(x) == caddr(x)? TRUE: FALSE;
 }
 
-cell pp_equal(cell x) {
+int pp_equal(int x) {
 	x = Cdr[x];
 	while (Cdr[x] != NIL) {
 		if (!integer_p(cadr(x)))
@@ -2113,43 +2298,7 @@ cell pp_equal(cell x) {
 	return TRUE;
 }
 
-cell expand_quasiquote(cell x);
-cell expand_syntax(cell x);
-
-cell pp_expand_macro(cell x) {
-	x = cadr(x);
-	save(x);
-	x = expand_quasiquote(x);
-	Car[Stack] = x;
-	x = expand_syntax(x);
-	unsave(1);
-	return x;
-}
-
-cell pp_file_exists_p(cell x) {
-	FILE	*f;
-
-	f = fopen(string(cadr(x)), "r");
-	if (f == NULL) return FALSE;
-	fclose(f);
-	return TRUE;
-}
-
-cell pp_gensym(cell x) {
-	static long	g = 0;
-	char		s[200], *pre;
-
-	pre = Cdr[x] == NIL? "g": string(cadr(x));
-	if (strlen(pre) > 100)
-		return error("gensym: prefix too long", cadr(x));
-	do {
-		sprintf(s, "%s%ld", pre, g);
-		g += 1;
-	} while (find_symbol(s) != NIL);
-	return add_symbol(s);
-}
-
-cell pp_greater(cell x) {
+int pp_greater(int x) {
 	x = Cdr[x];
 	while (Cdr[x] != NIL) {
 		if (!integer_p(cadr(x)))
@@ -2160,7 +2309,7 @@ cell pp_greater(cell x) {
 	return TRUE;
 }
 
-cell pp_greater_equal(cell x) {
+int pp_greater_equal(int x) {
 	x = Cdr[x];
 	while (Cdr[x] != NIL) {
 		if (!integer_p(cadr(x)))
@@ -2171,25 +2320,25 @@ cell pp_greater_equal(cell x) {
 	return TRUE;
 }
 
-cell pp_input_port_p(cell x) {
+int pp_input_port_p(int x) {
 	return input_port_p(cadr(x))? TRUE: FALSE;
 }
 
-cell pp_integer_to_char(cell x) {
-	cell	n;
+int pp_integer_to_char(int x) {
+	int	n;
 
 	n = integer_value("integer->char", cadr(x));
-	if (n < 0 || n > 255)
+	if (n < 0 || n > 127)
 		return error("integer->char: argument value out of range",
 				cadr(x));
 	return make_char(n);
 }
 
-cell pp_integer_p(cell x) {
+int pp_integer_p(int x) {
 	return integer_p(cadr(x))? TRUE: FALSE;
 }
 
-cell pp_less(cell x) {
+int pp_less(int x) {
 	x = Cdr[x];
 	while (Cdr[x] != NIL) {
 		if (!integer_p(cadr(x)))
@@ -2200,7 +2349,7 @@ cell pp_less(cell x) {
 	return TRUE;
 }
 
-cell pp_less_equal(cell x) {
+int pp_less_equal(int x) {
 	x = Cdr[x];
 	while (Cdr[x] != NIL) {
 		if (!integer_p(cadr(x)))
@@ -2211,9 +2360,8 @@ cell pp_less_equal(cell x) {
 	return TRUE;
 }
 
-cell pp_list_to_string(cell x) {
-	cell	n, p;
-	int	k = length(cadr(x));
+int pp_list_to_string(int x) {
+	int	n, p, k = length(cadr(x));
 	char	*s;
 
 	n = make_string("", k);
@@ -2233,17 +2381,21 @@ cell pp_list_to_string(cell x) {
 	return n;
 }
 
-cell pp_list_to_vector(cell x) {
+int pp_list_to_vector(int x) {
 	return list_to_vector(cadr(x), "improper list in list->vector");
 }
 
-int alloc_port(void) {
+int open_port(char *path, char *mode) {
 	int	i, tries;
 
 	for (tries=0; tries<2; tries++) {
 		for (i=0; i<MAX_PORTS; i++) {
 			if (Ports[i] == NULL) {
-				return i;
+				Ports[i] = fopen(path, mode);
+				if (Ports[i] == NULL)
+					return -1;
+				else
+					return i;
 			}
 		}
 		if (tries == 0) gc();
@@ -2251,56 +2403,35 @@ int alloc_port(void) {
 	return -1;
 }
 
-int open_port(char *path, char *mode) {
-	int	i = alloc_port();
-
-	if (i < 0) return -1;
-	Ports[i] = fopen(path, mode);
-	if (Ports[i] == NULL)
-		return -1;
-	else
-		return i;
-}
-
-cell eval(cell x);
+int eval(int x);
 
 int load(char *file) {
 	int	n;
 	int	new_port, old_port;
-	int	outer_loading;
 
 	new_port = open_port(file, "r");
 	if (new_port == -1) return -1;
-	Port_flags[new_port] |= LOCK_TAG;
-	save(Environment);
-	while (Cdr[Environment] != NIL)
-		Environment = Cdr[Environment];
-	outer_loading = Car[S_loading];
-	Car[S_loading] = TRUE;
+	Port_flags[new_port] |= LFLAG;
 	old_port = Input_port;
+	Input_port = new_port;
 	while (!Error_flag) {
-		Input_port = new_port;
 		n = xread();
-		Input_port = old_port;
 		if (n == ENDOFFILE) break;
 		if (!Error_flag) n = eval(n);
 	}
 	close_port(new_port);
-	Car[S_loading] = outer_loading;
-	rehash(Car[Environment]);
-	Environment = unsave(1);
+	Input_port = old_port;
 	return 0;
 }
 
-cell pp_load(cell x) {
+int pp_load(int x) {
 	if (load(string(cadr(x))) < 0)
 		return error("load: cannot open file", cadr(x));
 	return UNSPECIFIC;
 }
 
-cell pp_make_string(cell x) {
-	cell	n;
-	int	c, k;
+int pp_make_string(int x) {
+	int	n, c, k;
 	char	*s;
 
 	k = integer_value("make-string", cadr(x));
@@ -2312,20 +2443,20 @@ cell pp_make_string(cell x) {
 	return n;
 }
 
-cell pp_make_vector(cell x) {
-	int	i, k;
-	cell	n, *v, m;
+int pp_make_vector(int x) {
+	int	n, i, m, k;
+	int	*v;
 
 	k = integer_value("make-vector", cadr(x));
-	n = allocv(S_vector, k * sizeof(cell));
+	n = allocv(S_vector, k * sizeof(int));
 	v = vector(n);
 	m = cddr(x) == NIL? FALSE: caddr(x);
 	for (i=0; i<k; i++) v[i] = m;
 	return n;
 }
 
-cell pp_minus(cell x) {
-	cell	a;
+int pp_minus(int x) {
+	int	a;
 
 	x = Cdr[x];
 	if (Cdr[x] == NIL) return bignum_negate(Car[x]);
@@ -2343,46 +2474,38 @@ cell pp_minus(cell x) {
 	return a;
 }
 
-cell pp_open_input_file(cell x) {
-	cell	n;
-	int	p;
+int pp_open_input_file(int x) {
+	int	n, p;
 
 	p = open_port(string(cadr(x)), "r");
 	if (p < 0) return error("could not open input file", cadr(x));
-	Port_flags[p] |= LOCK_TAG;
+	Port_flags[p] |= LFLAG;
 	n = make_port(p, S_input_port);
-	Port_flags[p] &= ~LOCK_TAG;
+	Port_flags[p] &= ~LFLAG;
 	return n;
 }
 
-cell pp_open_output_file(cell x) {
-	cell	n;
-	int	p;
-	FILE	*f;
+int pp_open_output_file(int x) {
+	int	n, p;
 
-	f = fopen(string(cadr(x)), "r");
-	if (f != NULL) {
-		fclose(f);
-		return error("output file already exists", cadr(x));
-	}
 	p = open_port(string(cadr(x)), "w");
 	if (p < 0) return error("could not open output file", cadr(x));
-	Port_flags[p] |= LOCK_TAG;
+	Port_flags[p] |= LFLAG;
 	n = make_port(p, S_output_port);
-	Port_flags[p] &= ~LOCK_TAG;
+	Port_flags[p] &= ~LFLAG;
 	return n;
 }
 
-cell pp_output_port_p(cell x) {
+int pp_output_port_p(int x) {
 	return output_port_p(cadr(x))? TRUE: FALSE;
 }
 
-cell pp_pair_p(cell x) {
+int pp_pair_p(int x) {
 	return atom_p(cadr(x))? FALSE: TRUE;
 }
 
-cell pp_plus(cell x) {
-	cell	a;
+int pp_plus(int x) {
+	int	a;
 
 	x = Cdr[x];
 	if (Cdr[x] == NIL) return Car[x];
@@ -2399,18 +2522,17 @@ cell pp_plus(cell x) {
 	return a;
 }
 
-cell pp_procedure_p(cell x) {
+int pp_procedure_p(int x) {
 	return (procedure_p(cadr(x)) || primitive_p(cadr(x)))?
 		TRUE: FALSE;
 }
 
-cell pp_quotient(cell x) {
+int pp_quotient(int x) {
 	return Car[bignum_divide(x, cadr(x), caddr(x))];
 }
 
-cell pp_read(cell x) {
-	cell	n;
-	int	new_port, old_port;
+int pp_read(int x) {
+	int	n, new_port, old_port;
 
 	new_port = Cdr[x] == NIL? Input_port: port_no(cadr(x));
 	if (new_port < 0 || new_port >= MAX_PORTS)
@@ -2422,7 +2544,7 @@ cell pp_read(cell x) {
 	return n;
 }
 
-cell read_char(cell x, int unget) {
+int read_char(int x, int unget) {
 	int	c, new_port, old_port;
 
 	new_port = Cdr[x] == NIL? Input_port: port_no(cadr(x));
@@ -2438,48 +2560,47 @@ cell read_char(cell x, int unget) {
 	return c == EOF? ENDOFFILE: make_char(c);
 }
 
-cell pp_peek_char(cell x) {
+int pp_peek_char(int x) {
 	return read_char(x, 1);
 }
 
-cell pp_read_char(cell x) {
+int pp_read_char(int x) {
 	return read_char(x, 0);
 }
 
-cell pp_remainder(cell x) {
+int pp_remainder(int x) {
 	return Cdr[bignum_divide(x, cadr(x), caddr(x))];
 }
 
-cell pp_set_car_b(cell x) {
+int pp_set_car_b(int x) {
 	caadr(x) = caddr(x);
 	return UNSPECIFIC;
 }
 
-cell pp_set_cdr_b(cell x) {
+int pp_set_cdr_b(int x) {
 	cdadr(x) = caddr(x);
 	return UNSPECIFIC;
 }
 
-cell pp_set_input_port_b(cell x) {
+int pp_set_input_port_b(int x) {
 	Input_port = port_no(cadr(x));
 	return UNSPECIFIC;
 }
 
-cell pp_set_output_port_b(cell x) {
+int pp_set_output_port_b(int x) {
 	Output_port = port_no(cadr(x));
 	return UNSPECIFIC;
 }
 
-cell pp_string_to_list(cell x) {
+int pp_string_to_list(int x) {
 	char	*s;
-	cell	n, a, new;
-	int	k, i;
+	int	n, a, k, i, new;
 
+	s = string(cadr(x));
 	k = string_len(cadr(x));
 	n = NIL;
 	a = NIL;
 	for (i=0; i<k-1; i++) {
-		s = string(cadr(x));
 		if (n == NIL) {
 			n = a = alloc(make_char(s[i]), NIL);
 			save(n);
@@ -2494,16 +2615,16 @@ cell pp_string_to_list(cell x) {
 	return n;
 }
 
-cell pp_string_to_symbol(cell x) {
-	cell	y, n;
-	char	*s = string(cadr(x));
-
+int pp_string_to_symbol(int x) {
+	int	y, n;
+	char    *s = string(cadr(x));
+ 
 	y = find_symbol(s);
 	if (y != NIL) return y;
-	/* 
-	 * Cannot use make_symbol(), because 
+	/*
+	 * Cannot use make_symbol(), because
 	 * string(cadr(x)) may move during GC.
-	 */
+	*/
 	Symbols = alloc(NIL, Symbols);
 	n = allocv(S_symbol, strlen(s)+1);
 	Car[Symbols] = n;
@@ -2511,9 +2632,9 @@ cell pp_string_to_symbol(cell x) {
 	return Car[Symbols];
 }
 
-cell pp_string_append(cell x) {
-	cell	p, n;
-	int	k;
+
+int pp_string_append(int x) {
+	int	p, k, n;
 	char	*s;
 
 	k = 0;
@@ -2533,11 +2654,11 @@ cell pp_string_append(cell x) {
 	return n;
 }
 
-cell pp_string_copy(cell x) {
+int pp_string_copy(int x) {
 	return clone_string(cadr(x), string_len(cadr(x))-1);
 }
 
-cell pp_string_fill_b(cell x) {
+int pp_string_fill_b(int x) {
 	int	c = char_value(caddr(x)),
 		i, k = string_len(cadr(x))-1;
 	char	*s = string(cadr(x));
@@ -2546,13 +2667,13 @@ cell pp_string_fill_b(cell x) {
 	return UNSPECIFIC;
 }
 
-cell pp_substring(cell x) {
+int pp_substring(int x) {
 	int	k = string_len(cadr(x))-1;
 	int	p0 = integer_value("substring", caddr(x));
 	int	pn = integer_value("substring", cadddr(x));
 	char	*src = string(cadr(x));
 	char	*dst;
-	cell	n;
+	int	n;
 
 	if (p0 < 0 || p0 > k || pn < 0 || pn > k || pn < p0) {
 		n = alloc(cadddr(x), NIL);
@@ -2566,11 +2687,11 @@ cell pp_substring(cell x) {
 	return n;
 }
 
-cell pp_string_length(cell x) {
+int pp_string_length(int x) {
 	return make_integer(string_len(cadr(x))-1);
 }
 
-cell pp_string_ref(cell x) {
+int pp_string_ref(int x) {
 	int	p, k = string_len(cadr(x))-1;
 
 	p = integer_value("string-ref", caddr(x));
@@ -2580,7 +2701,7 @@ cell pp_string_ref(cell x) {
 	return make_char(string(cadr(x))[p]);
 }
 
-cell pp_string_set_b(cell x) {
+int pp_string_set_b(int x) {
 	int	p, k = string_len(cadr(x))-1;
 
 	p = integer_value("string-set!", caddr(x));
@@ -2589,6 +2710,17 @@ cell pp_string_set_b(cell x) {
 				caddr(x));
 	string(cadr(x))[p] = char_value(cadddr(x));
 	return UNSPECIFIC;
+}
+
+int strcmp_ci(char *s1, char *s2) {
+	int	c1, c2;
+
+	for (;;) {
+		c1 = tolower(*s1++);
+		c2 = tolower(*s2++);
+		if (!c1 || !c2 || c1 != c2) break;
+	}
+	return c1<c2? -1: c1>c2? 1: 0;
 }
 
 int string_ci_le(char *s1, char *s2) { return strcmp_ci(s1, s2) <= 0; }
@@ -2603,7 +2735,7 @@ int string_eq(char *s1, char *s2) { return strcmp(s1, s2) == 0; }
 int string_ge(char *s1, char *s2) { return strcmp(s1, s2) >= 0; }
 int string_gt(char *s1, char *s2) { return strcmp(s1, s2) >  0; }
 
-cell string_predicate(char *name, int (*p)(char *s1, char *s2), cell x) {
+int string_predicate(char *name, int (*p)(char *s1, char *s2), int x) {
 	char	msg[100];
 
 	x = Cdr[x];
@@ -2620,53 +2752,43 @@ cell string_predicate(char *name, int (*p)(char *s1, char *s2), cell x) {
 }
 
 #define SP return string_predicate
-cell pp_string_ci_le_p(cell x) { SP("string-ci<=?", string_ci_le, x); }
-cell pp_string_ci_lt_p(cell x) { SP("string-ci<?",  string_ci_lt, x); }
-cell pp_string_ci_eq_p(cell x) { SP("string-ci=?",  string_ci_eq, x); }
-cell pp_string_ci_ge_p(cell x) { SP("string-ci>=?", string_ci_ge, x); }
-cell pp_string_ci_gt_p(cell x) { SP("string-ci>?",  string_ci_gt, x); }
+int pp_string_ci_le_p(int x) { SP("string-ci<=?", string_ci_le, x); }
+int pp_string_ci_lt_p(int x) { SP("string-ci<?",  string_ci_lt, x); }
+int pp_string_ci_eq_p(int x) { SP("string-ci=?",  string_ci_eq, x); }
+int pp_string_ci_ge_p(int x) { SP("string-ci>=?", string_ci_ge, x); }
+int pp_string_ci_gt_p(int x) { SP("string-ci>?",  string_ci_gt, x); }
 
-cell pp_string_le_p(cell x) { SP("string<=?", string_le, x); }
-cell pp_string_lt_p(cell x) { SP("string<?",  string_lt, x); }
-cell pp_string_eq_p(cell x) { SP("string=?",  string_eq, x); }
-cell pp_string_ge_p(cell x) { SP("string>=?", string_ge, x); }
-cell pp_string_gt_p(cell x) { SP("string>?",  string_gt, x); }
+int pp_string_le_p(int x) { SP("string<=?", string_le, x); }
+int pp_string_lt_p(int x) { SP("string<?",  string_lt, x); }
+int pp_string_eq_p(int x) { SP("string=?",  string_eq, x); }
+int pp_string_ge_p(int x) { SP("string>=?", string_ge, x); }
+int pp_string_gt_p(int x) { SP("string>?",  string_gt, x); }
 
-cell pp_string_p(cell x) {
+int pp_string_p(int x) {
 	return string_p(cadr(x))? TRUE: FALSE;
 }
 
-cell pp_symbol_to_string(cell x) {
+int pp_symbol_to_string(int x) {
 	return clone_string(cadr(x), (int) strlen(string(cadr(x))));
 }
 
-cell pp_symbol_p(cell x) {
+int pp_symbol_p(int x) {
 	return symbol_p(cadr(x))? TRUE: FALSE;
 }
 
-cell pp_symbols(cell x) {
-	cell	n, a, y, new;
+int pp_syntax_to_list(int x) {
+	int	n;
 
-	n = NIL;
-	a = NIL;
-	for (y=Symbols; y != NIL; y = Cdr[y]) {
-		if (Car[y] == S_vector) break;
-		if (n == NIL) {
-			n = a = alloc(Car[y], NIL);
-			save(n);
-		}
-		else {
-			new = alloc(Car[y], NIL);
-			Cdr[a] = new;
-			a = Cdr[a];
-		}
-	}
-	if (n != NIL) unsave(1);
-	return n;
+	n = cadr(x);
+	if (symbol_p(n)) n = lookup(n, Environment);
+	if (n == NIL) return FALSE;
+	n = cadr(n);
+	if (!syntax_p(n)) return FALSE;
+	return Cdr[n];
 }
 
-cell pp_times(cell x) {
-	cell	a;
+int pp_times(int x) {
+	int	a;
 
 	x = Cdr[x];
 	if (Cdr[x] == NIL) return Car[x];
@@ -2683,24 +2805,22 @@ cell pp_times(cell x) {
 	return a;
 }
 
-cell pp_unquote(cell x) {
+int pp_unquote(int x) {
 	return error("unquote: not in quasiquote context", NOEXPR);
 }
 
-cell pp_unquote_splicing(cell x) {
+int pp_unquote_splicing(int x) {
 	return error("unquote-splicing: not in quasiquote context", NOEXPR);
 }
 
-cell pp_vector_to_list(cell x) {
-	cell	*v;
-	cell	n, a, new;
-	int	k, i;
+int pp_vector_to_list(int x) {
+	int	*v, n, a, k, i, new;
 
+	v = vector(cadr(x));
 	k = vector_len(cadr(x));
 	n = NIL;
 	a = NIL;
 	for (i=0; i<k; i++) {
-		v = vector(cadr(x));
 		if (n == NIL) {
 			n = a = alloc(v[i], NIL);
 			save(n);
@@ -2715,20 +2835,20 @@ cell pp_vector_to_list(cell x) {
 	return n;
 }
 
-cell pp_vector_fill_b(cell x) {
-	cell	fill = caddr(x);
-	int	i, k = vector_len(cadr(x));
-	cell	*v = vector(cadr(x));
+int pp_vector_fill_b(int x) {
+	int	fill = caddr(x),
+		i, k = vector_len(cadr(x)),
+		*v = vector(cadr(x));
 
 	for (i=0; i<k; i++) v[i] = fill;
 	return UNSPECIFIC;
 }
 
-cell pp_vector_length(cell x) {
+int pp_vector_length(int x) {
 	return make_integer(vector_len(cadr(x)));
 }
 
-cell pp_vector_ref(cell x) {
+int pp_vector_ref(int x) {
 	int	p, k = vector_len(cadr(x));
 
 	p = integer_value("vector-ref", caddr(x));
@@ -2738,7 +2858,7 @@ cell pp_vector_ref(cell x) {
 	return vector(cadr(x))[p];
 }
 
-cell pp_vector_set_b(cell x) {
+int pp_vector_set_b(int x) {
 	int	p, k = vector_len(cadr(x));
 
 	p = integer_value("vector-set!", caddr(x));
@@ -2749,11 +2869,11 @@ cell pp_vector_set_b(cell x) {
 	return UNSPECIFIC;
 }
 
-cell pp_vector_p(cell x) {
+int pp_vector_p(int x) {
 	return vector_p(cadr(x))? TRUE: FALSE;
 }
 
-cell pp_write(cell x) {
+int pp_write(int x) {
 	int	new_port, old_port;
 
 	new_port = cddr(x) == NIL? Output_port: port_no(caddr(x));
@@ -2761,150 +2881,197 @@ cell pp_write(cell x) {
 		return error("bad output port", caddr(x));
 	old_port = Output_port;
 	Output_port = new_port;
-	print_form(cadr(x));
+	print(cadr(x));
 	Output_port = old_port;
 	return UNSPECIFIC;
 }
 
-cell pp_write_char(cell x) {
+int pp_write_char(int x) {
 	return pp_display(x);
 }
 
-cell pp_wrong(cell x) {
+int pp_wrong(int x) {
 	return error(string(cadr(x)), length(x) > 2? caddr(x): NOEXPR);
 }
 
 /*----- Evaluator -----*/
 
-PRIM Primitives[] = {
- { "apply",               pp_apply,               2, -1, { PRC,___,___ } },
- { "boolean?",            pp_boolean_p,           1,  1, { ___,___,___ } },
- { "car",                 pp_car,                 1,  1, { PAI,___,___ } },
- { "cdr",                 pp_cdr,                 1,  1, { PAI,___,___ } },
- { "char?",               pp_char_p,              1,  1, { ___,___,___ } },
- { "char->integer",       pp_char_to_integer,     1,  1, { CHR,___,___ } },
- { "char-alphabetic?",    pp_char_alphabetic_p,   1,  1, { CHR,___,___ } },
- { "char-ci<=?",          pp_char_ci_le_p,        2, -1, { CHR,CHR,___ } },
- { "char-ci<?",           pp_char_ci_lt_p,        2, -1, { CHR,CHR,___ } },
- { "char-ci=?",           pp_char_ci_eq_p,        2, -1, { CHR,CHR,___ } },
- { "char-ci>=?",          pp_char_ci_ge_p,        2, -1, { CHR,CHR,___ } },
- { "char-ci>?",           pp_char_ci_gt_p,        2, -1, { CHR,CHR,___ } },
- { "char-downcase",       pp_char_downcase,       1,  1, { CHR,___,___ } },
- { "char-lower-case?",    pp_char_lower_case_p,   1,  1, { CHR,___,___ } },
- { "char-numeric?",       pp_char_numeric_p,      1,  1, { CHR,___,___ } },
- { "char-upcase",         pp_char_upcase,         1,  1, { CHR,___,___ } },
- { "char-upper-case?",    pp_char_upper_case_p,   1,  1, { CHR,___,___ } },
- { "char-whitespace?",    pp_char_whitespace_p,   1,  1, { CHR,___,___ } },
- { "char<=?",             pp_char_le_p,           2, -1, { CHR,CHR,___ } },
- { "char<?",              pp_char_lt_p,           2, -1, { CHR,CHR,___ } },
- { "char=?",              pp_char_eq_p,           2, -1, { CHR,CHR,___ } },
- { "char>=?",             pp_char_ge_p,           2, -1, { CHR,CHR,___ } },
- { "char>?",              pp_char_gt_p,           2, -1, { CHR,CHR,___ } },
- { "close-input-port",    pp_close_input_port,    1,  1, { INP,___,___ } },
- { "close-output-port",   pp_close_output_port,   1,  1, { OUP,___,___ } },
- { "cons",                pp_cons,                2,  2, { ___,___,___ } },
- { "current-input-port",  pp_current_input_port,  0,  0, { ___,___,___ } },
- { "current-output-port", pp_current_output_port, 0,  0, { ___,___,___ } },
- { "delete-file",         pp_delete_file,         1,  1, { STR,___,___ } },
- { "display",             pp_display,             1,  2, { ___,OUP,___ } },
- { "eof-object?",         pp_eof_object_p,        1,  1, { ___,___,___ } },
- { "eq?",                 pp_eq_p,                2,  2, { ___,___,___ } },
- { "=",                   pp_equal,               2, -1, { INT,INT,___ } },
- { "expand-macro",        pp_expand_macro,        1,  1, { ___,___,___ } },
- { "file-exists?",        pp_file_exists_p,       1,  1, { STR,___,___ } },
- { "gensym",              pp_gensym,              0,  1, { STR,___,___ } },
- { ">",                   pp_greater,             2, -1, { INT,INT,___ } },
- { ">=",                  pp_greater_equal,       2, -1, { INT,INT,___ } },
- { "input-port?",         pp_input_port_p,        1,  1, { ___,___,___ } },
- { "integer?",            pp_integer_p,           1,  1, { ___,___,___ } },
- { "integer->char",       pp_integer_to_char,     1,  1, { INT,___,___ } },
- { "<",                   pp_less,                2, -1, { INT,INT,___ } },
- { "<=",                  pp_less_equal,          2, -1, { INT,INT,___ } },
- { "list->string",        pp_list_to_string,      1,  1, { LST,___,___ } },
- { "list->vector",        pp_list_to_vector,      1,  1, { LST,___,___ } },
- { "load",                pp_load,                1,  1, { STR,___,___ } },
- { "make-string",         pp_make_string,         1,  2, { INT,___,___ } },
- { "make-vector",         pp_make_vector,         1,  2, { INT,___,___ } },
- { "-",                   pp_minus,               1, -1, { INT,___,___ } },
- { "open-input-file",     pp_open_input_file,     1,  1, { STR,___,___ } },
- { "open-output-file",    pp_open_output_file,    1,  1, { STR,___,___ } },
- { "output-port?",        pp_output_port_p,       1,  1, { ___,___,___ } },
- { "pair?",               pp_pair_p,              1,  1, { ___,___,___ } },
- { "peek-char",           pp_peek_char,           0,  1, { INP,___,___ } },
- { "+",                   pp_plus,                0, -1, { ___,___,___ } },
- { "procedure?",          pp_procedure_p,         1,  1, { ___,___,___ } },
- { "quotient",            pp_quotient,            2,  2, { INT,INT,___ } },
- { "read",                pp_read,                0,  1, { INP,___,___ } },
- { "read-char",           pp_read_char,           0,  1, { INP,___,___ } },
- { "remainder",           pp_remainder,           2,  2, { INT,INT,___ } },
- { "set-car!",            pp_set_car_b,           2,  2, { PAI,___,___ } },
- { "set-cdr!",            pp_set_cdr_b,           2,  2, { PAI,___,___ } },
- { "set-input-port!",     pp_set_input_port_b,    1,  1, { INP,___,___ } },
- { "set-output-port!",    pp_set_output_port_b,   1,  1, { OUP,___,___ } },
- { "string->list",        pp_string_to_list,      1,  1, { STR,___,___ } },
- { "string->symbol",      pp_string_to_symbol,    1,  1, { STR,___,___ } },
- { "string-append",       pp_string_append,       0, -1, { STR,___,___ } },
- { "string-copy",         pp_string_copy,         1,  1, { STR,___,___ } },
- { "string-fill!",        pp_string_fill_b,       2,  2, { STR,CHR,___ } },
- { "string-length",       pp_string_length,       1,  1, { STR,___,___ } },
- { "string-ref",          pp_string_ref,          2,  2, { STR,INT,___ } },
- { "string-set!",         pp_string_set_b,        3,  3, { STR,INT,CHR } },
- { "string-ci<=?",        pp_string_ci_le_p,      2, -1, { STR,STR,___ } },
- { "string-ci<?",         pp_string_ci_lt_p,      2, -1, { STR,STR,___ } },
- { "string-ci=?",         pp_string_ci_eq_p,      2, -1, { STR,STR,___ } },
- { "string-ci>=?",        pp_string_ci_ge_p,      2, -1, { STR,STR,___ } },
- { "string-ci>?",         pp_string_ci_gt_p,      2, -1, { STR,STR,___ } },
- { "string<=?",           pp_string_le_p,         2, -1, { STR,STR,___ } },
- { "string<?",            pp_string_lt_p,         2, -1, { STR,STR,___ } },
- { "string=?",            pp_string_eq_p,         2, -1, { STR,STR,___ } },
- { "string>=?",           pp_string_ge_p,         2, -1, { STR,STR,___ } },
- { "string>?",            pp_string_gt_p,         2, -1, { STR,STR,___ } },
- { "string?",             pp_string_p,            1,  1, { ___,___,___ } },
- { "substring",           pp_substring,           3,  3, { STR,INT,INT } },
- { "symbol?",             pp_symbol_p,            1,  1, { ___,___,___ } },
- { "symbol->string",      pp_symbol_to_string,    1,  1, { SYM,___,___ } },
- { "symbols",             pp_symbols,             0,  0, { ___,___,___ } },
- { "*",                   pp_times,               0, -1, { ___,___,___ } },
- { "unquote",             pp_unquote,             1,  1, { ___,___,___ } },
- { "unquote-splicing",    pp_unquote_splicing,    1,  1, { ___,___,___ } },
- { "vector-fill!",        pp_vector_fill_b,       2,  2, { VEC,___,___ } },
- { "vector-length",       pp_vector_length,       1,  1, { VEC,___,___ } },
- { "vector-set!",         pp_vector_set_b,        3,  3, { VEC,INT,___ } },
- { "vector-ref",          pp_vector_ref,          2,  2, { VEC,INT,___ } },
- { "vector->list",        pp_vector_to_list,      1,  1, { VEC,___,___ } },
- { "vector?",             pp_vector_p,            1,  1, { ___,___,___ } },
- { "write",               pp_write,               1,  2, { ___,OUP,___ } },
- { "write-char",          pp_write_char,          1,  2, { CHR,OUP,___ } },
- { "wrong",               pp_wrong,               1,  2, { STR,___,___ } },
- { NULL }
+enum TYPES {
+	T_NONE,
+	T_BOOLEAN,
+	T_CHAR,
+	T_INPUT_PORT,
+	T_INTEGER,
+	T_OUTPUT_PORT,
+	T_PAIR,
+	T_PAIR_OR_NIL,
+	T_PROCEDURE,
+	T_STRING,
+	T_SYMBOL,
+	T_VECTOR
 };
 
-cell expected(cell who, char *what, cell got) {
-	char	msg[100];
-	PRIM	*p;
+struct Primitive_procedure {
+	int	(*handler)(int expr);
+	int	min_args;
+	int	max_args;	/* -1 = variadic */
+	int	arg_types[3];
+};
 
-	p = (PRIM *) cadr(who);
+enum PRIMITIVES {
+	PP_APPLY, PP_BOOLEAN_P, PP_CAR, PP_CDR, PP_CHAR_P,
+	PP_CHAR_TO_INTEGER, PP_CHAR_ALPHABETIC_P, PP_CHAR_CI_LE_P,
+	PP_CHAR_CI_LT_P, PP_CHAR_CI_EQ_P, PP_CHAR_CI_GE_P,
+	PP_CHAR_CI_GT_P, PP_CHAR_DOWNCASE, PP_CHAR_LOWER_CASE_P,
+	PP_CHAR_NUMERIC_P, PP_CHAR_UPCASE, PP_CHAR_UPPER_CASE_P,
+	PP_CHAR_WHITESPACE_P, PP_CHAR_LE_P, PP_CHAR_LT_P, PP_CHAR_EQ_P,
+	PP_CHAR_GE_P, PP_CHAR_GT_P, PP_CLOSE_INPUT_PORT,
+	PP_CLOSE_OUTPUT_PORT, PP_CONS, PP_CURRENT_INPUT_PORT,
+	PP_CURRENT_OUTPUT_PORT, PP_DISPLAY, PP_EOF_OBJECT_P, PP_EQ_P,
+	PP_EQUAL, PP_GREATER, PP_GREATER_EQUAL, PP_INPUT_PORT_P,
+	PP_INTEGER_P, PP_INTEGER_TO_CHAR, PP_LESS, PP_LESS_EQUAL,
+	PP_LIST_TO_STRING, PP_LIST_TO_VECTOR, PP_LOAD, PP_MAKE_STRING,
+	PP_MAKE_VECTOR, PP_MINUS, PP_OPEN_INPUT_FILE, PP_OPEN_OUTPUT_FILE,
+	PP_OUTPUT_PORT_P, PP_PAIR_P, PP_PEEK_CHAR, PP_PLUS, PP_PROCEDURE_P,
+	PP_QUOTIENT, PP_READ, PP_READ_CHAR, PP_REMAINDER, PP_SET_CAR_B,
+	PP_SET_CDR_B, PP_SET_INPUT_PORT_B, PP_SET_OUTPUT_PORT_B,
+	PP_STRING_TO_LIST, PP_STRING_TO_SYMBOL, PP_STRING_APPEND,
+	PP_STRING_COPY, PP_STRING_FILL_B, PP_STRING_LENGTH, PP_STRING_REF,
+	PP_STRING_SET_B, PP_STRING_CI_LE_P, PP_STRING_CI_LT_P,
+	PP_STRING_CI_EQ_P, PP_STRING_CI_GE_P, PP_STRING_CI_GT_P,
+	PP_STRING_LE_P, PP_STRING_LT_P, PP_STRING_EQ_P, PP_STRING_GE_P,
+	PP_STRING_GT_P, PP_STRING_P, PP_SUBSTRING, PP_SYMBOL_P,
+	PP_SYMBOL_TO_STRING, PP_SYNTAX_TO_LIST, PP_TIMES, PP_UNQUOTE,
+	PP_UNQUOTE_SPLICING, PP_VECTOR_FILL_B, PP_VECTOR_LENGTH,
+	PP_VECTOR_SET_B, PP_VECTOR_REF, PP_VECTOR_TO_LIST, PP_VECTOR_P,
+	PP_WRITE, PP_WRITE_CHAR, PP_WRONG
+};
+
+/*
+ * Above enum must reflect the order of the array below!
+ */
+
+struct Primitive_procedure Primitives[] = {
+ { pp_apply,               2, -1, { T_PROCEDURE,  T_NONE,       T_NONE } },
+ { pp_boolean_p,           1,  1, { T_NONE,       T_NONE,       T_NONE } },
+ { pp_car,                 1,  1, { T_PAIR,       T_NONE,       T_NONE } },
+ { pp_cdr,                 1,  1, { T_PAIR,       T_NONE,       T_NONE } },
+ { pp_char_p,              1,  1, { T_NONE,       T_NONE,       T_NONE } },
+ { pp_char_to_integer,     1,  1, { T_CHAR,       T_NONE,       T_NONE } },
+ { pp_char_alphabetic_p,   1,  1, { T_CHAR,       T_NONE,       T_NONE } },
+ { pp_char_ci_le_p,        2, -1, { T_CHAR,       T_CHAR,       T_NONE } },
+ { pp_char_ci_lt_p,        2, -1, { T_CHAR,       T_CHAR,       T_NONE } },
+ { pp_char_ci_eq_p,        2, -1, { T_CHAR,       T_CHAR,       T_NONE } },
+ { pp_char_ci_ge_p,        2, -1, { T_CHAR,       T_CHAR,       T_NONE } },
+ { pp_char_ci_gt_p,        2, -1, { T_CHAR,       T_CHAR,       T_NONE } },
+ { pp_char_downcase,       1,  1, { T_CHAR,       T_NONE,       T_NONE } },
+ { pp_char_lower_case_p,   1,  1, { T_CHAR,       T_NONE,       T_NONE } },
+ { pp_char_numeric_p,      1,  1, { T_CHAR,       T_NONE,       T_NONE } },
+ { pp_char_upcase,         1,  1, { T_CHAR,       T_NONE,       T_NONE } },
+ { pp_char_upper_case_p,   1,  1, { T_CHAR,       T_NONE,       T_NONE } },
+ { pp_char_whitespace_p,   1,  1, { T_CHAR,       T_NONE,       T_NONE } },
+ { pp_char_le_p,           2, -1, { T_CHAR,       T_CHAR,       T_NONE } },
+ { pp_char_lt_p,           2, -1, { T_CHAR,       T_CHAR,       T_NONE } },
+ { pp_char_eq_p,           2, -1, { T_CHAR,       T_CHAR,       T_NONE } },
+ { pp_char_ge_p,           2, -1, { T_CHAR,       T_CHAR,       T_NONE } },
+ { pp_char_gt_p,           2, -1, { T_CHAR,       T_CHAR,       T_NONE } },
+ { pp_close_input_port,    1,  1, { T_INPUT_PORT, T_NONE,       T_NONE } },
+ { pp_close_output_port,   1,  1, { T_OUTPUT_PORT,T_NONE,       T_NONE } },
+ { pp_cons,                2,  2, { T_NONE,       T_NONE,       T_NONE } },
+ { pp_current_input_port,  0,  0, { T_NONE,       T_NONE,       T_NONE } },
+ { pp_current_output_port, 0,  0, { T_NONE,       T_NONE,       T_NONE } },
+ { pp_display,             1,  2, { T_NONE,       T_OUTPUT_PORT,T_NONE } },
+ { pp_eof_object_p,        1,  1, { T_NONE,       T_NONE,       T_NONE } },
+ { pp_eq_p,                2,  2, { T_NONE,       T_NONE,       T_NONE } },
+ { pp_equal,               2, -1, { T_INTEGER,    T_INTEGER,    T_NONE } },
+ { pp_greater,             2, -1, { T_INTEGER,    T_INTEGER,    T_NONE } },
+ { pp_greater_equal,       2, -1, { T_INTEGER,    T_INTEGER,    T_NONE } },
+ { pp_input_port_p,        1,  1, { T_NONE,       T_NONE,       T_NONE } },
+ { pp_integer_p,           1,  1, { T_NONE,       T_NONE,       T_NONE } },
+ { pp_integer_to_char,     1,  1, { T_INTEGER,    T_NONE,       T_NONE } },
+ { pp_less,                2, -1, { T_INTEGER,    T_INTEGER,    T_NONE } },
+ { pp_less_equal,          2, -1, { T_INTEGER,    T_INTEGER,    T_NONE } },
+ { pp_list_to_string,      1,  1, { T_PAIR_OR_NIL,T_NONE,       T_NONE } },
+ { pp_list_to_vector,      1,  1, { T_PAIR_OR_NIL,T_NONE,       T_NONE } },
+ { pp_load,                1,  1, { T_STRING,     T_NONE,       T_NONE } },
+ { pp_make_string,         1,  2, { T_INTEGER,    T_NONE,       T_NONE } },
+ { pp_make_vector,         1,  2, { T_INTEGER,    T_NONE,       T_NONE } },
+ { pp_minus,               1, -1, { T_INTEGER,    T_NONE,       T_NONE } },
+ { pp_open_input_file,     1,  1, { T_STRING,     T_NONE,       T_NONE } },
+ { pp_open_output_file,    1,  1, { T_STRING,     T_NONE,       T_NONE } },
+ { pp_output_port_p,       1,  1, { T_NONE,       T_NONE,       T_NONE } },
+ { pp_pair_p,              1,  1, { T_NONE,       T_NONE,       T_NONE } },
+ { pp_peek_char,           0,  1, { T_INPUT_PORT, T_NONE,       T_NONE } },
+ { pp_plus,                0, -1, { T_NONE,       T_NONE,       T_NONE } },
+ { pp_procedure_p,         1,  1, { T_NONE,       T_NONE,       T_NONE } },
+ { pp_quotient,            2,  2, { T_INTEGER,    T_INTEGER,    T_NONE } },
+ { pp_read,                0,  1, { T_INPUT_PORT, T_NONE,       T_NONE } },
+ { pp_read_char,           0,  1, { T_INPUT_PORT, T_NONE,       T_NONE } },
+ { pp_remainder,           2,  2, { T_INTEGER,    T_INTEGER,    T_NONE } },
+ { pp_set_car_b,           2,  2, { T_PAIR,       T_NONE,       T_NONE } },
+ { pp_set_cdr_b,           2,  2, { T_PAIR,       T_NONE,       T_NONE } },
+ { pp_set_input_port_b,    1,  1, { T_INPUT_PORT, T_NONE,       T_NONE } },
+ { pp_set_output_port_b,   1,  1, { T_OUTPUT_PORT,T_NONE,       T_NONE } },
+ { pp_string_to_list,      1,  1, { T_STRING,     T_NONE,       T_NONE } },
+ { pp_string_to_symbol,    1,  1, { T_STRING,     T_NONE,       T_NONE } },
+ { pp_string_append,       0, -1, { T_STRING,     T_NONE,       T_NONE } },
+ { pp_string_copy,         1,  1, { T_STRING,     T_NONE,       T_NONE } },
+ { pp_string_fill_b,       2,  2, { T_STRING,     T_CHAR,       T_NONE } },
+ { pp_string_length,       1,  1, { T_STRING,     T_NONE,       T_NONE } },
+ { pp_string_ref,          2,  2, { T_STRING,     T_INTEGER,    T_NONE } },
+ { pp_string_set_b,        3,  3, { T_STRING,     T_INTEGER,    T_CHAR } },
+ { pp_string_ci_le_p,      2, -1, { T_STRING,     T_STRING,     T_NONE } },
+ { pp_string_ci_lt_p,      2, -1, { T_STRING,     T_STRING,     T_NONE } },
+ { pp_string_ci_eq_p,      2, -1, { T_STRING,     T_STRING,     T_NONE } },
+ { pp_string_ci_ge_p,      2, -1, { T_STRING,     T_STRING,     T_NONE } },
+ { pp_string_ci_gt_p,      2, -1, { T_STRING,     T_STRING,     T_NONE } },
+ { pp_string_le_p,         2, -1, { T_STRING,     T_STRING,     T_NONE } },
+ { pp_string_lt_p,         2, -1, { T_STRING,     T_STRING,     T_NONE } },
+ { pp_string_eq_p,         2, -1, { T_STRING,     T_STRING,     T_NONE } },
+ { pp_string_ge_p,         2, -1, { T_STRING,     T_STRING,     T_NONE } },
+ { pp_string_gt_p,         2, -1, { T_STRING,     T_STRING,     T_NONE } },
+ { pp_string_p,            1,  1, { T_NONE,       T_NONE,       T_NONE } },
+ { pp_substring,           3,  3, { T_STRING,     T_INTEGER,    T_INTEGER } },
+ { pp_symbol_p,            1,  1, { T_NONE,       T_NONE,       T_NONE } },
+ { pp_symbol_to_string,    1,  1, { T_SYMBOL,     T_NONE,       T_NONE } },
+ { pp_syntax_to_list,      1,  1, { T_NONE,       T_NONE,       T_NONE } },
+ { pp_times,               0, -1, { T_INTEGER,    T_NONE,       T_NONE } },
+ { pp_unquote,             1,  1, { T_NONE,       T_NONE,       T_NONE } },
+ { pp_unquote_splicing,    1,  1, { T_NONE,       T_NONE,       T_NONE } },
+ { pp_vector_fill_b,       2,  2, { T_VECTOR,     T_NONE,       T_NONE } },
+ { pp_vector_length,       1,  1, { T_VECTOR,     T_NONE,       T_NONE } },
+ { pp_vector_set_b,        3,  3, { T_VECTOR,     T_INTEGER,    T_NONE } },
+ { pp_vector_ref,          2,  2, { T_VECTOR,     T_INTEGER,    T_NONE } },
+ { pp_vector_to_list,      1,  1, { T_VECTOR,     T_NONE,       T_NONE } },
+ { pp_vector_p,            1,  1, { T_NONE,       T_NONE,       T_NONE } },
+ { pp_write,               1,  2, { T_NONE,       T_OUTPUT_PORT,T_NONE } },
+ { pp_write_char,          1,  2, { T_CHAR,       T_OUTPUT_PORT,T_NONE } },
+ { pp_wrong,               1,  2, { T_STRING,     T_NONE,       T_NONE } },
+};
+
+int expected(int who, char *what, int got) {
+	char	msg[100];
+
 	sprintf(msg, "%s: expected %s, got",
-		p->name, what);
+		string(cddr(who)), what);
 	return error(msg, got);
 }
 
-cell primitive(cell x) {
-	PRIM	*p;
-	cell	n, a;
-	int	k, na, i;
+int primitive(int x) {
+	int	id, n, k, na, i, a;
 
-	p = (PRIM *) cadar(x);
+	id = cadar(x);
 	k = length(x);
-	if (k-1 < p->min_args)
+	if (k-1 < Primitives[id].min_args)
 		return too_few_args(x);
-	if (k-1 > p->max_args && p->max_args >= 0)
+	if (k-1 > Primitives[id].max_args && Primitives[id].max_args >= 0)
 		return too_many_args(x);
 	a = Cdr[x];
-	na = p->max_args < 0? p->min_args: p->max_args;
+	na = Primitives[id].max_args < 0? Primitives[id].min_args:
+					Primitives[id].max_args;
         if (na > k-1) na = k-1;
 	for (i=1; i<=na; i++) {
-		switch (p->arg_types[i-1]) {
+		switch (Primitives[id].arg_types[i-1]) {
 		case T_NONE:
 			break;
 		case T_BOOLEAN:
@@ -2956,18 +3123,19 @@ cell primitive(cell x) {
 		}
 		a = Cdr[a];
 	}
-	n = (*p->handler)(x);
+	n = (*Primitives[id].handler)(x);
 	return n;
 }
 
 /* Return (#<procedure> (quote #f)) or () */
-cell make_application(cell proc_sym) {
-	cell	app, p;
+int make_application(char *proc_name) {
+	int	p_sym, p, app;
 
-	p = lookup(proc_sym, Environment);
+	p_sym = find_symbol(proc_name);
+	if (p_sym == NIL) return NIL;
+	p = lookup(p_sym, Environment);
 	if (p == NIL) return NIL;
 	p = cadr(p);
-	if (syntax_p(p)) p = Cdr[p];
 	app = alloc(FALSE, NIL);
 	app = alloc(S_quote, app);
 	app = alloc(app, NIL);
@@ -2975,16 +3143,7 @@ cell make_application(cell proc_sym) {
 	return app;
 }
 
-/* Return (#<procedure> (quote #f)) or () */
-cell make_application_by_name(char *proc_name) {
-	cell	p_sym;
-
-	p_sym = find_symbol(proc_name);
-	if (p_sym == NIL) return NIL;
-	return make_application(p_sym);
-}
-
-int has_property_p(int (*p)(cell x), cell x) {
+int has_property_p(int (*p)(int x), int x) {
 	if (atom_p(x)) return 0;
 	if (Car[x] == S_quote) return 0;
 	if (p(x)) return 1;
@@ -2995,8 +3154,8 @@ int has_property_p(int (*p)(cell x), cell x) {
 	return 0;
 }
 
-int syntactic_symbol_p(cell x) {
-	cell	y;
+int syntactic_symbol_p(int x) {
+	int	y;
 
 	if (symbol_p(Car[x])) {
 		y = lookup(Car[x], Environment);
@@ -3005,29 +3164,29 @@ int syntactic_symbol_p(cell x) {
 	return 0;
 }
 
-int quasiquotation_p(cell x) {
+int quasiquotation_p(int x) {
 	return Car[x] == S_quasiquote;
 }
 
-int uses_transformer_p(cell x) {
+int uses_transformer_p(int x) {
 	return has_property_p(syntactic_symbol_p, x);
 }
 
-int uses_quasiquote_p(cell x) {
+int uses_quasiquote_p(int x) {
 	return has_property_p(quasiquotation_p, x);
 }
 
-cell _eval(cell x, int cbn);
+int _eval(int x);
 
-cell expand_qq(cell x, cell app) {
-	cell	n, a, new;
+int expand_qq(int x, int app) {
+	int	n, a, new;
 
 	if (Error_flag) return x;
 	if (atom_p(x)) return x;
 	if (Car[x] == S_quote) return x;
 	if (Car[x] == S_quasiquote) {
 		cadadr(app) = x;
-		return _eval(app, 0);
+		return _eval(app);
 	}
 	n = a = NIL;
 	save(n);
@@ -3049,13 +3208,13 @@ cell expand_qq(cell x, cell app) {
 	return n;
 }
 
-cell expand_quasiquote(cell x) {
-	cell	app;
+int expand_quasiquote(int x) {
+	int	app;
 
 	if (Error_flag) return x;
 	if (atom_p(x)) return x;
 	if (!uses_quasiquote_p(x)) return x;
-	app = make_application_by_name("expand-quasiquote");
+	app = make_application("expand-quasiquote");
 	if (app == NIL) return x;
 	save(app);
 	x = expand_qq(x, app);
@@ -3063,43 +3222,30 @@ cell expand_quasiquote(cell x) {
 	return x;
 }
 
-cell expand_all_syntax(cell x) {
-	cell	y, m, n, a, app;
+int expand_all_syntax(int x, int app) {
+	int	y, n, a, new;
 
 	if (Error_flag) return x;
 	if (atom_p(x)) return x;
-	if (Car[x] == S_quote) return x;
+	if (Car[x] == S_quote || Car[x] == S_define_syntax) return x;
 	if (symbol_p(Car[x])) {
 		y = lookup(Car[x], Environment);
 		if (y != NIL && syntax_p(cadr(y))) {
-			save(x);
-			app = alloc(cdadr(y), Cdr[x]);
-			unsave(1);
-			return _eval(app, 1);
+			cadadr(app) = x;
+			return _eval(app);
 		}
 	}
 	n = a = NIL;
 	save(n);
-	/*
-	 * If DEFINE-MACRO is followed by (MACRO-NAME ...)
-	 * unbind the MACRO-NAME first.
-	 */
-	if (	Car[x] == S_define_macro &&
-		Cdr[x] != NIL &&
-		!atom_p(cadr(x))
-	) {
-		m = lookup(caadr(x), Environment);
-		if (m != NIL) cadr(m) = UNDEFINED;
-	}
 	while (!atom_p(x)) {
-		m = alloc(expand_all_syntax(Car[x]), NIL);
 		if (n == NIL) {
-			n = m;
+			n = alloc(expand_all_syntax(Car[x], app), NIL);
 			Car[Stack] = n;
 			a = n;
 		}
 		else {
-			Cdr[a] = m;
+			new = alloc(expand_all_syntax(Car[x], app), NIL);
+			Cdr[a] = new;
 			a = Cdr[a];
 		}
 		x = Cdr[x];
@@ -3109,32 +3255,35 @@ cell expand_all_syntax(cell x) {
 	return n;
 }
 
-cell expand_syntax(cell x) {
+int expand_syntax(int x) {
+	int	app;
+
 	if (Error_flag) return x;
 	if (atom_p(x)) return x;
-	if (Car[x] == S_quote) return x;
-	save(x);
-	while (!Error_flag) {
-		if (!uses_transformer_p(x)) break;
-		x = expand_all_syntax(x);
-		Car[Stack] = x;
-	}
+	if (Car[x] == S_quote || Car[x] == S_define_syntax) return x;
+	if (!uses_transformer_p(x)) return x;
+	app = make_application("expand-syntax");
+	if (app == NIL) return x;
+	save(app);
+	x = expand_all_syntax(x, app);
 	unsave(1);
 	return x;
 }
 
-cell restore_state(void) {
-	cell	v;
+#define save_state(v) (State_stack = alloc3((v), State_stack, AFLAG))
 
-	if (State_stack == NIL) fatal("restore_state: stack underflow");
+static int restore_state(void) {
+	int	v;
+
+	if (State_stack == NIL) fatal("restore_state(): stack underflow");
 	v = Car[State_stack];
 	State_stack = Cdr[State_stack];
 	return v;
 }
 
-cell bind_arguments(cell n, cell name) {
-	cell	p, v, a, e;
-	cell	rib;
+int bind_arguments(int n, int name) {
+	int	p, v, a, e;
+	int	rib;
 
 	save(Environment);
 	p = Car[n];
@@ -3162,14 +3311,13 @@ cell bind_arguments(cell n, cell name) {
 	else if (a != NIL) {
 		return too_many_args(n);
 	}
-	Tmp = NIL;
 	unsave(1);
 	Environment = make_env(rib, Environment);
 	return UNSPECIFIC;
 }
 
 void tail_call(void) {
-	if (State_stack == NIL || Car[State_stack] != EV_BETA) return;
+	if (State_stack == NIL || Car[State_stack] != MBETA) return;
 	Tmp = unsave(1);
 	Environment = Car[Stack];
 	unsave(2);
@@ -3178,45 +3326,49 @@ void tail_call(void) {
 	Tmp = NIL;
 }
 
-cell apply_special(cell x, int *pc, int *ps) {
-	cell	sf;
+int apply_special(int x, int *pc, int *ps) {
+	int	sf;
 
 	sf = Car[x];
 	if (sf == S_and) return sf_and(x, pc, ps);
 	else if (sf == S_begin) return sf_begin(x, pc, ps);
 	else if (sf == S_cond) return sf_cond(x, pc, ps);
 	else if (sf == S_define) return sf_define(x, pc, ps);
-	else if (sf == S_define_macro) return sf_define_macro(x, pc, ps);
+	else if (sf == S_define_syntax) return sf_define_syntax(x, pc, ps);
 	else if (sf == S_if) return sf_if(x, pc, ps);
 	else if (sf == S_lambda) return sf_lambda(x);
+	else if (sf == S_let) return sf_let(x, pc);
+	else if (sf == S_letrec) return sf_letrec(x, pc);
 	else if (sf == S_quote) return sf_quote(x);
 	else if (sf == S_or) return sf_or(x, pc, ps);
 	else if (sf == S_set_b) return sf_set_b(x, pc, ps);
+	else if (sf == S_syntax_rules) return sf_syntax_rules(x);
 	else fatal("internal: unknown special form");
 	return UNSPECIFIC;
 }
 
-void make_dynamic(cell x) {
+void make_dynamic(int x) {
 	if (procedure_p(x))
 		cdddr(x) = NIL; /* clear lexical env. */
 }
 
-cell _eval(cell x, int cbn) {
-	cell	m2,	/* Root of result list */
+int _eval(int x) {
+	int	m2,	/* Root of result list */
 		a,	/* Used to append to result */
 		rib;	/* Temp storage for args */
-	int	/* cbn,	 Use call-by-name in next iteration */
+	int	cbn,	/* Use call-by-name in next iteration */
 		s,	/* Current state */
 		c;	/* Continuation */
-	cell	name;	/* Name of procedure to apply */
-	char	cond_err[] = "cond: bad syntax";
+	int	name;	/* Name of procedure to apply */
+	int	new;
 
 	save(x);
 	save(State_stack);
 	save(Stack_bottom);
 	Stack_bottom = Stack;
-	s = EV_ATOM;
+	s = MATOM;
 	c = 0;
+	cbn = 0;
 	while (!Error_flag) {
 		if (x == NIL) {			/* () -> () */
 			/* should catch unquoted () */
@@ -3224,7 +3376,8 @@ cell _eval(cell x, int cbn) {
 			cbn = 0;
 		}
 		else if (auto_quoting_p(x) ||
-			cbn == 2
+			procedure_p(x) ||
+			primitive_p(x)
 		) {
 			Acc = x;
 			cbn = 0;
@@ -3236,6 +3389,8 @@ cell _eval(cell x, int cbn) {
 			}
 			else {
 				Acc = value_of(x, Environment);
+				if (Acc == UNDEFINED)
+					error("symbol not bound", x);
 				if (Error_flag) break;
 			}
 		}
@@ -3268,20 +3423,20 @@ cell _eval(cell x, int cbn) {
 				x = Car[Acc];
 			}
 			save(rib);
-			s = EV_ARGS;
+			s = MARGS;
 			continue;
 		}
 		/*
 		 * The following loop is used to ASCEND back to the
 		 * root of a list, thereby performing BETA REDUCTION.
 		 */
-		while (1) if (s == EV_BETA) {
+		while (1) if (s == MBETA) {
 			/* Finish BETA reduction */
 			Environment = unsave(1);
 			unsave(1);	/* source expression */
 			s = restore_state();
 		}
-		else if (s == EV_ARGS) {	/* Append to list, reduce */
+		else if (s == MARGS) {	/* Append to list, reduce */
 			rib = Car[Stack];
 			x = rib_args(rib);
 			a = rib_append(rib);
@@ -3291,11 +3446,11 @@ cell _eval(cell x, int cbn) {
 			if (x == NIL) {		/* End of list */
 				Acc = m2;
  				/* Remember name of caller */
-				name = Car[rib_source(rib)];
+				name = Car[rib_source(Car[Stack])];
 				/* Save result (new source expression) */
 				Car[Stack] = Acc;
 				if (primitive_p(Car[Acc])) {
-					if ((PRIM *) cadar(Acc) == Apply_magic)
+					if (cadar(Acc) == PP_APPLY)
 						c = cbn = 1;
 					Acc = x = primitive(Acc);
 				}
@@ -3304,15 +3459,11 @@ cell _eval(cell x, int cbn) {
 				}
 				else if (procedure_p(Car[Acc])) {
 					name = symbol_p(name)? name: NIL;
-					Called_procedures[Proc_ptr] = name;
-					Proc_ptr += 1;
-					if (Proc_ptr >= MAX_CALL_TRACE)
-						Proc_ptr = 0;
 					tail_call();
 					bind_arguments(Acc, name);
 					x = caddar(Acc);
 					c = 2;
-					s = EV_BETA;
+					s = MBETA;
 				}
 				else {
 					error("application of non-procedure",
@@ -3332,17 +3483,17 @@ cell _eval(cell x, int cbn) {
 				x = NIL;
 				break;
 			}
-			else {		/* N =/= NIL: append to list */
+			else {		/* N =/= NIL: Append to list */
 				/* Create space for next argument */
-				Acc = alloc(NIL, NIL);
-				Cdr[a] = Acc;
+				new = alloc(NIL, NIL);
+				Cdr[a] = new;
 				rib_append(rib) = Cdr[a];
 				rib_args(rib) = Cdr[x];
 				x = Car[x];	/* Evaluate next member */
 				break;
 			}
 		}
-		else if (s == EV_IF_PRED) {
+		else if (s == MIFPR) {
 			x = unsave(1);
 			unsave(1);	/* source expression */
 			s = restore_state();
@@ -3353,16 +3504,16 @@ cell _eval(cell x, int cbn) {
 			c = 1;
 			break;
 		}
-		else if (s == EV_AND || s == EV_OR) {
+		else if (s == MCONJ || s == MDISJ) {
 			Car[Stack] = cdar(Stack);
-			if (	(Acc == FALSE && s == EV_AND) || 
-				(Acc != FALSE && s == EV_OR) ||
+			if (	(Acc == FALSE && s == MCONJ) || 
+				(Acc != FALSE && s == MDISJ) ||
 				Car[Stack] == NIL
 			) {
 				unsave(2);	/* state, source expr */
 				s = restore_state();
 				x = Acc;
-				cbn = 2;
+				cbn = 1;
 			}
 			else if (cdar(Stack) == NIL) {
 				x = caar(Stack);
@@ -3375,27 +3526,13 @@ cell _eval(cell x, int cbn) {
 			c = 1;
 			break;
 		}
-		else if (s == EV_COND) {
+		else if (s == MCOND) {
 			if (Acc != FALSE) {
 				x = cdar(Car[Stack]);
-				if (atom_p(x)) {
-					x = Acc;
-				}
-				else if (!atom_p(Cdr[x])) {
-					if (Car[x] == S_arrow) {
-						if (cddr(x) != NIL)
-							error(cond_err, x);
-						Acc = quote(Acc, S_quote);
-						Acc = alloc(Acc, NIL);
-						Acc = x = alloc(cadr(x), Acc);
-					}
-					else {
-						Acc = x = alloc(S_begin, x);
-					}
-				}
-				else {
+				if (length(x) > 1)
+					Acc = x = alloc(S_begin, x);
+				else
 					x = Car[x];
-				}
 				unsave(2);	/* state, source expr */
 				s = restore_state();
 			}
@@ -3413,7 +3550,7 @@ cell _eval(cell x, int cbn) {
 			c = 1;
 			break;
 		}
-		else if (s == EV_BEGIN) {
+		else if (s == MBEGN) {
 			Car[Stack] = cdar(Stack);
 			if (cdar(Stack) == NIL) {
 				x = caar(Stack);
@@ -3426,21 +3563,12 @@ cell _eval(cell x, int cbn) {
 			c = 1;
 			break;
 		}
-		else if (s == EV_SET_VAL || s == EV_DEFINE || s == EV_MACRO) {
-			char *err = "define-macro: expected procedure, got";
-
-			if (s == EV_DEFINE) make_dynamic(Acc);
-			if (s == EV_MACRO) {
-				if (procedure_p(Acc)) {
-					Acc = alloc3(S_syntax, Acc, ATOM_TAG);
-				}
-				if (syntax_p(Acc)) {
-					/* Acc = Acc; */
-				}
-				else {
-					error(err, Acc);
-					break;
-				}
+		else if (s == MSETV || s == MDEFN || s == MDSYN) {
+			if (s == MDEFN) make_dynamic(Acc);
+			if (s == MDSYN && !syntax_p(Acc)) {
+				error("define-syntax: expected syntax, got",
+					Acc);
+				break;
 			}
 			x = unsave(1);
 			unsave(1);	/* source expression */
@@ -3450,7 +3578,7 @@ cell _eval(cell x, int cbn) {
 			c = 0;
 			break;
 		}
-		else { /* s == EV_ATOM */
+		else { /* s == MATOM */
 			break;
 		}
 		if (c) {	/* Continue evaluation if requested */
@@ -3466,20 +3594,12 @@ cell _eval(cell x, int cbn) {
 	return Acc;		/* Return the evaluated expr */
 }
 
-void reset_calltrace(void) {
-	int	i;
-
-	for (i=0; i<MAX_CALL_TRACE; i++)
-		Called_procedures[i] = NIL;
-}
-
-cell eval(cell x) {
-	reset_calltrace();
+int eval(int x) {
 	save(x);
 	x = expand_quasiquote(x);
 	Car[Stack] = x;
 	x = expand_syntax(x);
-	x = _eval(x, 0);
+	x = _eval(x);
 	unsave(1);
 	return x;
 }
@@ -3503,8 +3623,7 @@ void keyboard_quit(int sig) {
 #endif
 
 void repl(void) {
-	cell	n = NIL; /*LINT*/
-	cell	sane_env;
+	int	n, sane_env;
 
 	sane_env = alloc(NIL, NIL);
 	save(sane_env);
@@ -3517,16 +3636,13 @@ void repl(void) {
 		Input_port = 0;
 		Output_port = 1;
 		clear_local_envs();
-		reset_calltrace();
 		Car[sane_env] = Environment;
-		if (!Quiet_mode) {
-			pr("> "); flush();
-		}
+		if (!Quiet_mode) pr("> ");
 		Program = xread();
 		if (Program == ENDOFFILE) break;
 		if (!Error_flag) n = eval(Program);
 		if (!Error_flag && n != UNSPECIFIC) {
-			print_form(n);
+			print(n);
 			pr("\n");
 			Car[S_latest] = n;
 		}
@@ -3536,174 +3652,198 @@ void repl(void) {
 	pr("\n");
 }
 
-/*----- Startup and Initialization -----*/
+/*----- Miscellanea -----*/
 
-/* Variables to dump to image file */
-cell *Image_vars[] = {
-	&Free_list, &Free_vecs, &Symbols, &Environment,
-	&S_arrow, &S_char, &S_else, &S_extensions, &S_input_port,
-	&S_integer, &S_latest, &S_library_path, &S_loading,
-	&S_output_port, &S_primitive, &S_procedure, &S_quasiquote,
-	&S_quote, &S_string, &S_symbol, &S_syntax, &S_unquote,
-	&S_unquote_splicing, &S_vector,
-	&S_and, &S_begin, &S_cond, &S_define, &S_define_macro,
-	&S_if, &S_lambda, &S_or, &S_quote, &S_set_b,
-NULL };
+int make_primitive(char *s, int id) {
+	int	n;
 
-void dump_image(char *p) {
-	FILE	*f;
-	cell	**v;
-	int	n, i, k;
-	char	magic[33];
-	char	buf[100];
-
-	f = fopen(p, "wb");
-	if (f == NULL) {
-		error("cannot create image file",
-			make_string(p, (int) strlen(p)));
-		return;
-	}
-	strcpy(magic, "S9__yyyy-mm-dd__s_0123__________");
-	strncpy(&magic[4], VERSION, 10);
-	magic[16] = sizeof(cell)+'0';
-	n = 0x30313233L;
-	memcpy(&magic[18], &n, 4);
-	fwrite(magic, 32, 1, f);
-	i = Pool_size;
-	fwrite(&i, sizeof(int), 1, f);
-	i = Vpool_size;
-	fwrite(&i, sizeof(int), 1, f);
-	v = Image_vars;
-	i = 0;
-	while (v[i]) {
-		fwrite(v[i], sizeof(cell), 1, f);
-		i = i+1;
-	}
-	if (	fwrite(Car, 1, Pool_size*sizeof(cell), f)
-		 != Pool_size*sizeof(cell) ||
-		fwrite(Cdr, 1, Pool_size*sizeof(cell), f)
-		 != Pool_size*sizeof(cell) ||
-		fwrite(Tag, 1, Pool_size, f) != Pool_size ||
-		fwrite(Vectors, 1, Vpool_size*sizeof(cell), f)
-		 != Vpool_size*sizeof(cell)
-	) {
-		fclose(f);
-		error("image dump failed", NOEXPR);
-		return;
-	}
-	fclose(f);
-	k = gc();
-	if (!Quiet_mode) {
-		sprintf(buf, "image dumped: %d nodes used, %d free",
-				Pool_size-k, k);
-		pr(buf); nl();
-	}
+	n = add_symbol(s);
+	n = alloc3(id, n, AFLAG);
+	return alloc3(S_primitive, n, AFLAG);
 }
 
-int load_image(char *p) {
-	FILE	*f;
-	cell	**v;
-	int	n, i;
-	char	buf[33];
-	int	bad = 0;
-	int	inodes, ivcells;
-	cell	name;
+void add_primitive(char *s, int id) {
+	int	v;
 
-	name = make_string(p, (int) strlen(p));
-	f = fopen(p, "rb");
-	if (f == NULL) return -1;
-	fread(buf, 32, 1, f);
-	if (memcmp(buf, "S9", 2)) {
-		error("bad image file (magic match failed)", name);
-		bad = 1;
-	}
-	if (memcmp(&buf[4], VERSION, 10)) {
-		error("bad image file (wrong version)", name);
-		bad = 1;
-	}
-	memcpy(&n, &buf[18], sizeof(int));
-	if (n != 0x30313233) {
-		error("bad image file (wrong architecture)", name);
-		bad = 1;
-	}
-	memset(Tag, 0, Pool_size);
-	fread(&inodes, sizeof(int), 1, f);
-	if (inodes > Pool_size) {
-		error("bad image file (too many nodes)", NOEXPR);
-		bad = 1;
-	}
-	fread(&ivcells, sizeof(int), 1, f);
-	if (ivcells > Vpool_size) {
-		error("bad image file (too many vcells)", NOEXPR);
-		bad = 1;
-	}
-	v = Image_vars;
-	i = 0;
-	while (v[i]) {
-		fread(v[i], sizeof(cell), 1, f);
-		i = i+1;
-	}
-	if (	!bad &&
-		(fread(Car, 1, inodes*sizeof(cell), f)
-		  != inodes*sizeof(cell) ||
-		 fread(Cdr, 1, inodes*sizeof(cell), f)
-		   != inodes*sizeof(cell) ||
-		 fread(Tag, 1, inodes, f) != inodes ||
-		 fread(Vectors, 1, ivcells*sizeof(cell), f)
-		  != ivcells*sizeof(cell))
-	) {
-		error("bad image file (bad size)", NOEXPR);
-		bad = 1;
-	}
-	fclose(f);
-	if (Error_flag) fatal("unusable image");
-	return 0;
+	v = add_symbol(s);
+	Environment = extend(v, make_primitive(s, id), Environment);
 }
 
-cell get_library_path(void) {
-	char	*s;
+int make_initial_env(void) {
+	Environment = alloc(NIL, NIL);
+	Environment = extend(add_symbol("**"), NIL, Environment);
+	S_latest = cdadr(Environment);
+	add_primitive("*", PP_TIMES);
+	add_primitive("+", PP_PLUS);
+	add_primitive("-", PP_MINUS);
+	add_primitive("<", PP_LESS);
+	add_primitive("<=", PP_LESS_EQUAL);
+	add_primitive("=", PP_EQUAL);
+	add_primitive(">", PP_GREATER);
+	add_primitive(">=", PP_GREATER_EQUAL);
+	add_primitive("apply", PP_APPLY);
+	add_primitive("boolean?", PP_BOOLEAN_P);
+	add_primitive("car", PP_CAR);
+	add_primitive("cdr", PP_CDR);
+	add_primitive("char->integer", PP_CHAR_TO_INTEGER);
+	add_primitive("char-alphabetic?", PP_CHAR_ALPHABETIC_P);
+	add_primitive("char-ci<=?", PP_CHAR_CI_LE_P);
+	add_primitive("char-ci<?", PP_CHAR_CI_LT_P);
+	add_primitive("char-ci=?", PP_CHAR_CI_EQ_P);
+	add_primitive("char-ci>=?", PP_CHAR_CI_GE_P);
+	add_primitive("char-ci>?", PP_CHAR_CI_GT_P);
+	add_primitive("char-downcase", PP_CHAR_DOWNCASE);
+	add_primitive("char-lower-case?", PP_CHAR_LOWER_CASE_P);
+	add_primitive("char-numeric?", PP_CHAR_NUMERIC_P);
+	add_primitive("char-upcase", PP_CHAR_UPCASE);
+	add_primitive("char-upper-case?", PP_CHAR_UPPER_CASE_P);
+	add_primitive("char-whitespace?", PP_CHAR_WHITESPACE_P);
+	add_primitive("char<=?", PP_CHAR_LE_P);
+	add_primitive("char<?", PP_CHAR_LT_P);
+	add_primitive("char=?", PP_CHAR_EQ_P);
+	add_primitive("char>=?", PP_CHAR_GE_P);
+	add_primitive("char>?", PP_CHAR_GT_P);
+	add_primitive("char?", PP_CHAR_P);
+	add_primitive("close-input-port", PP_CLOSE_INPUT_PORT);
+	add_primitive("close-output-port", PP_CLOSE_OUTPUT_PORT);
+	add_primitive("cons", PP_CONS);
+	add_primitive("current-input-port", PP_CURRENT_INPUT_PORT);
+	add_primitive("current-output-port", PP_CURRENT_OUTPUT_PORT);
+	add_primitive("display", PP_DISPLAY);
+	add_primitive("eq?", PP_EQ_P);
+	add_primitive("eof-object?", PP_EOF_OBJECT_P);
+	add_primitive("input-port?", PP_INPUT_PORT_P);
+	add_primitive("integer->char", PP_INTEGER_TO_CHAR);
+	add_primitive("integer?", PP_INTEGER_P);
+	add_primitive("list->string", PP_LIST_TO_STRING);
+	add_primitive("list->vector", PP_LIST_TO_VECTOR);
+	add_primitive("load", PP_LOAD);
+	add_primitive("make-string", PP_MAKE_STRING);
+	add_primitive("make-vector", PP_MAKE_VECTOR);
+	add_primitive("open-input-file", PP_OPEN_INPUT_FILE);
+	add_primitive("open-output-file", PP_OPEN_OUTPUT_FILE);
+	add_primitive("output-port?", PP_OUTPUT_PORT_P);
+	add_primitive("pair?", PP_PAIR_P);
+	add_primitive("peek-char", PP_PEEK_CHAR);
+	add_primitive("procedure?", PP_PROCEDURE_P);
+	add_primitive("quotient", PP_QUOTIENT);
+	add_primitive("read", PP_READ);
+	add_primitive("read-char", PP_READ_CHAR);
+	add_primitive("remainder", PP_REMAINDER);
+	add_primitive("set-car!", PP_SET_CAR_B);
+	add_primitive("set-cdr!", PP_SET_CDR_B);
+	add_primitive("set-input-port!", PP_SET_INPUT_PORT_B);
+	add_primitive("set-output-port!", PP_SET_OUTPUT_PORT_B);
+	add_primitive("string->list", PP_STRING_TO_LIST);
+	add_primitive("string->symbol", PP_STRING_TO_SYMBOL);
+	add_primitive("string-append", PP_STRING_APPEND);
+	add_primitive("string-copy", PP_STRING_COPY);
+	add_primitive("string-fill!", PP_STRING_FILL_B);
+	add_primitive("string-length", PP_STRING_LENGTH);
+	add_primitive("string-ref", PP_STRING_REF);
+	add_primitive("string-set!", PP_STRING_SET_B);
+	add_primitive("string-ci<=?", PP_STRING_CI_LE_P);
+	add_primitive("string-ci<?", PP_STRING_CI_LT_P);
+	add_primitive("string-ci=?", PP_STRING_CI_EQ_P);
+	add_primitive("string-ci>=?", PP_STRING_CI_GE_P);
+	add_primitive("string-ci>?", PP_STRING_CI_GT_P);
+	add_primitive("string<=?", PP_STRING_LE_P);
+	add_primitive("string<?", PP_STRING_LT_P);
+	add_primitive("string=?", PP_STRING_EQ_P);
+	add_primitive("string>=?", PP_STRING_GE_P);
+	add_primitive("string>?", PP_STRING_GT_P);
+	add_primitive("string?", PP_STRING_P);
+	add_primitive("substring", PP_SUBSTRING);
+	add_primitive("symbol->string", PP_SYMBOL_TO_STRING);
+	add_primitive("symbol?", PP_SYMBOL_P);
+	add_primitive("syntax->list", PP_SYNTAX_TO_LIST);
+	add_primitive("unquote", PP_UNQUOTE);
+	add_primitive("unquote-splicing", PP_UNQUOTE_SPLICING);
+	add_primitive("vector->list", PP_VECTOR_TO_LIST);
+	add_primitive("vector-fill!", PP_VECTOR_FILL_B);
+	add_primitive("vector-length", PP_VECTOR_LENGTH);
+	add_primitive("vector-ref", PP_VECTOR_REF);
+	add_primitive("vector-set!", PP_VECTOR_SET_B);
+	add_primitive("vector?", PP_VECTOR_P);
+	add_primitive("write", PP_WRITE);
+	add_primitive("write-char", PP_WRITE_CHAR);
+	add_primitive("wrong", PP_WRONG);
+	Environment = alloc(Environment, NIL);
+	return Environment;
+}
 
-	s = getenv("S9FES_LIBRARY_PATH");
-	if (s == NULL) s = DEFAULT_LIBRARY_PATH;
-	return make_string(s, (int) strlen(s));
+void init(void) {
+	int	i;
+
+	for (i=2; i<MAX_PORTS; i++) Ports[i] = NULL;
+	Ports[0] = stdin;
+	Ports[1] = stdout;
+	Port_flags[0] = LFLAG;
+	Port_flags[1] = LFLAG;
+	Input_port = 0;
+	Output_port = 1;
+	new_segment();
+	gc();
+	S_char = add_symbol("#<char>");
+	S_input_port = add_symbol("#<input-port>");
+	S_integer = add_symbol("#<integer>");
+	S_output_port = add_symbol("#<output-port>");
+	S_primitive = add_symbol("#<primitive>");
+	S_procedure = add_symbol("#<procedure>");
+	S_string = add_symbol("#<string>");
+	S_symbol = add_symbol("#<symbol>");
+	S_syntax = add_symbol("#<syntax>");
+	S_vector = add_symbol("#<vector>");
+	S_else = add_symbol("else");
+	S_and = add_symbol("and");
+	S_begin = add_symbol("begin");
+	S_cond = add_symbol("cond");
+	S_define = add_symbol("define");
+	S_define_syntax = add_symbol("define-syntax");
+	S_if = add_symbol("if");
+	S_lambda = add_symbol("lambda");
+	S_let = add_symbol("let");
+	S_letrec = add_symbol("letrec");
+	S_quote = add_symbol("quote");
+	S_quasiquote = add_symbol("quasiquote");
+	S_unquote = add_symbol("unquote");
+	S_unquote_splicing = add_symbol("unquote-splicing");
+	S_or = add_symbol("or");
+	S_set_b = add_symbol("set!");
+	S_syntax_rules = add_symbol("syntax-rules");
+	Environment = make_initial_env();
+	Program = TRUE;
+	rehash(Car[Environment]);
 }
 
 void load_library(void) {
 	char	*path, buf[100], *p;
-	char	libdir[240], libfile[256];
+	char	libpath[256];
 	char	*home;
 
-	path = strdup(string(Car[S_library_path]));
+	path = getenv("S9FES_LIBRARY_PATH");
 	home = getenv("HOME");
-	if (home == NULL) home = ".";
+	if (path == NULL)
+		path = strcpy(buf, ".:~/.s9fes:/usr/local/share/s9fes");
 	p = strtok(path, ":");
 	while (p != NULL) {
 		if (p[0] == '~') {
-			if (strlen(p) + strlen(home) >= 239)
-				fatal("load_library path too long");
-			sprintf(libdir, "%s%s", home, &p[1]);
+			if (strlen(p) + strlen(home) > 240)
+				fatal("path too long in S9FES_LIBRARY_PATH");
+			sprintf(libpath, "%s%s/s9.scm", home, &p[1]);
 		}
 		else {
-			if (strlen(p) >= 239)
-				fatal("load_library: path too long");
-			sprintf(libdir, "%s", p);
+			if (strlen(p) > 248)
+				fatal("path too long in S9FES_LIBRARY_PATH");
+			sprintf(libpath, "%s/s9.scm", p);
 		}
-		sprintf(libfile, "%s/%s", libdir, IMAGEFILE);
-		if (load_image(libfile) == 0) {
-			free(path);
-			/* *library-path* is overwritten by load_image() */
-			Car[S_library_path] = get_library_path();
-			return;
-		}
-		sprintf(libfile, "%s/%s", libdir, LIBRARY);
-		if (load(libfile) == 0) {
-			free(path);
+		if (load(libpath) == 0) {
+			/* printf("Library: %s\n", libpath); */
 			return;
 		}
 		p = strtok(NULL, ":");
 	}
-	sprintf(buf, "Found neither \"%s\" nor \"%s\"", IMAGEFILE, LIBRARY);
-	fatal(buf);
+	fatal("could not load library: \"s9.scm\"");
 }
 
 void load_rc(void) {
@@ -3717,193 +3857,12 @@ void load_rc(void) {
 	load(rcpath);
 }
 
-cell make_primitive(char *s, PRIM *p) {
-	int	n;
-
-	n = alloc3((cell) p, NIL, ATOM_TAG);
-	return alloc3(S_primitive, n, ATOM_TAG);
-}
-
-void add_primitives(char *name, PRIM *p) {
-	cell	v, n, new;
-	int	i;
-
-	if (name) {
-		n = add_symbol(name);
-		new = alloc(n, Car[S_extensions]);
-		Car[S_extensions] = new;
-	}
-	for (i=0; p[i].name; i++) {
-		if (	Apply_magic == NULL &&
-			!strcmp(p[i].name, "apply")
-		) {
-			Apply_magic = &p[i];
-		}
-		v = add_symbol(p[i].name);
-		Environment =
-			extend(v, make_primitive(p[i].name, &p[i]),
-				Environment);
-	}
-}
-
-/* Extension prototypes */
-void unix_init(void);
-
-void make_initial_env(void) {
-	Environment = alloc(NIL, NIL);
-	Environment = extend(add_symbol("**"), NIL, Environment);
-	S_latest = cdadr(Environment);
-	Environment = extend(add_symbol("*extensions*"), NIL, Environment);
-	S_extensions = cdadr(Environment);
-	Environment = extend(add_symbol("*library-path*"), NIL, Environment);
-	S_library_path = cdadr(Environment);
-	Car[S_library_path] = get_library_path();
-	Environment = extend(add_symbol("*loading*"), FALSE, Environment);
-	S_loading = cdadr(Environment);
-	Apply_magic = NULL;
-	add_primitives(NULL, Primitives);
-	EXTENSIONS;
-	Environment = alloc(Environment, NIL);
-}
-
-void init(void) {
-	int	i;
-
-	for (i=2; i<MAX_PORTS; i++) Ports[i] = NULL;
-	Ports[0] = stdin;
-	Ports[1] = stdout;
-	Port_flags[0] = LOCK_TAG;
-	Port_flags[1] = LOCK_TAG;
-	Input_port = 0;
-	Output_port = 1;
-	Segment_size = INITIAL_SEGMENT_SIZE;
-	Pool_size = 0,
-	Vpool_size = 0;
-	Car = NULL,
-	Cdr = NULL;
-	Tag = NULL;
-	Free_list = NIL;
-	Vectors = NULL;
-	Free_vecs = 0;
-	Memory_limit_kn = DEFAULT_LIMIT_KN * 1024L;
-	Stack = NIL,
-	Stack_bottom = NIL;
-	State_stack = NIL;
-	Tmp_car = NIL;
-	Tmp_cdr = NIL;
-	Tmp = NIL;
-	Symbols = NIL;
-	Program = NIL;
-	Proc_ptr = 0;
-	Environment = NIL;
-	Acc = NIL;
-	Input_port = 0;
-	Output_port = 1;
-	Level = 0;
-	Error_flag = 0;
-	Load_level = 0;
-	Displaying = 0;
-	Quiet_mode = 0;
-	Command_line = NULL;
-	new_segment();
-	gc();
-	S_char = add_symbol("#<char>");
-	S_input_port = add_symbol("#<input-port>");
-	S_integer = add_symbol("#<integer>");
-	S_output_port = add_symbol("#<output-port>");
-	S_primitive = add_symbol("#<primitive>");
-	S_procedure = add_symbol("#<procedure>");
-	S_string = add_symbol("#<string>");
-	S_symbol = add_symbol("#<symbol>");
-	S_syntax = add_symbol("#<syntax>");
-	S_vector = add_symbol("#<vector>");
-	S_arrow = add_symbol("=>");
-	S_else = add_symbol("else");
-	S_and = add_symbol("and");
-	S_begin = add_symbol("begin");
-	S_cond = add_symbol("cond");
-	S_define = add_symbol("define");
-	S_define_macro = add_symbol("define-macro");
-	S_if = add_symbol("if");
-	S_lambda = add_symbol("lambda");
-	S_quote = add_symbol("quote");
-	S_quasiquote = add_symbol("quasiquote");
-	S_unquote = add_symbol("unquote");
-	S_unquote_splicing = add_symbol("unquote-splicing");
-	S_or = add_symbol("or");
-	S_set_b = add_symbol("set!");
-	make_initial_env();
-	Program = TRUE;
-	rehash(Car[Environment]);
-	reset_calltrace();
-}
-
-void usage(char *name, int quit) {
-	pr("Usage: ");
-	pr(name);
-	pr(" [-h?] [-giqv] [-d image] [-f program] [-m size[m]]"); nl();
-	pr("             [-- argument ...]\n");
-	if (quit) exit(1);
-}
-
-void long_usage(char *name) {
-	nl();
-	usage(name, 0);
-	nl();
-	pr("-?       display this summary (also -h)"); nl();
-	pr("-d file  dump heap image to file and exit"); nl();
-	pr("-f file  run program and exit (implies -q)"); nl();
-	pr("-g       print GC summaries (-gg = more)"); nl();
-	pr("-i       ignore the $HOME/.s9fes/rc file"); nl();
-	pr("-m n[m]  set memory limit to nK (or nM) nodes"); nl();
-	pr("-q       be quiet (no banner, no prompt, exit on errors)"); nl();
-	pr("-v       print version and exit"); nl();
-	pr("-- args  pass following arguments to program"); nl();
-	nl();
-}
-
-void version_info(void) {
-	char	buf[10];
-
-	pr("version:        "); pr(VERSION);
-#ifdef unix
-	pr(" (unix)");
-#else
- #ifdef plan9
-	pr(" (plan 9)");
- #else
-	pr(" (unknown)");
- #endif
-#endif
-	nl();
-	pr("library image:  "); pr(IMAGEFILE); nl();
-	pr("library source: "); pr(LIBRARY); nl();
-	pr("library path:   "); pr(string(Car[S_library_path])); nl();
-	sprintf(buf, "%d", DEFAULT_LIMIT_KN);
-	pr("memory limit:   "); pr(buf); pr("K nodes"); nl();
-	pr("extensions:     "); print_form(Car[S_extensions]); nl();
-}
-
-long get_size_k(char *name, char *s) {
-	int	c;
-	long	n;
-
-	c = s[strlen(s)-1];
-	n = atol(s);
-	if (isdigit(c))
-		;
-	else if (c == 'M' || c == 'm')
-		n *= 1024L;
-	else
-		usage(name, 1);
-	return n * 1024;
+void usage(void) {
+	printf("Usage: s9 [-q] [-v] [-f program]\n");
+	exit(1);
 }
 
 int main(int argc, char **argv) {
-	char	*name = *argv;
-	int	ignore_rc = 0;
-	int	run_file = 0;
-
 	init();
 	argv++;
 	load_library();
@@ -3912,70 +3871,32 @@ int main(int argc, char **argv) {
 		(*argv)++;
 		while (**argv) {
 			switch (**argv)  {
-			case '-':
-				Command_line = ++argv;
-				break;
-			case 'd':
-				if (argv[1] == NULL) usage(name, 1);
-				dump_image(argv[1]);
-				exit(Error_flag? 1: 0);
-				break;
-			case 'f':
-				if (argv[1] == NULL) usage(name, 1);
-				if (!ignore_rc) {
-					load_rc();
-					ignore_rc = 1;
-				}
-				if (load(argv[1]))
-					error("program file not found",
-						make_string(argv[1],
-							(int)strlen(argv[1])));
-				run_file = 1;
-				argv++;
-				*argv = &(*argv)[strlen(*argv)];
-				if (Error_flag) exit(1);
-				break;
-			case 'g':
-				Debug_GC++;
-				(*argv)++;
-				break;
-			case 'i':
-				ignore_rc = 1;
-				(*argv)++;
-				break;
-			case 'm':
-				if (argv[1] == NULL) usage(name, 1);
-				Memory_limit_kn = get_size_k(name, argv[1]);
-				argv++;
-				*argv += strlen(*argv);
-				break;
 			case 'q':
 				Quiet_mode = 1;
 				(*argv)++;
 				break;
-			case 'v':
-				version_info();
-				exit(0);
+			case 'f':
+				if (argv[1] == NULL) usage();
+				load_rc();
+				if (load(argv[1]))
+					error("program file not found",
+						NOEXPR);
+				exit(Error_flag? 1: 0);
 				break;
-			case 'h':
-			case '?':
-				long_usage(name);
-				exit(0);
+			case 'v':
+				printf("Version: %s\n", VERSION);
+				exit(1);
 				break;
 			default:
-				usage(name, 1);
+				usage();
 				break;
 			}
-			if (Command_line) break;
 		}
-		if (Command_line) break;
 		argv++;
 	}
-	if (!Command_line && argv[0] != NULL) usage(name, 1);
-	if (run_file) exit(Error_flag? 1: 0);
-	if (!Quiet_mode)
-		pr("Scheme 9 from Empty Space by Nils M Holm, 2009\n");
-	if (!ignore_rc) load_rc();
+	if (!Quiet_mode) printf("Scheme 9 from Empty Space"
+				" (C) 2007 Nils M Holm\n");
+	load_rc();
 	repl();
 	return 0;
 }

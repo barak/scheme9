@@ -1,4 +1,0 @@
-R4RS 6.8 (vector-fill! vector fill) ==> unspecific
-
-Stores FILL in every element of VECTOR. The value returned by
-VECTOR-FILL! is unspecified.

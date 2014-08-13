@@ -1,5 +1,5 @@
 .\" S9(1) Manual Page
-.\" By Nils M Holm, 2007, 2008, 2009
+.\" Copyright (C) 2007 Nils M Holm
 .ll 70
 .lt 70
 .ds N "pi
@@ -50,46 +50,19 @@
 .B "s9
 - Scheme Interpreter
 .SH USAGE
-.B "s9 [-h?] [-giqv] [-d image] [-f program] [-m size[m]]
-.B "   [-- argument ...]
+.B "s9 [-qv] [-f program]
 .SH "DESCRIPTION
 .B "Scheme 9 from Empty Space
 is an interpreter for a broad subset of
-R4RS Scheme. The
+R5RS Scheme. The
 .B s9
 command starts the interpreter.
 .SH "OPTIONS
-.B "-h or -?
-.in +4
-Display a brief summary of options.
-.in -4
-.B "-d file
-.in +4
-Dump heap image to
-.B file
-and exit.
-.in -4
 .B "-f program
 .in +4
 Run
 .B program
 and exit (implies -q).
-.in -4
-.B "-g
-.in +4
-Print GC summaries (-gg = more verbose).
-.in -4
-.B "-i
-.in +4
-Ignore the
-.I $HOME/.s9fes/rc
-file, if any.
-.in -4
-.B "-m N[m]
-.in +4
-Set memory limit to
-.B N
-kilo (or mega) nodes.
 .in -4
 .B "-q
 .in +4
@@ -99,12 +72,6 @@ Be quiet: skip banners and prompts, exit on errors.
 .in +4
 Display version and exit.
 .in -4
-.B --
-.in +4
-Arguments following
-.B --
-are not interpreted by S9fES.
-.in -4
 .SH "TECHNICAL DETAILS
 S9fES is a tree-walking interpreter using deep binding and hashed
 environments. It employs a constant-space mark and sweep garbage
@@ -112,46 +79,33 @@ collector with in-situ string and vector pool compaction. Memory
 pools grow on demand.
 .br
 The interpreter uses bignum integer arithmetics exclusively.
-It provides both low-level macros (see
-.B MACROS
-below) and \fBdefine-syntax\fP/\fBsyntax-rules\fP.
 .SH "ADDITIONS
-These S9fES procedures are not in R4RS:
+The symbol
+.B **
+is always bound to the normal form of the expression most recently
+evaluated at the top level.
+.sp
+These S9 procedures are not in R5RS:
 .sp
 .ne 3
-.B "(delete-file string) ==> unspecific
-.in +4
-Delete the file specifed in the argument. If the file does not exist
-or cannot be deleted, report an error.
-.in -4
-.br
-.ne 3
-.B "(expand-quasiquote form) ==> expanded-form
+.B "(expand-quasiquote form) => expanded-form
 .in +4
 If
 .B form
 is a quasiquoted expression, re-write it to an equivalent expression
 that does not use quasiquotation.
 .in -4
-.br
 .ne 3
-.B "(expand-macro form) ==> expanded-form
+.B "(expand-syntax form) => expanded-form
 .in +4
 If
 .B form
-applies a macro, return the expanded form, else return the form.
-.in -4
-.br
-.ne 3
-.B "(file-exists? string) ==> boolean
-.in +4
-Return 
-.B "#t
-if the file specifed in the argument exists and otherwise \fB#f\fP.
+applies a syntax transformer, return the expanded form, else return
+the form.
 .in -4
 .br
 .ne 4
-.B "(fold-left proc base list ...) ==> form
+.B "(fold-left proc base list ...) => folded-list
 .in +4
 Combine the elements of the
 .BR list s
@@ -163,7 +117,7 @@ is the leftmost element.
 .in -4
 .br
 .ne 4
-.B "(fold-right proc base list ...) ==> form
+.B "(fold-right proc base list ...) => folded-list
 .in +4
 Combine the elements of the
 .BR list s
@@ -174,34 +128,8 @@ Combine elements right-associatively.
 is the rightmost element.
 .in -4
 .br
-.B "(gensym) ==> symbol
-.in +4
-Return a fresh symbol.
-.in -4
-.br
 .ne 2
-.B "(load-from-library string) ==> unspecific
-.in +4
-Attempt to
-.B load
-the file
-.B string
-from each directory of
-\fBS9FES_LIBRARY_PATH\fP.
-.in -4
-.br
-.ne 2
-.B "(locate-file string) ==> string | #f
-.in +4
-Search for the file
-.B string
-in each  directory of \fBS9FES_LIBRARY_PATH\fP in sequence.
-When the file can be located, return its full path, else
-return \fB#f\fP.
-.in -4
-.br
-.ne 2
-.B "(map-car proc list) ==> mapped-list
+.B "(map-car proc list) => mapped-list
 .in +4
 This is equal to
 .B map
@@ -209,31 +137,29 @@ with a single list.
 .in -4
 .br
 .ne 2
-.B "(print form ...) ==> unspecific
-.in +4
-Write multiple forms separated by spaces.
-.in -4
-.br
-.ne 2
-.B "(set-input-port! input-port) ==> unspecific
+.B "(set-input-port! input-port) => unspecific
 .in +4
 Destructively set the current input port.
 .in -4
 .br
 .ne 2
-.B "(set-output-port! output-port) ==> unspecific
+.B "(set-output-port! output-port) => unspecific
 .in +4
 Destructively set the current output port.
 .in -4
 .br
-.ne 2
-.B "(symbols) ==> list
+.ne 3
+.B "(syntax->list form) => list | #f
 .in +4
-Return a list of all defined symbols.
+If the head of
+.B form
+is the name of a syntax object, return its syntax rules, else
+return
+.BR #f .
 .in -4
 .br
 .ne 3
-.B "(wrong string form) ==> bottom
+.B "(wrong string form) => bottom
 .in +4
 Print an error message of the form
 .B "error: string: form
@@ -243,117 +169,36 @@ may be omitted.
 .in -4
 .sp
 Redefinition of these procedures is safe except for
-.BR expand-quasiquote
+.BR expand-quasiquote ,
+.BR expand-syntax ,
 and
 .BR wrong .
-.SH "VARIABLES
-These variables are pre-defined in the dynamic top-level scope of the
-interpreter.
-.sp
-.ne 2
-.B "** (form)
-.in +4
-The normal form of the expression most recently evaluated at the
-top level.
-.in -4
-.ne 2
-.B "*extensions* (list of symbols)
-.in +4
-Compiled-in extensions.
-.in -4
-.ne 2
-.B "*library-path* (string)
-.in +4
-A verbatim copy of the
-.B S9FES_LIBRARY_PATH
-environment variable (see below).
-.in -4
-.ne 2
-.B "*loading* (boolean)
-.in +4
-Set to
-.B #t
-when \fBload\fPing a file, else \fB#f\fP.
-.in -4
-.SH "MACROS
-A S9fES macro is a procedure that is applied to its unevaluated arguments.
-The macro application is replaced with the value returned by the procedure.
-This happens before the expression containing the macro application is
-evaluated, so a macro
-.I rewrites
-its own application:
-.sp
-.ne 2
-.nf
-(define-macro (when p . c)
-  `(if ,p (begin ,@c)))
-(expand-macro '(when (= 1 1) (display "true") (newline) #t))
-  ==>  (if (= 1 1)
-           (begin (display "true")
-                  (newline)
-                  #t))
-(when (= 1 1) 1 2 3)  ==>  3
-.fi
-.sp
-The
-.B define-macro
-form introduces a new macro:
-.sp
-.ne 3
-.B "(define-macro name procedure) ==> unspecific
-.br
-.B "(define-macro (name args ...) body) ==> unspecific
-.sp
-Both of these forms introduce the keyword
-.B name
-and bind it to a procedure. The first form requires the
-second argument to be a procedure. Like in
-.B define
-forms the second variant implies a procedure definition. 
-.sp
-Macros may contain applications of macros that were defined earlier.
-Macros may not recurse directly, but they may implement recursion
-internally using
-.B letrec
-or by rewriting their own applications. The following macro,
-for example, does
-.I not
-work, because
-.B d
-is undefined in the body of
-.BR d :
-.sp
-.B "(define-macro (d x) (and (pair? x) (d (cdr x)))) ; wrong"
-.sp
-The following version
-.I does
-work, though:
-.sp
-.B "(define-macro (d x) (and (pair? x) `(d ,(cdr x)))) ; OK"
-.SH "ALLOCATION STRATEGY
-The S9fES memory pool grows exponentially until the memory limit
-its reached. When the limit is reached, the current computation
-is aborted. A memory limit can be specified using the
-.B -m
-command line option. The limit is specified in units of 1024
-nodes (or in units of 1024*1024 nodes by appending an
-.B m
-suffix).
-.br
-Note that computations may abort
-.I before
-the limit is reached due to the way the pool grows. Use the
-.B -g
-command line option to experiment with pool sizes.
-.br
-Specifying a memory limit of zero disables the memory limit and
-the interpreter will allocate as much memory as it can get. This
-option should be used with care.
 .SH "LIMITATIONS
-These parts of R4RS are not implemented:
+These parts of R5RS are not implemented:
 .sp
-Control:
+Continuations:
 .BR call-with-current-continuation .
+.br
+Named
+.BR let .
+.br
+The
+.B =>
+syntax of
+.BR cond .
+.br
+Local syntax:
+.BR let-syntax ,
+.BR letrec-syntax .
+.br
+Multiple values:
+.BR values ,
+.BR call-with-values .
+.br
+Control:
+.BR do ,
+.BR dynamic-wind ,
+.BR eval .
 .br
 I/O:
 .BR char-ready? .
@@ -364,7 +209,6 @@ Transcripts:
 .br
 Numeric base prefixes:
 .BR #b ,
-.BR #d ,
 .BR #o ,
 .BR #x .
 .br
@@ -400,46 +244,24 @@ Numeric syntax and procedures:
 .BR real? ,
 .BR round ,
 .BR sin ,
-.BR sqrt,
 .BR tan ,
 .BR truncate .
 .SH "BUGS
 Quasiquotation of improper lists does not work.
 .br
-Nested quasiquotation is currently unsupported.
-.br
-When using
-.BR define-syntax ,
-you may not redefine the symbols
-.B syntax-match
-and
-.BR syntax-expand .
-.br
-Ellipses must be preceded by variables in patterns of
+Only one ellipsis per rule is allowed in
 .BR syntax-rules .
-.br
-The
-.B define-syntax
-implementation is rather quirky.
 .SH "FILES
-.ne 2
+.B PREFIX/share/s9fes/s9.scm
+.in +4
+The library part of the interpreter (source code).
+.in -4
 .B $HOME/.s9fes/rc
 .in +4
 If present, this file is
 .BR load ed
-when the interpreter starts up.
+when the interpreter starts.
 .in -4
-.ne 2
-.B @LIBDIR@/s9.scm
-.in +4
-The library part of the interpreter (source code).
-.in -4
-.ne 2
-.B @LIBDIR@/s9.image
-.in +4
-The library part of the interpreter (heap image).
-.in -4
-.ne 2
 .B *.scm
 .in +4
 Scheme source code.
@@ -448,35 +270,28 @@ Scheme source code.
 .B S9FES_LIBRARY_PATH
 .in +4
 A colon-separated list of directories which will be searched for
-the s9 library when the interpreter is launched. The same directories
-will be search by the
-.B locate-file
-procedure.
+the s9 library when the interpreter is launched.
 .br
 Default:
-.B .:~/.s9fes:@LIBDIR@
+.B .:~/.s9fes:/usr/local/share/s9fes
 .in -4
 .SH "SIGNALS
 These work only if POSIX signal handling was enabled at compile time.
 .sp
-.ne 3
 .B "SIGINT
 .in +4
 Abort input or terminate program execution.
 .in -4
-.ne 3
 .B "SIGQUIT
 .in +4
 Terminate the interpreter process (emergency exit).
 .in -4
 .SH "REFERENCES
-.ne 3
-.B "http://www-swiss.ai.mit.edu/~jaffer/r4rs_toc.html
+.B "http://www.schemers.org/Documents/Standards/R5RS/HTML/
 .in +4
-The Revised^4 Report on the Algorithmic Language Scheme.
+The Revised^5 Report on the Algorithmic Language Scheme.
 .in -4
 .sp
-.ne 3
 .B "http://www.lulu.com/content/1010408"
 .in +4
 Scheme 9 from Empty Space -- A Guide to Implementing Scheme in C.

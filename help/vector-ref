@@ -1,6 +1,0 @@
-R4RS 6.8 (vector-ref vector k) ==> obj
-
-K must be a valid index of VECTOR. VECTOR-REF returns the
-contents of element K of VECTOR.
-
-(vector-ref '#(1 1 2 3 5 8 13 21) 5) ==>  8

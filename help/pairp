@@ -1,8 +1,0 @@
-R4RS 6.3 (pair? obj) ==> boolean
-
-PAIR? returns #t if OBJ is a pair, and otherwise returns #f.
-
-(pair? '(a . b))  ==>  #t
-(pair? '(a b c))  ==>  #t
-(pair? '())       ==>  #f
-(pair? '#(a b))   ==>  #f
