@@ -10,10 +10,10 @@ problematic if the target bin directory is moved.
  1 file changed, 1 insertion(+), 1 deletion(-)
 
 diff --git a/Makefile b/Makefile
-index 7a0d7f7..3f83a79 100644
+index 73afb1e..1274ed0 100644
 --- a/Makefile
 +++ b/Makefile
-@@ -164,7 +164,7 @@ install-util:
+@@ -167,7 +167,7 @@ install-util:
  install-s9e:	s9e-core.image
  	install -d -m 0755 $(BINDIR)
  	install -d -m 0755 $(LIBDIR)

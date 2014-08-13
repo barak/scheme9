@@ -9,7 +9,7 @@ hardened build.  See lintian tag hardening-no-fortify-functions.
  1 file changed, 1 insertion(+)
 
 diff --git a/Makefile b/Makefile
-index ac13204..b16bd1c 100644
+index adfd641..9b7b25e 100644
 --- a/Makefile
 +++ b/Makefile
 @@ -47,6 +47,7 @@ EXTRA_SCM+=	-l s9-real.scm
@@ -17,6 +17,6 @@ index ac13204..b16bd1c 100644
  
  DEFS=	$(OSDEF) \
 +	$(CPPFLAGS) \
- 	-DDEFAULT_LIBRARY_PATH="\".:~/s9fes:$(LIBDIR)\"" \
+ 	-DDEFAULT_LIBRARY_PATH="\".:~/s9fes:$(pkglibdir)\"" \
  	-DEXTENSIONS="$(EXTRA_INIT)" \
  	-DREALNUM \

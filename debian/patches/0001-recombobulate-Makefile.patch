@@ -3,11 +3,11 @@ Date: Wed, 27 Jul 2011 20:46:53 +0100
 Subject: recombobulate Makefile
 
 ---
- Makefile | 29 +++++++++++++++++++++--------
- 1 file changed, 21 insertions(+), 8 deletions(-)
+ Makefile | 34 +++++++++++++++++++++++++---------
+ 1 file changed, 25 insertions(+), 9 deletions(-)
 
 diff --git a/Makefile b/Makefile
-index f684093..24a08ac 100644
+index f684093..f9eda1f 100644
 --- a/Makefile
 +++ b/Makefile
 @@ -4,7 +4,7 @@
@@ -19,22 +19,34 @@ index f684093..24a08ac 100644
  
  # Base version and Release
  BASE=		20140708
-@@ -55,14 +55,21 @@ DEFS=	$(OSDEF) \
+@@ -47,7 +47,7 @@ EXTRA_SCM+=	-l s9-real.scm
+ #				# (requires the Curses extension)
+ 
+ DEFS=	$(OSDEF) \
+-	-DDEFAULT_LIBRARY_PATH="\".:~/s9fes:$(LIBDIR)\"" \
++	-DDEFAULT_LIBRARY_PATH="\".:~/s9fes:$(pkglibdir)\"" \
+ 	-DEXTENSIONS="$(EXTRA_INIT)" \
+ 	-DREALNUM \
+ 	-DNETWORK \
+@@ -55,14 +55,24 @@ DEFS=	$(OSDEF) \
  	-DCURSES_RESET
  
  # Where to install the stuff
 -BINDIR=	$(PREFIX)/bin
 -LIBDIR=	$(PREFIX)/share/s9fes
 -MANDIR=	$(PREFIX)/man/man1
++PACKAGE=scheme9
 +prefix=/usr/local
 +exec_prefix=$(prefix)
 +bindir=$(exec_prefix)/bin
 +datadir=$(prefix)/share
++pkgdatadir=$(datadir)/$(PACKAGE)
 +libdir=$(exec_prefix)/lib
++pkglibdir=$(libdir)/$(PACKAGE)
 +mandir=$(prefix)/man
 +
 +BINDIR=$(DESTDIR)$(bindir)
-+LIBDIR=$(DESTDIR)$(libdir)
++LIBDIR=$(DESTDIR)$(pkglibdir)
 +MANDIR=$(DESTDIR)$(mandir)/man1
  
  # Set up environment to be used during the build process
@@ -45,7 +57,7 @@ index f684093..24a08ac 100644
  		lib/matcher.scm contrib/bottles.scm
  
  all:	default
-@@ -77,8 +84,14 @@ s9.o:	s9.c s9-real.c s9.h
+@@ -77,8 +87,14 @@ s9.o:	s9.c s9-real.c s9.h
  s9.image:	s9 s9.scm s9-real.scm ext/unix.scm ext/curses.scm config.scm
  	$(BUILD_ENV) ./s9 -i - -n $(EXTRA_SCM) -l config.scm -d s9.image
  
@@ -53,8 +65,8 @@ index f684093..24a08ac 100644
 -	sed -e "s,@LIBDIR@,$(LIBDIR)," <s9.1 |gzip -9 >s9.1.gz
 +%.1: %.1.in
 +	sed \
-+	 -e "s,@LIBDIR@,$(LIBDIR),g" \
-+	 -e "s,@DATADIR@,$(DATADIR),g" \
++	 -e "s,@LIBDIR@,$(pkglibdir),g" \
++	 -e "s,@DATADIR@,$(pkgdatadir),g" \
 +	 < $@.in > $@
 +
 +%.gz: %
@@ -62,7 +74,7 @@ index f684093..24a08ac 100644
  
  unix.o:	ext/unix.c s9.h
  	$(CC) $(CFLAGS) $(DEFS) -I . -o unix.o -c ext/unix.c
-@@ -121,7 +134,7 @@ install-s9:	s9 s9.scm s9.image s9.1.gz
+@@ -121,7 +137,7 @@ install-s9:	s9 s9.scm s9.image s9.1.gz
  	install -d -m 0755 $(LIBDIR)/help
  	install -d -m 0755 $(MANDIR)
  	install $C -m 0755 s9 $(BINDIR)
