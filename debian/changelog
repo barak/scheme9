@@ -1,3 +1,10 @@
+scheme9 (2014.08.04-1) unstable; urgency=medium
+
+  * New Upstream Version
+  * Install support files into package-specific directories
+
+ -- Barak A. Pearlmutter <bap@debian.org>  Wed, 13 Aug 2014 22:27:50 +0200
+
 scheme9 (2014.01.11-1) unstable; urgency=medium
 
   * New Upstream Version
