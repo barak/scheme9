@@ -1,3 +1,10 @@
+scheme9 (2014.11.05-1) unstable; urgency=medium
+
+  * New Upstream Version
+  * Bump standards version (no changes required)
+
+ -- Barak A. Pearlmutter <bap@debian.org>  Wed, 19 Nov 2014 23:36:34 +0000
+
 scheme9 (2014.08.04-1) unstable; urgency=medium
 
   * New Upstream Version
