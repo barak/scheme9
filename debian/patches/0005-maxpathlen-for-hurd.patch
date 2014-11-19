@@ -7,10 +7,10 @@ Subject: maxpathlen for hurd
  1 file changed, 5 insertions(+)
 
 diff --git a/s9.h b/s9.h
-index b451bbd..5d6d056 100644
+index 3667c61..003f495 100644
 --- a/s9.h
 +++ b/s9.h
-@@ -80,6 +80,11 @@
+@@ -86,6 +86,11 @@
   #endif
  #endif
  

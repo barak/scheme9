@@ -9,7 +9,7 @@ by builder, e.g., dpkg-buildflags.
  1 file changed, 1 insertion(+), 1 deletion(-)
 
 diff --git a/Makefile b/Makefile
-index f9eda1f..adfd641 100644
+index 335dac6..94d6ec9 100644
 --- a/Makefile
 +++ b/Makefile
 @@ -78,7 +78,7 @@ default:	s9 s9.image s9.1 lib/syntax-rules.scm \
