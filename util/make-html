@@ -4,10 +4,6 @@ dumpdir=webdump
 update_only=no
 tmpfile=/tmp/mkhtml.$$
 
-about='S9fES is a mature, portable, and comprehensible R4RS Scheme
-interpreter with an (optional) Unix interface. It is in the public domain.
-You can <A href="s9fes.tgz">download</A> it here (~450KB).'
-
 cleanup() {
 	rm -f $tmpfile
 	rm -f rpp rp_html
@@ -28,7 +24,13 @@ while [ "x$1" != "x" ]; do
 		update_only=$1
 		shift
 		;;
-	*)	usage
+	x-r) 	shift
+		if [ "x$1" = "x" ]; then usage; fi
+		V=$1
+		export V
+		shift
+		;;
+	*) 	usage
 		;;
 	esac
 done
@@ -155,11 +157,11 @@ format_man_pages() {
 		<$tmpfile >$ofile
 		echo '<PRE class=man>' >>$ofile
 		if [ $hrefs = yes ]; then
-			nroff $file | ./rpp -p html | \
+			nroff -mdoc -c $file | ./rpp -p html | \
 			sed -e 's/\(http:\/\/.*\)</<A href="\1">\1<\/A></' \
 				>>$ofile
 		else
-			nroff $file | ./rpp -p html >>$ofile
+			nroff -mdoc -c $file | ./rpp -p html >>$ofile
 		fi
 		echo '</PRE>' >>$ofile
 		cat util/dirtail >>$ofile
@@ -188,7 +190,8 @@ naah() {
 		fi
 		echo '<H2>Naah</H2>' >>$oname
 		echo "<P>This $what is not included here. Please" >>$oname
-		echo ' download the <A href="s9fes.tgz">archive</A>' >>$oname
+		echo ' download the <A href="'"s9fes-$V.tgz"'">archive</A>' \
+			>>$oname
 		echo ' to have a look at it.</P>' >>$oname
 		cat util/dirtail >>$oname
 		echo " done"
@@ -207,12 +210,15 @@ dirlist() {
 			<util/dirhead >$tmpfile
 	fi
 	sed -e "s/@DESC@/$title/" <$tmpfile >$ofile
-	echo $4 >>$ofile
+	if [ "$4" = "about" ]; then
+		sed -e 's/\$V/'"$V"'/g' <util/blurb >>$ofile
+	fi
 	echo '<PRE class=dirlist>' >>$ofile
-	(cd $dir; ls -l | grep -v "$dumpdir") | grep -v "edoc$" | awk '
+	(cd $dir; ls -l | grep -v "$dumpdir") | grep -v " edoc$" | awk '
+		BEGIN { V=ENVIRON["V"] }
 		{ if ($9 == "CATEGORIES.html")
 			name=$9
-		  else if ($9 == "s9fes.tgz")
+		  else if ($9 == "s9fes-"V".tgz")
 			name=$9
 		  else if ($9 == "MASCOT.png")
 			name=$9
@@ -235,7 +241,7 @@ dirlist() {
 if [ $update_only = no -o $update_only = dir ]; then
 	if [ $update_only = no ]; then
 		# XXX edoc
-		make stripped-arc
+		make dist
 		# make HACKING.html
 		s9 -f util/make-cats.scm
 	fi
@@ -248,11 +254,11 @@ if [ $update_only = no -o $update_only = dir ]; then
 		fi
 	else
 		mkdir $dumpdir
-		cp s9fes.tgz util/s9.css MASCOT.png $dumpdir
+		cp s9fes-$V.tgz util/s9.css MASCOT.png $dumpdir
 		cp prog/edoc.css contrib/scheme.css contrib/ccode.css $dumpdir
 	fi
 
-	dirlist . $dumpdir/index.html "Scheme 9 from Empty Space" "$about"
+	dirlist . $dumpdir/index.html "Scheme 9 from Empty Space" "about"
 	dirlist lib $dumpdir/lib.html "lib\/" ""
 	dirlist contrib $dumpdir/contrib.html "contrib\/" ""
 	dirlist ext $dumpdir/ext.html "ext\/" ""
@@ -286,14 +292,29 @@ if [ $update_only = no -o $update_only = cee ]; then
 	format_C_files util util/rpp.c
 fi
 
+make_edoc() {
+	echo -n "webdump/edoc.html ..."
+	edoc -l scheme -w  -P util/libhead -E util/libtail prog/edoc.scm.edoc \
+		| sed -e 's/@DESC@/Rendered EDOC Code/' \
+		-e 's/@BASE@/<A href=edoc.html>edoc.html<\/A>/' \
+		-e 's/@TITLE@/EDOC/' \
+		| sed -e '1,/^$/d' \
+		>webdump/_.html
+        head -$(expr `wc -l webdump/_.html | awk '{print \$1}'` - 3) \
+		webdump/_.html > webdump/edoc.html
+	rm -f webdump/_.html
+	echo " done"
+}
+
 if [ $update_only = no -o $update_only = scm ]; then
+	make_edoc
 	format_scm_files "" s9.scm
 	format_scm_files "" s9-real.scm
 	format_scm_files "" config.scm
 	format_scm_files lib lib/*.scm
 	format_scm_files contrib contrib/*.scm
 	format_scm_files ext ext/*.scm
-	format_scm_files prog prog/*.scm
+	format_scm_files prog prog/*.scm prog/*.scm.edoc
 	format_scm_files util util/*.scm
 fi
 
@@ -303,6 +324,7 @@ if [ $update_only = no -o $update_only = nah ]; then
 	naah contrib file S9Book
 	naah contrib file S9Book-bw
 	naah prog file adventure.intro
+	naah util file blurb
 	naah util file dirhead
 	naah util file dirtail
 	naah util file libhead

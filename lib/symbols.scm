@@ -110,4 +110,6 @@
     sys:inet-listen curs:attr-normal curs:attr-standout curs:attr-underline
     curs:attr-bold curs:key-backspace curs:key-up curs:key-down
     curs:key-left curs:key-right curs:key-home curs:key-eol
-    curs:key-ppage curs:key-npage))
+    curs:key-ppage curs:key-npage curs:key-dc curs:key-ic curs:key-end
+    curs:color-black curs:color-blue curs:color-green curs:color-cyan
+    curs:color-red curs:color-magenta curs:color-yellow curs:color-gray))

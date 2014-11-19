@@ -13,7 +13,7 @@
  *     (also add "s9-real.scm" to the heap image).
  */
 
-#define VERSION "2014-08-04"
+#define VERSION "2014-11-05"
 
 #define EXTERN
  #include "s9.h"
@@ -1480,7 +1480,7 @@ int argument_list_p(cell n) {
 	do {					\
 		h = 0;				\
 		while (*s)			\
-			h = (h<<3) ^ *s++;	\
+			h = ((h<<5)+h) ^ *s++;	\
 	} while (0)
 
 int hash_size(int n) {
@@ -2284,7 +2284,9 @@ cell x_bignum_divide(cell a, cell b) {
 	if (bignum_less_p(a, b)) {
 		if (neg_a)
 			a = bignum_negate(a);
+		Tmp = a;
 		f = make_integer(0);
+		Tmp = NIL;
 		unsave(2);
 		return cons(f, a);
 	}
@@ -2320,9 +2322,11 @@ cell x_bignum_divide(cell a, cell b) {
 		car(Stack) = result;
 		a = bignum_subtract(a, c0);
 		car(cddddr(Stack)) = a;
-		f = car(bignum_shift_right(f));
+		f = bignum_shift_right(f);
+		f = car(f);
 		cadr(Stack) = f;
-		b = car(bignum_shift_right(b));
+		b = bignum_shift_right(b);
+		b = car(b);
 		cadr(cddddr(Stack)) = b;
 	}
 	if (neg)
@@ -2885,7 +2889,8 @@ cell pp_quotient(cell x) {
         unsave(1);
 	if (a == NIL || b == NIL)
 		return UNDEFINED;
-        return car(bignum_divide(x, a, b));
+	a = bignum_divide(x, a, b);
+        return car(a);
 }
 
 cell pp_remainder(cell x) {
@@ -2899,7 +2904,8 @@ cell pp_remainder(cell x) {
         unsave(1);
 	if (a == NIL || b == NIL)
 		return UNDEFINED;
-        return cdr(bignum_divide(x, a, b));
+	a = bignum_divide(x, a, b);
+        return cdr(a);
 }
 
 cell pp_positive_p(cell x) {

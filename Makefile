@@ -8,7 +8,7 @@ PREFIX= /u
 
 # Base version and Release
 BASE=		20140708
-RELEASE=	20140804
+RELEASE=	20141105
 
 # Override default compiler and flags
 # CC=	cc
@@ -227,14 +227,14 @@ update-library:
 
 s9.1.txt:	s9.1
 	cc -o rpp util/rpp.c
-	nroff -mdoc s9.1 | ./rpp -a >s9.1.txt
+	nroff -c -mdoc s9.1 | ./rpp -a >s9.1.txt
 	rm -f rpp
 
 docs:	lib ext contrib
 	util/make-docs
 
 webdump:
-	util/make-html
+	util/make-html -r $(RELEASE)
 
 advdump:	prog/advgen.scm prog/adventure.adv prog/adventure.intro
 	sed -e 's/@dir/quest/' -e 's/@file/index/g' <util/pagehead >pagehead
@@ -252,11 +252,11 @@ advdump:	prog/advgen.scm prog/adventure.adv prog/adventure.intro
 		<util/s9.css >advdump/s9.css
 
 csums:
-	txsum -u <_checksums >_checksums.new
+	csum -u <_checksums >_checksums.new
 	mv _checksums.new _checksums
 
 mksums:	clean
-	find . -type f | grep -v _checksums | txsum -m >_checksums
+	find . -type f | grep -v _checksums | csum >_checksums
 
 dist:	clean s9.1.txt
 	mv Makefile Makefile.ORIG

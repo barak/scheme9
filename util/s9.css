@@ -1,16 +1,13 @@
-BODY { background: #e8e0c0;
-       color: #000000; }
+BODY { background: #e8e0c0; color: #000000; }
 
-A:link {
-        color: #0000ff;
-        text-decoration: none; }
+H1, H2, H3 { color: #800000; }
 
-A:visited {
-        color: #006060;
-        text-decoration: none; }
+DIV.menu { font-family: courier, monospace; }
 
-A:hover, A:focus {
-        background: #0000ff; color: #ffffff; }
+A:link { color: #0040b0; }
+A:visited { color: #006060; }
+A:hover { background: #0060ff; color: #ffffff; }
+A:focus { background: #0060ff; color: #ffffff; }
 
 IMG { float: right; 
       margin-left: 0.5cm;
@@ -19,6 +16,14 @@ IMG { float: right;
       margin-bottom: 0.2cm; }
 
 HR { border: 0; border-top: 1px solid #a00000; clear: both; }
+
+PRE { border-color: #202020; background: #eaf0f6; border-width: 1px;
+      border-style: solid; padding: 0.5em; font-family: courier, monospace; }
+
+PRE.dirlist { font-family: courier, monospace; background: #e8e0c0;
+	color: #000000; border: 0; padding: 0; }
+
+CODE { font-family: courier, monospace; font-weight: bold; color: #6000c0; }
 
 PRE.man { }
 
@@ -31,7 +36,7 @@ PRE.scheme { background: #f6f0ea;
              padding: 0.5em;
              border: 1px solid #808080; }
 
-PRE.scheme SPAN.o { color: #600000; } /* comment */
+PRE.scheme SPAN.o { color: #503030; } /* comment */
 PRE.scheme SPAN.p { color: #707070; } /* parenthesis */
 PRE.scheme SPAN.s { color: #000000; } /* symbol */
 PRE.scheme SPAN.c { color: #0060c0; } /* constant */
@@ -46,10 +51,13 @@ PRE.ccode { background: #f6f0ea;
             padding: 0.5em;
             border: 1px solid #808080; }
 
-PRE.ccode SPAN.co { color: #600000; } /* comment */
+PRE.ccode SPAN.co { color: #503030; } /* comment */
 PRE.ccode SPAN.cp { color: #505050; } /* punctuation */
 PRE.ccode SPAN.cs { color: #000000; } /* symbol */
 PRE.ccode SPAN.cc { color: #0060c0; } /* constant */
 PRE.ccode SPAN.cr { color: #6000c0; } /* reserved word */
 PRE.ccode SPAN.cl { color: #6000c0; } /* stdlib symbol */
 PRE.ccode SPAN.cx { color: #c06000; } /* extension */
+
+*.center { text-align: center; }
+*.hl { color: #ff0000; }

@@ -129,7 +129,7 @@ char	*file;
 
 	if (file) {
 		if ((in = fopen(file, "r")) == NULL) {
-			error("no such file: `%s'", file);
+			error("no such file: `%s'", file, NULL);
 			return;
 		}
 	}
@@ -152,8 +152,8 @@ char	*s;
 	char	*new;
 
 	if ((new = (char *) malloc(strlen(s)+1)) == NULL) {
-		error("out of memory");
-		error("aborting...");
+		error("out of memory", NULL, NULL);
+		error("aborting...", NULL, NULL);
 		exit(-1);
 	}
 
@@ -183,7 +183,8 @@ int	lno;
 	int	i, radix, c, v;
 
 	if ((p = strchr(val, '\t')) == NULL) {
-		error("missing TAB in profile (line %d)", lno);
+		sprintf(buf, "%d", lno);
+		error("missing TAB in profile (line %s)", buf, NULL);
 		return;
 	}
 
@@ -249,7 +250,7 @@ void readprofile()
 		sprintf(buf, "%s%s", PREFIX, o_prof);
 		if ((pf = fopen(buf, "r")) == NULL) {
 			error("profile not found (%s) -- using ASCII-fy mode",
-			buf);
+				buf, NULL);
 			o_asciify = 1;
 			return;
 		}
@@ -276,8 +277,10 @@ void readprofile()
 			set(&ion, buf, lno);
 		else if (!strncmp(buf, "italics-off", 11))
 			set(&ioff, buf, lno);
-		else
-			error("bad option in profile (line %d)", lno);
+		else {
+			sprintf(buf, "%d", lno);
+			error("bad option in profile (line %s)", buf, NULL);
+		}
 		fgets(buf, MAXLINE, pf);
 	}
 

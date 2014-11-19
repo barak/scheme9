@@ -2,7 +2,7 @@
 
 /*
  * Scheme 9 from Empty Space, big real number arithmetics
- * By Nils M Holm, 2008-2010
+ * By Nils M Holm, 2008-2014
  * Placed in the Public Domain
  */
 
@@ -437,7 +437,8 @@ cell bignum_to_real(cell a) {
 	if (length(cdr(m)) > MANTISSA_SEGMENTS) {
 		d = count_digits(cdr(m));
 		while (d > MANTISSA_SIZE) {
-			m = car(bignum_shift_right(m));
+			m = bignum_shift_right(m);
+			m = car(m);
 			e++;
 			d--;
 		}
@@ -642,7 +643,8 @@ cell real_add(cell a, cell b) {
 	m = bignum_add(a, b);
 	unsave(2);
 	flags = x_bignum_negative_p(m)? REAL_NEGATIVE: 0;
-	r = make_real(flags, e, cdr(bignum_abs(m)));
+	r = bignum_abs(m);
+	r = make_real(flags, e, cdr(r));
 	return real_normalize(r, "+");
 }
 
@@ -691,7 +693,8 @@ cell real_divide(cell x, cell a, cell b) {
 	if (integer_p(a))
 		a = bignum_to_real(a);
 	if (x_real_zero_p(a)) {
-		return make_real(0, 0, cdr(make_integer(0)));
+		r = make_integer(0);
+		return make_real(0, 0, cdr(r));
 	}
 	save(a);
 	if (integer_p(b))
@@ -783,7 +786,8 @@ cell pp_exact_to_inexact(cell x) {
 	x = cadr(x);
 	if (integer_p(x)) {
 		flags = x_bignum_negative_p(x)? REAL_NEGATIVE: 0;
-		n = make_real(flags, 0, cdr(bignum_abs(x)));
+		n = bignum_abs(x);
+		n = make_real(flags, 0, cdr(n));
 		return real_normalize(n, "exact->inexact");
 	}
 	return x;
