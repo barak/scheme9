@@ -1,5 +1,5 @@
 ; Scheme 9 from Empty Space, Function Library
-; By Nils M Holm, 2010
+; By Nils M Holm, 2010,2014
 ; Placed in the Public Domain
 ;
 ; (spawn-command string list)     ==>  list
@@ -24,7 +24,7 @@
 ; SPAWN-COMMAND/FD is like SPAWN-COMMAND, but delivers raw Unix file
 ; descriptors instead of input/output ports.
 ;
-; (Example): (spawn-command "/bin/ls -l /bin")
+; (Example): (spawn-command "/bin/ls" '(" -l" "/bin"))
 ;              ==>  (#<input-port> #<output-port> 707)
 
 (require-extension sys-unix)

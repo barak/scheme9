@@ -33,7 +33,7 @@ displaystar.scm|display*|-|Display multiple objects
 draw-tree.scm|draw-tree|-|Draw S-expressions in box notation
 dupes.scm|-|Find duplicate file names|-
 duplicates.scm|duplicates|-|Find duplicate members in lists
-edoc.scm|-|Embedded documentation processor|-
+edoc.scm.edoc|-|Embedded documentation processor|-
 equal-cip.scm|equal-ci?|-|Compare objects case-insensitively
 exists.scm|exists|-|Existential quantifier
 explode.scm|explode|-|Explode symbols

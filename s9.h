@@ -29,6 +29,12 @@
  #endif
 #endif
 
+#ifdef __GNUC__
+ #ifndef unix
+  #define unix
+ #endif
+#endif
+
 #ifndef unix
  #ifndef plan9
   #error "Either 'unix' or 'plan9' must be #defined."

@@ -1,6 +1,14 @@
 
 Change Log
 
+2014-11-05
+	Fixed SPAWN-COMMAND help page. (ext/, help/)
+2014-11-03
+	Fixed some warnings in util/rpp.c (not used outside of build).
+2014-10-31
+	Fixed a few potential GC leaks. (s9.c, s9-real.c)
+2014-08-08
+	Changed hash function. (s9.c)
 2014-08-04
 	Fix: wrong magic number in 64-bit image check. (s9.c)
 2014-08-03
