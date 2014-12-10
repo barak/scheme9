@@ -13,7 +13,7 @@
  *     (also add "s9-real.scm" to the heap image).
  */
 
-#define VERSION "2014-11-05"
+#define VERSION "2014-12-06"
 
 #define EXTERN
  #include "s9.h"
@@ -641,6 +641,12 @@ cell quote(cell n, cell quotation) {
 	return cons(quotation, q);
 }
 
+long x_atol(char *s) {
+	while (*s == '0' && s[1])
+		s++;
+	return atol(s);
+}
+
 #ifdef REALNUM
 
  #include "s9-real.c"
@@ -700,14 +706,11 @@ cell quote(cell n, cell quotation) {
 	else if (s[0] == '+') {
 		s++;
 	}
-	/* plan9's atol() interprets leading 0 as octal! */
-	while (s[0] == '0' && s[1])
-		s++;
 	k = (int) strlen(s);
 	n = NIL;
 	while (k) {
 		j = k <= DIGITS_PER_WORD? k: DIGITS_PER_WORD;
-		v = atol(&s[k-j]);
+		v = x_atol(&s[k-j]);
 		s[k-j] = 0;
 		k -= j;
 		if (k == 0)
@@ -2626,9 +2629,10 @@ cell pp_cons(cell x) {
 
 cell pp_length(cell x) {
 	int	k = 0;
+	cell	p;
 
-	for (x = cadr(x); x != NIL; x = cdr(x)) {
-		if (!pair_p(x))
+	for (p = cadr(x); p != NIL; p = cdr(p)) {
+		if (!pair_p(p))
 			return error("length: improper list", cadr(x));
 		k++;
 	}
@@ -3768,7 +3772,7 @@ char *copy_string(char *s) {
 	char	*new;
 
 	new = malloc(strlen(s)+1);
-	if (s == NULL)
+	if (new == NULL)
 		fatal("copy_string(): out of memory");
 	strcpy(new, s);
 	return new;
@@ -5291,7 +5295,7 @@ long get_size_k(char *s) {
 	long	n;
 
 	c = s[strlen(s)-1];
-	n = atol(s);
+	n = x_atol(s);
 	if (isdigit(c))
 		;
 	else if (c == 'M' || c == 'm')
@@ -5376,7 +5380,7 @@ int main(int argc, char **argv) {
 			case 't':
 				if (argv[1] == NULL)
 					usage(1);
-				Proc_max = atoi(argv[1]);
+				Proc_max = (int) x_atol(argv[1]);
 				if (Proc_max > MAX_CALL_TRACE)
 					Proc_max = MAX_CALL_TRACE;
 				argv++;

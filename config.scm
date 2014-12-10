@@ -16,5 +16,3 @@
 (load-from-library "string-tools.scm")
 (load-from-library "syntax-extensions.scm")
 (load-from-library "vector-tools.scm")
-
-(load-from-library "unix-tools.scm")

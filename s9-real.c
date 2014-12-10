@@ -116,7 +116,7 @@ cell string_to_bignum(char *numstr, int must_be_exact) {
 	n = NIL;
 	while (k) {
 		j = k <= DIGITS_PER_WORD? k: DIGITS_PER_WORD;
-		v = atol(&s[k-j]);
+		v = x_atol(&s[k-j]);
 		s[k-j] = 0;
 		k -= j;
 		if (k == 0)

@@ -48,7 +48,12 @@ cat >$testfile <<EOT
 
 EOT
 
-for f in lib/*.scm contrib/*.scm ext/*.scm; do
+cases="lib/*.scm contrib/*.scm"
+if echo '*extensions*' | ./s9 | grep -q sys-unix; then
+	cases="$cases ext/*.scm"
+fi
+
+for f in $cases; do
 	if grep '^; Example: ' $f >/dev/null 2>&1; then
 		echo "(load-from-library \"`basename $f`\")" >>$testfile
 		echo "(%test" >>$testfile

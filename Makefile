@@ -8,7 +8,7 @@ PREFIX= /u
 
 # Base version and Release
 BASE=		20140708
-RELEASE=	20141105
+RELEASE=	20141206
 
 # Override default compiler and flags
 # CC=	cc
@@ -19,7 +19,7 @@ EDOC=	prog/edoc.scm.edoc
 OSDEF=	-Dunix
 
 # Uncomment these to include the Unix extensions
-EXTRA_SCM+=	-l ext/unix.scm
+EXTRA_SCM+=	-l ext/unix.scm -l ext/unix-tools.scm
 EXTRA_OBJS+=	unix.o
 EXTRA_INIT+=	sys_init();
 EXTRA_LIBS+=

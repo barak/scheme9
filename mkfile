@@ -1,13 +1,36 @@
 # mkfile for Plan 9
-# By Nils M Holm, 2008
+# By Nils M Holm, 2008; Ray, 2014
 
-all:V:	s9 s9.image
+</$objtype/mkfile
 
-s9:	s9.8
-	8l -o s9 s9.8
+TARG=		s9
+OFILES=		s9.$O
+CLEANFILES=	s9.image test.image
+CFLAGS=		$CFLAGS -Dplan9
 
-s9.8:	s9.c s9.h
-	8c -Dplan9 s9.c
+# Include real number arithmetics
 
-s9.image:	s9 s9.scm
-	./s9 -d s9.image
+CFLAGS=		$CFLAGS -DREALNUM
+EXTRA_SCM=	-l s9-real.scm
+HFILES=		s9-real.c
+
+all:V: s9 s9.image
+
+tests:V: test realtest srtest libtest
+
+s9:	$O.out
+	cp $prereq $target
+
+s9.image:	s9 s9.scm s9-real.scm config.scm
+	./s9 -i - -n $EXTRA_SCM -l config.scm -d $target
+
+libtest:V: s9 test.image
+	ape/psh util/$target.sh
+
+%test:V: s9 test.image util/%test.scm
+	./s9 -i test -f util/$target.scm
+
+test.image: s9 s9.scm s9-real.scm
+	./s9 -i - -n $EXTRA_SCM -d $target
+
+</sys/src/cmd/mkone
