@@ -61,7 +61,6 @@
 (load-from-library "keyword-value.scm")
 (load-from-library "symbols.scm")
 (load-from-library "read-line.scm")
-(load-from-library "parse-optionsb.scm")
 (load-from-library "setters.scm")
 (load-from-library "hof.scm")
 (load-from-library "htmlify-char.scm")
