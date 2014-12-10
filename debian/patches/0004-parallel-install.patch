@@ -10,7 +10,7 @@ result in multiple creation; that is okay.
  1 file changed, 11 insertions(+)
 
 diff --git a/Makefile b/Makefile
-index 78cd8c9..520041b 100644
+index 7979884..5bd71a6 100644
 --- a/Makefile
 +++ b/Makefile
 @@ -150,6 +150,7 @@ install-s9:	s9 s9.scm s9.image s9.1.gz

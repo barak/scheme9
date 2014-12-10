@@ -7,7 +7,7 @@ Subject: recombobulate Makefile
  1 file changed, 25 insertions(+), 9 deletions(-)
 
 diff --git a/Makefile b/Makefile
-index 8ef0266..335dac6 100644
+index 70fd431..7eb93ef 100644
 --- a/Makefile
 +++ b/Makefile
 @@ -4,7 +4,7 @@

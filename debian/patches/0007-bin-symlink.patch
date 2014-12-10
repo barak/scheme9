@@ -10,7 +10,7 @@ problematic if the target bin directory is moved.
  1 file changed, 1 insertion(+), 1 deletion(-)
 
 diff --git a/Makefile b/Makefile
-index 520041b..e51eb06 100644
+index 5bd71a6..8a7feb3 100644
 --- a/Makefile
 +++ b/Makefile
 @@ -167,7 +167,7 @@ install-util:

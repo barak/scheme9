@@ -10,10 +10,10 @@ Subject: search path in test script
 diff --git a/util/libtest.sh b/util/libtest.sh
 old mode 100644
 new mode 100755
-index f923084..5e27690
+index 02806bc..dc8287e
 --- a/util/libtest.sh
 +++ b/util/libtest.sh
-@@ -70,4 +70,6 @@ trap '
+@@ -75,4 +75,6 @@ trap '
  	exit 1
  ' 1 2 3 15
  
