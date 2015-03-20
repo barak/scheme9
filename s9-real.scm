@@ -46,7 +46,7 @@
   (letrec
     ((e-series
        (lambda (x i x^y y! r last)
-         (if (= r last)
+         (if (<= (abs (- last r)) *epsilon*)
              r
              (e-series x
                        (+ 1 i)
@@ -65,7 +65,7 @@
        (lambda (x y x^y r last lim)
          (cond ((and lim (zero? lim))
                  r)
-               ((= r last)
+               ((<= (abs (- last r)) *epsilon*)
                  (* 2 r))
                (else
                  (l-series6 x
@@ -119,7 +119,7 @@
 (define sine-series 
   (let ((fact2 fact2))
     (lambda (x y r add last)
-      (if (= r last)
+      (if (<= (abs (- last r)) *epsilon*)
           r
           (sine-series x
                        (+ 2 y)
@@ -186,7 +186,7 @@
     (letrec
       ((at-series
          (lambda (x y r last)
-           (if (= r last)
+           (if (<= (abs (- last r)) *epsilon*)
                r
                (at-series x
                           (+ 1 y)
@@ -199,7 +199,7 @@
                           r)))))
       (lambda (x)
         (cond ((negative? x)
-                (- (at-series (- x) 0.0 0 1)))
+                (- (atan (- x))))
               ((> x 1)
                 (- pi/2 (atan (/ x))))
               (else
@@ -225,7 +225,7 @@
   (letrec
     ((sqrt2
        (lambda (x last)
-          (if (= last x)
+          (if (<= (abs (- last x)) *epsilon*)
               x
               (sqrt2 (/ (+ x (/ square x)) 2)
                      x)))))

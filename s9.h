@@ -143,6 +143,21 @@
 /* #define BITS_PER_WORD_32 */
 /* #define BITS_PER_WORD_16 */
 
+/* ... or try some magic constants (unreliable, though) ... */
+
+#ifdef __amd64__
+ #define BITS_PER_WORD_64
+#endif
+#ifdef __amd64
+ #define BITS_PER_WORD_64
+#endif
+#ifdef __x86_64__
+ #define BITS_PER_WORD_64
+#endif
+#ifdef __x86_64
+ #define BITS_PER_WORD_64
+#endif
+
 /* ... or assume a reasonable default */
 #ifndef BITS_PER_WORD_16
  #ifndef BITS_PER_WORD_32
@@ -364,6 +379,7 @@ EXTERN cell	S_arrow, S_else, S_extensions, S_latest,
 EXTERN cell	S_and, S_begin, S_cond, S_define,
 		S_define_syntax, S_if, S_lambda, S_or,
 		S_set_b;
+EXTERN cell	S_zero, S_one, S_two;
 
 /*
  * I/O
