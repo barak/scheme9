@@ -1,10 +1,14 @@
 S9fES **              ==>  object
+      *epsilon*       ==>  real
       *extensions*    ==>  list
       *library-path*  ==>  string
       *loading*       ==>  boolean
 
 These are dynamic variables defined at the top level of S9fES.
 ** evaluates to the result most recently displayed at the REPL.
+
+*EPSILON* is the smallest real number that can be represented
+without loss of precision by the given S9 implementation.
 
 *EXTENSIONS* lists the extension procedures provided by the
 extended interpreter (if any).
@@ -19,6 +23,8 @@ will lead to undefined behavior of S9fES.
 
 (cons 1 2)      ==>  (1 . 2)
 (car **)        ==>  1
+
+*epsilon*       ==>  10e-17
 
 *extensions*    ==>  ()
 

@@ -2,7 +2,7 @@
 
 /*
  * Scheme 9 from Empty Space
- * By Nils M Holm, 2007-2014
+ * By Nils M Holm, 2007-2015
  * Placed in the Public Domain
  */
 
@@ -13,7 +13,7 @@
  *     (also add "s9-real.scm" to the heap image).
  */
 
-#define VERSION "2014-12-06"
+#define VERSION "2015-03-13"
 
 #define EXTERN
  #include "s9.h"
@@ -28,6 +28,7 @@ int	Verbose_GC = 0;
 cell	*GC_root[] = { &Program, &Symbols, &Environment, &Tmp,
 			&Tmp_car, &Tmp_cdr, &Stack, &Stack_bottom,
 			&State_stack, &Acc, &Trace_list, &File_list,
+			&S_zero, &S_one, &S_two,
 			NULL };
 
 /*
@@ -1268,7 +1269,6 @@ int print_string(cell n) {
 }
 
 int print_symbol(cell n) {
-	char	b[2];
 	int	k;
 	char	*s;
 
@@ -1276,12 +1276,7 @@ int print_symbol(cell n) {
 		return 0;
 	s = symbol_name(n);
 	k = symbol_len(n)-1;
-	b[1] = 0;
-	while (k) {
-		b[0] = *s++;
-		pr(b);
-		k--;
-	}
+	pr_raw(s, k);
 	return 1;
 }
 
@@ -2220,7 +2215,7 @@ cell bignum_multiply(cell a, cell b) {
 	save(a);
 	b = bignum_abs(b);
 	save(b);
-	result = make_integer(0);
+	result = S_zero;
 	save(result);
 	while (!x_bignum_zero_p(a)) {
 		if (Error_flag)
@@ -2253,7 +2248,7 @@ cell bignum_equalize(cell a, cell b) {
 
 	r0 = a;
 	save(r0);
-	f0 = make_integer(1);
+	f0 = S_one;
 	save(f0);
 	r = r0;
 	save(r);
@@ -2288,7 +2283,7 @@ cell x_bignum_divide(cell a, cell b) {
 		if (neg_a)
 			a = bignum_negate(a);
 		Tmp = a;
-		f = make_integer(0);
+		f = S_zero;
 		Tmp = NIL;
 		unsave(2);
 		return cons(f, a);
@@ -2304,12 +2299,12 @@ cell x_bignum_divide(cell a, cell b) {
 	b = car(b);
 	cadddr(Stack) = b;
 	save(f);	/* cadr */
-	result = make_integer(0);
+	result = S_zero;
 	save(result);	/* car */
 	while (!x_bignum_zero_p(f)) {
 		if (Error_flag)
 			break;
-		c = make_integer(0);
+		c = S_zero;
 		cadddr(Stack) = c;
 		caddr(Stack) = c0 = c;
 		i = 0;
@@ -2361,7 +2356,7 @@ cell bignum_read(char *pre, int radix) {
 
 	base = make_integer(radix);
 	save(base);
-	num = make_integer(0);
+	num = S_zero;
 	save(num);
 	c = read_c_ci();
 	s = 0;
@@ -2864,10 +2859,10 @@ cell pp_plus(cell x) {
 
 	x = cdr(x);
 	if (x == NIL)
-		return make_integer(0);
+		return S_zero;
 	if (cdr(x) == NIL)
 		return car(x);
-	a = make_integer(0);
+	a = S_zero;
 	save(a);
 	while (x != NIL) {
 		if (!number_p(car(x))) {
@@ -2921,10 +2916,10 @@ cell pp_times(cell x) {
 
 	x = cdr(x);
 	if (x == NIL)
-		return make_integer(1);
+		return S_one;
 	if (cdr(x) == NIL)
 		return car(x);
-	a = make_integer(1);
+	a = S_one;
 	save(a);
 	while (x != NIL) {
 		if (!number_p(car(x))) {
@@ -3958,8 +3953,8 @@ cell pp_trace(cell x) {
 	cell	n = Trace_list;
 
 	if (cdr(x) == NIL) {
-		n = Trace_list;
 		Trace_list = NIL;
+		return n;
 	}
 	if (cddr(x) == NIL && cadr(x) == TRUE) {
 		Trace_list = TRUE;
@@ -5108,6 +5103,9 @@ void make_initial_env(void) {
 	EXTENSIONS;
 #ifdef REALNUM
 	add_primitives("realnums", NULL);
+	Tmp = make_real(0, -MANTISSA_SIZE+1, cdr(S_one));
+	Environment = extend(symbol_ref("*epsilon*"), Tmp, Environment);
+	Tmp = NIL;
 #endif
 	Environment = cons(Environment, NIL);
 	Program = TRUE; /* or rehash() will not work */
@@ -5179,6 +5177,9 @@ void init(void) {
 	S_set_b = symbol_ref("set!");
 	S_unquote = symbol_ref("unquote");
 	S_unquote_splicing = symbol_ref("unquote-splicing");
+	S_zero = make_integer(0);
+	S_one = make_integer(1);
+	S_two = make_integer(2);
 	make_initial_env();
 	reset_calltrace();
 }
@@ -5245,7 +5246,15 @@ void version_info(char *name) {
 	nl();
 	pr("version:         "); pr(VERSION);
 #ifdef unix
+ #ifdef BITS_PER_WORD_64
+	pr(" (64-bit unix)");
+ #else
+  #ifdef BITS_PER_WORD_32
+	pr(" (32-bit unix)");
+  #else
 	pr(" (unix)");
+  #endif
+ #endif
 #else
  #ifdef plan9
 	pr(" (plan 9)");

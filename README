@@ -2,7 +2,7 @@
 
 	Scheme 9 from Empty Space
 	A Portable Scheme Interpreter with a Unix Interface
-	By Nils M Holm, 2007-2014
+	By Nils M Holm, 2007-2015
 
 	S9fES is a mature, portable, and comprehensible public-domain
 	interpreter for R4RS Scheme offering
@@ -200,9 +200,9 @@
 	etc:
 
 	Bakul Shah, Barak Pearlmutter, Blake McBride, Bsamograd (reddit),
-	Dig1 (reddit), Dirk Lutzebaeck, Doug Currie, Mario Deilmann,
-	Masaru KIMURA, Ray Lai, Torsten Leibold, Yi Dai, and the Super
-	Dimension Fortress (SDF.ORG).
+	David Person, Dig1 (reddit), Dirk Lutzebaeck, Doug Currie, Mario
+	Deilmann, Masaru KIMURA, Ray Lai, Torsten Leibold, Yi Dai, and
+	the Super Dimension Fortress (SDF.ORG).
 
 
 	CONTACT

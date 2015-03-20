@@ -1,6 +1,28 @@
 
 Change Log
 
+2015-03-13
+	Added constants (S_zero, ...) for frequently used bignum literals,
+	so we don't have to call make_integer() each time. (s9.c, s9-real.c)
+2015-03-12
+	Fix: TRACE without arguments could core-dump on some machines. (s9.c)
+	Thanks, David Person!
+	Made real number division round its mantissa instead of truncating
+	it, e.g.: (/ 2 3) --> 0.66...67 instead of 0.66...66. Should improve
+	real number precision a bit. (s9-real.c) Suggested by David.
+2015-03-10
+	Fix: These functions would not terminate for certain values due to
+	inappropriate real number comparison: EXP, LOG, COS, SIN, TAN, ATAN,
+	SQRT. Thanks to David Person for pointing this out! (s9-real.scm)
+	Introduced *EPSILON* constant representing the least real number
+	with a precise representation. (s9.c)
+2014-12-16
+	Simplified print_symbol() procedure. (s9.c)
+2014-12-13
+	Fixed ATAN function for negative arguments. (s9-real.scm)
+	Thanks again, David!
+	Added some #ifdefs to guess whether we are compiling on a
+	64-bit system. (s9.h)
 2014-12-06
 	Fix: LENGTH would print garbage when reporting an improper list.
 	(s9.c) Thanks, David Person!

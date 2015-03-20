@@ -142,7 +142,7 @@ cell string_to_real(char *s) {
 	int	neg = 0;
 	int	i, j, v;
 
-	mantissa = make_integer(0);
+	mantissa = S_zero;
 	save(mantissa);
 	exponent = 0;
 	i = 0;
@@ -294,17 +294,13 @@ cell count_digits(cell m) {
 }
 
 cell round_last(cell m, cell e, int n_digits, int flags) {
-	cell	one;
 	int	r;
 
 	m = bignum_shift_right(new_atom(T_INTEGER, m));
 	r = integer_value("print", cdr(m));
 	m = car(m);
 	if (r >= 5) {
-		save(m);
-		one = make_integer(1);
-		m = bignum_add(m, one);
-		unsave(1);
+		m = bignum_add(m, S_one);
 	}
 	m = cdr(m);
 	n_digits--;
@@ -687,13 +683,13 @@ cell real_multiply(cell a, cell b) {
 }
 
 cell real_divide(cell x, cell a, cell b) {
-	cell	r, m, e, ma, mb, ea, eb, neg;
+	cell	r, m, e, ma, mb, ea, eb, neg, div2;
 	int	nd, dd;
 
 	if (integer_p(a))
 		a = bignum_to_real(a);
 	if (x_real_zero_p(a)) {
-		r = make_integer(0);
+		r = S_zero;
 		return make_real(0, 0, cdr(r));
 	}
 	save(a);
@@ -721,8 +717,20 @@ cell real_divide(cell x, cell a, cell b) {
 	}
 	e = ea - eb;
 	m = bignum_divide(NOEXPR, ma, mb);
-	unsave(2);
-	r = make_real(neg? REAL_NEGATIVE: 0, e, cdar(m));
+	/**/
+	save(m);
+	div2 = bignum_abs(mb);
+	div2 = bignum_divide(NOEXPR, div2, S_two);
+	div2 = car(div2);
+	if (bignum_less_p(div2, cdr(m))) {
+		m = bignum_add(car(m), S_one);
+	}
+	else {
+		m = car(m);
+	}
+	/**/
+	unsave(3);
+	r = make_real(neg? REAL_NEGATIVE: 0, e, cdr(m));
 	return real_normalize(r, "/");
 }
 
@@ -757,7 +765,7 @@ cell pp_divide(cell x) {
 	expr = x;
 	x = cdr(x);
 	if (cdr(x) == NIL) {
-		a = make_integer(1);
+		a = S_one;
 		save(a);
 		a = real_divide(expr, a, car(x));
 		unsave(1);
@@ -799,7 +807,7 @@ cell pp_exact_p(cell x) {
 
 cell pp_exponent(cell x) {
 	if (integer_p(cadr(x)))
-		return make_integer(0);
+		return S_zero;
 	return make_integer(x_real_exponent(cadr(x)));
 }
 
@@ -820,7 +828,7 @@ cell pp_floor(cell x) {
 	}
 	if (x_real_negative_p(x)) {
 		/* sign not in mantissa! */
-		m = bignum_add(m, make_integer(1));
+		m = bignum_add(m, S_one);
 	}
 	unsave(1);
 	n = make_real(x_real_flags(x), e, cdr(m));

@@ -302,6 +302,7 @@ ln -fs split-url url-proto
 ln -fs split-url url-suffix
 ln -fs standard-error-port call-with-stderr
 ln -fs standard-error-port with-output-to-stderr
+ln -fs starstar starepsilonstar
 ln -fs starstar starextensionsstar
 ln -fs starstar starlibrary-pathstar
 ln -fs starstar starloadingstar
