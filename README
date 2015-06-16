@@ -7,6 +7,7 @@
 	S9fES is a mature, portable, and comprehensible public-domain
 	interpreter for R4RS Scheme offering
 
+	- bignum arithmetics
 	- decimal-based real number arithmetics
 	- support for low-level Unix programming
 	- cursor addressing with Curses
@@ -47,7 +48,7 @@
 	The S9 code is only loosely coupled to its Makefile, so in most
 	cases running "cc -Dunix -o s9 s9.c" or "8c -Dplan9 -o s9 s9.c"
 	will compile the interpreter just fine. (However, doing so will
-	not include the Realnum/Unix/Curses/Networking extensions.)
+	not include the Unix/Curses/Networking extensions.)
 
 	On most systems of the Unix family (plus CygWin and MinGW),
 	you can compile and install S9fES by running "make install".
@@ -65,11 +66,11 @@
 
 	Unix
 
-	To compile S9fES, run "make test" (this will also run the test
-	suite to make sure that the interpreter works properly). Running
-	"make tests" will run even more tests.
+	To compile S9fES, run "make" and then "make test" (this will run
+	the test suite to make sure that the interpreter works properly).
+	Running "make tests" will run even more tests.
 
-	On 64-bit systems, you may want to add the -DBITS_PER_WORD_64
+	On 64-bit systems, you may have to add the -DBITS_PER_WORD_64
 	define to the Makefile. Not doing so will probably still work,
 	but result in slightly worse bignum performance.
 
@@ -89,10 +90,10 @@
 
 	To install S9fES manually,
 
-	- Compile s9 with a proper default library path (the one
-	  hardwired in "s9.h" is probably not what you want). E.g.:
+	- Compile s9 with a proper library path (the one hardwired in
+	  "s9.h" is probably not what you want). E.g.:
 
-	  cc -o s9 -DDEFAULT_LIBRARY_PATH="\"your-path\"" s9.c
+	  cc -o s9 -DLIBRARY_PATH="\"your-path\"" s9.c
 
 	  A reasonable value for "your-path" would be, for example:
 
@@ -105,13 +106,13 @@
 
 	- Copy the file "s9.scm" to a publicly readable directory
 	  (default: /usr/local/share/s9fes). This directory will be
-	  referred to as LIBDIR in the following instructions. Note
-	  that this directory must be contained in DEFAULT_LIBRARY_PATH,
+	  referred to as S9DIR in the following instructions. Note
+	  that this directory *must* be contained in LIBRARY_PATH,
 	  as defined above.
 
-	- Compile a heap image and copy it to LIBDIR:
+	- Compile a heap image and copy it to S9DIR:
 
-	  s9 -d s9.image
+	  s9 -i - -d s9.image
 
 	  The image file must have the same base name as the interpreter
 	  or it will not be loaded. An image loads significantly faster
@@ -119,15 +120,15 @@
 
 	Optionally:
 
-	- Copy the content of the "lib" directory to LIBDIR. This
+	- Copy the content of the "lib" directory to S9DIR. This
 	  directory contains lots of useful Scheme functions.
 
-	- Copy the content of the "contrib" directory to LIBDIR. These
+	- Copy the content of the "contrib" directory to S9DIR. These
 	  files contain additional Scheme functions contributed by other
 	  authors and/or imported from various sources.
 
-	- Create a subdirectory named "help" in LIBDIR and copy the
-	  content of the "help" directory to LIBDIR/help. These files
+	- Create a subdirectory named "help" in S9DIR and copy the
+	  content of the "help" directory to S9DIR/help. These files
 	  are part of the interactive help system.
 
 	- Copy the nroff(1) source code of the manual page "s9.1" to
@@ -139,34 +140,29 @@
 	CONFIGURATION
 
 	You may create the S9FES_LIBRARY_PATH environment variable and
-	make it point to LIBDIR as well as other directories that
+	make it point to S9DIR as well as other directories that
 	contain Scheme programs. The variable may contain a single
 	directory or a colon-separated list of directories that will be
 	searched in sequence for image files, library files, and help
 	pages (in "help" subdirectories contained in the given paths).
 
-	S9FES_LIBRARY_PATH overrides DEFAULT_LIBRARY_PATH, so all
-	directories listed in the latter should also be present in
-	the former.
-
-	If you set up an rc file in your home directory ($HOME/.s9fes/rc),
-	this file will be LOADed before entering the REPL. It will never
-	be loaded when running programs non-interactively (with the -f
-	option).
+	S9FES_LIBRARY_PATH overrides LIBRARY_PATH, so all directories
+	listed in the latter should also be present in the former.
 
 	To create an image file containing additional functionality,
 	add the desired options to the "config.scm" file and run
 
-	s9 -n -l config.scm -d s9.image
+	s9 -i - -l config.scm -d s9.image
 
 
 	GETTING STARTED
 
 	Typing "s9" will drop you into the read-eval-print loop of the
 	interpreter. You can run Scheme programs non-interactively by
-	typing "s9 -f program.scm" at your shell prompt.
+	typing "s9 -f program.scm" (or just "s9 program.scm") at your
+	shell prompt.
 
-	If you installed the extension library functions in LIBDIR,
+	If you installed the extension library functions in S9DIR,
 	they can be loaded by the LOAD-FROM-LIBRARY procedure or the
 	",l" (comma ell) meta command:
 
@@ -189,7 +185,7 @@
 	If compiled in, there are some extension procedures providing
 	access to some Unix system calls, some networking procedures,
 	and a Curses interface. To compile these extensions, uncomment
-	the three EXTRA_ lines in the Makefile. (In fact, the Unix
+	the corresponding EXTRA_ lines in the Makefile. (In fact, all
 	extensions are compiled in by default.)
 
 

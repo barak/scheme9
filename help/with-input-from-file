@@ -10,3 +10,6 @@ returned by CURRENT-INPUT-PORT or CURRENT-OUTPUT-PORT, and the thunk
 is called with no arguments.  When the thunk returns, the port is
 closed and the previous default is restored. WITH-INPUT-FROM-FILE
 and WITH-OUTPUT-TO-FILE return the value yielded by PROCEDURE^0.
+
+S9fES silently overwrites the existing file when the file specified
+with WITH-OUTPUT-TO-FILE already exists.

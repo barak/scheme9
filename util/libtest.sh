@@ -75,4 +75,4 @@ trap '
 	exit 1
 ' 1 2 3 15
 
-./s9 -i test -nf $testfile
+./s9 -i test -f $testfile

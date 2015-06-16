@@ -12,3 +12,6 @@ the value yielded by the procedure is returned. If the procedure
 does not return, then the port will not be closed automatically
 unless it is possible to prove that the port will never again be
 used for a read or write operation.
+
+S9fES silently overwrites the existing file when the file specified
+in STRING already exists.

@@ -1,5 +1,5 @@
 # mkfile for Plan 9
-# By Nils M Holm, 2008; Ray, 2014
+# By Nils M Holm, 2008; Ray Lai, 2014
 
 </$objtype/mkfile
 

@@ -131,6 +131,11 @@
       (list v r)))             ==>  (0 1)
 )
 
+(load-from-library "cdf.scm")
+(%test
+  (cdf 0)  ==>  0.5
+)
+
 (load-from-library "char-canvas.scm")
 (%test
   (let ((c (make-canvas 10 5 10 10)))
@@ -200,6 +205,11 @@
 (load-from-library "equal-cip.scm")
 (%test
   (equal-ci? '(#\A ("b")) '(#\a ("B")))  ==>  #t
+)
+
+(load-from-library "erf.scm")
+(%test
+  (erf 0)  ==>  0.0
 )
 
 (load-from-library "exists.scm")
@@ -418,6 +428,16 @@
     (appnd '(a b c) '(d e f)))             ==>  (a b c d e f)
 )
 
+(load-from-library "mean.scm")
+(%test
+  (mean '(1 2 3 4 5 6))  ==>  3.5
+)
+
+(load-from-library "median.scm")
+(%test
+  (mean '(1 2 3 4 5 6))  ==>  3.5
+)
+
 (load-from-library "memoize.scm")
 (%test
   (letrec
@@ -446,6 +466,11 @@
 (load-from-library "mergesort.scm")
 (%test
   (mergesort <= '(5 3 7 9 1))  ==>  (1 3 5 7 9)
+)
+
+(load-from-library "mode.scm")
+(%test
+  (mode '(1 2 3 3 4 5 5 6))  ==>  (3 5)
 )
 
 (load-from-library "name-to-file-name.scm")
@@ -503,6 +528,11 @@
   (program? '(let ((x 1)) (cons x x)))  ==>  #t
 )
 
+(load-from-library "quartile.scm")
+(%test
+  (quartile '(1 2 3 4 5 6 7 ))  ==>  (2 4 6)
+)
+
 (load-from-library "queue.scm")
 (%test
   (let ((q (make-queue)))
@@ -526,6 +556,11 @@
   (list (random 100)
         (random 100)
         (random 100))  ==>  (5 47 68)
+)
+
+(load-from-library "range.scm")
+(%test
+  (range '(1 2 3 4 5))  ==>  (1 5)
 )
 
 (load-from-library "rb-tree.scm")
@@ -671,6 +706,11 @@
   (split '(1 2 3 4))    ==>  ((1 2) (3 4))
   (split '(1 2 3 4 5))  ==>  ((1 2 3) (4 5))
   (split '())           ==>  (() ())
+)
+
+(load-from-library "stddev.scm")
+(%test
+  (stddev '(1 1 2 1 1))  ==>  0.4
 )
 
 (load-from-library "streams.scm")
@@ -947,6 +987,11 @@
 (load-from-library "url-decode.scm")
 (%test
   (url-decode "%46%4F%4FBAR")  ==>  "FOOBAR"
+)
+
+(load-from-library "variance.scm")
+(%test
+  (variance '(1 1 2 1 1))  ==>  0.16
 )
 
 (load-from-library "vector-map.scm")

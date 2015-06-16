@@ -1,17 +1,19 @@
 /*
  * Scheme 9 from Empty Space, Curses Interface
- * By Nils M Holm, 2010,2014
+ * By Nils M Holm, 2010-2015
  * Placed in the Public Domain
  *
  * A low-level interface to some CURSES(3) routines.
  */
 
-#include "s9.h"
+#define S9FES
+#include "s9core.h"
 
 /*
  * XXX Because of major C "macro" preprocessor brain damage,
- * the following values have to be *copied* from s9.h. *Sigh*
+ * the following values have to be *copied* from s9core.h. *Sigh*
  */
+
 #define S9_TRUE  (-2)
 #define S9_FALSE (-3)
 #define _nl() pr("\n")
@@ -26,19 +28,19 @@ int	Running = 0;
 
 cell pp_curs_addch(cell x) {
 	if (!Running) return UNSPECIFIC;
-	addch(char_value(cadr(x)));
+	addch(char_value(car(x)));
 	return UNSPECIFIC;
 }
 
 cell pp_curs_addstr(cell x) {
 	if (!Running) return UNSPECIFIC;
-	addstr(string(cadr(x)));
+	addstr(string(car(x)));
 	return UNSPECIFIC;
 }
 
 cell pp_curs_attrset(cell x) {
 	if (!Running) return UNSPECIFIC;
-	attrset(integer_value("curs:attrset", cadr(x)));
+	attrset(integer_value("curs:attrset", car(x)));
 	return UNSPECIFIC;
 }
 
@@ -62,7 +64,7 @@ cell pp_curs_clear(cell x) {
 
 cell pp_curs_clearok(cell x) {
 	if (!Running) return UNSPECIFIC;
-	clearok(stdscr, cadr(x) == S9_TRUE? TRUE: FALSE);
+	clearok(stdscr, car(x) == S9_TRUE? TRUE: FALSE);
 	return UNSPECIFIC;
 }
 
@@ -132,7 +134,7 @@ cell pp_curs_flushinp(cell x) {
 }
 
 cell pp_curs_get_magic_value(cell x) {
-	char	*s = string(cadr(x));
+	char	*s = string(car(x));
 
 	if (!strcmp(s, "A_BOLD")) return make_integer(A_BOLD);
 	if (!strcmp(s, "A_NORMAL")) return make_integer(A_NORMAL);
@@ -150,7 +152,7 @@ cell pp_curs_get_magic_value(cell x) {
 	if (!strcmp(s, "KEY_RIGHT")) return make_integer(KEY_RIGHT);
 	if (!strcmp(s, "KEY_UP")) return make_integer(KEY_UP);
 	return error("curs:get-magic-value: requested value not found",
-			cadr(x));
+			car(x));
 }
 
 cell pp_curs_getch(cell x) {
@@ -179,7 +181,7 @@ cell pp_curs_getyx(cell x) {
 
 cell pp_curs_idlok(cell x) {
 	if (!Running) return UNSPECIFIC;
-	idlok(stdscr, cadr(x) == S9_TRUE? TRUE: FALSE);
+	idlok(stdscr, car(x) == S9_TRUE? TRUE: FALSE);
 	return UNSPECIFIC;
 }
 
@@ -190,7 +192,7 @@ cell pp_curs_inch(cell x) {
 
 cell pp_curs_insch(cell x) {
 	if (!Running) return UNSPECIFIC;
-	insch(char_value(cadr(x)));
+	insch(char_value(car(x)));
 	return UNSPECIFIC;
 }
 
@@ -218,8 +220,8 @@ cell pp_curs_color_set(cell x) {
 	int	f, b;
 	char	name[] = "curs:color-set";
 
-	f = integer_value(name, cadr(x));
-	b = integer_value(name, caddr(x));
+	f = integer_value(name, car(x));
+	b = integer_value(name, cadr(x));
 	color_set(b<<3|f, NULL);
 	return UNSPECIFIC;
 }
@@ -250,7 +252,7 @@ cell pp_curs_insertln(cell x) {
 
 cell pp_curs_keypad(cell x) {
 	if (!Running) return UNSPECIFIC;
-	keypad(stdscr, cadr(x) == S9_TRUE? TRUE: FALSE);
+	keypad(stdscr, car(x) == S9_TRUE? TRUE: FALSE);
 	return UNSPECIFIC;
 }
 
@@ -262,8 +264,7 @@ cell pp_curs_move(cell x) {
 	char	name[] = "curs:move";
 
 	if (!Running) return UNSPECIFIC;
-	move(integer_value(name, cadr(x)),
-		integer_value(name, caddr(x)));
+	move(integer_value(name, car(x)), integer_value(name, cadr(x)));
 	return UNSPECIFIC;
 }
 
@@ -271,9 +272,9 @@ cell pp_curs_mvaddch(cell x) {
 	char	name[] = "curs:mvaddch";
 
 	if (!Running) return UNSPECIFIC;
-	mvaddch(integer_value(name, cadr(x)),
-		integer_value(name, caddr(x)),
-		char_value(cadddr(x)));
+	mvaddch(integer_value(name, car(x)),
+		integer_value(name, cadr(x)),
+		char_value(caddr(x)));
 	return UNSPECIFIC;
 }
 
@@ -281,9 +282,9 @@ cell pp_curs_mvaddstr(cell x) {
 	char	name[] = "curs:mvaddstr";
 
 	if (!Running) return UNSPECIFIC;
-	mvaddstr(integer_value(name, cadr(x)),
-		integer_value(name, caddr(x)),
-		string(cadddr(x)));
+	mvaddstr(integer_value(name, car(x)),
+		integer_value(name, cadr(x)),
+		string(caddr(x)));
 	return UNSPECIFIC;
 }
 
@@ -291,13 +292,13 @@ cell pp_curs_mvcur(cell x) {
 	char	name[] = "curs:mvcur";
 
 	if (!Running) return UNSPECIFIC;
-	if (!integer_p(cadddr(cdr(x))))
+	if (!integer_p(cadddr(x)))
 		return error("curs:mvcur: expected integer, got",
-				cadddr(cdr(x)));
-	mvcur(integer_value(name, cadr(x)),
+				caddr(cdr(x)));
+	mvcur(integer_value(name, car(x)),
+		integer_value(name, cadr(x)),
 		integer_value(name, caddr(x)),
-		integer_value(name, cadddr(x)),
-		integer_value(name, cadddr(cdr(x))));
+		integer_value(name, cadddr(x)));
 	return UNSPECIFIC;
 }
 
@@ -305,8 +306,8 @@ cell pp_curs_mvdelch(cell x) {
 	char	name[] = "curs:mvdelch";
 
 	if (!Running) return UNSPECIFIC;
-	mvdelch(integer_value(name, cadr(x)),
-		integer_value(name, caddr(x)));
+	mvdelch(integer_value(name, car(x)),
+		integer_value(name, cadr(x)));
 	return UNSPECIFIC;
 }
 
@@ -315,8 +316,8 @@ cell pp_curs_mvgetch(cell x) {
 	int	c;
 
 	if (!Running) return UNSPECIFIC;
-	c = mvgetch(integer_value(name, cadr(x)),
-			integer_value(name, caddr(x)));
+	c = mvgetch(integer_value(name, car(x)),
+			integer_value(name, cadr(x)));
 	if (c == ERR)
 		return S9_FALSE;
 	return make_integer(c);
@@ -326,17 +327,17 @@ cell pp_curs_mvinch(cell x) {
 	char	name[] = "curs:mvinch";
 
 	if (!Running) return UNSPECIFIC;
-	return make_char((int) mvinch(integer_value(name, cadr(x)),
-			integer_value(name, caddr(x))));
+	return make_char((int) mvinch(integer_value(name, car(x)),
+			integer_value(name, cadr(x))));
 }
 
 cell pp_curs_mvinsch(cell x) {
 	char	name[] = "curs:mvinsch";
 
 	if (!Running) return UNSPECIFIC;
-	mvinsch(integer_value(name, cadr(x)),
-		integer_value(name, caddr(x)),
-		char_value(cadddr(x)));
+	mvinsch(integer_value(name, car(x)),
+		integer_value(name, cadr(x)),
+		char_value(caddr(x)));
 	return UNSPECIFIC;
 }
 
@@ -354,7 +355,7 @@ cell pp_curs_nocbreak(cell x) {
 
 cell pp_curs_nodelay(cell x) {
 	if (!Running) return UNSPECIFIC;
-	nodelay(stdscr, cadr(x) == S9_TRUE? TRUE: FALSE);
+	nodelay(stdscr, car(x) == S9_TRUE? TRUE: FALSE);
 	return UNSPECIFIC;
 }
 
@@ -402,13 +403,13 @@ cell pp_curs_savetty(cell x) {
 
 cell pp_curs_scroll(cell x) {
 	if (!Running) return UNSPECIFIC;
-	scrl(integer_value("curs:scroll", cadr(x)));
+	scrl(integer_value("curs:scroll", car(x)));
 	return UNSPECIFIC;
 }
 
 cell pp_curs_scrollok(cell x) {
 	if (!Running) return UNSPECIFIC;
-	scrollok(stdscr, cadr(x) == S9_TRUE? TRUE: FALSE);
+	scrollok(stdscr, car(x) == S9_TRUE? TRUE: FALSE);
 	return UNSPECIFIC;
 }
 
@@ -416,17 +417,17 @@ cell pp_curs_unctrl(cell x) {
 	char	*s;
 
 	if (!Running) return UNSPECIFIC;
-	s = (char *) unctrl(integer_value("curs:unctrl", cadr(x)));
+	s = (char *) unctrl(integer_value("curs:unctrl", car(x)));
 	return make_string(s, strlen(s));
 }
 
 cell pp_curs_ungetch(cell x) {
 	if (!Running) return UNSPECIFIC;
-	ungetch(integer_value("curs:ungetch", cadr(x)));
+	ungetch(integer_value("curs:ungetch", car(x)));
 	return UNSPECIFIC;
 }
 
-struct Primitive_procedure Curs_primitives[] = {
+PRIM Curs_primitives[] = {
  { "curs:addch",            pp_curs_addch,           1,  1, { CHR,___,___ } },
  { "curs:addstr",           pp_curs_addstr,          1,  1, { STR,___,___ } },
  { "curs:attrset",          pp_curs_attrset,         1,  1, { INT,___,___ } },

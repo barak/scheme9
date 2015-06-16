@@ -2,8 +2,6 @@
 ; Real Number Test Suite
 ; By Nils M Holm, 2008, 2009
 
-(require-extension realnums)
-
 (define testfile "__testfile__")
 
 (if (file-exists? testfile)
@@ -115,24 +113,6 @@
 (test 12345678.901F10 1.2345678901e+17)
 (test 12345678.901L10 1.2345678901e+17)
 (test 12345678.901S10 1.2345678901e+17)
-(test 0# 5.0)
-(test 0##### 55555.0)
-(test 0#####00000 5555500000.0)
-(test 1234#67890 1234567890.0)
-(test .# 0.5)
-(test 1.# 1.5)
-(test 1.##### 1.55555)
-(test 1.1#3#5#7#9 1.153555759)
-(test 1e# 1e5)
-(test 1e### 1e555)
-(test 1e+# 1e5)
-(test 1e-# 1e-5)
-(test +# 5.0)
-(test +#.# 5.5)
-(test +###.### 555.555)
-(test -# -5.0)
-(test -#.# -5.5)
-(test -###.### -555.555)
 
 ; --- type predicates ---
 
