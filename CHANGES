@@ -1,6 +1,62 @@
 
 Change Log
 
+2015-06-15b
+	Extended magic ID length to 16 bytes. (S9core)
+	Included time stamp in magic ID. (s9.c)
+	Fixed (expt 0 r) where r is not integer. (s9.scm)
+2015-06-15
+	General:
+		- Factored out the S9 Core, providing a library for
+		  implementing dynamic languages. Discussed in s9core.pdf.
+		- Real number arithmetics are now a non-optional part of
+		  the interpreter.
+	Policy changes:
+		- Images are preferred over source files on startup, i.e.
+		  first all directories of *library-path* are searched for
+		  images, then all directories are searched for source files.
+		  The old policy was to load the first image /or/ source
+		  from the first directory containing either of those.
+		- Existing output files are silently overwritten by
+		  the OPEN-OUTPUT-FILE, WITH-OUTPUT-TO-FILE, and
+		  WITH-OUTPUT-FILE functions. Previous policy was to signal
+		  an error.
+		- The S9:S9 procedure will be called last when initializing
+		  extensions thereby allowing it to call procedures of
+		  other extensions. (Previously, S9:S9 was called first.)
+	Additions:
+		- The *ARGUMENTS* variable binds to a list of strings
+		  containing the command line arguments passed to the
+		  /program/ (not to the interpreter), i.e. the ARGS in
+		  "-f program args".
+	Command line options:
+		- The -f flag is now optional, i.e. "s9 -f file args" and
+		  "s9 file args" do the same.
+		- The "-m size" flag has been split into "-k size" (vectors)
+		  and "-n size" (nodes).
+		- "-u" is short for "-k 0 -n 0" (unlimited space).
+		- "-n" no longer means "do not load rc file".
+	Removals:
+		- S9 no longer loads an rc file (~/.s9fes/rc) on startup.
+		  Use the image file and the (badly documented) S9:S9
+		  procedure to do things on start-up.
+		- Dropped the "-t count" command line option. The five most
+		  recently called procedures will print in error messages.
+		- Dropped "imprecise" digits ("#") from number format. Use
+		  "5" instead, that's what it did anyway.
+		- Dropped the TRACE command.
+
+-------------------------------------------------------------------------------
+	S9 Core Refactoring
+-------------------------------------------------------------------------------
+
+2015-06-08
+	Fix: (lambda (x) ...) and (define (x) ...) would attempt to
+	macro-expand (x). Thanks, David Person!
+	Note: this still fails in (cond (x)). Rename X as a work-around.
+2015-03-31
+	Added statistics functions: CDF, ERF, MEAN, MEDIAN, MODE, NDF,
+	QUARTILE, RANGE, STDDEV, VARIANCE. (lib/)
 2015-03-13
 	Added constants (S_zero, ...) for frequently used bignum literals,
 	so we don't have to call make_integer() each time. (s9.c, s9-real.c)
@@ -882,7 +938,7 @@ Change Log
 	Also added the APPEND-TO-OUTPUT-FILE procedure. (ext/)
 2010-04-28
 	Added PARSE-OPTIONS! and friends. (ext/parse-options.scm)
-	Installing contribs directly in @LIBDIR@ now.
+	Installing contribs directly in @S9DIR@ now.
 	Made UNIX:READDIR skip the "." and ".." entries.
 	Added UNIX:RENAME procedure.
 2010-04-27
@@ -920,9 +976,9 @@ Change Log
 	Removed Scientific Calculator stuff.
 	Removed statistics package.
 
-------------------------------------------------------------------------
-Forked this version.
-------------------------------------------------------------------------
+-------------------------------------------------------------------------------
+	Forked this version.
+-------------------------------------------------------------------------------
 
 2009-09-06
 	Removed EXPAND-QUASIQUOTE. It is no longer needed, because
@@ -1575,9 +1631,9 @@ Forked this version.
        Removed redundant clauses from FOLD-LEFT and FOLD-RIGHT.
        Fixed a bug in the syntax checker of SYNTAX-RULES.
 
-------------------------------------------------------------------------
-Major change: re-implemented DEFINE-SYNTAX/SYNTAX-RULES
-------------------------------------------------------------------------
+-------------------------------------------------------------------------------
+	Major change: re-implemented DEFINE-SYNTAX/SYNTAX-RULES
+-------------------------------------------------------------------------------
 
 2007-09-23
        Applied some cosmetical changes to DEFINE-SYNTAX.
@@ -1637,9 +1693,9 @@ Major change: re-implemented DEFINE-SYNTAX/SYNTAX-RULES
        macros.
        Rewrote LET, LETREC, LET*, CASE, DELAY using DEFINE-MACRO.
 
-------------------------------------------------------------------------
-Major change: switching from DEFINE-SYNTAX to DEFINE-MACRO
-------------------------------------------------------------------------
+-------------------------------------------------------------------------------
+	Major change: switching from DEFINE-SYNTAX to DEFINE-MACRO
+-------------------------------------------------------------------------------
 
 2007-08-29
        Misc. small, cosmetical changes.

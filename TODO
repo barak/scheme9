@@ -1,4 +1,6 @@
 
+	- c2html: missing </B> at end of file after #endif
+
 	- macro tests
 
 	- EDOC: handle white space in block comments properly

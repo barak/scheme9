@@ -220,6 +220,8 @@ dirlist() {
 			name=$9
 		  else if ($9 == "s9fes-"V".tgz")
 			name=$9
+		  else if ($9 == "s9core.pdf")
+			name=$9
 		  else if ($9 == "MASCOT.png")
 			name=$9
 		  else if ($9 == "freebsd-port")
@@ -240,9 +242,8 @@ dirlist() {
 
 if [ $update_only = no -o $update_only = dir ]; then
 	if [ $update_only = no ]; then
-		# XXX edoc
+		make s9core.pdf && mv -f s9core.pdf /tmp/s9core$$
 		make dist
-		# make HACKING.html
 		s9 -f util/make-cats.scm
 	fi
 
@@ -256,6 +257,7 @@ if [ $update_only = no -o $update_only = dir ]; then
 		mkdir $dumpdir
 		cp s9fes-$V.tgz util/s9.css MASCOT.png $dumpdir
 		cp prog/edoc.css contrib/scheme.css contrib/ccode.css $dumpdir
+		mv -f /tmp/s9core$$ s9core.pdf
 	fi
 
 	dirlist . $dumpdir/index.html "Scheme 9 from Empty Space" "about"
@@ -266,16 +268,16 @@ if [ $update_only = no -o $update_only = dir ]; then
 	dirlist util $dumpdir/util.html "util\/" ""
 
 	if [ $update_only = no ]; then
-		mv CATEGORIES.html $dumpdir
-		# mv HACKING.html $dumpdir/HACKING.html.html
+		mv -f CATEGORIES.html $dumpdir
+		mv -f s9core.pdf $dumpdir
 		make
 	fi
 fi
 
 if [ $update_only = no -o $update_only = txt ]; then
-	format_txt_files -r "" ABOUT
-	format_txt_files "" CHANGES LICENSE Makefile README TODO
-	format_txt_files "" configure _checksums mkfile s9.1.txt
+	format_txt_files "" ABOUT CHANGES LICENSE
+	format_txt_files "" Makefile README TODO README.s9core
+	format_txt_files "" configure _csums mkfile s9.1.txt s9core.tr
 	format_txt_files lib lib/_template
 	format_txt_files prog prog/adventure.adv prog/edoc.css
 	format_txt_files prog prog/advgen.txt
@@ -287,7 +289,7 @@ if [ $update_only = no -o $update_only = txt ]; then
 fi
 
 if [ $update_only = no -o $update_only = cee ]; then
-	format_C_files "" s9.c s9.h s9-real.c
+	format_C_files "" s9.c s9core.c s9core.h
 	format_C_files ext ext/unix.c ext/curses.c
 	format_C_files util util/rpp.c
 fi
@@ -309,7 +311,6 @@ make_edoc() {
 if [ $update_only = no -o $update_only = scm ]; then
 	make_edoc
 	format_scm_files "" s9.scm
-	format_scm_files "" s9-real.scm
 	format_scm_files "" config.scm
 	format_scm_files lib lib/*.scm
 	format_scm_files contrib contrib/*.scm
@@ -325,10 +326,12 @@ if [ $update_only = no -o $update_only = nah ]; then
 	naah contrib file S9Book-bw
 	naah prog file adventure.intro
 	naah util file blurb
+	naah util file book
 	naah util file dirhead
 	naah util file dirtail
 	naah util file libhead
 	naah util file libtail
+	naah util file mktoc.sed
 	naah util file pagehead
 	naah util file pagetail
 	naah util file stress-tests.tgz

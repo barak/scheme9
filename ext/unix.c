@@ -1,12 +1,13 @@
 /*
  * Scheme 9 from Empty Space, Unix Interface
- * By Nils M Holm, 2009-2012
+ * By Nils M Holm, 2009-2015
  * Placed in the Public Domain
  *
  * A low-level interface to some Unix system services.
  */
 
-#include "s9.h"
+#define S9FES
+#include "s9core.h"
 
 #include <stdlib.h>
 #include <stdio.h>
@@ -35,9 +36,9 @@
 #endif /* NETWORK */
 
 /*
- * XXX Ugh. Shouldn't these be defined in <sys/stat.h> and <signal.h>?
- * Probably just another POSIX hickup. Please someone supply a clean
- * solution.
+ * XXX Shouldn't these be defined in <sys/stat.h> and <signal.h>?
+ * Probably just another POSIX hickup. Please someone supply a
+ * clean solution.
  */
 
 #ifndef S_ISVTX
@@ -61,7 +62,7 @@
  *		car(x) = cons(foo, bar);
  */
 static cell		New_node;
-#define assign(n,v)	{ New_node = v; n = New_node; }
+#define assign(n,v)	{ New_node = (v); n = New_node; }
 
 cell	Last_errno = 0;
 cell	Catch_errors = 0;
@@ -94,24 +95,24 @@ cell sys_ok(void) {
 }
 
 cell pp_sys_access(cell x) {
-	return access(string(cadr(x)),
-		integer_value("sys:access", caddr(x))) < 0? FALSE: TRUE;
+	return access(string(car(x)),
+		integer_value("sys:access", cadr(x))) < 0? FALSE: TRUE;
 }
 
 cell pp_sys_catch_errors(cell x) {
-	Catch_errors = cadr(x) == TRUE;
+	Catch_errors = car(x) == TRUE;
 	if (Catch_errors) Last_errno = 0;
 	return UNSPECIFIC;
 }
 
 cell pp_sys_chdir(cell x) {
-	if (chdir(string(cadr(x))) < 0)
+	if (chdir(string(car(x))) < 0)
 		return sys_error("sys:chdir", x);
 	return sys_ok();
 }
 
 cell pp_sys_close(cell x) {
-	if (close(integer_value("sys:close", cadr(x))) < 0)
+	if (close(integer_value("sys:close", car(x))) < 0)
 		return sys_error("sys:close", x);
 	return sys_ok();
 }
@@ -119,7 +120,7 @@ cell pp_sys_close(cell x) {
 cell pp_sys_chmod(cell x) {
 	int	r;
 
-	r = chmod(string(cadr(x)), integer_value("sys:chmod", caddr(x)));
+	r = chmod(string(car(x)), integer_value("sys:chmod", cadr(x)));
 	if (r < 0)
 		return sys_error("sys:chmod", x);
 	return sys_ok();
@@ -128,41 +129,25 @@ cell pp_sys_chmod(cell x) {
 cell pp_sys_chown(cell x) {
 	int	r;
 
-	r = chown(string(cadr(x)),
-		integer_value("sys:chown", caddr(x)),
-		integer_value("sys:chown", cadddr(x)));
+	r = chown(string(car(x)),
+		integer_value("sys:chown", cadr(x)),
+		integer_value("sys:chown", caddr(x)));
 	if (r < 0)
 		return sys_error("sys:chown", x);
 	return sys_ok();
 }
 
 cell pp_sys_command_line(cell x) {
-	cell	n, a;
-	char	**cl;
+	extern cell	Argv;
 
-	if (Command_line == NULL || *Command_line == NULL)
-		return NIL;
-	n = cons(NIL, NIL);
-	a = n;
-	save(n);
-	cl = Command_line;
-	while (*cl != NULL) {
-		assign(car(a), make_string(*cl, strlen(*cl)));
-		cl++;
-		if (*cl != NULL) {
-			assign(cdr(a), cons(NIL, NIL));
-			a = cdr(a);
-		}
-	}
-	unsave(1);
-	return n;
+	return Argv;
 }
 
 cell pp_sys_creat(cell x) {
 	int	fd;
 
-	fd = open(string(cadr(x)), O_CREAT|O_TRUNC|O_WRONLY,
-			integer_value("sys:creat", caddr(x)));
+	fd = open(string(car(x)), O_CREAT|O_TRUNC|O_WRONLY,
+			integer_value("sys:creat", cadr(x)));
 	if (fd < 0)
 		return sys_error("sys:creat", x);
 	return make_integer(fd);
@@ -171,7 +156,7 @@ cell pp_sys_creat(cell x) {
 cell pp_sys_dup(cell x) {
 	int	r;
 
-	r = dup(integer_value("sys:dup", cadr(x)));
+	r = dup(integer_value("sys:dup", car(x)));
 	if (r < 0)
 		return sys_error("sys:dup", x);
 	return make_integer(r);
@@ -181,8 +166,8 @@ cell pp_sys_dup2(cell x) {
 	int	r;
 	char	name[] = "sys:dup2";
 
-	r = dup2(integer_value(name, cadr(x)),
-			integer_value(name, caddr(x)));
+	r = dup2(integer_value(name, car(x)),
+			integer_value(name, cadr(x)));
 	if (r < 0)
 		return sys_error("sys:dup2", x);
 	return make_integer(r);
@@ -200,7 +185,7 @@ cell pp_sys_execv(cell x) {
 	cell	p;
 	int	i;
 
-	for (p = caddr(x); p != NIL; p = cdr(p)) {
+	for (p = cadr(x); p != NIL; p = cdr(p)) {
 		if (!pair_p(p))
 			return error(
 				"sys:execv: improper list, last element is",
@@ -210,15 +195,15 @@ cell pp_sys_execv(cell x) {
 				"sys:execv: expected list of string, got",
 				car(p));
 	}
-	argv = malloc((length(caddr(x)) + 2) * sizeof(char *));
+	argv = malloc((length(cadr(x)) + 2) * sizeof(char *));
 	if (argv == NULL)
 		return sys_error("sys:execv", NOEXPR);
-	argv[0] = string(cadr(x));
+	argv[0] = string(car(x));
 	i = 1;
-	for (p = caddr(x); p != NIL; p = cdr(p))
+	for (p = cadr(x); p != NIL; p = cdr(p))
 		argv[i++] = string(car(p));
 	argv[i] = NULL;
-	execv(string(cadr(x)), argv);
+	execv(string(car(x)), argv);
 	free(argv);
 	return sys_error("sys:execv", NOEXPR);
 }
@@ -226,24 +211,24 @@ cell pp_sys_execv(cell x) {
 cell pp_sys_exit(cell x) {
 	int	r;
 
-	r = integer_value("sys:exit", cadr(x));
+	r = integer_value("sys:exit", car(x));
 	if (r > 255 || r < 0)
-		return error("sys:exit: value out of range", cadr(x));
+		return error("sys:exit: value out of range", car(x));
 	exit(r);
 	fatal("exit() failed");
 	return sys_ok();
 }
 
 cell pp_sys_fileno(cell x) {
-	if (!input_port_p(cadr(x)) && !output_port_p(cadr(x)))
-		return error("sys:fileno: expected port, got", cadr(x));
-	if (Ports[port_no(cadr(x))] == NULL)
+	if (!input_port_p(car(x)) && !output_port_p(car(x)))
+		return error("sys:fileno: expected port, got", car(x));
+	if (Ports[port_no(car(x))] == NULL)
 		return sys_error("sys:fileno", x);
-	return make_integer(fileno(Ports[port_no(cadr(x))]));
+	return make_integer(fileno(Ports[port_no(car(x))]));
 }
 
 cell pp_sys_flush(cell x) {
-	if (fflush(Ports[port_no(cadr(x))]))
+	if (fflush(Ports[port_no(car(x))]))
 		return sys_error("sys:flush", x);
 	return sys_ok();
 }
@@ -270,7 +255,7 @@ cell pp_sys_getcwd(cell x) {
 cell pp_sys_getenv(cell x) {
 	char	*s;
 
-	s = getenv(string(cadr(x)));
+	s = getenv(string(car(x)));
 	if (s == NULL)
 		return FALSE;
 	return make_string(s, strlen(s));
@@ -298,7 +283,7 @@ cell mkgrent(struct group *gr) {
 cell pp_sys_getgrnam(cell x) {
 	struct group	*gr;
 
-	gr = getgrnam(string(cadr(x)));
+	gr = getgrnam(string(car(x)));
 	if (gr == NULL)
 		return FALSE;
 	return mkgrent(gr);
@@ -307,7 +292,7 @@ cell pp_sys_getgrnam(cell x) {
 cell pp_sys_getgrgid(cell x) {
 	struct group	*gr;
 
-	gr = getgrgid(integer_value("sys:getgrgid", cadr(x)));
+	gr = getgrgid(integer_value("sys:getgrgid", car(x)));
 	if (gr == NULL)
 		return FALSE;
 	return mkgrent(gr);
@@ -384,7 +369,7 @@ cell mkpwent(struct passwd *pw) {
 cell pp_sys_getpwnam(cell x) {
 	struct passwd	*pw;
 
-	pw = getpwnam(string(cadr(x)));
+	pw = getpwnam(string(car(x)));
 	if (pw == NULL)
 		return FALSE;
 	return mkpwent(pw);
@@ -393,7 +378,7 @@ cell pp_sys_getpwnam(cell x) {
 cell pp_sys_getpwuid(cell x) {
 	struct passwd	*pw;
 
-	pw = getpwuid(integer_value("sys:getpwuid", cadr(x)));
+	pw = getpwuid(integer_value("sys:getpwuid", car(x)));
 	if (pw == NULL)
 		return FALSE;
 	return mkpwent(pw);
@@ -405,17 +390,17 @@ cell pp_sys_getuid(cell x) {
 
 cell pp_sys_kill(cell x) {
 	char	name[] = "sys:kill";
-	int	sig = integer_value(name, caddr(x));
+	int	sig = integer_value(name, cadr(x));
 	int	r;
 
-	r = kill(integer_value(name, cadr(x)), sig);
+	r = kill(integer_value(name, car(x)), sig);
 	if (r < 0)
 		return sys_error("sys:kill", x);
 	return sys_ok();
 }
 
 cell pp_sys_link(cell x) {
-	if (link(string(cadr(x)), string(caddr(x))) < 0)
+	if (link(string(car(x)), string(cadr(x))) < 0)
 		return sys_error("sys:link", x);
 	return sys_ok();
 }
@@ -423,9 +408,9 @@ cell pp_sys_link(cell x) {
 cell pp_sys_lock(cell x) {
 	char	p[256], *s;
 
-	s = string(cadr(x));
+	s = string(car(x));
 	if (strlen(s) > 248)
-		return error("sys:lock: path too long", cadr(x));
+		return error("sys:lock: path too long", car(x));
 	sprintf(p, "%s.lock", s);
 	return (mkdir(p, 0700) < 0)? FALSE: TRUE;
 }
@@ -434,16 +419,16 @@ cell pp_sys_lseek(cell x) {
 	char	name[] = "sys:lseek";
 	long	r;
 
-	r = lseek(integer_value(name, cadr(x)),
-		integer_value(name, caddr(x)),
-		integer_value(name, cadddr(x)));
+	r = lseek(integer_value(name, car(x)),
+		integer_value(name, cadr(x)),
+		integer_value(name, caddr(x)));
 	if (r < 0L)
 		return sys_error("sys:lseek", x);
 	return make_integer(r);
 }
 
 cell pp_sys_get_magic_value(cell x) {
-	char	*s = string(cadr(x));
+	char	*s = string(car(x));
 
 	if (!strcmp(s, "F_OK")) return make_integer(F_OK);
 	if (!strcmp(s, "X_OK")) return make_integer(X_OK);
@@ -486,7 +471,7 @@ cell pp_sys_get_magic_value(cell x) {
 	if (!strcmp(s, "S_IWOTH")) return make_integer(S_IWOTH);
 	if (!strcmp(s, "S_IXOTH")) return make_integer(S_IXOTH);
 	else return error("sys:get-magic-value: requested value not found",
-			cadr(x));
+			car(x));
 }
 
 cell pp_sys_make_input_port(cell x) {
@@ -494,7 +479,7 @@ cell pp_sys_make_input_port(cell x) {
 
 	if (in < 0)
 		return error("sys:make-input-port: out of ports", NOEXPR);
-	Ports[in] = fdopen(integer_value("sys:make-input-port", cadr(x)),
+	Ports[in] = fdopen(integer_value("sys:make-input-port", car(x)),
 				"r");
 	return make_port(in, T_INPUT_PORT);
 }
@@ -504,13 +489,13 @@ cell pp_sys_make_output_port(cell x) {
 
 	if (out < 0)
 		return error("sys:make-output-port: out of ports", NOEXPR);
-	Ports[out] = fdopen(integer_value("sys:make-output-port", cadr(x)),
+	Ports[out] = fdopen(integer_value("sys:make-output-port", car(x)),
 				"w");
 	return make_port(out, T_OUTPUT_PORT);
 }
 
 cell pp_sys_mkdir(cell x) {
-	if (mkdir(string(cadr(x)), integer_value("sys:mkdir", caddr(x))) < 0)
+	if (mkdir(string(car(x)), integer_value("sys:mkdir", cadr(x))) < 0)
 		return sys_error("sys:mkdir", x);
 	return sys_ok();
 }
@@ -518,7 +503,7 @@ cell pp_sys_mkdir(cell x) {
 cell pp_sys_open(cell x) {
 	int	fd;
 
-	fd = open(string(cadr(x)), integer_value("sys:open", caddr(x)));
+	fd = open(string(car(x)), integer_value("sys:open", cadr(x)));
 	if (fd < 0)
 		return sys_error("sys:open", x);
 	return make_integer(fd);
@@ -542,9 +527,9 @@ cell pp_sys_read(cell x) {
 	int	r, k;
 	char	name[] = "sys:read";
 
-	k = integer_value(name, caddr(x));
+	k = integer_value(name, cadr(x));
 	buf = make_string("", k);
-	r = read(integer_value(name, cadr(x)), string(buf), k);
+	r = read(integer_value(name, car(x)), string(buf), k);
 	if (r < 0)
 		return sys_error("sys:read", x);
 	if (r < k) {
@@ -562,7 +547,7 @@ cell pp_sys_readdir(cell x) {
 	struct dirent	*dp;
 	cell		n, a, pa;
 
-	dir = opendir(string(cadr(x)));
+	dir = opendir(string(car(x)));
 	if (dir == NULL)
 		return sys_error("sys:readdir", x);
 	n = cons(NIL, NIL);
@@ -594,7 +579,7 @@ cell pp_sys_readlink(cell x) {
 	char	buf[MAXPATHLEN+1];
 	int	k;
 
-	k = readlink(string(cadr(x)), buf, MAXPATHLEN);
+	k = readlink(string(car(x)), buf, MAXPATHLEN);
 	if (k < 0)
 		return sys_error("sys:readlink", x);
 	buf[k] = 0;
@@ -604,14 +589,14 @@ cell pp_sys_readlink(cell x) {
 cell pp_sys_rename(cell x) {
 	int	r;
 
-	r = rename(string(cadr(x)), string(caddr(x)));
+	r = rename(string(car(x)), string(cadr(x)));
 	if (r < 0)
 		return sys_error("sys:rename", x);
 	return sys_ok();
 }
 
 cell pp_sys_rmdir(cell x) {
-	if (rmdir(string(cadr(x))) < 0)
+	if (rmdir(string(car(x))) < 0)
 		return sys_error("sys:rmdir", x);
 	return sys_ok();
 }
@@ -624,42 +609,42 @@ cell pp_sys_select(cell x) {
 	int		r, k, nfd;
 	char		msg[] = "sys:select: expected list of integer, got";
 
-	if (	cadr(x) != NIL &&
-		(!integer_p(caadr(x)) ||
-		 cdadr(x) == NIL ||
-		 !integer_p(cadadr(x)) ||
-		 cddadr(x) != NIL)
+	if (	car(x) != NIL &&
+		(!integer_p(caar(x)) ||
+		 cdar(x) == NIL ||
+		 !integer_p(cadar(x)) ||
+		 cddar(x) != NIL)
 	) {
-		return error(msg, cadr(x));
+		return error(msg, car(x));
 	}
 	FD_ZERO(&rset);
 	nfd = 0;
+	for (p = cadr(x); p != NIL; p = cdr(p)) {
+		if (!pair_p(p))
+			return error("sys:select: improper list", cadr(x));
+		if (!integer_p(car(p)))
+			return error(msg, cadr(x));
+		k = integer_value(name, car(p));
+		FD_SET(k, &rset);
+		if (k > nfd) nfd = k;
+	}
+	FD_ZERO(&wset);
 	for (p = caddr(x); p != NIL; p = cdr(p)) {
 		if (!pair_p(p))
 			return error("sys:select: improper list", caddr(x));
 		if (!integer_p(car(p)))
 			return error(msg, caddr(x));
 		k = integer_value(name, car(p));
-		FD_SET(k, &rset);
-		if (k > nfd) nfd = k;
-	}
-	FD_ZERO(&wset);
-	for (p = cadddr(x); p != NIL; p = cdr(p)) {
-		if (!pair_p(p))
-			return error("sys:select: improper list", cadddr(x));
-		if (!integer_p(car(p)))
-			return error(msg, cadddr(x));
-		k = integer_value(name, car(p));
 		FD_SET(k, &wset);
 		if (k > nfd) nfd = k;
 	}
 	nfd++;
-	if (cadr(x) == NIL) {
+	if (car(x) == NIL) {
 		tvp = NULL;
 	}
 	else {
-		tv.tv_sec = integer_value(name, caadr(x));
-		tv.tv_usec = integer_value(name, cadadr(x));
+		tv.tv_sec = integer_value(name, caar(x));
+		tv.tv_usec = integer_value(name, cadar(x));
 		tvp = &tv;
 	}
 	r = select(nfd, &rset, &wset, NULL, tvp);
@@ -669,7 +654,7 @@ cell pp_sys_select(cell x) {
 }
 
 cell pp_sys_setgid(cell x) {
-	if (setgid(integer_value("sys:setgid", cadr(x))) < 0)
+	if (setgid(integer_value("sys:setgid", car(x))) < 0)
 		return sys_error("sys:setgid", x);
 	return sys_ok();
 }
@@ -677,20 +662,20 @@ cell pp_sys_setgid(cell x) {
 cell pp_sys_setpgid(cell x) {
 	int	r;
 
-	r = setpgid(0, integer_value("sys:setpgid", cadr(x)));
+	r = setpgid(0, integer_value("sys:setpgid", car(x)));
 	if (r < 0)
 		return sys_error("sys:setpgid", x);
 	return sys_ok();
 }
 
 cell pp_sys_setuid(cell x) {
-	if (setuid(integer_value("sys:setgid", cadr(x))) < 0)
+	if (setuid(integer_value("sys:setgid", car(x))) < 0)
 		return sys_error("sys:setuid", x);
 	return sys_ok();
 }
 
 cell pp_sys_sleep(cell x) {
-	if (sleep(integer_value("sys:sleep", cadr(x))))
+	if (sleep(integer_value("sys:sleep", car(x))))
 		return sys_error("sys:sleep", x);
 	return sys_ok();
 }
@@ -699,11 +684,11 @@ cell sys_stat(int follow, cell x) {
 	struct stat	sb;
 	cell		n, a;
 
-	if ((follow? stat: lstat)(string(cadr(x)), &sb) < 0)
+	if ((follow? stat: lstat)(string(car(x)), &sb) < 0)
 		return sys_error(NULL, NOEXPR);
 	n = cons(NIL, NIL);
 	save(n);
-	assign(car(n), cons(symbol_ref("name"), cadr(x)));
+	assign(car(n), cons(symbol_ref("name"), car(x)));
 	a = cons(NIL, NIL);
 	cdr(n) = a;
 	assign(car(a), cons(symbol_ref("size"), NIL));
@@ -759,7 +744,7 @@ cell pp_sys_lstat(cell x) {
 int stat_mode(char *who, int follow, cell x) {
 	struct stat	st;
 
-	if ((follow? stat: lstat)(string(cadr(x)), &st) < 0)
+	if ((follow? stat: lstat)(string(car(x)), &st) < 0)
 		return sys_error(who, x);
 	return st.st_mode;
 }
@@ -817,13 +802,13 @@ cell pp_sys_lstat_symlink_p(cell x) {
 }
 
 cell pp_sys_strerror(cell x) {
-	char	*s = strerror(integer_value("sys:strerror", cadr(x)));
+	char	*s = strerror(integer_value("sys:strerror", car(x)));
 
 	return make_string(s, strlen(s));
 }
 
 cell pp_sys_symlink(cell x) {
-	if (symlink(string(cadr(x)), string(caddr(x))) < 0)
+	if (symlink(string(car(x)), string(cadr(x))) < 0)
 		return sys_error("sys:symlink", x);
 	return sys_ok();
 }
@@ -831,7 +816,7 @@ cell pp_sys_symlink(cell x) {
 cell pp_sys_system(cell x) {
 	int	r;
 
-	r = system(string(cadr(x)));
+	r = system(string(car(x)));
 	if (r < 0 || r > 127)
 		return sys_error("sys:system", x);
 	return make_integer(r);
@@ -854,15 +839,15 @@ cell pp_sys_gettimeofday(cell x) {
 cell pp_sys_umask(cell x) {
 	int	r;
 
-	if (cdr(x) == NIL)
+	if (x == NIL)
 		umask(r = umask(0));
 	else
-		r = umask(integer_value("sys:umask", cadr(x)));
+		r = umask(integer_value("sys:umask", car(x)));
 	return make_integer(r);
 }
 
 cell pp_sys_unlink(cell x) {
-	if (unlink(string(cadr(x))) < 0)
+	if (unlink(string(car(x))) < 0)
 		return sys_error("sys:unlink", x);
 	return sys_ok();
 }
@@ -870,9 +855,9 @@ cell pp_sys_unlink(cell x) {
 cell pp_sys_unlock(cell x) {
 	char	p[256], *s;
 
-	s = string(cadr(x));
+	s = string(car(x));
 	if (strlen(s) > 248)
-		return error("sys:unlock: path too long", cadr(x));
+		return error("sys:unlock: path too long", car(x));
 	sprintf(p, "%s.lock", s);
 	rmdir(p);
 	return sys_ok();
@@ -882,13 +867,13 @@ cell pp_sys_usleep(cell x) {
 #if __FreeBSD__ == 7
 	int usleep(useconds_t microseconds);
 #endif
-	if (usleep(integer_value("sys:usleep", cadr(x))))
+	if (usleep(integer_value("sys:usleep", car(x))))
 		return sys_error("sys:usleep", x);
 	return sys_ok();
 }
 
 cell pp_sys_utimes(cell x) {
-	if (utimes(string(cadr(x)), NULL) < 0)
+	if (utimes(string(car(x)), NULL) < 0)
 		return sys_error("sys:utimes", x);
 	return sys_ok();
 }
@@ -911,7 +896,7 @@ cell pp_sys_waitpid(cell x) {
 	int	r, status;
 	char	name[] = "sys:waitpid";
 
-	r = waitpid(integer_value(name, cadr(x)), &status, WNOHANG);
+	r = waitpid(integer_value(name, car(x)), &status, WNOHANG);
 	if (r < 0)
 		return sys_error(name, NOEXPR);
 	return r == 0? FALSE: make_integer(WEXITSTATUS(status));
@@ -920,8 +905,8 @@ cell pp_sys_waitpid(cell x) {
 cell pp_sys_write(cell x) {
 	int	r;
 
-	r = write(integer_value("sys:write", cadr(x)), string(caddr(x)),
-		string_len(caddr(x))-1);
+	r = write(integer_value("sys:write", car(x)), string(cadr(x)),
+		string_len(cadr(x))-1);
 	if (r < 0)
 		return sys_error("sys:write", x);
 	return make_integer(r);
@@ -932,7 +917,7 @@ cell pp_sys_write(cell x) {
 cell pp_sys_inet_accept(cell x) {
 	int	r;
 
-	r = accept(integer_value("sys:inet-accept", cadr(x)), NULL, 0);
+	r = accept(integer_value("sys:inet-accept", car(x)), NULL, 0);
 	if (r < 0)
 		return sys_error("sys:inet-accept", x);
 	return make_integer(r);
@@ -946,7 +931,7 @@ cell pp_sys_inet_connect(cell x) {
 	memset(&hints, 0, sizeof(hints));
 	hints.ai_family = AF_UNSPEC;
 	hints.ai_socktype = SOCK_STREAM;
-	r = getaddrinfo(string(cadr(x)), string(caddr(x)), &hints, &res);
+	r = getaddrinfo(string(car(x)), string(cadr(x)), &hints, &res);
 	if (r != 0)
 		return sys_error("sys:inet-connect/getaddrinfo", x);
 	s = -1;
@@ -973,7 +958,7 @@ cell pp_sys_inet_getpeername(cell x) {
 	int			port, fd;
 	cell			n, m;
 
-	fd = integer_value("sys:inet-getpeername", cadr(x));
+	fd = integer_value("sys:inet-getpeername", car(x));
 	len = sizeof addr;
 	if (getpeername(fd, (struct sockaddr *) &addr, &len) < 0)
 		return sys_error(NULL, NOEXPR);
@@ -1002,11 +987,11 @@ cell pp_sys_inet_listen(cell x) {
 	char		*host;
 	struct utsname	u;
 
-	maxq = integer_value("sys:inet-listen", cadddr(x));
-	if (string_p(cadr(x))) {
-		host = string(cadr(x));
+	maxq = integer_value("sys:inet-listen", caddr(x));
+	if (string_p(car(x))) {
+		host = string(car(x));
 	}
-	else if (cadr(x) == TRUE) {
+	else if (car(x) == TRUE) {
 		r = uname(&u);
 		if (r < 0)
 			return sys_error("sys:inet-listen/uname", x);
@@ -1014,13 +999,13 @@ cell pp_sys_inet_listen(cell x) {
 	}
 	else {
 		return error("sys:inet-listen: expected string or #t, got",
-				cadr(x));
+				car(x));
 	}
 	memset(&hints, 0, sizeof(hints));
 	hints.ai_family = AF_UNSPEC;
 	hints.ai_socktype = SOCK_STREAM;
 	hints.ai_flags = AI_PASSIVE;
-	r = getaddrinfo(host, string(caddr(x)), &hints, &res);
+	r = getaddrinfo(host, string(cadr(x)), &hints, &res);
 	if (r != 0)
 		return sys_error("sys:inet-listen/getaddrinfo", x);
 	s = -1;
@@ -1043,7 +1028,7 @@ cell pp_sys_inet_listen(cell x) {
 
 #endif /* NETWORK */
 
-struct Primitive_procedure Unix_primitives[] = {
+PRIM Unix_primitives[] = {
  { "sys:access",           pp_sys_access,           2,  2, { STR,INT,___ } },
  { "sys:catch-errors",     pp_sys_catch_errors,     1,  1, { BOL,___,___ } },
  { "sys:chdir",            pp_sys_chdir,            1,  1, { STR,___,___ } },

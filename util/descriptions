@@ -3,19 +3,20 @@ advgen.scm|-|Generate HTML text adventures|-
 amb.scm|-|McCarthy's ambivalence operator|-
 amk.scm|-|Another Micro Kanren|Embed logic programming into Scheme
 and-letstar.scm|and-let*|-|Guarded LET*
-appendb.scm|append!|-|Append lists destructively
 append-to-output-file.scm|append-to-output-file|-|Open files for appending
+appendb.scm|append!|-|Append lists destructively
 array.scm|-|Array type and operations|-
-bitops.scm|-|Fast small-magnitude bit operators|-
-char-canvas.scm|-|Character-based canvas|-
-char-plot.scm|-|Character-based graph plotter|-
 assp.scm|assp|-|Find first member of an alist satisfying a predicate
 basename.scm|basename|-|Extract the base name from a path
+bitops.scm|-|Fast small-magnitude bit operators|-
 bitwise-ops.scm|-|Bitwise logic operators|-
 bottles.scm|bottles|-|Generate the 99-bottles lyrics using syntax-rules
 c2html.scm|c2html|-|Render C code in HTML
 c2html1.scm|-|C2HTML command line wrapper|-
 catch.scm|catch / throw|-|Handle exceptions
+cdf.scm|cdf|-|Cumulative Distribution Function
+char-canvas.scm|-|Character-based canvas|-
+char-plot.scm|-|Character-based graph plotter|-
 check-descr.scm|-|Missing description ;-)|-
 choose.scm|choose|-|Compute binomial coefficients
 collect.scm|collect|-|Collect related elements from lists
@@ -35,6 +36,7 @@ dupes.scm|-|Find duplicate file names|-
 duplicates.scm|duplicates|-|Find duplicate members in lists
 edoc.scm.edoc|-|Embedded documentation processor|-
 equal-cip.scm|equal-ci?|-|Compare objects case-insensitively
+erf.scm|erf|-|Gauss error function
 exists.scm|exists|-|Existential quantifier
 explode.scm|explode|-|Explode symbols
 factor.scm|factor|-|Compute prime factors
@@ -57,8 +59,8 @@ group.scm|group|-|Group lists in tuples
 hash-table.scm|-|Hash tables|-
 help.scm|-|Online help system|-
 hof.scm|-|Higher order functions (composition, partial application, etc)|-
-htmlify.scm|-|Convert plain text to HTML|-
 htmlify-char.scm|-|Convert text to HTML|-
+htmlify.scm|-|Convert plain text to HTML|-
 hyper.scm|hyper|-|Hyper operator
 id.scm|-|Identity, truth, and falsity functions|-
 implode.scm|implode|-|Implode lists to symbols
@@ -73,8 +75,8 @@ leap-yearp.scm|leap-year?|-|Check if a year is a leap year
 letcc.scm|let/cc|-|Bind current continuation
 letrecstar.scm|letrec*|-|Sequential LETREC
 libtest.scm|-|S9fES library test suite|-
-list-to-set.scm|list-\&gt;set|-|Convert list to set
 list-copy.scm|list-copy|-|Copy the spine of a list
+list-to-set.scm|list-\&gt;set|-|Convert list to set
 list-tools.scm|-|List tools|-
 listq.scm|listq|-|Create list of quoted objects
 loutify-char.scm|-|Convert text to Lout input|-
@@ -82,12 +84,16 @@ make-cats.scm|-|Create CATEGORIES.html file|-
 make-partitions.scm|make-partitions|-|Compute number-theoretic partitions
 matcher.scm|-|Pattern-based procedure dispatch|-
 math-tools.scm|-|Math tools|-
+mean.scm|mean|-|Arithmetic mean (average)
+median.scm|median|-|Statistical median (middle value)
 memoize.scm|-|Function memoization|-
 memp.scm|memp|-|Find first list member satisfying a predicate
 merge.scm|merge|-|Merge lists
 mergesort.scm|mergesort|-|Sort elements using mergesort
 mode-to-string.scm|mode-\&gt;string|-|Convert Unix file mode to readable string
+mode.scm|mode|-|Statistical mode (most frequent values) of a sample
 name-to-file-name.scm|name-\&gt;file-name|-|Convert names to safe file names
+ndf.scm|ndf|-|Normal Distribution Function (probability density)
 package.scm|-|First-class packages|-
 parse-optionsb.scm|-|Parse command line options|-
 partition.scm|partition|-|Partition lists
@@ -99,11 +105,13 @@ programp.scm|program?|-|Check Scheme program syntax
 prolog-test.scm|-|Tiny PROLOG sample program|-
 prolog.scm|-|Tiny PROLOG interpreter|-
 proper-timep.scm|proper-time?|-|Check whether a time specification is sound
+quartile.scm|quartile|-|Quartiles of a sample
 queens.scm|-|N-Queens puzzle (using AMK)|-
 queue.scm|-|Queue data structure and operations|-
 quicksort.scm|quicksort|-|Sort elements using Quicksort
-random.scm|random|-|Generate pseudo-random numbers
 random-sort.scm|random-sort|-|Generate random permutations
+random.scm|random|-|Generate pseudo-random numbers
+range.scm|range|-|Range of a sample (minimal/maximal value)
 rb-tree.scm|-|Red-Black Trees|-
 read-file.scm|read-file|-|Read all lines of a text file
 read-from-string.scm|read-from-string|-|Read S-expression from string
@@ -114,11 +122,13 @@ regex.scm|-|Regular expression matcher|-
 remove.scm|remove|-|Remove members from lists
 replace.scm|replace|-|Replace members in pairs
 runtime-stats.scm|runtime-stats|-|Gather runtime statistics
-s9.scm|-|S9fES core library|-
 s9-real.scm|-|S9fES core library (real numbers)|-
+s9.scm|-|S9fES core library|-
 s9help.scm|-|Find and display S9fES help pages|-
 s9hts.scm|-|Hypertext server|-
 s9resolve.scm|-|Resolve S9fES library references|-
+s9sos.scm|-|S9fES Simple Object System|-
+s9symbols.scm|-|Extract S9 symbols from help pages|-
 scm2html.scm|-|Render Scheme code in HTML|-
 scm2html1.scm|-|SCM2HTML command line wrapper|-
 scmpp.scm|-|PRETTY-PRINT command line wrapper|-
@@ -130,14 +140,14 @@ sieve.scm|sieve|-|Find prime numbers
 simple-modules.scm|-|Simple module syntax|-
 soccat.scm|-|Connect to remote systems|-
 sort.scm|sort|-|Sort lists
-s9sos.scm|-|S9fES Simple Object System|-
-s9symbols.scm|-|Extract S9 symbols from help pages|-
 spawn-command.scm|spawn-command|-|Spawn a child process
 spawn-shell-command.scm|spawn-shell-command|-|Spawn a shell command
 split-url.scm|split-url|-|Split an URL string into individual parts
 split.scm|split|-|Split a list into two
 srtest.scm|-|S9fES syntax-rules tests|-
 standard-error.scm|-|Write output to stderr descriptor|-
+stat-tools.scm|-|Statistics tools|-
+stddev.scm|stddev|-|Standard deviation
 streams.scm|-|Purely functional lazy streams|-
 string-case.scm|-|Convert strings to upper/lower case|-
 string-digest.scm|string-digest|-|Create digests of strings
@@ -170,9 +180,9 @@ tagbody.scm|tagbody|-|Common Lisp TAGBODY
 take.scm|take|-|Copy leftmost elements of a list
 test.scm|-|S9fES core test suite|-
 threads.scm|-|Cooperative multithreading|-
-time.scm|time|-|Measure execution time
 time-ops.scm|-|Date and time operations|-
 time-to-unix-time.scm|time-\&gt;unix-time|-|Convert Unix time to time spec
+time.scm|time|-|Measure execution time
 transpose.scm|transpose|-|Transpose matrixes
 tree-copy.scm|tree-copy|-|Copy cons structures
 tree-equalp.scm|tree-equal?|-|Compare cons structures
@@ -184,6 +194,7 @@ unix-tools.scm|-|Unix system tools|-
 unix.scm|-|S9fES Unix interface|-
 unsort.scm|unsort|-|Unsort lists
 url-decode.scm|url-decode|-|Decode URL-encoded strings
+variance.scm|variance|-|Variance
 vector-map.scm|-|Map procedures over vectors|-
 vector-tools.scm|-|Vector tools|-
 when.scm|-|Conditional evaluation without alternative|-

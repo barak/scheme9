@@ -13,6 +13,7 @@
 (load-from-library "list-tools.scm")
 (load-from-library "math-tools.scm")
 (load-from-library "set-tools.scm")
+(load-from-library "stat-tools.scm")
 (load-from-library "string-tools.scm")
 (load-from-library "syntax-extensions.scm")
 (load-from-library "vector-tools.scm")

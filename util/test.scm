@@ -2181,7 +2181,7 @@
     (lambda args
       (f (apply g args)))))
 
-(define (sqrt square)
+(define (isqrt square)
   (letrec
     ((sqrt2 (lambda (x last)
        (cond ((= last x)
@@ -2195,7 +2195,7 @@
                       x))))))
     (sqrt2 square 0)))
 
-(test ((compose sqrt *) 12 75) 30)
+(test ((compose isqrt *) 12 75) 30)
 
 (test (map cadr '((a b) (d e) (g h))) '(b e h))
 

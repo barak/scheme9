@@ -40,7 +40,7 @@
 (load-from-library "remove.scm")
 (load-from-library "mergesort.scm")
 
-(define *lines-per-page* 20)
+(define *lines-per-page* 23)
 
 (define help
   (let ((name->file-name name->file-name))
