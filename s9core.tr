@@ -2336,14 +2336,14 @@ It returns the number of characters written. When an I/O error occurs,
 it updates the internal I/O status (see
 .K io_status() ).
 .PQ
-.X print
-.CO "void print(char *s);"
+.X prints
+.CO "void prints(char *s);"
 .sp -0.7
 .PS
 line right 4.5i
 .PE
 .PA
-.K print()
+.K prints()
 writes the C string $s$ to the current output port.
 .PQ
 .X print_bignum
@@ -2399,7 +2399,7 @@ line right 4.5i
 .PA
 .K nl()
 is short for
-.K "print(""\\\\n"");" .
+.K "prints(""\\\\n"");" .
 .PQ
 .X flush
 .CO "void flush(void);"
@@ -2547,7 +2547,7 @@ will become the new ``current input port''.
 .K set_output_port()
 changes the current output port, affecting
 .K blockwrite() ,
-.K print() ,
+.K prints() ,
 etc.
 .PQ
 .PA
@@ -2575,7 +2575,7 @@ When
 .K set_printer_limit()
 is used to specify a non-zero ``printer limit'' $k$, then the output
 functions (like
-.K print() ,
+.K prints() ,
 .K blockwrite() ,
 etc) will write $k$ characters at most and discard any excess output.
 The
@@ -3247,7 +3247,7 @@ would be the proper way.
 \f[CB]prim_info\fP \n[prim_info]                    	\f[CB]real_zero_p\fP \n[real_zero_p]              
 \f[CB]prim_slot\fP \n[prim_slot]                    	\f[CB]reject\fP \n[reject]                        
 \f[CB]printer_limit\fP \n[printer_limit]            	\f[CB]reset_counter\fP \n[reset_counter]          
-\f[CB]print\fP \n[print]                            	\f[CB]reset_std_ports\fP \n[reset_std_ports]      
+\f[CB]prints\fP \n[prints]                           	\f[CB]reset_std_ports\fP \n[reset_std_ports]      
 \f[CB]print_bignum\fP \n[print_bignum]              	\f[CB]run_stats\fP \n[run_stats]                  
 \f[CB]print_expanded_real\fP \n[print_expanded_real]	\f[CB]run_stats\fP \n[run_stats]                  
 \f[CB]print_real\fP \n[print_real]                  	\f[CB]s9fini\fP \n[s9fini]                        

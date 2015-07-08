@@ -1,6 +1,41 @@
 
 Change Log
 
+2015-07-01
+	Changed Plan 9 install procedure to allow for multi-platform
+	installation. (mkfile, util/)
+	Added *HOST-SYSTEM* to help pages. (help/)
+2015-06-30
+	Added install target for Plan 9. (mkfile)
+	Fix: embedded newline in a string literal would not bump the line
+	counter. (s9.c) Thanks, David Person!
+2015-06-29
+	Added *HOST-SYSTEM* variable. (s9.c)
+	Made HELP print without prompting on Plan 9. (contrib/)
+	Added Plan 9 installation procedure.
+2015-06-28
+	Rewrote signal handling to use notify()/noted() on Plan 9. (s9.c)
+
+-------------------------------------------------------------------------------
+	Interface change: S9core PRINT is now called PRINTS; see below.
+-------------------------------------------------------------------------------
+
+2015-06-27
+	Renamed print() function of S9core to prints(). Sorry about the
+	inconvenience; "print" is reserved in the Plan 9 C library.
+	Fixed some Plan 9 issues (signal handlers, function declarations,
+	mkfile). (s9.c, s9core.c)
+	C2HTML: fixed missing </B> after keyword at end of file. (contrib/)
+2015-06-23
+	Removed TRACE help page and entry in *S9FES-PROCEDURES*.
+	Fix: added MACRO-EXPAND and MACRO-EXPAND-1 (had been removed
+	accidentally). (s9.c) Thanks, nullbuilt0! (reddit)
+2015-06-18
+	Fix: (expt 0 r) ==> 0 for r > 0. (s9.scm)
+	Added regression tests. (util/)
+2015-06-17
+	Fix: Added missing POSIX/XOPEN prelude to Unix extension (required
+	on Linux, Cygwin, etc). (ext/)
 2015-06-15b
 	Extended magic ID length to 16 bytes. (S9core)
 	Included time stamp in magic ID. (s9.c)
@@ -13,7 +48,7 @@ Change Log
 		  the interpreter.
 	Policy changes:
 		- Images are preferred over source files on startup, i.e.
-		  first all directories of *library-path* are searched for
+		  first all directories of *LIBRARY-PATH* are searched for
 		  images, then all directories are searched for source files.
 		  The old policy was to load the first image /or/ source
 		  from the first directory containing either of those.

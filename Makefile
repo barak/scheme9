@@ -8,11 +8,10 @@ PREFIX= /u
 
 # Base version and Release
 BASE=		20150612
-RELEASE=	20150615b
+RELEASE=	20150701
 
 # Override default compiler and flags
 # CC=	cc
-CC=gcc
 CFLAGS=	-g -Wall -ansi -pedantic -O2
 
 # Which OS are we using (unix or plan9)?
@@ -32,7 +31,6 @@ EXTRA_LIBS+=	-lncurses
 
 # Options to be added to $(DEFS)
 #	-DBITS_PER_WORD_64	# use 64-bit bignum arithmetics
-#	-DNO_SIGNALS		# disable POSIX signal handlers
 #	-DLIBRARY_PATH="\"dir:...\""
 #				# search path for LOCATE-FILE, etc
 #	-DNETWORK		# include socket code in the Unix extension
@@ -210,11 +208,11 @@ cd:
 clean:
 	rm -f s9 s9.image s9core.a test.image s9.1.gz *.o *.core \
 		CATEGORIES.html HACKING.html core s9fes-$(RELEASE).tgz \
-		s9fes-$(BASE).tgz __testfile__  s9core.ps s9core.pdf \
-		_meta _toc.tr _xref.tr _ndx.tr
+		s9fes-$(BASE).tgz s9core-$(RELEASE).tgz __testfile__ \
+		s9core.ps s9core.pdf _meta _toc.tr _xref.tr _ndx.tr
 
 new-version:
-	vi s9.c CHANGES
+	vi Makefile s9.c CHANGES
 	make s9.c
 
 update-library:
@@ -270,6 +268,12 @@ dist:	clean s9.1.txt
 		mv s9fes-$(RELEASE).tgz s9
 	rm -f s9core.pdf
 	ls -l s9fes-$(RELEASE).tgz | awk '{print int($$5/1024+.5)}'
+
+cdist:
+	make s9core.pdf
+	tar cf - s9core.[ch] s9core.pdf README.s9core \
+		| gzip -9 > s9core-$(RELEASE).tgz 
+	rm -f s9core.pdf
 
 arc:	clean s9.1.txt
 	cd .. && tar cf - s9 | gzip -9 > s9fes-$(BASE).tgz && \

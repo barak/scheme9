@@ -239,7 +239,7 @@ struct Primitive_function {
  * I/O
  */
 
-#define nl()		print("\n")
+#define nl()		prints("\n")
 #define reject(c)	ungetc(c, Ports[Input_port])
 #define readc()		getc(Ports[Input_port])
 
@@ -480,7 +480,7 @@ cell	new_vec(cell type, int size);
 int	open_input_port(char *path);
 int	open_output_port(char *path, int append);
 cell	output_port(void);
-void	print(char *s);
+void	prints(char *s);
 int	printer_limit(void);
 void	print_bignum(cell n);
 void	print_expanded_real(cell n);

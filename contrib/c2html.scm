@@ -1,5 +1,5 @@
 ; Scheme 9 from Empty Space, Function Library
-; By Nils M Holm, 2010,2012
+; By Nils M Holm, 2010-2015
 ; Placed in the Public Domain
 ;
 ; (c2html <option> ...)  ==>  string | unspecific
@@ -96,9 +96,10 @@
           p)))
 
   (define (Epilog)
+    (change-color #f #f #f)
     (let ((p (if lout-mode
-                 '("}}")
-                 '("</SPAN></PRE>"))))
+                 '("}")
+                 '("</PRE>"))))
       (if full-html
           (append p '("</BODY>" "</HTML>"))
           p)))
@@ -161,22 +162,22 @@
           ((and (equal? co Color) (eq? bo Bold)))
           (else
             (if Bold
-                (begin (if lout-mode
-                           (output "}")
-                           (output "</B>"))
-                       (set! Bold #f)))
+                (if lout-mode
+                    (output "}")
+                    (output "</B>")))
             (if Color
                 (if lout-mode
                     (output "}")
                     (output "</SPAN>")))
-            (if lout-mode
-                (begin (output "@C_")
-                       (output co)
-                       (output "{"))
-                (begin (output "<SPAN class=")
-                       (output co)
-                       (output ">")))
-            (if (and bo (not Bold))
+            (if co
+                (if lout-mode
+                    (begin (output "@C_")
+                           (output co)
+                           (output "{"))
+                    (begin (output "<SPAN class=")
+                           (output co)
+                           (output ">"))))
+            (if bo
                 (if lout-mode
                     (output "@B{")
                     (output "<B>")))
@@ -354,10 +355,7 @@
             ((char=? #\/ c)
               (if (not star)
                   (loop (next-char) #f)
-                  (begin (if lout-mode
-                             (output "}")
-                             (output "</SPAN>"))
-                         (set! Color #f))))
+                  (change-color #f #f #f)))
             ((char=? c #\space)
               (loop (skip-spaces #\space)
                     #f))

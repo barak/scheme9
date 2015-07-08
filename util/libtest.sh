@@ -49,7 +49,7 @@ cat >$testfile <<EOT
 EOT
 
 cases="lib/*.scm contrib/*.scm"
-if echo '*extensions*' | ./s9 | grep -q sys-unix; then
+if echo '*extensions*' | ./s9 | grep sys-unix >/dev/null; then
 	cases="$cases ext/*.scm"
 fi
 

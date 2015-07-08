@@ -221,7 +221,7 @@ int blockread(char *s, int k) {
 	return n;
 }
 
-void print(char *s) {
+void prints(char *s) {
 	if (Ports[Output_port] == NULL)
 		fatal("pr: output port is not open");
 	blockwrite(s, strlen(s));
@@ -413,7 +413,7 @@ int gc(void) {
 	}
 	if (Verbose_GC > 1) {
 		sprintf(buf, "GC: %d nodes reclaimed", k);
-		print(buf); nl();
+		prints(buf); nl();
 	}
 	return k;
 }
@@ -459,7 +459,7 @@ cell cons3(cell pcar, cell pcdr, int ptag) {
 						 " next segment = %d",
 						Cons_pool_size,
 						Cons_segment_size);
-					print(buf); nl();
+					prints(buf); nl();
 				}
 				gc();
 			}
@@ -514,7 +514,7 @@ int gcv(void) {
 	k = Free_vecs - to;
 	if (Verbose_GC > 1) {
 		sprintf(buf, "GC: gcv: %d cells reclaimed", k);
-		print(buf); nl();
+		prints(buf); nl();
 	}
 	Free_vecs = to;
 	return k;
@@ -550,7 +550,7 @@ cell new_vec(cell type, int size) {
 						"GC: new_vec: new segment,"
 						 " cells = %d",
 						Vec_pool_size);
-					print(buf); nl();
+					prints(buf); nl();
 				}
 			}
 		}
@@ -1893,7 +1893,7 @@ void print_bignum(cell n) {
 	n = cdr(n);
 	first = 1;
 	while (n != NIL) {
-		print(ntoa(buf, car(n), first? 0: DIGITS_PER_CELL));
+		prints(ntoa(buf, car(n), first? 0: DIGITS_PER_CELL));
 		n = cdr(n);
 		first = 0;
 	}
@@ -1912,13 +1912,13 @@ void print_expanded_real(cell n) {
 	n_digits = count_digits(m);
 	dp_offset = e+n_digits;
 	if (neg)
-		print("-");
+		prints("-");
 	if (dp_offset <= 0)
-		print("0");
+		prints("0");
 	if (dp_offset < 0)
-		print(".");
+		prints(".");
 	while (dp_offset < 0) {
-		print("0");
+		prints("0");
 		dp_offset++;
 	}
 	dp_offset = e+n_digits;
@@ -1933,16 +1933,16 @@ void print_expanded_real(cell n) {
 				-dp_offset+1);
 			buf[k+dp_offset] = '.';
 		}
-		print(buf);
+		prints(buf);
 		m = cdr(m);
 		first = 0;
 	}
 	if (dp_offset >= 0) {
 		while (dp_offset > 0) {
-			print("0");
+			prints("0");
 			dp_offset--;
 		}
-		print(".0");
+		prints(".0");
 	}
 }
 
@@ -1956,22 +1956,22 @@ void print_sci_real(cell n) {
 	e = Real_exponent(n);
 	n_digits = count_digits(m);
 	if (Real_negative_flag(n))
-		print("-");
+		prints("-");
 	ntoa(buf, car(m), 0);
 	blockwrite(buf, 1);
-	print(".");
-	print(buf[1] || cdr(m) != NIL? &buf[1]: "0");
+	prints(".");
+	prints(buf[1] || cdr(m) != NIL? &buf[1]: "0");
 	m = cdr(m);
 	while (m != NIL) {
-		print(ntoa(buf, car(m), DIGITS_PER_CELL));
+		prints(ntoa(buf, car(m), DIGITS_PER_CELL));
 		m = cdr(m);
 	}
 	es[0] = Exponent_chars[0];
 	es[1] = 0;
-	print(es);
+	prints(es);
 	if (e+n_digits-1 >= 0)
-		print("+");
-	print(ntoa(buf, e+n_digits-1, 0));
+		prints("+");
+	prints(ntoa(buf, e+n_digits-1, 0));
 }
 
 void print_real(cell n) {
@@ -2108,6 +2108,9 @@ cell set_output_port(cell port) {
 }
 
 void reset_std_ports(void) {
+	clearerr(stdin);
+	clearerr(stdout);
+	clearerr(stderr);
 	Input_port = 0;
 	Output_port = 1;
 	Error_port = 2;
@@ -2433,7 +2436,7 @@ void image_vars(cell **v) {
 	Image_vars = v;
 }
 
-static void resetpools() {
+static void resetpools(void) {
 	Cons_segment_size = INITIAL_SEGMENT_SIZE;
 	Vec_segment_size = INITIAL_SEGMENT_SIZE;
 	Cons_pool_size = 0,
@@ -2757,7 +2760,7 @@ void test_io(void) {
 	if (output_port() != 1) error("output_port(1)");
 	p = open_output_port(TESTFILE, 0);
 	set_output_port(p);
-	print("0123456789");
+	prints("0123456789");
 	close_port(p);
 	reset_std_ports();
 	p = open_input_port(TESTFILE);
@@ -2775,7 +2778,7 @@ void test_io(void) {
 	reset_std_ports();
 	p = open_output_port(TESTFILE, 1);
 	set_output_port(p);
-	print("0123456789");
+	prints("0123456789");
 	close_port(p);
 	reset_std_ports();
 	p = open_input_port(TESTFILE);

@@ -58,7 +58,7 @@
   '(delete-file error file-exists? fold-left fold-right gensym
     load-from-library locate-file macro-expand macro-expand-1 print
     require-extension reverse! set-input-port! set-output-port! stats
-    symbols trace vector-append vector-copy void ** *extensions*
+    symbols vector-append vector-copy void ** *extensions*
     *library-path* *loading*))
 
 (define (s9fes-extension-procedures)

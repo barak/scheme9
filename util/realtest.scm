@@ -1029,6 +1029,11 @@
 (test (expt -2.0 4) 16.0)
 (test (expt 2.5 5) 97.65625)
 (test (expt -2.5 5) -97.65625)
+(test (expt 0 0) 1)
+(test (expt 0 1) 0)
+(test (expt 0 0.1) 0)
+(test (number? (expt 0 0.0)) #f)
+(test (number? (expt 0 -0.1)) #f)
 
 (test (expt  1 -1) 1.0)
 (test (expt  2 -1) 0.5)
