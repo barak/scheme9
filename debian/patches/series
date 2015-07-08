@@ -1,4 +1,3 @@
-0001-.-configure-is-not-actually-a-configure-script-skip.patch
-0002-tweak-Makefile.patch
-0003-search-path-in-test-script.patch
-0004-source-defines.patch
+0001-tweak-Makefile.patch
+0002-search-path-in-test-script.patch
+0003-source-defines.patch
