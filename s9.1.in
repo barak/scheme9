@@ -88,13 +88,14 @@ they are passed to the
 .IR program ,
 where they can be extracted from the
 .B *arguments*
-variable. This must be the last option. The
-.B \-f
+variable. This option must be the last one. The
+.B -f
 flag is optional.
 .in -4
-.B "\-g
+.B "-g[g]
 .in +4
-Print GC summaries (\fB\-gg\fP = more verbose).
+Print GC summaries. A single `g' will report pool growth, a second
+`g' will also include data about pool usage after each collection.
 .in -4
 .B "\-k N[m]
 .in +4
@@ -132,7 +133,7 @@ Arguments following
 .B \-\-
 are not interpreted by S9fES, but bound to the
 .B *arguments*
-variable instead.
+variable instead. This option must be the last one.
 .in -4
 .SH "ONLINE HELP
 When the interpreter is running and the default heap image is loaded,
@@ -469,7 +470,14 @@ in \fIs9 -f file args\fP.
 Compiled-in extensions.
 .in -4
 .ne 2
-.B "*library\-path* (string)
+.B "*host-system* (symbol)
+.in +4
+The host system running the \fBs9\fP interpreter: \fBunix\fP, \fBplan9\fP, or
+.B "#F
+(unknown).
+.in -4
+.ne 2
+.B "*library-path* (string)
 .in +4
 A verbatim copy of the
 .I S9FES_LIBRARY_PATH
@@ -614,12 +622,13 @@ Interactive mode is only entered, when no
 option was specified.
 .in -4
 .SH "ALLOCATION STRATEGY
-The S9fES memory pool grows exponentially until the memory limit
+The S9fES memory pools grow exponentially until the memory limit
 is reached. When the limit is reached, the current computation
-is aborted. A memory limit can be specified using the
-.B \-m
-command line option. The limit is specified in units of 1024
-nodes (or in units of 1024*1024 nodes by appending an
+is aborted. A memory limit can be specified using the \fB-k\fP,
+\fB-n\fP, and
+.B -u
+command line options. The limit is specified in units of 1024
+nodes/cells (or in units of 1024*1024 nodes/cells by appending an
 .B m
 suffix).
 .sp
@@ -629,7 +638,9 @@ the limit is reached due to the way the pool grows. Use the
 .B \-g
 command line option to experiment with pool sizes.
 .br
-Specifying a limit of zero disables the memory limit completely
+Specifying a limit of zero (or using the
+.B -u
+option) disables the memory limit completely
 and the interpreter will allocate as much memory as it can get.
 This option should be used with care.
 .SH "LIMITATIONS
@@ -646,6 +657,10 @@ Transcripts:
 .BR transcript\-on .
 .br
 Rational and complex numbers and related procedures.
+.br
+The
+.B atan
+procedure does not accept a second argument.
 .SH "BUGS
 You may not quasiquote
 .B quasiquote
@@ -704,8 +719,6 @@ Default:
 .I \&.:~/.s9fes:@S9DIR@
 .in -4
 .SH "SIGNALS
-These work only if POSIX signal handling was enabled at compile time.
-.sp
 .ne 3
 .B "SIGINT
 .in +4
@@ -719,6 +732,14 @@ Terminate the interpreter process (emergency exit).
 .B "SIGTERM
 .in +4
 Silently terminate the interpreter process.
+.in -4
+.B """interrupt"""
+.in +4
+On Plan 9, receiving an
+.I interrupt
+note will abort input or terminate program execution, as
+.I SIGINT
+would on Unix.
 .in -4
 .SH "FOOTNOTES
 .B [1]

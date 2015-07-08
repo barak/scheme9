@@ -15,7 +15,8 @@ pages exist. When an argument is passed to APROPOS, its output
 is limited to topics whose name contains the argument.
 
 The *LINES-PER-PAGE* variable controls the number of lines
-to be printed by HELP before prompting.
+to be printed by HELP before prompting. Set to #F for continuous
+printing.
 
 (help 'symbol?)  ==>  unspecific
 

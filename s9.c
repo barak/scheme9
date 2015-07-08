@@ -4,11 +4,22 @@
  * In the public domain
  */
 
-#define VERSION "2015-06-15b"
+#define VERSION "2015-07-01"
 
 #define S9FES
 #include "s9core.h"
-#include <signal.h>
+
+#ifdef unix
+ #include <signal.h>
+ #define handle_sigquit()	signal(SIGQUIT, keyboard_quit)
+ #define handle_sigterm()	signal(SIGTERM, terminated)
+ #define handle_sigint()	signal(SIGINT, keyboard_interrupt)
+#endif
+#ifdef plan9
+ #define handle_sigquit()
+ #define handle_sigterm()
+ #define handle_sigint()	notify(keyboard_interrupt)
+#endif
 
 #ifndef LIBRARY_PATH
  #define LIBRARY_PATH \
@@ -92,16 +103,16 @@ static int      Quiet_mode;
 static int	Eval_stats;
 static counter	Reductions;
 
-static volatile int     Error_flag;
+static volatile int     Error_flag, Intr_flag;
 
 cell	Argv;
 
 /* Short cuts for accessing predefined symbols */
 static cell	S_and, S_arguments, S_arrow, S_begin, S_cond,
 		S_define, S_define_syntax, S_else, S_extensions,
-		S_if, S_lambda, S_latest, S_library_path, S_loading,
-		S_or, S_quasiquote, S_quote, S_set_b, S_unquote,
-		S_unquote_splicing;
+		S_host_system, S_if, S_lambda, S_latest, S_library_path,
+		S_loading, S_or, S_quasiquote, S_quote, S_set_b,
+		S_unquote, S_unquote_splicing;
 
 /*
  * I/O
@@ -173,13 +184,13 @@ void print_calltrace(void) {
 			break;
 	if (i == MAX_CALL_TRACE)
 		return;
-	print("call trace:");
+	prints("call trace:");
 	i = Proc_ptr;
 	for (j=0; j<MAX_CALL_TRACE; j++) {
 		if (i >= MAX_CALL_TRACE)
 			i = 0;
 		if (Called_procedures[i] != NIL) {
-			print(" ");
+			prints(" ");
 			print_form(Called_procedures[i]);
 		}
 		i++;
@@ -196,18 +207,18 @@ cell error(char *msg, cell expr) {
 	oport = output_port();
 	set_output_port(Quiet_mode? 2: 1);
 	Error_flag = 1;
-	print("error: ");
+	prints("error: ");
 	if (Load_level) {
 		if (File_list != NIL) {
 			print_form(car(File_list));
-			print(": ");
+			prints(": ");
 		}
 		sprintf(buf, "%d: ", Line_no);
-		print(buf);
+		prints(buf);
 	}
-	print(msg);
+	prints(msg);
 	if (expr != NOEXPR) {
-		print(": ");
+		prints(": ");
 		Error_flag = 0;
 		print_error_form(expr);
 		Error_flag = 1;
@@ -371,6 +382,8 @@ cell read_string(void) {
 	c = readc();
 	inv = 0;
 	while (q || c != '"') {
+		if (c == '\n')
+			Line_no++;
 		if (c == EOF)
 			error("missing '\"' in string literal", NOEXPR);
 		if (Error_flag)
@@ -502,10 +515,10 @@ cell meta_command(void) {
 	case 'h':	cmdsym = symbol_ref("help"); break;
 	case 'l':	cmdsym = symbol_ref("load-from-library"); break;
 	case 'q':	cmdsym = symbol_ref("sys:exit"); break;
-	default: 	print(",a = apropos"); nl();
-			print(",h = help"); nl();
-			print(",l = load-from-library"); nl();
-			print(",q = sys:exit"); nl();
+	default: 	prints(",a = apropos"); nl();
+			prints(",h = help"); nl();
+			prints(",l = load-from-library"); nl();
+			prints(",q = sys:exit"); nl();
 			return UNSPECIFIC;
 	}
 	return cons(cmdsym, n);
@@ -849,7 +862,7 @@ int print_quoted(cell n) {
 		cdr(n) != NIL &&
 		cddr(n) == NIL
 	) {
-		print("'");
+		prints("'");
 		print_form(cadr(n));
 		return 1;
 	}
@@ -858,9 +871,9 @@ int print_quoted(cell n) {
 
 int print_procedure(cell n) {
 	if (function_p(n)) {
-		print("#<procedure ");
+		prints("#<procedure ");
 		print_form(cadr(n));
-		print(">");
+		prints(">");
 		return 1;
 	}
 	return 0;
@@ -868,7 +881,7 @@ int print_procedure(cell n) {
 
 int print_continuation(cell n) {
 	if (continuation_p(n)) {
-		print("#<continuation>");
+		prints("#<continuation>");
 		return 1;
 	}
 	return 0;
@@ -881,16 +894,16 @@ int print_char(cell n) {
 	if (!char_p(n))
 		return 0;
 	if (!Displaying)
-		print("#\\");
+		prints("#\\");
 	c = cadr(n);
 	b[1] = 0;
 	if (!Displaying && c == ' ')
-		print("space");
+		prints("space");
 	else if (!Displaying && c == '\n')
-		print("newline");
+		prints("newline");
 	else {
 		b[0] = c;
-		print(b);
+		prints(b);
 	}
 	return 1;
 }
@@ -903,19 +916,19 @@ int print_string(cell n) {
 	if (!string_p(n))
 		return 0;
 	if (!Displaying)
-		print("\"");
+		prints("\"");
 	s = string(n);
 	k = string_len(n)-1;
 	b[1] = 0;
 	while (k) {
 		b[0] = *s++;
 		if (!Displaying && (b[0] == '"' || b[0] == '\\'))
-			print("\\");
-		print(b);
+			prints("\\");
+		prints(b);
 		k--;
 	}
 	if (!Displaying)
-		print("\"");
+		prints("\"");
 	return 1;
 }
 
@@ -925,7 +938,7 @@ int print_symbol(cell n) {
 	if (!symbol_p(n))
 		return 0;
 	s = symbol_name(n);
-	print(s);
+	prints(s);
 	return 1;
 }
 
@@ -934,17 +947,17 @@ int print_primitive(cell n) {
 
 	if (!primitive_p(n))
 		return 0;
-	print("#<primitive ");
+	prints("#<primitive ");
 	p = &Primitives[cadr(n)];
-	print(p->name);
-	print(">");
+	prints(p->name);
+	prints(">");
 	return 1;
 }
 
 int print_syntax(cell n) {
 	if (!syntax_p(n))
 		return 0;
-	print("#<syntax>");
+	prints("#<syntax>");
 	return 1;
 }
 
@@ -954,15 +967,15 @@ int print_vector(cell n) {
 
 	if (!vector_p(n))
 		return 0;
-	print("#(");
+	prints("#(");
 	p = vector(n);
 	k = vector_len(n);
 	while (k--) {
 		print_form(*p++);
 		if (k)
-			print(" ");
+			prints(" ");
 	}
-	print(")");
+	prints(")");
 	return 1;
 }
 
@@ -974,7 +987,7 @@ int print_port(cell n) {
 	sprintf(buf, "#<%s-port %d>",
 		input_port_p(n)? "input": "output",
 		(int) port_no(n));
-	print(buf);
+	prints(buf);
 	return 1;
 }
 
@@ -984,22 +997,22 @@ void x_print_form(cell n, int depth) {
 		return;
 	}
 	if (n == NIL) {
-		print("()");
+		prints("()");
 	}
 	else if (eof_p(n)) {
-		print("#<eof>");
+		prints("#<eof>");
 	}
 	else if (n == FALSE) {
-		print("#f");
+		prints("#f");
 	}
 	else if (n == TRUE) {
-		print("#t");
+		prints("#t");
 	}
 	else if (undefined_p(n)) {
-		print("#<undefined>");
+		prints("#<undefined>");
 	}
 	else if (unspecific_p(n)) {
-		print("#<unspecific>");
+		prints("#<unspecific>");
 	}
 	else {
 		if (print_char(n)) return;
@@ -1014,7 +1027,7 @@ void x_print_form(cell n, int depth) {
 		if (print_syntax(n)) return;
 		if (print_vector(n)) return;
 		if (print_port(n)) return;
-		print("(");
+		prints("(");
 		while (n != NIL) {
 			if (Error_flag) return;
 			if (printer_limit())
@@ -1023,13 +1036,13 @@ void x_print_form(cell n, int depth) {
 			if (Error_flag) return;
 			n = cdr(n);
 			if (n != NIL && atom_p(n)) {
-				print(" . ");
+				prints(" . ");
 				x_print_form(n, depth+1);
 				n = NIL;
 			}
-			if (n != NIL) print(" ");
+			if (n != NIL) prints(" ");
 		}
-		print(")");
+		prints(")");
 	}
 }
 
@@ -2764,7 +2777,7 @@ int load(char *file) {
 		if (n == END_OF_FILE)
 			break;
 		if (!Error_flag)
-			n = eval(n);
+			eval(n);
 	}
 	unlock_port(new_port);
 	close_port(new_port);
@@ -2970,6 +2983,26 @@ cell pp_gensym(cell x) {
 		return error("gensym: prefix too long", car(x));
 	pre[100] = 0;
 	return gensym(pre);
+}
+
+cell expand_syntax(cell x);
+
+cell pp_macro_expand(cell x) {
+	x = car(x);
+	save(x);
+	x = expand_syntax(x);
+	unsave(1);
+	return x;
+}
+
+cell expand_syntax_1(cell x);
+
+cell pp_macro_expand_1(cell x) {
+	x = car(x);
+	save(x);
+	x = expand_syntax_1(x);
+	unsave(1);
+	return x;
 }
 
 cell pp_reverse_b(cell x) {
@@ -3185,6 +3218,8 @@ PRIM Core_primitives[] = {
  { "list->vector",        pp_list_to_vector,      1,  1, { LST,___,___ } },
  { "list-tail",           pp_list_tail,           2,  2, { LST,INT,___ } },
  { "load",                pp_load,                1,  1, { STR,___,___ } },
+ { "macro-expand",        pp_macro_expand,        1,  1, { ___,___,___ } },
+ { "macro-expand-1",      pp_macro_expand_1,      1,  1, { ___,___,___ } },
  { "make-string",         pp_make_string,         1,  2, { INT,CHR,___ } },
  { "make-vector",         pp_make_vector,         1,  2, { INT,___,___ } },
  { "mantissa",            pp_mantissa,            1,  1, { REA,___,___ } },
@@ -3396,7 +3431,7 @@ cell restore_state(void) {
 	return v;
 }
 
-cell bind_arguments(cell n, int tail) {
+cell bind_arguments(cell n) {
 	cell	p, v, a;
 	cell	rib;
 
@@ -3451,7 +3486,7 @@ void trace(cell name, cell expr) {
 	if (	Trace_list == TRUE ||
 		memqv("trace", 0, name, Trace_list) != FALSE
 	) {
-		print("+ ");
+		prints("+ ");
 		print_form(cons(name, cdr(expr)));
 		nl();
 	}
@@ -3565,7 +3600,8 @@ cell xeval(cell x, int cbn) {
 					Proc_ptr++;
 					if (Proc_ptr >= MAX_CALL_TRACE)
 						Proc_ptr = 0;
-					bind_arguments(Acc, tail_call());
+					tail_call();
+					bind_arguments(Acc);
 					x = caddar(Acc);
 					c = 2;
 					s = EV_BETA;
@@ -3753,10 +3789,11 @@ void clear_leftover_envs(void) {
 		Environment = cdr(Environment);
 }
 
-#ifndef NO_SIGNALS
+#ifdef unix
  void keyboard_interrupt(int sig) {
 	reset_std_ports();
 	error("interrupted", NOEXPR);
+	Intr_flag = 1;
 	signal(SIGINT, keyboard_interrupt);
  }
 
@@ -3768,7 +3805,18 @@ void clear_leftover_envs(void) {
  void terminated(int sig) {
 	quit(1);
  }
-#endif
+#endif /* unix */
+
+#ifdef plan9
+ void keyboard_interrupt(void *dummy, char *note) {
+	if (strstr(note, "interrupt") == NULL)
+		noted(NDFLT);
+	reset_std_ports();
+	error("interrupted", NOEXPR);
+	Intr_flag = 1;
+	noted(NCONT);
+ }
+#endif /* plan9 */
 
 void mem_error(int src) {
 	if (src == 1)
@@ -3785,7 +3833,7 @@ void repl(void) {
 	sane_env = cons(NIL, NIL);
 	save(sane_env);
 	if (!Quiet_mode) {
-		signal(SIGINT, keyboard_interrupt);
+		handle_sigint();
 	}
 	while (1) {
 		reset_tty();
@@ -3795,23 +3843,24 @@ void repl(void) {
 		reset_calltrace();
 		car(sane_env) = Environment;
 		if (!Quiet_mode) {
-			print("> "); flush();
+			prints("> "); flush();
 		}
+		Intr_flag = 0;
 		Program = xread();
-		if (Program == END_OF_FILE)
+		if (Program == END_OF_FILE && !Intr_flag)
 			break;
 		if (!Error_flag)
 			n = eval(Program);
 		if (!Error_flag && !unspecific_p(n)) {
 			print_form(n);
-			print("\n");
+			prints("\n");
 			box_value(S_latest) = n;
 		}
 		if (Error_flag)
 			Environment = car(sane_env);
 	}
 	unsave(1);
-	print("\n");
+	prints("\n");
 }
 
 /*
@@ -3960,6 +4009,17 @@ void make_initial_env(void) {
 	Environment = extend(symbol_ref("*epsilon*"), Epsilon, Environment);
         Environment = extend(symbol_ref("*extensions*"), NIL, Environment);
 	S_extensions = cadr(Environment);
+        Environment = extend(symbol_ref("*host-system*"), NIL, Environment);
+	S_host_system = cadr(Environment);
+#ifdef unix
+	box_value(S_host_system) = symbol_ref("unix");
+#else
+ #ifdef plan9
+	box_value(S_host_system) = symbol_ref("plan9");
+ #else
+	box_value(S_host_system) = FALSE;
+ #endif
+#endif
 	Environment = extend(symbol_ref("*library-path*"), NIL, Environment);
 	S_library_path = cadr(Environment);
 	new = get_library_path();
@@ -3984,8 +4044,8 @@ NULL };
 cell *Image_vars[] = {
 	&Environment, &S_and, &S_arguments, &S_arrow, &S_begin,
 	&S_cond, &S_define, &S_define_syntax, &S_else, &S_extensions,
-	&S_if, &S_lambda, &S_latest, &S_library_path, &S_loading,
-	&S_or, &S_quasiquote, &S_quote, &S_quote, &S_set_b,
+	&S_host_system, &S_if, &S_lambda, &S_latest, &S_library_path,
+	&S_loading, &S_or, &S_quasiquote, &S_quote, &S_quote, &S_set_b,
 	&S_unquote, &S_unquote_splicing,
 NULL };
 
@@ -4008,6 +4068,7 @@ void init(void) {
 	Level = 0;
 	Line_no = 1;
 	Error_flag = 0;
+	Intr_flag = 0;
 	Load_level = 0;
 	File_list = NIL;
 	Displaying = 0;
@@ -4061,76 +4122,76 @@ void init_extensions(void) {
 }
 
 void usage(int q) {
-	print("Usage: s9 [-hv?] [-i name|-] [-gqu] [-d image]");
-	print(" [-k size[m]] [-l prog]");
+	prints("Usage: s9 [-hv?] [-i name|-] [-gqu] [-d image]");
+	prints(" [-k size[m]] [-l prog]");
 	nl();
-	print("          [-n size[m]] [[-f] prog [arg ...]]");
-	print(" [-- [arg ...]]");
+	prints("          [-n size[m]] [[-f] prog [arg ...]]");
+	prints(" [-- [arg ...]]");
 	nl();
 	if (q) quit(1);
 }
 
-void long_usage() {
+void long_usage(void) {
 	cell	x;
 
 	nl();
-	print("Scheme 9 from Empty Space by Nils M Holm, ");
-	print(VERSION);
+	prints("Scheme 9 from Empty Space by Nils M Holm, ");
+	prints(VERSION);
 	nl();
-	print("");
-#ifdef BITS_PER_WORD_64
-	print("64-bit ");
-#else
- #ifdef BITS_PER_WORD_32
-	print("32-bit ");
- #endif
-#endif
+	prints("");
 #ifdef unix
-	print("unix");
+	prints("unix");
 #else
  #ifdef plan9
-	print("plan 9");
+	prints("plan 9");
  #else
-	print("unknown platform");
+	prints("unknown platform");
+ #endif
+#endif
+#ifdef BITS_PER_WORD_64
+	prints(", 64 bits");
+#else
+ #ifdef BITS_PER_WORD_32
+	prints(", 32 bits");
  #endif
 #endif
 	x = binding_value(S_extensions);
 	if (x == NIL) {
-		print(", no extensions");
+		prints(", no extensions");
 	}
 	else {
-		print(", extensions: ");
+		prints(", extensions: ");
 		while (x != NIL) {
 			print_form(car(x));
 			x = cdr(x);
 			if (x != NIL)
-				print(", ");
+				prints(", ");
 		}
 	}
 	nl();
-	print("library path: ");
-	print(string(binding_value(S_library_path)));
+	prints("library path: ");
+	prints(string(binding_value(S_library_path)));
 	nl();
-	print("This program is in the public domain");
+	prints("This program is in the public domain");
 	nl();
 	nl();
 	usage(0);
 	nl();
-	print("-h        display this summary (also -v, -?)"); nl();
-	print("-i name   base name of image file (must be first option!)");
+	prints("-h        display this summary (also -v, -?)"); nl();
+	prints("-i name   base name of image file (must be first option!)");
 	nl();
-	print("-i -      ignore image, load s9.scm instead"); nl();
-	print("-d file   dump heap image to file and exit"); nl();
-	print("-g        print GC summaries (-gg = more)"); nl();
-	print("-f file   run program with args, then exit (-f is optional)");
+	prints("-i -      ignore image, load source file instead"); nl();
+	prints("-d file   dump heap image to file and exit"); nl();
+	prints("-g        print GC summaries (-gg = more)"); nl();
+	prints("-f file   run program with args, then exit (-f is optional)");
 	nl();
-	print("-k n[m]   set vector limit to nK (or nM) cells"); nl();
-	print("-l file   load program (may be repeated)"); nl();
-	print("-n n[m]   set node limit to nK (or nM) nodes"); nl();
-	print("-q        be quiet (no banner, no prompt, exit on errors)");
+	prints("-k n[m]   set vector limit to nK (or nM) cells"); nl();
+	prints("-l file   load program (may be repeated)"); nl();
+	prints("-n n[m]   set node limit to nK (or nM) nodes"); nl();
+	prints("-q        be quiet (no banner, no prompt, exit on errors)");
 	nl();
-	print("-u        use unlimited node and vector memory"); nl();
-	print("-- args   bind remaining arguments to *arguments*");
+	prints("-u        use unlimited node and vector memory"); nl();
+	prints("-- args   bind remaining arguments to *arguments*");
 	nl();
 	nl();
 }
@@ -4141,11 +4202,9 @@ long get_size_k(char *s) {
 
 	c = s[strlen(s)-1];
 	n = asctol(s);
-	if (isdigit(c))
-		;
-	else if (c == 'M' || c == 'm')
+	if (c == 'M' || c == 'm')
 		n *= 1024L;
-	else
+	else if (!isdigit(c))
 		usage(1);
 	return n * 1024;
 }
@@ -4157,13 +4216,11 @@ int main(int argc, char **argv) {
 	char	*argv0;
 	char	*s;
 
-	if (argc > 2 && !strcmp(argv[1], "-i")) {
+	if (argc > 2 && !strcmp(argv[1], "-i"))
 		argv += 2;
-		argc -= 2;
-	}
 	init();
-	signal(SIGQUIT, keyboard_quit);
-	signal(SIGTERM, terminated);
+	handle_sigquit();
+	handle_sigterm();
 	argv0 = *argv++;
 	load_library(argv0);
 	init_extensions();
@@ -4253,7 +4310,7 @@ int main(int argc, char **argv) {
 	}
 	box_value(S_arguments) = get_args(argv);
 	if (!Quiet_mode)
-		print("Scheme 9 from Empty Space\n");
+		prints("Scheme 9 from Empty Space\n");
 	repl();
 	return 0;
 }

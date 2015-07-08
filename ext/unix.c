@@ -6,6 +6,25 @@
  * A low-level interface to some Unix system services.
  */
 
+/*
+ * Make Linux happy.
+ */
+
+#ifndef _BSD_SOURCE
+ #define _BSD_SOURCE
+#endif
+#ifndef __FreeBSD__
+ #ifndef __NetBSD__
+  #ifndef _POSIX_SOURCE
+   #define _POSIX_SOURCE
+   #define _POSIX_C_SOURCE 200112L
+  #endif
+  #ifndef _XOPEN_SOURCE
+   #define _XOPEN_SOURCE 500
+  #endif
+ #endif
+#endif
+
 #define S9FES
 #include "s9core.h"
 

@@ -17,7 +17,7 @@
 	It is written in ANSI C (C89) and Scheme and it runs in many
 	popular environments, including *BSD, Linux, Plan 9, and the
 	unmentionable horror (although the Plan 9 and Horror versions
-	probably exclude some of the above goodies).
+	will exclude the Unix, Curses, and Networking extensions).
 
 	The S9fES code strives to be simple and comprehensible. It is
 	particularly interesting to people who want to
@@ -43,7 +43,8 @@
 	QUICK START
 
 	You can run the interpreter in its build directory without
-	installing it. Just type "cc -Dunix -o s9 s9.c" and then "./s9".
+	installing it. Just type "cc -Dunix -o s9 s9.c" (or -Dplan9)
+	and then "./s9".
 
 	The S9 code is only loosely coupled to its Makefile, so in most
 	cases running "cc -Dunix -o s9 s9.c" or "8c -Dplan9 -o s9 s9.c"
@@ -82,9 +83,21 @@
 
 	Plan 9
 
-	To compile S9fES on Plan 9 from Bell Labs, just type "mk", but
-	note that the Plan 9 port is rather experimental at this stage.
-	Above all, there is currently no installation procedure.
+	Before installing, run "rc util/fix-help-files". The help/
+	directory contains symlinks, and the above script replaces
+	them by copies.
+
+	To compile S9fES on Plan 9 from Bell Labs, just type "mk".
+	The "test" and "tests" targets will run tests, just like on
+	Unix.
+
+	To install S9fES, run "mk inst". It will copy the S9fES binary,
+	heap image, function library, and help files to $s9dir (which
+	defaults to /lib/s9fes). Edit mkfile if you prefer a different
+	location.
+
+	The install procedure will also copy the file util/s9.rc to
+	/rc/bin/s9 and adjust the $s9dir variable in that file.
 
 	Manual Installation
 
@@ -154,6 +167,9 @@
 
 	s9 -i - -l config.scm -d s9.image
 
+	(This step is already included in the default Unix Makefile and
+	 Plan 9 mkfile).
+
 
 	GETTING STARTED
 
@@ -186,7 +202,7 @@
 	access to some Unix system calls, some networking procedures,
 	and a Curses interface. To compile these extensions, uncomment
 	the corresponding EXTRA_ lines in the Makefile. (In fact, all
-	extensions are compiled in by default.)
+	extensions are compiled in by default on Unix.)
 
 
 	ACKNOWLEDGEMENTS

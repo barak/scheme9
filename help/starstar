@@ -1,6 +1,7 @@
 S9fES **              ==>  object
       *epsilon*       ==>  real
       *extensions*    ==>  list
+      *host-system*   ==>  symbol
       *library-path*  ==>  string
       *loading*       ==>  boolean
 
@@ -12,6 +13,9 @@ without loss of precision by the given S9 implementation.
 
 *EXTENSIONS* lists the extension procedures provided by the
 extended interpreter (if any).
+
+*HOST-SYSTEM* is the host system on which S9fES is running. It
+is currently either UNIX, PLAN9, or #F (unknown).
 
 *LIBRARY-PATH* is a string containing the value of the
 S9FES_LIBRARY_PATH environment variable as initialized when the
@@ -27,6 +31,8 @@ will lead to undefined behavior of S9fES.
 *epsilon*       ==>  10e-17
 
 *extensions*    ==>  ()
+
+*host-sytstem*  ==>  unix
 
 *library-path*  ==>  ".:~/.s9fes:/u/share/s9fes"
 

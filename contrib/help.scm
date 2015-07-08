@@ -19,7 +19,8 @@
 ; is limited to topics whose name contains the argument.
 ;
 ; The *LINES-PER-PAGE* variable controls the number of lines
-; to be printed by HELP before prompting.
+; to be printed by HELP before prompting. Set to #F for continuous
+; printing.
 ;
 ; (Example): (help 'symbol?)  ==>  unspecific
 ;
@@ -40,7 +41,7 @@
 (load-from-library "remove.scm")
 (load-from-library "mergesort.scm")
 
-(define *lines-per-page* 23)
+(define *lines-per-page* (if (eq? *host-system* 'plan9) #f 23))
 
 (define help
   (let ((name->file-name name->file-name))
@@ -64,7 +65,7 @@
                           (lno  1))
                 (cond ((eof-object? line)
                         (newline))
-                      ((and (not (zero? *lines-per-page*))
+                      ((and *lines-per-page*
                             (= lno *lines-per-page*))
                         (if (more? tty)
                             (print line 0)))

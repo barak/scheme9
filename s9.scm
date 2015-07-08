@@ -536,10 +536,14 @@
                (else      (* x (square (expt2 x (quotient y 2)))))))))
     (cond ((negative? y)
             (/ (expt (exact->inexact x) (- y))))
+          ((zero? x)
+            (if (inexact? y)
+                (if (positive? y)
+                    0
+                    (/ 1 0))
+                (expt2 x y)))
           ((integer? y)
             (expt2 x y))
-          ((zero? x)
-            (/ 1 0))
           (else
             (exp (* y (log x)))))))
 
