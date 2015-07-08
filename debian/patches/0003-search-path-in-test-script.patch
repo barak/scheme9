@@ -10,7 +10,7 @@ Subject: search path in test script
 diff --git a/util/libtest.sh b/util/libtest.sh
 old mode 100644
 new mode 100755
-index 02806bc..dc8287e
+index f71ff5c..b6d3548
 --- a/util/libtest.sh
 +++ b/util/libtest.sh
 @@ -75,4 +75,6 @@ trap '
@@ -19,4 +19,4 @@ index 02806bc..dc8287e
  
 +# Use BUILD_ENV from Makefile here
 +env S9FES_LIBRARY_PATH=.:lib:ext:contrib \
- ./s9 -i test -nf $testfile
+ ./s9 -i test -f $testfile

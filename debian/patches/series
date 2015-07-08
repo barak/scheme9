@@ -1,7 +1,4 @@
-0001-recombobulate-Makefile.patch
-0002-use-CFLAGS.patch
-0003-use-CPPFLAGS.patch
-0004-parallel-install.patch
-0005-maxpathlen-for-hurd.patch
-0006-search-path-in-test-script.patch
-0007-bin-symlink.patch
+0001-.-configure-is-not-actually-a-configure-script-skip.patch
+0002-tweak-Makefile.patch
+0003-search-path-in-test-script.patch
+0004-source-defines.patch

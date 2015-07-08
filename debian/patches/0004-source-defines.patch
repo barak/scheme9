@@ -1,0 +1,37 @@
+From: "Barak A. Pearlmutter" <barak+git@pearlmutter.net>
+Date: Wed, 8 Jul 2015 12:24:12 +0100
+Subject: source defines
+
+define _POSIX_SOURCE for fileno() etc in <stdio.h>.
+define _XOPEN_SOURCE && _XOPEN_SOURCE_EXTENDED for setpwent() etc.
+define _DEFAULT_SOURCE for S_ISSOCK() etc.
+---
+ s9core.h | 15 +++++++++++++++
+ 1 file changed, 15 insertions(+)
+
+diff --git a/s9core.h b/s9core.h
+index cf6ba18..99ac657 100644
+--- a/s9core.h
++++ b/s9core.h
+@@ -4,6 +4,21 @@
+  * In the public domain
+  */
+ 
++#ifndef _POSIX_SOURCE
++#define _POSIX_SOURCE
++#endif
++
++#ifndef _XOPEN_SOURCE
++#define _XOPEN_SOURCE
++#endif
++#ifndef _XOPEN_SOURCE_EXTENDED
++#define _XOPEN_SOURCE_EXTENDED
++#endif
++
++#ifndef _DEFAULT_SOURCE
++#define _DEFAULT_SOURCE
++#endif
++
+ /*
+  * Ugly prelude to figure out if
+  * we are compiling on a Un*x system.
