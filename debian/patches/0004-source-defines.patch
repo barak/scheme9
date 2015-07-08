@@ -10,7 +10,7 @@ define _DEFAULT_SOURCE for S_ISSOCK() etc.
  1 file changed, 15 insertions(+)
 
 diff --git a/s9core.h b/s9core.h
-index cf6ba18..99ac657 100644
+index 2056208..ff32d94 100644
 --- a/s9core.h
 +++ b/s9core.h
 @@ -4,6 +4,21 @@
