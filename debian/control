@@ -3,6 +3,7 @@ Section: lisp
 Priority: extra
 Maintainer: Barak A. Pearlmutter <bap@debian.org>
 Build-Depends: debhelper (>= 9),
+	groff, ghostscript,
 	libncurses5-dev | libncurses-dev | ncurses-dev,
 	libx11-dev
 Standards-Version: 3.9.6
