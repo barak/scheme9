@@ -1,3 +1,4 @@
 0001-tweak-Makefile.patch
 0002-search-path-in-test-script.patch
 0003-source-defines.patch
+0004-MAXPATHLEN.patch
