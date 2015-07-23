@@ -4,7 +4,7 @@
  * In the public domain
  */
 
-#define VERSION "20150615"
+#define VERSION "20150709"
 
 #include "s9core.h"
 
@@ -135,7 +135,7 @@ void count(counter *c) {
 				c->n1m -= 1000;
 				c->n1g++;
 				if (c->n1g >= 1000) {
-					c->n1t -= 1000;
+					c->n1g -= 1000;
 					c->n1t++;
 				}
 			}
@@ -2163,6 +2163,8 @@ char *typecheck(cell f, cell a) {
 	na = p->max_args < 0? p->min_args: p->max_args;
 	if (na > k)
 		na = k;
+	else if (na > 3)
+		na = 3;
 	for (i=1; i<=na; i++) {
 		switch (p->arg_types[i-1]) {
 		case T_ANY:
@@ -2433,6 +2435,29 @@ void exponent_chars(char *s) {
 }
 
 void image_vars(cell **v) {
+	Image_vars = v;
+}
+
+void add_image_vars(cell **v) {
+	int	i, n, m;
+	cell	**nv;
+
+	if (Image_vars != NULL) {
+		for (n=0; Image_vars[n] != NULL; n++)
+			;
+		for (m=0; v[m] != NULL; m++)
+			;
+		nv = malloc((n+m+1) * sizeof(cell *));
+		if (nv == NULL)
+			fatal("add_image_vars(): out of memory");
+		n = 0;
+		for (i = 0; Image_vars[i] != NULL; i++)
+			nv[n++] = Image_vars[i];
+		for (i = 0; v[i] != NULL; i++)
+			nv[n++] = v[i];
+		nv[n] = NULL;
+		v = nv;
+	}
 	Image_vars = v;
 }
 

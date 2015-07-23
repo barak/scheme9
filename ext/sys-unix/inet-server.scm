@@ -39,7 +39,7 @@
 ;
 ;            (inet-server "localhost" "12345" handle-echo-request)
 
-(require-extension sys-unix network)
+(require-extension sys-unix net-unix)
 
 (load-from-library "hash-table.scm")
 (load-from-library "remove.scm")

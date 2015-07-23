@@ -1070,12 +1070,21 @@
                   (error "cannot locate file" file))))))))
 
 (define-syntax (require-extension . x*)
+  (define (isect a b)
+    (cond ((null? a)
+            '())
+          ((memq (car a) b)
+            (cons (car a) (isect (cdr a) b)))
+          (else
+            (isect (cdr a) b))))
   (do ((x* x* (cdr x*))
        (na '()))
       ((null? x*)
         (if (not (null? na))
             (error "extension(s) required, but not compiled-in"
                    (reverse! na))))
-    (if (not (memq (car x*) *extensions*))
-        (set! na (cons (car x*) na)))))
-
+    (cond ((memq (car x*) *extensions*))
+          ((and (pair? (car x*))
+                (eq? 'or (caar x*))
+                (not (null? (isect (cdar x*) *extensions*)))))
+          (else (set! na (cons (car x*) na))))))

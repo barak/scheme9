@@ -88,6 +88,12 @@
   (assp char=? #\b '((#\a . 1) (#\b . 2)))  ==>  (#\b . 2)
 )
 
+(load-from-library "basename.scm")
+(%test
+  (basename "/foo/bar/baz")     ==>  "baz"
+  (basename "/goo/bar.Z" ".Z")  ==>  "bar"
+)
+
 (load-from-library "bitops.scm")
 (%test
   (bit0  123 456)  ==>  0
@@ -194,6 +200,16 @@
   (depth '(a (b (c d (e)))))  ==>  4
 )
 
+(load-from-library "dirname.scm")
+(%test
+  (dirname "/foo/bar/baz")  ==>  "/foo/bar"
+  (dirname "foo/bar")       ==>  "foo"
+  (dirname "foo/bar/")      ==>  "foo"
+  (dirname "/foo")          ==>  "/"
+  (dirname "/")             ==>  "/"
+  (dirname "foo")           ==>  "."
+)
+
 (load-from-library "duplicates.scm")
 (%test
   (dupp = '(1 2 3 1 2))        ==>  (1 2)
@@ -263,6 +279,13 @@
 (%test
   (for-all < '(1 7) '(2 8) '(3 9))  ==>  #t
   ; because (< 1 2 3) and (< 7 8 9)
+)
+
+(load-from-library "format-time.scm")
+(%test
+  (format-time "~w ~4y-~@m-~2d ~2h:~2m:~2s"
+               '(1 2009 3 9 8 53 20))
+      ==> "Tue 2009-Mar-09 08:53:20"
 )
 
 (load-from-library "get-prop.scm")
@@ -361,6 +384,12 @@
   (keyword-value '(foo 1) 'bar 0)      ==>  0
 ;
   (accept-keywords "test" '(foo 1 bar 2) '(foo bar))  ==>  #t
+)
+
+(load-from-library "leap-yearp.scm")
+(%test
+  (leap-year? 2000)  ==>  #t
+  (leap-year? 2003)  ==>  #f
 )
 
 (load-from-library "letcc.scm")
@@ -526,6 +555,11 @@
 (load-from-library "programp.scm")
 (%test
   (program? '(let ((x 1)) (cons x x)))  ==>  #t
+)
+
+(load-from-library "proper-timep.scm")
+(%test
+  (proper-time? '(3 1970 1 1 0 0 0))  ==>  #t
 )
 
 (load-from-library "quartile.scm")
@@ -922,6 +956,23 @@
   (take '(foo bar baz) 3)  ==>  (foo bar baz)
 )
 
+(load-from-library "time-ops.scm")
+(%test
+  (time-add '(0 2010 10 06 12 30 00) '(10 7 30 0))
+    ==>  (5 2010 10 16 20 0 0)
+  (time-difference '(0 2010 10 06 12 30 00)
+                   '(5 2010 10 16 20 00 00))
+    ==>  (10 7 30 0)
+  (time-after? '(5 2010 10 16 20 00 00)
+               '(0 2010 10 06 12 30 00))
+    ==>  #t
+)
+
+(load-from-library "time-to-unix-time.scm")
+(%test
+  (time->unix-time '(6 2010 4 25 7 1 19))  ==>  1272178879
+)
+
 (load-from-library "transpose.scm")
 (%test
   (transpose '((1 2 3) (4 5 6)))  ==>  ((1 4) (2 5) (3 6))
@@ -977,6 +1028,11 @@
 (load-from-library "union.scm")
 (%test
   (union '(v w x) '(w x y) '(x y z))  ==>  (v w x y z)
+)
+
+(load-from-library "unix-time-to-time.scm")
+(%test
+  (unix-time->time 1272178879)  ==>  (6 2010 4 25 7 1 19)
 )
 
 (load-from-library "unsort.scm")
@@ -1115,80 +1171,6 @@
                   (englishman oldgolds milk snails red)
                   (spaniard luckystrikes orangejuice dog ivory)
                   (japanese parliaments coffee zebra green)))
-)
-
-(load-from-library "basename.scm")
-(%test
-  (basename "/foo/bar/baz")     ==>  "baz"
-  (basename "/goo/bar.Z" ".Z")  ==>  "bar"
-)
-
-(load-from-library "dirname.scm")
-(%test
-  (dirname "/foo/bar/baz")  ==>  "/foo/bar"
-  (dirname "foo/bar")       ==>  "foo"
-  (dirname "foo/bar/")      ==>  "foo"
-  (dirname "/foo")          ==>  "/"
-  (dirname "/")             ==>  "/"
-  (dirname "foo")           ==>  "."
-)
-
-(load-from-library "format-time.scm")
-(%test
-  (format-time "~w ~4y-~@m-~2d ~2h:~2m:~2s"
-               '(1 2009 3 9 8 53 20))
-      ==> "Tue 2009-Mar-09 08:53:20"
-)
-
-(load-from-library "leap-yearp.scm")
-(%test
-  (leap-year? 2000)  ==>  #t
-  (leap-year? 2003)  ==>  #f
-)
-
-(load-from-library "mode-to-string.scm")
-(%test
-  (mode->string #o5751)  ==>  "rwsr-x--t"
-)
-
-(load-from-library "parse-optionsb.scm")
-(%test
-  (option #\o 'string)             ==>  (#\o string (#f))
-  (opt-char (option #\o 'string))  ==>  #\o
-  (opt-arg? (option #\o 'string))  ==>  #t
-  (opt-type (option #\o 'string))  ==>  string
-  (opt-val  (option #\o 'string))  ==>  #f
-;
-  (parse-options! '("-o" "file1" "file2")
-                  `(,(option #\o #t))
-                  #f)                   ==>  ("file2")
-)
-
-(load-from-library "proper-timep.scm")
-(%test
-  (proper-time? '(3 1970 1 1 0 0 0))  ==>  #t
-)
-
-(load-from-library "time-ops.scm")
-(%test
-  (time-add '(0 2010 10 06 12 30 00) '(10 7 30 0))
-    ==>  (5 2010 10 16 20 0 0)
-  (time-difference '(0 2010 10 06 12 30 00)
-                   '(5 2010 10 16 20 00 00))
-    ==>  (10 7 30 0)
-  (time-after? '(5 2010 10 16 20 00 00)
-               '(0 2010 10 06 12 30 00))
-    ==>  #t
-)
-
-(load-from-library "time-to-unix-time.scm")
-(%test
-  (time->unix-time '(6 2010 4 25 7 1 19))  ==>  1272178879
-)
-
-(load-from-library "unix-time-to-time.scm")
-(%test
-  (unix-time->time 1272178879)  ==>  (6 2010 4 25 7 1 19)
 )
 
 (if (= 0 Errors)

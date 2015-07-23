@@ -50,7 +50,7 @@ EOT
 
 cases="lib/*.scm contrib/*.scm"
 if echo '*extensions*' | ./s9 | grep sys-unix >/dev/null; then
-	cases="$cases ext/*.scm"
+	cases="$cases ext/unix/*.scm"
 fi
 
 for f in $cases; do

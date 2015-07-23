@@ -4,9 +4,9 @@
 ;
 ; (dirname string)  ==>  string
 ;
-; Return the directory part of the path name in STRING. Note that
-; DIRNAME performs merely a syntaxical operation without any regard
-; to the actual file system structure, i.e.
+; Return the directory part of the Unix path name in STRING. Note
+; that DIRNAME performs merely a syntaxical operation without any
+; regard to the actual file system structure, i.e.
 ;
 ;       (dirname "/foo/bar")  ==>  "/foo"
 ;

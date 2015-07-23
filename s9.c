@@ -4,7 +4,7 @@
  * In the public domain
  */
 
-#define VERSION "2015-07-01"
+#define VERSION "2015-07-14"
 
 #define S9FES
 #include "s9core.h"
@@ -22,13 +22,24 @@
 #endif
 
 #ifndef LIBRARY_PATH
- #define LIBRARY_PATH \
-		"."                             \
-		":lib"                          \
-		":ext"                          \
-		":contrib"                      \
-		":~/.s9fes"                     \
+ #ifdef unix
+  #define LIBRARY_PATH \
+		"."				\
+		":lib"				\
+		":ext/unix"			\
+		":ext/curses"			\
+		":contrib"			\
+		":~/.s9fes"			\
 		":/usr/local/share/s9fes"
+ #endif
+ #ifdef plan9
+  #define LIBRARY_PATH \
+		"."		\
+		":lib"		\
+		":ext/plan9"	\
+		":contrib"	\
+		":~/lib/s9fes"
+ #endif
 #endif
 
 #define TOKEN_LENGTH		1024
@@ -3956,8 +3967,14 @@ void add_primitives(char *name, PRIM *p) {
 
 	if (name) {
 		n = symbol_ref(name);
-		new = cons(n, box_value(S_extensions));
-		box_value(S_extensions) = new;
+		if (box_value(S_extensions) == NIL) {
+			new = cons(n, box_value(S_extensions));
+			box_value(S_extensions) = new;
+		}
+		else {
+			new = cons(n, NIL);
+			append_b(box_value(S_extensions), new);
+		}
 	}
 	for (i=0; p && p[i].name; i++) {
 		v = symbol_ref(p[i].name);

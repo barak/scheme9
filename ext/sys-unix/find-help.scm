@@ -27,13 +27,12 @@
 (require-extension sys-unix)
 
 (load-from-library "find-help-path.scm")
-(load-from-library "basename.scm")
 (load-from-library "read-line.scm")
 (load-from-library "string-find.scm")
 (load-from-library "mergesort.scm")
 (load-from-library "displaystar.scm")
 
-(define (search-help-page page what any long)
+(define (search-help-page page what any long prefixlen)
   (with-input-from-file
     page
     (lambda ()
@@ -43,14 +42,14 @@
                 '())
               (((if any string-ci-find string-ci-find-word) what line)
                 (if long
-                    `(,(list (basename page)
+                    `(,(list (substring page prefixlen (string-length page)))
                              (append prev
                                      (list line)
                                      (let ((next (read-line)))
                                        (if (eof-object? next)
                                            '()
                                            (list next))))))
-                   `(,(basename page))))
+                   `(,(substring page prefixlen (string-length page))))
               (else
                 (loop (read-line) (list line))))))))
 
@@ -67,9 +66,26 @@
                       (display* match #\newline))))
             pages))
 
+(define (scan-help-pages path)
+  (let scan ((pages (sys:readdir path))
+             (exts  (map symbol->string *extensions*)))
+    (if (null? exts)
+        pages
+        (let* ((dir (string-append path "/" (car exts)))
+               (new (if (sys:access dir sys:access-f-ok)
+                        (sys:readdir dir)
+                        '()))
+               (new (map (lambda (x)
+                           (string-append (car exts) "/" x))
+                         new)))
+          (scan (append pages new)
+                (cdr exts))))))
+
 (define find-help
   (let ((find-help-path   find-help-path)
         (search-help-page search-help-page)
+        (print-results    print-results)
+        (scan-help-pages  scan-help-pages)
         (print-results    print-results))
     (lambda (what . opts)
       (let ((help-path (find-help-path))
@@ -78,7 +94,7 @@
                            (string->list (car opts)))))
         (if (not help-path)
             (error "help pages not found in *library-path*"))
-        (let loop ((pages (sys:readdir help-path))
+        (let loop ((pages (scan-help-pages help-path))
                    (found '()))
           (let ((page (if (null? pages)
                           ""
@@ -87,11 +103,13 @@
                     (let ((result (apply
                                     append
                                     (map (lambda (page)
-                                         (search-help-page page
-                                                           what
-                                                           (memv #\a opts)
-                                                           (memv #\l opts)))
-                                  (mergesort string<? found)))))
+                                           (search-help-page
+                                             page
+                                             what
+                                             (memv #\a opts)
+                                             (memv #\l opts)
+                                             (+ 1 (string-length help-path))))
+                                         (mergesort string<? found)))))
                       (if (memv #\p opts)
                           (print-results result)
                           result)))
