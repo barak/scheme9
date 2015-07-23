@@ -95,53 +95,53 @@ cp complement curry
 cp complement curryr
 cp complement fork
 cp current-input-port current-output-port
-cp curs_addch curs_addstr
-cp curs_addch curs_beep
-cp curs_addch curs_flash
-cp curs_addch curs_move
-cp curs_addch curs_mvaddch
-cp curs_addch curs_mvaddstr
-cp curs_addch curs_refresh
-cp curs_addch curs_scroll
-cp curs_attroff curs_attron
-cp curs_attroff curs_attrset
-cp curs_attroff curs_standend
-cp curs_attroff curs_standout
-cp curs_cbreak curs_clearok
-cp curs_cbreak curs_echo
-cp curs_cbreak curs_get-magic-value
-cp curs_cbreak curs_idlok
-cp curs_cbreak curs_keypad
-cp curs_cbreak curs_nl
-cp curs_cbreak curs_nocbreak
-cp curs_cbreak curs_nodelay
-cp curs_cbreak curs_noecho
-cp curs_cbreak curs_nonl
-cp curs_cbreak curs_noraw
-cp curs_cbreak curs_raw
-cp curs_cbreak curs_resetty
-cp curs_cbreak curs_savetty
-cp curs_cbreak curs_scrollok
-cp curs_clear curs_clrtobot
-cp curs_clear curs_clrtoeol
-cp curs_color-set curs_has-colors
-cp curs_cursoff curs_curson
-cp curs_cursoff curs_mvcur
-cp curs_delch curs_deleteln
-cp curs_delch curs_insch
-cp curs_delch curs_insertln
-cp curs_delch curs_mvdelch
-cp curs_delch curs_mvinsch
-cp curs_endwin curs_initscr
-cp curs_flushinp curs_cols
-cp curs_flushinp curs_getch
-cp curs_flushinp curs_getyx
-cp curs_flushinp curs_inch
-cp curs_flushinp curs_lines
-cp curs_flushinp curs_mvgetch
-cp curs_flushinp curs_mvinch
-cp curs_flushinp curs_unctrl
-cp curs_flushinp curs_ungetch
+{cd curses; cp curs_addch curs_addstr; cd ..}
+{cd curses; cp curs_addch curs_beep; cd ..}
+{cd curses; cp curs_addch curs_flash; cd ..}
+{cd curses; cp curs_addch curs_move; cd ..}
+{cd curses; cp curs_addch curs_mvaddch; cd ..}
+{cd curses; cp curs_addch curs_mvaddstr; cd ..}
+{cd curses; cp curs_addch curs_refresh; cd ..}
+{cd curses; cp curs_addch curs_scroll; cd ..}
+{cd curses; cp curs_attroff curs_attron; cd ..}
+{cd curses; cp curs_attroff curs_attrset; cd ..}
+{cd curses; cp curs_attroff curs_standend; cd ..}
+{cd curses; cp curs_attroff curs_standout; cd ..}
+{cd curses; cp curs_cbreak curs_clearok; cd ..}
+{cd curses; cp curs_cbreak curs_echo; cd ..}
+{cd curses; cp curs_cbreak curs_get-magic-value; cd ..}
+{cd curses; cp curs_cbreak curs_idlok; cd ..}
+{cd curses; cp curs_cbreak curs_keypad; cd ..}
+{cd curses; cp curs_cbreak curs_nl; cd ..}
+{cd curses; cp curs_cbreak curs_nocbreak; cd ..}
+{cd curses; cp curs_cbreak curs_nodelay; cd ..}
+{cd curses; cp curs_cbreak curs_noecho; cd ..}
+{cd curses; cp curs_cbreak curs_nonl; cd ..}
+{cd curses; cp curs_cbreak curs_noraw; cd ..}
+{cd curses; cp curs_cbreak curs_raw; cd ..}
+{cd curses; cp curs_cbreak curs_resetty; cd ..}
+{cd curses; cp curs_cbreak curs_savetty; cd ..}
+{cd curses; cp curs_cbreak curs_scrollok; cd ..}
+{cd curses; cp curs_clear curs_clrtobot; cd ..}
+{cd curses; cp curs_clear curs_clrtoeol; cd ..}
+{cd curses; cp curs_color-set curs_has-colors; cd ..}
+{cd curses; cp curs_cursoff curs_curson; cd ..}
+{cd curses; cp curs_cursoff curs_mvcur; cd ..}
+{cd curses; cp curs_delch curs_deleteln; cd ..}
+{cd curses; cp curs_delch curs_insch; cd ..}
+{cd curses; cp curs_delch curs_insertln; cd ..}
+{cd curses; cp curs_delch curs_mvdelch; cd ..}
+{cd curses; cp curs_delch curs_mvinsch; cd ..}
+{cd curses; cp curs_endwin curs_initscr; cd ..}
+{cd curses; cp curs_flushinp curs_cols; cd ..}
+{cd curses; cp curs_flushinp curs_getch; cd ..}
+{cd curses; cp curs_flushinp curs_getyx; cd ..}
+{cd curses; cp curs_flushinp curs_inch; cd ..}
+{cd curses; cp curs_flushinp curs_lines; cd ..}
+{cd curses; cp curs_flushinp curs_mvgetch; cd ..}
+{cd curses; cp curs_flushinp curs_mvinch; cd ..}
+{cd curses; cp curs_flushinp curs_unctrl; cd ..}
+{cd curses; cp curs_flushinp curs_ungetch; cd ..}
 cp define-class call-next-method
 cp define-class class-of
 cp define-class classp
@@ -237,12 +237,12 @@ cp minus slash
 cp module using
 cp numberp integerp
 cp numberp realp
-cp parse-optionsb display-usage
-cp parse-optionsb opt-argp
-cp parse-optionsb opt-char
-cp parse-optionsb opt-type
-cp parse-optionsb opt-val
-cp parse-optionsb option
+{cd sys-unix; cp parse-optionsb display-usage; cd ..}
+{cd sys-unix; cp parse-optionsb opt-argp; cd ..}
+{cd sys-unix; cp parse-optionsb opt-char; cd ..}
+{cd sys-unix; cp parse-optionsb opt-type; cd ..}
+{cd sys-unix; cp parse-optionsb opt-val; cd ..}
+{cd sys-unix; cp parse-optionsb option; cd ..}
 cp permute permutestar
 cp plus star
 cp position posp
@@ -292,16 +292,16 @@ cp remove remp
 cp remove remq
 cp remove remv
 cp set-input-portb set-output-portb
-cp spawn-command spawn-command_fd
-cp spawn-shell-command spawn-shell-command_fd
+{cd sys-unix; cp spawn-command spawn-command_fd; cd ..}
+{cd sys-unix; cp spawn-shell-command spawn-shell-command_fd; cd ..}
 cp split-url url-anchor
 cp split-url url-args
 cp split-url url-host
 cp split-url url-path
 cp split-url url-proto
 cp split-url url-suffix
-cp standard-error-port call-with-stderr
-cp standard-error-port with-output-to-stderr
+{cd sys-unix; cp standard-error-port call-with-stderr; cd ..}
+{cd sys-unix; cp standard-error-port with-output-to-stderr; cd ..}
 cp starstar starepsilonstar
 cp starstar starextensionsstar
 cp starstar starlibrary-pathstar
@@ -333,61 +333,61 @@ cp stringltp string-ciltp
 cp stringltp stringgep
 cp stringltp stringgtp
 cp stringltp stringlep
-cp sys_chmod sys_change_mode
-cp sys_dup sys_dup2
-cp sys_getgrnam sys_getgrgid
-cp sys_getpgid sys_setpgid
-cp sys_getpwnam sys_getpwuid
-cp sys_getuid sys_getgid
-cp sys_group-name sys_group-gid
-cp sys_inet-listen sys_inet-accept
-cp sys_kill sys_notify
-cp sys_make-input-port sys_make-output-port
-cp sys_open sys_close
-cp sys_open sys_creat
-cp sys_read sys_write
-cp sys_setuid sys_setgid
-cp sys_stat sys_lstat
-cp sys_stat-name sys_lstat-atime
-cp sys_stat-name sys_lstat-ctime
-cp sys_stat-name sys_lstat-dev
-cp sys_stat-name sys_lstat-gid
-cp sys_stat-name sys_lstat-ino
-cp sys_stat-name sys_lstat-mode
-cp sys_stat-name sys_lstat-mtime
-cp sys_stat-name sys_lstat-name
-cp sys_stat-name sys_lstat-nlink
-cp sys_stat-name sys_lstat-size
-cp sys_stat-name sys_lstat-uid
-cp sys_stat-name sys_stat-atime
-cp sys_stat-name sys_stat-ctime
-cp sys_stat-name sys_stat-dev
-cp sys_stat-name sys_stat-gid
-cp sys_stat-name sys_stat-ino
-cp sys_stat-name sys_stat-mode
-cp sys_stat-name sys_stat-mtime
-cp sys_stat-name sys_stat-nlink
-cp sys_stat-name sys_stat-size
-cp sys_stat-name sys_stat-uid
-cp sys_stat-regularp sys_lstat-block-devp
-cp sys_stat-regularp sys_lstat-char-devp
-cp sys_stat-regularp sys_lstat-directoryp
-cp sys_stat-regularp sys_lstat-pipep
-cp sys_stat-regularp sys_lstat-regularp
-cp sys_stat-regularp sys_lstat-socketp
-cp sys_stat-regularp sys_lstat-symlinkp
-cp sys_stat-regularp sys_stat-block-devp
-cp sys_stat-regularp sys_stat-char-devp
-cp sys_stat-regularp sys_stat-directoryp
-cp sys_stat-regularp sys_stat-pipep
-cp sys_stat-regularp sys_stat-socketp
-cp sys_user-name sys_user-gecos
-cp sys_user-name sys_user-gid
-cp sys_user-name sys_user-home
-cp sys_user-name sys_user-shell
-cp sys_user-name sys_user-uid
-cp sys_usleep sys_sleep
-cp sys_wait sys_waitpid
+{cd sys-unix; cp sys_chmod sys_change_mode; cd ..}
+{cd sys-unix; cp sys_dup sys_dup2; cd ..}
+{cd sys-unix; cp sys_getgrnam sys_getgrgid; cd ..}
+{cd sys-unix; cp sys_getpgid sys_setpgid; cd ..}
+{cd sys-unix; cp sys_getpwnam sys_getpwuid; cd ..}
+{cd sys-unix; cp sys_getuid sys_getgid; cd ..}
+{cd sys-unix; cp sys_group-name sys_group-gid; cd ..}
+{cd sys-unix; cp sys_inet-listen sys_inet-accept; cd ..}
+{cd sys-unix; cp sys_kill sys_notify; cd ..}
+{cd sys-unix; cp sys_make-input-port sys_make-output-port; cd ..}
+{cd sys-unix; cp sys_open sys_close; cd ..}
+{cd sys-unix; cp sys_open sys_creat; cd ..}
+{cd sys-unix; cp sys_read sys_write; cd ..}
+{cd sys-unix; cp sys_setuid sys_setgid; cd ..}
+{cd sys-unix; cp sys_stat sys_lstat; cd ..}
+{cd sys-unix; cp sys_stat-name sys_lstat-atime; cd ..}
+{cd sys-unix; cp sys_stat-name sys_lstat-ctime; cd ..}
+{cd sys-unix; cp sys_stat-name sys_lstat-dev; cd ..}
+{cd sys-unix; cp sys_stat-name sys_lstat-gid; cd ..}
+{cd sys-unix; cp sys_stat-name sys_lstat-ino; cd ..}
+{cd sys-unix; cp sys_stat-name sys_lstat-mode; cd ..}
+{cd sys-unix; cp sys_stat-name sys_lstat-mtime; cd ..}
+{cd sys-unix; cp sys_stat-name sys_lstat-name; cd ..}
+{cd sys-unix; cp sys_stat-name sys_lstat-nlink; cd ..}
+{cd sys-unix; cp sys_stat-name sys_lstat-size; cd ..}
+{cd sys-unix; cp sys_stat-name sys_lstat-uid; cd ..}
+{cd sys-unix; cp sys_stat-name sys_stat-atime; cd ..}
+{cd sys-unix; cp sys_stat-name sys_stat-ctime; cd ..}
+{cd sys-unix; cp sys_stat-name sys_stat-dev; cd ..}
+{cd sys-unix; cp sys_stat-name sys_stat-gid; cd ..}
+{cd sys-unix; cp sys_stat-name sys_stat-ino; cd ..}
+{cd sys-unix; cp sys_stat-name sys_stat-mode; cd ..}
+{cd sys-unix; cp sys_stat-name sys_stat-mtime; cd ..}
+{cd sys-unix; cp sys_stat-name sys_stat-nlink; cd ..}
+{cd sys-unix; cp sys_stat-name sys_stat-size; cd ..}
+{cd sys-unix; cp sys_stat-name sys_stat-uid; cd ..}
+{cd sys-unix; cp sys_stat-regularp sys_lstat-block-devp; cd ..}
+{cd sys-unix; cp sys_stat-regularp sys_lstat-char-devp; cd ..}
+{cd sys-unix; cp sys_stat-regularp sys_lstat-directoryp; cd ..}
+{cd sys-unix; cp sys_stat-regularp sys_lstat-pipep; cd ..}
+{cd sys-unix; cp sys_stat-regularp sys_lstat-regularp; cd ..}
+{cd sys-unix; cp sys_stat-regularp sys_lstat-socketp; cd ..}
+{cd sys-unix; cp sys_stat-regularp sys_lstat-symlinkp; cd ..}
+{cd sys-unix; cp sys_stat-regularp sys_stat-block-devp; cd ..}
+{cd sys-unix; cp sys_stat-regularp sys_stat-char-devp; cd ..}
+{cd sys-unix; cp sys_stat-regularp sys_stat-directoryp; cd ..}
+{cd sys-unix; cp sys_stat-regularp sys_stat-pipep; cd ..}
+{cd sys-unix; cp sys_stat-regularp sys_stat-socketp; cd ..}
+{cd sys-unix; cp sys_user-name sys_user-gecos; cd ..}
+{cd sys-unix; cp sys_user-name sys_user-gid; cd ..}
+{cd sys-unix; cp sys_user-name sys_user-home; cd ..}
+{cd sys-unix; cp sys_user-name sys_user-shell; cd ..}
+{cd sys-unix; cp sys_user-name sys_user-uid; cd ..}
+{cd sys-unix; cp sys_usleep sys_sleep; cd ..}
+{cd sys-unix; cp sys_wait sys_waitpid; cd ..}
 cp t-sort t-sort-net
 cp tagbody go
 cp thread-create thread-exit
@@ -397,7 +397,7 @@ cp time-add time-subtract
 cp time-add time-difference
 cp time-add time-beforep
 cp time-add time-afterp
-cp time timestar
+{cd sys-unix; cp time timestar; cd ..}
 cp type-case type-of
 cp vector-to-list list-to-vector
 cp vector-map vector-mapb

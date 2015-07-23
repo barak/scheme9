@@ -1,7 +1,7 @@
 #! /usr/local/bin/s9 -f
 
 ; s9help -- find and display S9fES help pages
-; by Nils M Holm, 2010
+; by Nils M Holm, 2010,2015
 ; Placed in the Public Domain
 ;
 ; Usage: s9help [-als] topic ...
@@ -31,22 +31,27 @@
   (newline))
 
 (define (display-help topic)
-  (let ((path (string-append (find-help-path)
-                             "/"
-                             (name->file-name topic))))
-    (if (not (file-exists? path))
+  (let loop ((exts (cons "." (map symbol->string *extensions*))))
+    (if (null? exts)
         (begin (display* "s9: " topic ": help file not found" #\newline)
-               (sys:exit 1)))
-    (with-input-from-file
-      path
-      (lambda ()
-        (newline)
-        (let print ((line (read-line)))
-          (if (eof-object? line)
-              (newline)
-              (begin (display line)
-                     (newline)
-                     (print (read-line)))))))))
+               (sys:exit 1))
+        (let ((path (string-append (find-help-path)
+                                   "/"
+                                   (car exts)
+                                   "/"
+                                   (name->file-name topic))))
+          (if (not (file-exists? path))
+              (loop (cdr exts))
+              (with-input-from-file
+                path
+                (lambda ()
+                  (newline)
+                  (let print ((line (read-line)))
+                    (if (eof-object? line)
+                        (newline)
+                        (begin (display line)
+                               (newline)
+                               (print (read-line))))))))))))
 
 (let ((topic* (parse-options! (sys:command-line) options usage)))
   (if (opt-val show-help)

@@ -2,8 +2,8 @@
 R4RS Scheme. The core interpreter is written in pure ANSI C (C89), so it
 runs on all platforms offering a C compiler. It can even be compiled
 natively on Plan 9. On Unix-based systems (or MinGW), it also offers 
-an interface to common <A href="ext.html">Unix system calls and
-Curses routines</A>.</P>
+an interface to common <A href="sys-unix.html">Unix system calls</A>
+and <A href="curses.html">Curses routines</A>.</P>
 
 <P>The interpreter is built around a toolkit called
 <A href="s9core-$V.tgz">S9core</A> (<A href="s9core.pdf">PDF</A>), which
@@ -16,7 +16,7 @@ included in the S9fES tarball).
 programming tool. The rendered EDOC source code to a previous version is
 available in <A href="../s9book/index.html">print and PDF form</A>. The C
 and Scheme code stripped from the EDOC files is in the <EM>public domain</EM>,
-though, and can be <A href="s9fes-$V.tgz">downloaded</A> here (~580KB).</P>
+though, and can be <A href="s9fes-$V.tgz">downloaded</A> here (~600KB).</P>
 
 <P>The interpreter is explained in detail
 in the <A href="../s9book/index.html">Scheme&nbsp;9 Book</A>!

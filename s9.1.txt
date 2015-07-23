@@ -186,18 +186,19 @@ S9(1)                  Scheme 9 from Empty Space                 S9(1)
           (print object ...)  ==>  unspecific
               Write multiple objects separated by spaces.
 
-          (require-extension name ...)  ==>  unspecific
+          (require-extension ext ...)  ==>  unspecific
               Require the named extensions to be  compiled-in.  Signal
               an  error  if  not  all  of  the required extensions are
-              present.
-
-
+              present.  Ext may be of the form (or ext1 ext2 ...).  In
+              this case, it is sufficient if at least one of the given
+              exts is present.
 
 
 S9 Interpreter                  Page 3                           S9(1)
 
 
 S9(1)                  Scheme 9 from Empty Space                 S9(1)
+
 
 
           (reverse! list)  ==>  list
@@ -256,8 +257,7 @@ SPECIAL VARIABLES
           These variables are  predefined  in  the  dynamic  top-level
           scope of the interpreter.
 
-          ** (form)
-              The   normal   form  of  the  expression  most  recently
+
 
 
 S9 Interpreter                  Page 4                           S9(1)
@@ -266,6 +266,8 @@ S9 Interpreter                  Page 4                           S9(1)
 S9(1)                  Scheme 9 from Empty Space                 S9(1)
 
 
+          ** (form)
+              The   normal   form  of  the  expression  most  recently
               evaluated at the top level.
           *arguments* (list of strings)
               A list of command line arguments passed  to  the  Scheme
@@ -322,8 +324,6 @@ MACROS
 
           The body of define-syntax may be a syntax-rules transformer,
           as described in R4RS, if the syntax-rules extension has been
-
-
 
 
 S9 Interpreter                  Page 5                           S9(1)

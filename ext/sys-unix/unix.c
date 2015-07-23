@@ -80,6 +80,7 @@
  *	order of evaluation messes up
  *		car(x) = cons(foo, bar);
  */
+
 static cell		New_node;
 #define assign(n,v)	{ New_node = (v); n = New_node; }
 
@@ -1135,6 +1136,6 @@ void sys_init(void) {
 	signal(SIGPIPE, SIG_IGN);
 	add_primitives("sys-unix", Unix_primitives);
 #ifdef NETWORK
-	add_primitives("network", NULL);
+	add_primitives("net-unix", NULL);
 #endif /* NETWORK */
 }

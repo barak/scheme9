@@ -2559,6 +2559,7 @@ the current output stream (handle 1) to
 .K stdout ,
 and port handle 2 to
 .K stderr .
+It also clears the error and EOF flags of all standard ports.
 .PQ
 .bp \&XXX
 .X set_printer_limit
@@ -2622,7 +2623,10 @@ will return
 on success or an error message in case of failure.
 .PQ
 .X image_vars
+.X add_image_vars
 .CO "void image_vars(cell **v);"
+.sp -0.5
+.CO "void add_image_vars(cell **v);"
 .sp -0.7
 .PS
 line right 4.5i
@@ -2631,14 +2635,22 @@ line right 4.5i
 The parameter of
 .K image_vars()
 is a list of addresses of cells that need to be saved to a heap image.
-This includes basically all non-local
+This basically includes all non-temporary
 .K cell
 variables that reference the node pool when an image is dumped, for
-example, a symbol table, an interpreter stack, etc.
+example: a symbol table, an interpreter stack, etc.
 .PQ
 .PA
-All variables that are GC roots [pg \n[s9init]], should also be included in
-the image.
+.K add_image_vars()
+is similar to
+.K image_vars() ,
+but adds image variables to an existing list. Calling
+.K image_vars()
+will clear any previously existing list.
+.PQ
+.PA
+All variables that are GC roots [pg \n[s9init]] and all global symbols
+[pg \n[symbol_ref]] also have to be included in the image.
 .PQ
 .PA
 Internal S9core variables are included automatically and do not have
@@ -2714,8 +2726,6 @@ is set to $1$, S9core will print information about pool growth to
 When $n=2$, it will also print the number of nodes/cells reclaimed in
 each GC. $n=0$ disables informative messages.
 .PQ
-.TL "" \&XXX
-.bp \&XXX
 .sp -1
 .SH "String/Number Conversion"
 .X exponent_chars
@@ -3184,6 +3194,7 @@ would be the proper way.
 .HD "Index"
 .S
 .nf
+\f[CB]add_image_vars\fP \n[add_image_vars]        	\f[CB]count\fP \n[count]                      
 \f[CB]apply_prim\fP \n[apply_prim]                	\f[CB]DIGITS_PER_WORD\fP \n[DIGITS_PER_WORD]  
 \f[CB]asctol\fP \n[asctol]                        	\f[CB]dump_image\fP \n[dump_image]            
 \f[CB]atom_p\fP \n[atom_p]                        	\f[CB]END_OF_FILE\fP \n[END_OF_FILE]          
@@ -3217,8 +3228,8 @@ would be the proper way.
 \f[CB]continuation_p\fP \n[continuation_p]        	\f[CB]make_char\fP \n[make_char]              
 \f[CB]copy_string\fP \n[copy_string]              	\f[CB]make_integer\fP \n[make_integer]        
 \f[CB]counter\fP \n[counter]                      	\f[CB]make_port\fP \n[make_port]              
-\f[CB]count\fP \n[count]                          	\f[CB]make_port\fP \n[make_port]              
 .bp
+\f[CB]make_port\fP \n[make_port]                    	\f[CB]real_add\fP \n[real_add]                    
 \f[CB]make_primitive\fP \n[make_primitive]          	\f[CB]real_ceil\fP \n[real_ceil]                  
 \f[CB]Make_real\fP \n[Make_real]                    	\f[CB]real_divide\fP \n[real_divide]              
 \f[CB]make_real\fP \n[make_real]                    	\f[CB]real_equal_p\fP \n[real_equal_p]            
@@ -3246,8 +3257,8 @@ would be the proper way.
 \f[CB]PRIM\fP \n[PRIM]                              	\f[CB]Real_zero\fP \n[Real_zero]                  
 \f[CB]prim_info\fP \n[prim_info]                    	\f[CB]real_zero_p\fP \n[real_zero_p]              
 \f[CB]prim_slot\fP \n[prim_slot]                    	\f[CB]reject\fP \n[reject]                        
-\f[CB]printer_limit\fP \n[printer_limit]            	\f[CB]reset_counter\fP \n[reset_counter]          
-\f[CB]prints\fP \n[prints]                           	\f[CB]reset_std_ports\fP \n[reset_std_ports]      
+\f[CB]printer_limit\fP \n[printer_limit]            	\f[CB]reset_counter()\fP \n[reset_counter()]      
+\f[CB]prints\fP \n[prints]                          	\f[CB]reset_std_ports\fP \n[reset_std_ports]      
 \f[CB]print_bignum\fP \n[print_bignum]              	\f[CB]run_stats\fP \n[run_stats]                  
 \f[CB]print_expanded_real\fP \n[print_expanded_real]	\f[CB]run_stats\fP \n[run_stats]                  
 \f[CB]print_real\fP \n[print_real]                  	\f[CB]s9fini\fP \n[s9fini]                        
@@ -3255,30 +3266,30 @@ would be the proper way.
 \f[CB]readc\fP \n[readc]                            	\f[CB]save\fP \n[save]                            
 \f[CB]read_counter\fP \n[read_counter]              	\f[CB]set_input_port\fP \n[set_input_port]        
 \f[CB]real_abs\fP \n[real_abs]                      	\f[CB]set_node_limit\fP \n[set_node_limit]        
-\f[CB]real_add\fP \n[real_add]                      	\f[CB]set_output_port\fP \n[set_output_port]      
 .bp
-\f[CB]set_printer_limit\fP \n[set_printer_limit]	\f[CB]T_FUNCTION\fP \n[T_FUNCTION]      
-\f[CB]set_vector_limit\fP \n[set_vector_limit]  	\f[CB]T_INPUT_PORT\fP \n[T_INPUT_PORT]  
-\f[CB]special_value_p\fP \n[special_value_p]    	\f[CB]T_INTEGER\fP \n[T_INTEGER]        
-\f[CB]string\fP \n[string]                      	\f[CB]T_LIST\fP \n[T_LIST]              
-\f[CB]string_len\fP \n[string_len]              	\f[CB]T_OUTPUT_PORT\fP \n[T_OUTPUT_PORT]
-\f[CB]string_numeric_p\fP \n[string_numeric_p]  	\f[CB]T_PAIR\fP \n[T_PAIR]              
-\f[CB]string_p\fP \n[string_p]                  	\f[CB]T_PRIMITIVE\fP \n[T_PRIMITIVE]    
-\f[CB]string_to_bignum\fP \n[string_to_bignum]  	\f[CB]T_REAL\fP \n[T_REAL]              
-\f[CB]string_to_number\fP \n[string_to_number]  	\f[CB]T_STRING\fP \n[T_STRING]          
-\f[CB]string_to_real\fP \n[string_to_real]      	\f[CB]T_SYMBOL\fP \n[T_SYMBOL]          
-\f[CB]string_to_symbol\fP \n[string_to_symbol]  	\f[CB]T_SYNTAX\fP \n[T_SYNTAX]          
-\f[CB]symbol_len\fP \n[symbol_len]              	\f[CB]T_VECTOR\fP \n[T_VECTOR]          
-\f[CB]symbol_name\fP \n[symbol_name]            	\f[CB]UNDEFINED\fP \n[UNDEFINED]        
-\f[CB]symbol_p\fP \n[symbol_p]                  	\f[CB]undefined_p\fP \n[undefined_p]    
-\f[CB]symbol_ref\fP \n[symbol_ref]              	\f[CB]unlock_port\fP \n[unlock_port]    
-\f[CB]symbol_to_string\fP \n[symbol_to_string]  	\f[CB]unsave\fP \n[unsave]              
-\f[CB]syntax_p\fP \n[syntax_p]                  	\f[CB]UNSPECIFIC\fP \n[UNSPECIFIC]      
-\f[CB]TRUE\fP \n[TRUE]                          	\f[CB]unspecific_p\fP \n[unspecific_p]  
-\f[CB]Two\fP \n[Two]                            	\f[CB]USER_SPECIALS\fP \n[USER_SPECIALS]
-\f[CB]typecheck\fP \n[typecheck]                	\f[CB]vector\fP \n[vector]              
-\f[CB]T_ANY\fP \n[T_ANY]                        	\f[CB]vector_len\fP \n[vector_len]      
-\f[CB]T_BOOLEAN\fP \n[T_BOOLEAN]                	\f[CB]VECTOR_LIMIT\fP \n[VECTOR_LIMIT]  
-\f[CB]T_CHAR\fP \n[T_CHAR]                      	\f[CB]vector_p\fP \n[vector_p]          
-\f[CB]T_CONTINUATION\fP \n[T_CONTINUATION]      	\f[CB]Zero\fP \n[Zero]                  
+\f[CB]set_output_port\fP \n[set_output_port]    	\f[CB]T_FUNCTION\fP \n[T_FUNCTION]      
+\f[CB]set_printer_limit\fP \n[set_printer_limit]	\f[CB]T_INPUT_PORT\fP \n[T_INPUT_PORT]  
+\f[CB]set_vector_limit\fP \n[set_vector_limit]  	\f[CB]T_INTEGER\fP \n[T_INTEGER]        
+\f[CB]special_value_p\fP \n[special_value_p]    	\f[CB]T_LIST\fP \n[T_LIST]              
+\f[CB]string\fP \n[string]                      	\f[CB]T_OUTPUT_PORT\fP \n[T_OUTPUT_PORT]
+\f[CB]string_len\fP \n[string_len]              	\f[CB]T_PAIR\fP \n[T_PAIR]              
+\f[CB]string_numeric_p\fP \n[string_numeric_p]  	\f[CB]T_PRIMITIVE\fP \n[T_PRIMITIVE]    
+\f[CB]string_p\fP \n[string_p]                  	\f[CB]T_REAL\fP \n[T_REAL]              
+\f[CB]string_to_bignum\fP \n[string_to_bignum]  	\f[CB]T_STRING\fP \n[T_STRING]          
+\f[CB]string_to_number\fP \n[string_to_number]  	\f[CB]T_SYMBOL\fP \n[T_SYMBOL]          
+\f[CB]string_to_real\fP \n[string_to_real]      	\f[CB]T_SYNTAX\fP \n[T_SYNTAX]          
+\f[CB]string_to_symbol\fP \n[string_to_symbol]  	\f[CB]T_VECTOR\fP \n[T_VECTOR]          
+\f[CB]symbol_len\fP \n[symbol_len]              	\f[CB]UNDEFINED\fP \n[UNDEFINED]        
+\f[CB]symbol_name\fP \n[symbol_name]            	\f[CB]undefined_p\fP \n[undefined_p]    
+\f[CB]symbol_p\fP \n[symbol_p]                  	\f[CB]unlock_port\fP \n[unlock_port]    
+\f[CB]symbol_ref\fP \n[symbol_ref]              	\f[CB]unsave\fP \n[unsave]              
+\f[CB]symbol_to_string\fP \n[symbol_to_string]  	\f[CB]UNSPECIFIC\fP \n[UNSPECIFIC]      
+\f[CB]syntax_p\fP \n[syntax_p]                  	\f[CB]unspecific_p\fP \n[unspecific_p]  
+\f[CB]TRUE\fP \n[TRUE]                          	\f[CB]USER_SPECIALS\fP \n[USER_SPECIALS]
+\f[CB]Two\fP \n[Two]                            	\f[CB]vector\fP \n[vector]              
+\f[CB]typecheck\fP \n[typecheck]                	\f[CB]vector_len\fP \n[vector_len]      
+\f[CB]T_ANY\fP \n[T_ANY]                        	\f[CB]VECTOR_LIMIT\fP \n[VECTOR_LIMIT]  
+\f[CB]T_BOOLEAN\fP \n[T_BOOLEAN]                	\f[CB]vector_p\fP \n[vector_p]          
+\f[CB]T_CHAR\fP \n[T_CHAR]                      	\f[CB]Zero\fP \n[Zero]                  
+\f[CB]T_CONTINUATION\fP \n[T_CONTINUATION]      	                                        
 .fi

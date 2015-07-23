@@ -32,9 +32,14 @@ format() {
 	cat $exms
 }
 
-if [ ! -d help-new ]; then mkdir help-new; fi
+if [ ! -d help-new ]; then
+	mkdir help-new
+	mkdir help-new/sys-unix
+	mkdir help-new/sys-plan9
+	mkdir help-new/curses
+fi
 
-for file in lib/*.scm contrib/*.scm ext/*.scm; do
+for file in lib/*.scm contrib/*.scm; do
 	if echo $file | grep -- '-test.scm' >/dev/null 2>&1; then
 		continue
 	fi
@@ -42,9 +47,16 @@ for file in lib/*.scm contrib/*.scm ext/*.scm; do
 	echo $file
 done
 
+for ext in sys-unix sys-plan9 curses; do
+	for file in ext/$ext/*.scm; do
+		format $file >help-new/$ext/$(basename $file .scm)
+		echo $file
+	done
+done
+
 cd help-new
 
-rm -f	curses		\
+rm -f	curses/curses	\
 	fluid-let-sr	\
 	format		\
 	io-tools	\
@@ -53,7 +65,8 @@ rm -f	curses		\
 	set-tools	\
 	string-tools	\
 	syntax-rules	\
-	unix		\
+	sys-plan9/plan9	\
+	sys-unix/unix	\
 	unix-tools	\
 	vector-tools
 
@@ -72,7 +85,7 @@ mv -f records record
 mv -f regex re-comp
 mv -f simple-modules module
 mv -f s9sos define-class
-mv -f standard-error standard-error-port
+mv -f sys-unix/standard-error sys-unix/standard-error-port
 mv -f streams make-stream
 mv -f string-case string-upcase
 mv -f symbols r4rs-procedures

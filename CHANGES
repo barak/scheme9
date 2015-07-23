@@ -1,6 +1,34 @@
 
 Change Log
 
+2015-07-14
+	Made APROPOS find extension procedures. (contrib/)
+2015-07-13
+	Adapted S9HELP to the new help folder structure. (prog/)
+	Renamed extension directories to reflect their names:
+	ext/unix --> ext/sys-unix, ext/plan9 --> ext/sys-plan9.
+	Modified install scripts for new help structure.
+2015-07-12
+	Renamed NETWORK extension to NET-UNIX. (ext/unix/)
+	Moved portable procedures from ext/ to lib/.
+	Re-structured help folder: moved extension procedures to separate
+	directories. (help/)
+	Made HELP find only procedures of extensions that are actually
+	available. (contrib/)
+2015-07-09
+	Added add_image_vars() function to S9core. (s9core.*)
+	Cleaned up S9 bignum <-> C int conversion. (ext/plan9/)
+	Fixed some bugs in sys_convD2M(). (ext/plan9/)
+	Added DIR structure to Plan 9 extension. (ext/plan9/)
+2015-07-07
+	Imported Bakul Shah's Plan 9 extension. (ext/plan9/) Cool! Thanks!
+	Restructured the extensions directory:
+		* ext/ -- portable extensions (might even move to lib/)
+		* ext/unix, ext/plan9 -- OS-specific extensions
+		* ext/curses -- curses extension
+2015-07-06
+	Fix: internal counters did not count trillions correctly. (s9core.c)
+	Thanks, Arun Srinivasan!
 2015-07-01
 	Changed Plan 9 install procedure to allow for multi-platform
 	installation. (mkfile, util/)
@@ -80,6 +108,7 @@ Change Log
 		- Dropped "imprecise" digits ("#") from number format. Use
 		  "5" instead, that's what it did anyway.
 		- Dropped the TRACE command.
+		- Dropped the DUMP-IMAGE procedure. (Use -d)
 
 -------------------------------------------------------------------------------
 	S9 Core Refactoring

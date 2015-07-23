@@ -422,6 +422,7 @@ extern int	Input_port,
  * Prototypes
  */
 
+void	add_image_vars(cell **v);
 cell	apply_prim(cell f, cell a);
 long	asctol(char *s);
 cell	bignum_abs(cell a);

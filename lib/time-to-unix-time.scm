@@ -5,8 +5,8 @@
 ; (time->unix-time time-list)  ==>  integer | #f
 ;
 ; TIME->UNIX-TIME converts TIME-LIST (see UNIX-TIME->TIME) to the
-; number of seconds since the Unix epoch. It returns #F if TIME-LIST
-; is not a proper time list.
+; number of seconds since the Unix epoch (1970-01-01). It returns
+; #F if TIME-LIST is not a proper time list.
 ;
 ; Example:   (time->unix-time '(6 2010 4 25 7 1 19))  ==>  1272178879
 

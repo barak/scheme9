@@ -8,7 +8,7 @@ PREFIX= /u
 
 # Base version and Release
 BASE=		20150612
-RELEASE=	20150701
+RELEASE=	20150714
 
 # Override default compiler and flags
 # CC=	cc
@@ -18,13 +18,13 @@ CFLAGS=	-g -Wall -ansi -pedantic -O2
 OSDEF=	-Dunix
 
 # Uncomment these to include the Unix extensions
-EXTRA_SCM+=	-l ext/unix.scm -l ext/unix-tools.scm
+EXTRA_SCM+=	-l ext/sys-unix/unix.scm -l ext/sys-unix/unix-tools.scm
 EXTRA_OBJS+=	unix.o
 EXTRA_INIT+=	sys_init();
 EXTRA_LIBS+=
 
 # Uncomment these to include the Curses extensions
-EXTRA_SCM+=	-l ext/curses.scm
+EXTRA_SCM+=	-l ext/curses/curses.scm
 EXTRA_OBJS+=	curses.o
 EXTRA_INIT+=	curs_init();
 EXTRA_LIBS+=	-lncurses
@@ -53,7 +53,7 @@ LIBDIR=	$(PREFIX)/lib
 MANDIR=	$(PREFIX)/man/man1
 
 # Set up environment to be used during the build process
-BUILD_ENV=	env S9FES_LIBRARY_PATH=.:lib:ext:contrib
+BUILD_ENV=	env S9FES_LIBRARY_PATH=.:lib:ext/sys-unix:ext/curses:contrib
 
 SETPREFIX=	sed -e "s|^\#! /usr/local|\#! $(PREFIX)|"
 
@@ -70,7 +70,7 @@ s9.o:	s9.c s9core.h
 s9core.o:	s9core.c s9core.h
 	$(CC) -o s9core.o $(CFLAGS) $(DEFS) -c s9core.c
 
-s9.image:	s9 s9.scm ext/unix.scm ext/curses.scm config.scm
+s9.image:	s9 s9.scm ext/sys-unix/unix.scm ext/curses/curses.scm config.scm
 	$(BUILD_ENV) ./s9 -i - $(EXTRA_SCM) -l config.scm -d s9.image
 
 s9core.a: s9core.o
@@ -79,11 +79,11 @@ s9core.a: s9core.o
 s9.1.gz:	s9.1
 	sed -e "s,@S9DIR@,$(S9DIR)," <s9.1 |gzip -9 >s9.1.gz
 
-unix.o:	ext/unix.c s9core.h
-	$(CC) $(CFLAGS) $(DEFS) -I . -o unix.o -c ext/unix.c
+unix.o:	ext/sys-unix/unix.c s9core.h
+	$(CC) $(CFLAGS) $(DEFS) -I . -o unix.o -c ext/sys-unix/unix.c
 
-curses.o:	ext/curses.c s9core.h
-	$(CC) $(CFLAGS) $(DEFS) -I . -o curses.o -c ext/curses.c
+curses.o:	ext/curses/curses.c s9core.h
+	$(CC) $(CFLAGS) $(DEFS) -I . -o curses.o -c ext/curses/curses.c
 
 s9core.ps:	s9core.tr util/book
 	groff -e -p -t -Tps -P-p9i,6i s9core.tr >s9core.ps 2>_meta
@@ -128,6 +128,8 @@ install-all:	install-s9 install-util install-progs
 install-s9:	s9 s9.scm s9.image s9.1.gz
 	install -d -m 0755 $(S9DIR)
 	install -d -m 0755 $(S9DIR)/help
+	install -d -m 0755 $(S9DIR)/help/sys-unix
+	install -d -m 0755 $(S9DIR)/help/curses
 	install -d -m 0755 $(BINDIR)
 	install -d -m 0755 $(LIBDIR)
 	install -d -m 0755 $(INCDIR)
@@ -137,14 +139,14 @@ install-s9:	s9 s9.scm s9.image s9.1.gz
 	install $C -m 0644 s9.scm $(S9DIR)
 	install $C -m 0644 s9.image $(S9DIR)
 	install $C -m 0644 lib/* $(S9DIR)
-	install $C -m 0644 ext/*.scm $(S9DIR)
+	install $C -m 0644 ext/sys-unix/*.scm $(S9DIR)
+	install $C -m 0644 ext/curses/*.scm $(S9DIR)
 	install $C -m 0644 contrib/* $(S9DIR)
 	install $C -m 0644 s9.1.gz $(MANDIR)
-	install $C -m 0644 help/* $(S9DIR)/help
+	(tar cf - help | tar xfC - $(S9DIR))
 	install $C -m 0644 s9core.a $(LIBDIR)
 	install $C -m 0644 s9core.h $(INCDIR)
 	install $C -m 0755 util/make-help-links $(S9DIR)
-	(cd $(S9DIR) && ./make-help-links && rm make-help-links)
 
 install-util:
 	$(SETPREFIX) <prog/s9help.scm >$(BINDIR)/s9help
@@ -231,8 +233,15 @@ s9.1.txt:	s9.1
 	nroff -c -mdoc s9.1 | ./rpp -a >s9.1.txt
 	rm -f rpp
 
-docs:	lib ext contrib
+docs:	lib ext/sys-unix ext/sys-plan9 ext/curses contrib
 	util/make-docs
+	mv -f help-new/sys-unix/* help/sys-unix
+#	mv -f help-new/sys-plan9/* help/sys-plan9
+	mv -f help-new/curses/* help/curses
+	rm help-new/sys-plan9/*
+	rmdir help-new/sys-unix help-new/sys-plan9 help-new/curses
+	mv -f help-new/* help
+	rmdir help-new
 
 webdump:
 	util/make-html -r $(RELEASE)

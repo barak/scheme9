@@ -343,10 +343,13 @@ separated by spaces.
 .in -4
 .sp
 .ne 2
-.B "(require-extension name ...)  ==>  unspecific
+.B "(require-extension ext ...)  ==>  unspecific
 .in +4
 Require the named extensions to be compiled-in. Signal an error
 if not all of the required extensions are present.
+.I Ext
+may be of the form \fI(or ext1 ext2 ...)\fP. In this case,
+it is sufficient if at least one of the given \fIext\fPs is present.
 .in -4
 .sp
 .ne 2

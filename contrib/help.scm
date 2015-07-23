@@ -1,5 +1,5 @@
 ; Scheme 9 from Empty Space, Function Library
-; By Nils M Holm, 2009-2014
+; By Nils M Holm, 2009-2015
 ; Placed in the Public Domain
 ;
 ; (help)                     ==>  unspecific
@@ -87,10 +87,32 @@
         (cond ((locate-file (string-append "help/" name))
                 => show-file)
               (else
-                (error "help: could not find help page" name)))))))
+                (let loop ((e (map symbol->string *extensions*)))
+                  (if (null? e)
+                      (error "help: could not find help page" name)
+                      (cond ((locate-file
+                               (string-append "help/" (car e) "/" name))
+                              => show-file)
+                            (else (loop (cdr e))))))))))))
+
+(define (help-file-exists? name s)
+  (let loop ((exts (cons "." (map symbol->string *extensions*))))
+    (cond ((null? exts)
+            #f)
+          ((and (string-find name s)
+                (locate-file
+                  (string-append
+                    "help/"
+                    (car exts)
+                    "/"
+                    (name->file-name s))))
+            #t)
+          (else
+            (loop (cdr exts))))))
 
 (define apropos
-  (let ((name->file-name name->file-name))
+  (let ((name->file-name   name->file-name)
+        (help-file-exists? help-file-exists?))
     (lambda sym
       (let* ((name (cond ((null? sym)
                            "")
@@ -108,14 +130,10 @@
           (remp null?
                 (map (lambda (x)
                        (let ((s (symbol->string x)))
-                         (if (and (string-find name s)
-                                  (locate-file
-                                    (string-append
-                                      "help/"
-                                      (name->file-name s))))
+                         (if (help-file-exists? name s)
                              x
                              '())))
-                       (let ((index (locate-file "help/INDEX")))
-                         (if index
-                             (with-input-from-file index read)
-                             (error "help index not found"))))))))))
+                     (let ((index (locate-file "help/INDEX")))
+                       (if index
+                           (with-input-from-file index read)
+                           (error "help index not found"))))))))))

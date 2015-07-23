@@ -37,5 +37,8 @@
                         '("lib"
                           "contrib"
                           "ext"
+                          "ext/curses"
+                          "ext/sys-plan9"
+                          "ext/sys-unix"
                           "prog"
                           "util"))))))

@@ -5,9 +5,9 @@
 ; (basename string)          ==>  string
 ; (basename string string2)  ==>  string
 ;
-; Return the rightmost component of the path name given in STRING.
-; When STRING2 is given also remove a STRING2 suffix (if any) from
-; STRING.
+; Return the rightmost component of the Unix path name given in
+; STRING. When STRING2 is given also remove a STRING2 suffix
+; (if any) from STRING.
 ; 
 ; Example:   (basename "/foo/bar/baz")     ==>  "baz"
 ;            (basename "/goo/bar.Z" ".Z")  ==>  "bar"
