@@ -4,7 +4,7 @@
  * In the public domain
  */
 
-#define VERSION "2015-07-14"
+#define VERSION "2015-08-10"
 
 #define S9FES
 #include "s9core.h"

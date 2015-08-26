@@ -8,7 +8,7 @@ PREFIX= /u
 
 # Base version and Release
 BASE=		20150612
-RELEASE=	20150714
+RELEASE=	20150810
 
 # Override default compiler and flags
 # CC=	cc
@@ -254,12 +254,10 @@ advdump:	prog/advgen.scm prog/adventure.adv prog/adventure.intro
 		-e util/pagetail \
 		-i prog/adventure.intro \
 		-t "The Quest for S9fES" \
-		-y s9.css \
+		-y ../t3x.css \
 		prog/adventure.adv
 	rm -f pagehead
 	cp MASCOT.png advdump
-	sed -e 's/^A:link/A/' -e '/^A:visited/,+3d' \
-		<util/s9.css >advdump/s9.css
 
 csums:
 	csum -u <_csums >_csums.new

@@ -4,7 +4,7 @@
  * In the public domain
  */
 
-#define VERSION "20150709"
+#define VERSION "20150810"
 
 #include "s9core.h"
 
@@ -631,8 +631,7 @@ cell make_vector(int k) {
 	cell	n, *v;
 	int	i;
 
-	k *= sizeof(cell);
-	n = new_vec(T_VECTOR, k);
+	n = new_vec(T_VECTOR, k * sizeof(cell));
 	v = vector(n);
 	for (i=0; i<k; i++)
 		v[i] = UNDEFINED;

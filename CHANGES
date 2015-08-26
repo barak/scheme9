@@ -1,6 +1,9 @@
 
 Change Log
 
+2015-08-10
+	Fix: S9core: make_vector() overwrote unallocated memory. (s9core.c)
+	(This bug did *not* affect the S9 interpreter!)
 2015-07-14
 	Made APROPOS find extension procedures. (contrib/)
 2015-07-13
