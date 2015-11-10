@@ -1,10 +1,10 @@
-44339 8 ./Makefile
-21970 13 ./s9core.h
-40180 93 ./s9.c
+39230 8 ./Makefile
+29894 13 ./s9core.h
+26401 93 ./s9.c
 23969 9 ./MASCOT.png
-18307 77 ./s9core.tr
+20588 76 ./s9core.tr
 160 35 ./s9.scm
-45789 58 ./s9core.c
+60416 59 ./s9core.c
 18002 19 ./s9.1.txt
 20304 1 ./ABOUT
 41089 38 ./contrib/format.scm
@@ -589,7 +589,7 @@
 56910 56 ./prog/edoc.scm.edoc
 3265 6 ./util/rpp.c
 53688 1 ./util/rp_html
-12837 63 ./util/test.scm
+45662 63 ./util/test.scm
 12249 29 ./util/libtest.scm
 17652 2 ./util/libtest.sh
 26839 1 ./util/dirhead
@@ -616,7 +616,7 @@
 48144 1 ./util/s9.rc
 41741 13 ./util/fix-help-files
 14635 2 ./README.s9core
-10468 79 ./CHANGES
+5583 79 ./CHANGES
 32621 2 ./LICENSE
 47295 8 ./README
 3386 1 ./TODO

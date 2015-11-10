@@ -1,6 +1,13 @@
 
 Change Log
 
+2015-11-08
+	S9core: added the open_input_string(), close_input_string(),
+	and port_eof() functions. (s9core.[ch])
+	S9core: fixed some function types (mostly port-related), made
+	readc() and reject() functions (previously macros). (s9core.[ch])
+	Updated the S9core manual. (s9core.tr)
+	Fixed a potential GC leak in string_to_bignum(). (s9core.c)
 2015-08-10
 	Fix: S9core: make_vector() overwrote unallocated memory. (s9core.c)
 	(This bug did *not* affect the S9 interpreter!)

@@ -199,8 +199,6 @@ and
 .K unsave()
 [pg \n[save]] to protect objects temporarily.
 .PQ
-.TL "" \&XXX
-.bp \&XXX
 .sp -1
 .SH "Configuration"
 .sp -1
@@ -463,8 +461,6 @@ _
 Fig 1. Memory Limits
 .ps
 .PQ
-.TL "" \&XXX
-.bp \&XXX
 .sp -1
 .SU "Arithmetics"
 .X DIGITS_PER_WORD
@@ -546,6 +542,7 @@ accessors that extract values from the type. Predicates always return
 0 (false) or 1 (true). Type predicates succeed (return 1) if the object
 passed to them is of the given type.
 .PQ
+.bp \&XXX
 .sp -1
 .SU "Special Values"
 .PA
@@ -629,7 +626,6 @@ The
 value can be returned by functions to indicate that the return value is
 of no importance and should be ignored.
 .PQ
-.bp \&XXX
 .X USER_SPECIALS
 .X special_value_p
 .CO "USER_SPECIALS"
@@ -1498,7 +1494,6 @@ a car accessor, and each ``d'' a cdr, e.g.
 = car    of (9)
 =           9
 .CE
-.TL "" \&XXX
 .bp \&XXX
 .sp -1
 .SH "Primitive Procedures"
@@ -2294,9 +2289,9 @@ I/O error occurs, it updates the internal I/O status (see
 .PQ
 .X readc
 .X reject
-.CO "readc()"
+.CO "int readc(void)"
 .sp -0.5
-.CO "reject(c)"
+.CO "void reject(int c)"
 .sp -0.7
 .PS
 line right 4.5i
@@ -2335,6 +2330,16 @@ This function writes $k$ characters from $s$ to the current output port.
 It returns the number of characters written. When an I/O error occurs,
 it updates the internal I/O status (see
 .K io_status() ).
+.PQ
+.X prints
+.CO "int port_eof(int p);"
+.sp -0.7
+.PS
+line right 4.5i
+.PE
+.PA
+This function returns a non-zero value, if reading beyond the EOF has been
+attempted on the given port. Otherwise it returns 0.
 .PQ
 .X prints
 .CO "void prints(char *s);"
@@ -2470,17 +2475,45 @@ function closes the file associated with the given port handle and frees
 the handle. It can be used to close locked ports (see below), thereby
 unlocking them in the process.
 .PQ
-.X lock_port
-.X unlock_port
-.CO "int lock_port(cell port);"
+.X open_input_string
+.X close_input_string
+.CO "char *open_input_string(char *s);"
 .sp -0.5
-.CO "int unlock_port(cell port);"
+.CO "void close_input_string(void);"
 .sp -0.7
 .PS
 line right 4.5i
 .PE
 .PA
-These function
+.K open_input_string()
+opens a string as input source and immediately redirects the current input
+port to that string.
+.K readc() ,
+and
+.K reject()
+work as expected on string input (but
+.K blockread()
+does not). The function returns the previous input string, if any, and
+.K NULL
+otherwise.
+.PQ
+.PA
+.K close_input_string()
+ends input from a string and reestablishes the current input port that
+was in effect before opening the string (it does not reestablish a previous
+input string, though!).
+.PQ
+.X lock_port
+.X unlock_port
+.CO "int lock_port(int port);"
+.sp -0.5
+.CO "int unlock_port(int port);"
+.sp -0.7
+.PS
+line right 4.5i
+.PE
+.PA
+These functions
 .I lock
 and
 .I unlock
@@ -2508,9 +2541,9 @@ it is accessible through a GC root (on the stack, bound to a symbol, etc).
 .PQ
 .X input_port
 .X output_port
-.CO "cell input_port(void);"
+.CO "int input_port(void);"
 .sp -0.5
-.CO "cell output_port(void);"
+.CO "int output_port(void);"
 .sp -0.7
 .PS
 line right 4.5i
@@ -2521,6 +2554,8 @@ These functions return the
 and
 .I "current output port" ,
 respectively.
+.K input_port
+returns -1 when input is currently being read from a string.
 .PQ
 .X set_input_port
 .X set_output_port
@@ -2561,7 +2596,6 @@ and port handle 2 to
 .K stderr .
 It also clears the error and EOF flags of all standard ports.
 .PQ
-.bp \&XXX
 .X set_printer_limit
 .X printer_limit
 .CO "void set_printer_limit(int k);"
@@ -2688,6 +2722,7 @@ are there options:
 .LI "Restart S9core by calling \f[CB]s9fini()\fP and then \f[CB]s9init()\fP
 .LI "Terminate the process with \f[CB]fatal()\fP
 .LE
+.bp \&XXX
 .sp -1
 .SH "Memory Management"
 .X gc
@@ -2795,7 +2830,6 @@ function converts a numeric string (see
 to a bignum integer and returns it. The result of this function is
 undefined, if its argument does not represent an integer.
 .PQ
-.bp \&XXX
 .X string_to_real
 .CO "cell string_to_real(char *s);"
 .sp -0.7
@@ -2837,6 +2871,7 @@ real numbers. Its result is undefined for non-numeric strings. See also:
 .K string_to_real () ,
 .K integer_string_p() .
 .PQ
+.bp \&XXX
 .sp -1
 .SH "Counters"
 .X counter
@@ -2870,7 +2905,6 @@ line right 4.5i
 This function increments the given counter by one. Counters overflow
 at one quatrillion ($10 sup {15}$). There is no overflow checking.
 .PQ
-.bp \&XXX
 .X read_counter
 .CO "cell read_counter(counter *c);"
 .sp -0.7
@@ -2990,6 +3024,7 @@ instance, an O(1) destructive append. $"lastp"$ will be ignored, if $n$
 is
 .K NULL .
 .PQ
+.bp \&XXX
 .X length
 .CO "int length(cell n);"
 .sp -0.7
@@ -3194,102 +3229,198 @@ would be the proper way.
 .HD "Index"
 .S
 .nf
-\f[CB]add_image_vars\fP \n[add_image_vars]        	\f[CB]count\fP \n[count]                      
-\f[CB]apply_prim\fP \n[apply_prim]                	\f[CB]DIGITS_PER_WORD\fP \n[DIGITS_PER_WORD]  
-\f[CB]asctol\fP \n[asctol]                        	\f[CB]dump_image\fP \n[dump_image]            
-\f[CB]atom_p\fP \n[atom_p]                        	\f[CB]END_OF_FILE\fP \n[END_OF_FILE]          
-\f[CB]bignum_abs\fP \n[bignum_abs]                	\f[CB]eof_p\fP \n[eof_p]                      
-\f[CB]bignum_add\fP \n[bignum_add]                	\f[CB]Epsilon\fP \n[Epsilon]                  
-\f[CB]bignum_divide\fP \n[bignum_divide]          	\f[CB]exponent_chars\fP \n[exponent_chars]    
-\f[CB]bignum_equal_p\fP \n[bignum_equal_p]        	\f[CB]FALSE\fP \n[FALSE]                      
-\f[CB]bignum_even_p\fP \n[bignum_even_p]          	\f[CB]fatal\fP \n[fatal]                      
-\f[CB]bignum_less_p\fP \n[bignum_less_p]          	\f[CB]find_symbol\fP \n[find_symbol]          
-\f[CB]bignum_multiply\fP \n[bignum_multiply]      	\f[CB]flat_copy\fP \n[flat_copy]              
-\f[CB]bignum_negate\fP \n[bignum_negate]          	\f[CB]flush\fP \n[flush]                      
-\f[CB]bignum_shift_left\fP \n[bignum_shift_left]  	\f[CB]function_p\fP \n[function_p]            
-\f[CB]bignum_shift_right\fP \n[bignum_shift_right]	\f[CB]gcv\fP \n[gcv]                          
-\f[CB]bignum_subtract\fP \n[bignum_subtract]      	\f[CB]gc\fP \n[gc]                            
-\f[CB]bignum_to_int\fP \n[bignum_to_int]          	\f[CB]gc_verbosity\fP \n[gc_verbosity]        
-\f[CB]bignum_to_real\fP \n[bignum_to_real]        	\f[CB]get_counters\fP \n[get_counters]        
-\f[CB]bignum_to_string\fP \n[bignum_to_string]    	\f[CB]image_vars\fP \n[image_vars]            
-\f[CB]blockread\fP \n[blockread]                  	\f[CB]input_port\fP \n[input_port]            
-\f[CB]blockwrite\fP \n[blockwrite]                	\f[CB]input_port_p\fP \n[input_port_p]        
-\f[CB]boolean_p\fP \n[boolean_p]                  	\f[CB]integer_p\fP \n[integer_p]              
-\f[CB]caar...cddddr\fP \n[caar...cddddr]          	\f[CB]integer_string_p\fP \n[integer_string_p]
-\f[CB]car\fP \n[car]                              	\f[CB]intern_symbol\fP \n[intern_symbol]      
-\f[CB]cdr\fP \n[cdr]                              	\f[CB]INT_SEG_LIMIT\fP \n[INT_SEG_LIMIT]      
-\f[CB]cell\fP \n[cell]                            	\f[CB]IO\fP \n[IO]                            
-\f[CB]char_p\fP \n[char_p]                        	\f[CB]io_reset\fP \n[io_reset]                
-\f[CB]char_value\fP \n[char_value]                	\f[CB]io_status\fP \n[io_status]              
-\f[CB]close_port\fP \n[close_port]                	\f[CB]length\fP \n[length]                    
-\f[CB]cons3\fP \n[cons3]                          	\f[CB]load_image\fP \n[load_image]            
-\f[CB]constant_p\fP \n[constant_p]                	\f[CB]lock_port\fP \n[lock_port]              
-\f[CB]cons\fP \n[cons]                            	\f[CB]make_byte_vector\fP \n[make_byte_vector]
-\f[CB]continuation_p\fP \n[continuation_p]        	\f[CB]make_char\fP \n[make_char]              
-\f[CB]copy_string\fP \n[copy_string]              	\f[CB]make_integer\fP \n[make_integer]        
-\f[CB]counter\fP \n[counter]                      	\f[CB]make_port\fP \n[make_port]              
-.bp
-\f[CB]make_port\fP \n[make_port]                    	\f[CB]real_add\fP \n[real_add]                    
-\f[CB]make_primitive\fP \n[make_primitive]          	\f[CB]real_ceil\fP \n[real_ceil]                  
-\f[CB]Make_real\fP \n[Make_real]                    	\f[CB]real_divide\fP \n[real_divide]              
-\f[CB]make_real\fP \n[make_real]                    	\f[CB]real_equal_p\fP \n[real_equal_p]            
-\f[CB]make_string\fP \n[make_string]                	\f[CB]Real_exponent\fP \n[Real_exponent]          
-\f[CB]make_symbol\fP \n[make_symbol]                	\f[CB]real_exponent\fP \n[real_exponent]          
-\f[CB]make_vector\fP \n[make_vector]                	\f[CB]Real_flags\fP \n[Real_flags]                
-\f[CB]MANTISSA_SEGMENTS\fP \n[MANTISSA_SEGMENTS]    	\f[CB]Real_flags\fP \n[Real_flags]                
-\f[CB]mem_error_handler\fP \n[mem_error_handler]    	\f[CB]real_floor\fP \n[real_floor]                
-\f[CB]new_atom\fP \n[new_atom]                      	\f[CB]real_integer_p\fP \n[real_integer_p]        
-\f[CB]new_port\fP \n[new_port]                      	\f[CB]real_less_p\fP \n[real_less_p]              
-\f[CB]new_vec\fP \n[new_vec]                        	\f[CB]Real_mantissa\fP \n[Real_mantissa]          
-\f[CB]NIL\fP \n[NIL]                                	\f[CB]real_mantissa\fP \n[real_mantissa]          
-\f[CB]nl\fP \n[nl]                                  	\f[CB]real_multiply\fP \n[real_multiply]          
-\f[CB]NODE_LIMIT\fP \n[NODE_LIMIT]                  	\f[CB]Real_negate\fP \n[Real_negate]              
-\f[CB]number_p\fP \n[number_p]                      	\f[CB]real_negate\fP \n[real_negate]              
-\f[CB]One\fP \n[One]                                	\f[CB]Real_negative\fP \n[Real_negative]          
-\f[CB]open_input_port\fP \n[open_input_port]        	\f[CB]Real_negative_flag\fP \n[Real_negative_flag]
-\f[CB]open_output_port\fP \n[open_output_port]      	\f[CB]real_negative_p\fP \n[real_negative_p]      
-\f[CB]output_port\fP \n[output_port]                	\f[CB]Real_positive\fP \n[Real_positive]          
-\f[CB]output_port_p\fP \n[output_port_p]            	\f[CB]real_positive_p\fP \n[real_positive_p]      
-\f[CB]pair_p\fP \n[pair_p]                          	\f[CB]real_p\fP \n[real_p]                        
-\f[CB]port_no\fP \n[port_no]                        	\f[CB]real_subtract\fP \n[real_subtract]          
-\f[CB]port_no\fP \n[port_no]                        	\f[CB]real_to_bignum\fP \n[real_to_bignum]        
-\f[CB]primitive_p\fP \n[primitive_p]                	\f[CB]real_trunc\fP \n[real_trunc]                
-\f[CB]PRIM\fP \n[PRIM]                              	\f[CB]Real_zero\fP \n[Real_zero]                  
-\f[CB]prim_info\fP \n[prim_info]                    	\f[CB]real_zero_p\fP \n[real_zero_p]              
-\f[CB]prim_slot\fP \n[prim_slot]                    	\f[CB]reject\fP \n[reject]                        
-\f[CB]printer_limit\fP \n[printer_limit]            	\f[CB]reset_counter()\fP \n[reset_counter()]      
-\f[CB]prints\fP \n[prints]                          	\f[CB]reset_std_ports\fP \n[reset_std_ports]      
-\f[CB]print_bignum\fP \n[print_bignum]              	\f[CB]run_stats\fP \n[run_stats]                  
-\f[CB]print_expanded_real\fP \n[print_expanded_real]	\f[CB]run_stats\fP \n[run_stats]                  
-\f[CB]print_real\fP \n[print_real]                  	\f[CB]s9fini\fP \n[s9fini]                        
-\f[CB]print_sci_real\fP \n[print_sci_real]          	\f[CB]s9init\fP \n[s9init]                        
-\f[CB]readc\fP \n[readc]                            	\f[CB]save\fP \n[save]                            
-\f[CB]read_counter\fP \n[read_counter]              	\f[CB]set_input_port\fP \n[set_input_port]        
-\f[CB]real_abs\fP \n[real_abs]                      	\f[CB]set_node_limit\fP \n[set_node_limit]        
-.bp
-\f[CB]set_output_port\fP \n[set_output_port]    	\f[CB]T_FUNCTION\fP \n[T_FUNCTION]      
-\f[CB]set_printer_limit\fP \n[set_printer_limit]	\f[CB]T_INPUT_PORT\fP \n[T_INPUT_PORT]  
-\f[CB]set_vector_limit\fP \n[set_vector_limit]  	\f[CB]T_INTEGER\fP \n[T_INTEGER]        
-\f[CB]special_value_p\fP \n[special_value_p]    	\f[CB]T_LIST\fP \n[T_LIST]              
-\f[CB]string\fP \n[string]                      	\f[CB]T_OUTPUT_PORT\fP \n[T_OUTPUT_PORT]
-\f[CB]string_len\fP \n[string_len]              	\f[CB]T_PAIR\fP \n[T_PAIR]              
-\f[CB]string_numeric_p\fP \n[string_numeric_p]  	\f[CB]T_PRIMITIVE\fP \n[T_PRIMITIVE]    
-\f[CB]string_p\fP \n[string_p]                  	\f[CB]T_REAL\fP \n[T_REAL]              
-\f[CB]string_to_bignum\fP \n[string_to_bignum]  	\f[CB]T_STRING\fP \n[T_STRING]          
-\f[CB]string_to_number\fP \n[string_to_number]  	\f[CB]T_SYMBOL\fP \n[T_SYMBOL]          
-\f[CB]string_to_real\fP \n[string_to_real]      	\f[CB]T_SYNTAX\fP \n[T_SYNTAX]          
-\f[CB]string_to_symbol\fP \n[string_to_symbol]  	\f[CB]T_VECTOR\fP \n[T_VECTOR]          
-\f[CB]symbol_len\fP \n[symbol_len]              	\f[CB]UNDEFINED\fP \n[UNDEFINED]        
-\f[CB]symbol_name\fP \n[symbol_name]            	\f[CB]undefined_p\fP \n[undefined_p]    
-\f[CB]symbol_p\fP \n[symbol_p]                  	\f[CB]unlock_port\fP \n[unlock_port]    
-\f[CB]symbol_ref\fP \n[symbol_ref]              	\f[CB]unsave\fP \n[unsave]              
-\f[CB]symbol_to_string\fP \n[symbol_to_string]  	\f[CB]UNSPECIFIC\fP \n[UNSPECIFIC]      
-\f[CB]syntax_p\fP \n[syntax_p]                  	\f[CB]unspecific_p\fP \n[unspecific_p]  
-\f[CB]TRUE\fP \n[TRUE]                          	\f[CB]USER_SPECIALS\fP \n[USER_SPECIALS]
-\f[CB]Two\fP \n[Two]                            	\f[CB]vector\fP \n[vector]              
-\f[CB]typecheck\fP \n[typecheck]                	\f[CB]vector_len\fP \n[vector_len]      
-\f[CB]T_ANY\fP \n[T_ANY]                        	\f[CB]VECTOR_LIMIT\fP \n[VECTOR_LIMIT]  
-\f[CB]T_BOOLEAN\fP \n[T_BOOLEAN]                	\f[CB]vector_p\fP \n[vector_p]          
-\f[CB]T_CHAR\fP \n[T_CHAR]                      	\f[CB]Zero\fP \n[Zero]                  
-\f[CB]T_CONTINUATION\fP \n[T_CONTINUATION]      	                                        
+\f[CB]add_image_vars\fP \n[add_image_vars]
+\f[CB]apply_prim\fP \n[apply_prim]
+\f[CB]asctol\fP \n[asctol]
+\f[CB]atom_p\fP \n[atom_p]
+\f[CB]bignum_abs\fP \n[bignum_abs]
+\f[CB]bignum_add\fP \n[bignum_add]
+\f[CB]bignum_divide\fP \n[bignum_divide]
+\f[CB]bignum_equal_p\fP \n[bignum_equal_p]
+\f[CB]bignum_even_p\fP \n[bignum_even_p]
+\f[CB]bignum_less_p\fP \n[bignum_less_p]
+\f[CB]bignum_multiply\fP \n[bignum_multiply]
+\f[CB]bignum_negate\fP \n[bignum_negate]
+\f[CB]bignum_shift_left\fP \n[bignum_shift_left]
+\f[CB]bignum_shift_right\fP \n[bignum_shift_right]
+\f[CB]bignum_subtract\fP \n[bignum_subtract]
+\f[CB]bignum_to_int\fP \n[bignum_to_int]
+\f[CB]bignum_to_real\fP \n[bignum_to_real]
+\f[CB]bignum_to_string\fP \n[bignum_to_string]
+\f[CB]blockread\fP \n[blockread]
+\f[CB]blockwrite\fP \n[blockwrite]
+\f[CB]boolean_p\fP \n[boolean_p]
+\f[CB]caar...cddddr\fP \n[caar...cddddr]
+\f[CB]car\fP \n[car]
+\f[CB]cdr\fP \n[cdr]
+\f[CB]cell\fP \n[cell]
+\f[CB]char_p\fP \n[char_p]
+\f[CB]char_value\fP \n[char_value]
+\f[CB]close_input_string\fP \n[close_input_string]
+\f[CB]close_port\fP \n[close_port]
+\f[CB]cons3\fP \n[cons3]
+\f[CB]constant_p\fP \n[constant_p]
+\f[CB]cons\fP \n[cons]
+\f[CB]continuation_p\fP \n[continuation_p]
+\f[CB]copy_string\fP \n[copy_string]
+\f[CB]counter\fP \n[counter]
+\f[CB]count\fP \n[count]
+\f[CB]DIGITS_PER_WORD\fP \n[DIGITS_PER_WORD]
+\f[CB]dump_image\fP \n[dump_image]
+\f[CB]END_OF_FILE\fP \n[END_OF_FILE]
+\f[CB]eof_p\fP \n[eof_p]
+\f[CB]Epsilon\fP \n[Epsilon]
+\f[CB]exponent_chars\fP \n[exponent_chars]
+\f[CB]FALSE\fP \n[FALSE]
+\f[CB]fatal\fP \n[fatal]
+\f[CB]find_symbol\fP \n[find_symbol]
+\f[CB]flat_copy\fP \n[flat_copy]
+\f[CB]flush\fP \n[flush]
+\f[CB]function_p\fP \n[function_p]
+\f[CB]gcv\fP \n[gcv]
+\f[CB]gc\fP \n[gc]
+\f[CB]gc_verbosity\fP \n[gc_verbosity]
+\f[CB]get_counters\fP \n[get_counters]
+\f[CB]image_vars\fP \n[image_vars]
+\f[CB]input_port\fP \n[input_port]
+\f[CB]input_port_p\fP \n[input_port_p]
+\f[CB]integer_p\fP \n[integer_p]
+\f[CB]integer_string_p\fP \n[integer_string_p]
+\f[CB]intern_symbol\fP \n[intern_symbol]
+\f[CB]INT_SEG_LIMIT\fP \n[INT_SEG_LIMIT]
+\f[CB]IO\fP \n[IO]
+\f[CB]io_reset\fP \n[io_reset]
+\f[CB]io_status\fP \n[io_status]
+\f[CB]length\fP \n[length]
+\f[CB]load_image\fP \n[load_image]
+\f[CB]lock_port\fP \n[lock_port]
+\f[CB]make_byte_vector\fP \n[make_byte_vector]
+\f[CB]make_char\fP \n[make_char]
+\f[CB]make_integer\fP \n[make_integer]
+\f[CB]make_port\fP \n[make_port]
+\f[CB]make_port\fP \n[make_port]
+\f[CB]make_primitive\fP \n[make_primitive]
+\f[CB]Make_real\fP \n[Make_real]
+\f[CB]make_real\fP \n[make_real]
+\f[CB]make_string\fP \n[make_string]
+\f[CB]make_symbol\fP \n[make_symbol]
+\f[CB]make_vector\fP \n[make_vector]
+\f[CB]MANTISSA_SEGMENTS\fP \n[MANTISSA_SEGMENTS]
+\f[CB]mem_error_handler\fP \n[mem_error_handler]
+\f[CB]new_atom\fP \n[new_atom]
+\f[CB]new_port\fP \n[new_port]
+\f[CB]new_vec\fP \n[new_vec]
+\f[CB]NIL\fP \n[NIL]
+\f[CB]nl\fP \n[nl]
+\f[CB]NODE_LIMIT\fP \n[NODE_LIMIT]
+\f[CB]number_p\fP \n[number_p]
+\f[CB]One\fP \n[One]
+\f[CB]open_input_port\fP \n[open_input_port]
+\f[CB]open_input_string\fP \n[open_input_string]
+\f[CB]open_output_port\fP \n[open_output_port]
+\f[CB]output_port\fP \n[output_port]
+\f[CB]output_port_p\fP \n[output_port_p]
+\f[CB]pair_p\fP \n[pair_p]
+\f[CB]port_no\fP \n[port_no]
+\f[CB]port_no\fP \n[port_no]
+\f[CB]primitive_p\fP \n[primitive_p]
+\f[CB]PRIM\fP \n[PRIM]
+\f[CB]prim_info\fP \n[prim_info]
+\f[CB]prim_slot\fP \n[prim_slot]
+\f[CB]printer_limit\fP \n[printer_limit]
+\f[CB]prints\fP \n[prints]
+\f[CB]prints\fP \n[prints]
+\f[CB]print_bignum\fP \n[print_bignum]
+\f[CB]print_expanded_real\fP \n[print_expanded_real]
+\f[CB]print_real\fP \n[print_real]
+\f[CB]print_sci_real\fP \n[print_sci_real]
+\f[CB]readc\fP \n[readc]
+\f[CB]read_counter\fP \n[read_counter]
+\f[CB]real_abs\fP \n[real_abs]
+\f[CB]real_add\fP \n[real_add]
+\f[CB]real_ceil\fP \n[real_ceil]
+\f[CB]real_divide\fP \n[real_divide]
+\f[CB]real_equal_p\fP \n[real_equal_p]
+\f[CB]Real_exponent\fP \n[Real_exponent]
+\f[CB]real_exponent\fP \n[real_exponent]
+\f[CB]Real_flags\fP \n[Real_flags]
+\f[CB]Real_flags\fP \n[Real_flags]
+\f[CB]real_floor\fP \n[real_floor]
+\f[CB]real_integer_p\fP \n[real_integer_p]
+\f[CB]real_less_p\fP \n[real_less_p]
+\f[CB]Real_mantissa\fP \n[Real_mantissa]
+\f[CB]real_mantissa\fP \n[real_mantissa]
+\f[CB]real_multiply\fP \n[real_multiply]
+\f[CB]Real_negate\fP \n[Real_negate]
+\f[CB]real_negate\fP \n[real_negate]
+\f[CB]Real_negative\fP \n[Real_negative]
+\f[CB]Real_negative_flag\fP \n[Real_negative_flag]
+\f[CB]real_negative_p\fP \n[real_negative_p]
+\f[CB]Real_positive\fP \n[Real_positive]
+\f[CB]real_positive_p\fP \n[real_positive_p]
+\f[CB]real_p\fP \n[real_p]
+\f[CB]real_subtract\fP \n[real_subtract]
+\f[CB]real_to_bignum\fP \n[real_to_bignum]
+\f[CB]real_trunc\fP \n[real_trunc]
+\f[CB]Real_zero\fP \n[Real_zero]
+\f[CB]real_zero_p\fP \n[real_zero_p]
+\f[CB]reject\fP \n[reject]
+\f[CB]reset_counter()\fP \n[reset_counter()]
+\f[CB]reset_std_ports\fP \n[reset_std_ports]
+\f[CB]run_stats\fP \n[run_stats]
+\f[CB]run_stats\fP \n[run_stats]
+\f[CB]s9fini\fP \n[s9fini]
+\f[CB]s9init\fP \n[s9init]
+\f[CB]save\fP \n[save]
+\f[CB]set_input_port\fP \n[set_input_port]
+\f[CB]set_node_limit\fP \n[set_node_limit]
+\f[CB]set_output_port\fP \n[set_output_port]
+\f[CB]set_printer_limit\fP \n[set_printer_limit]
+\f[CB]set_vector_limit\fP \n[set_vector_limit]
+\f[CB]special_value_p\fP \n[special_value_p]
+\f[CB]string\fP \n[string]
+\f[CB]string_len\fP \n[string_len]
+\f[CB]string_numeric_p\fP \n[string_numeric_p]
+\f[CB]string_p\fP \n[string_p]
+\f[CB]string_to_bignum\fP \n[string_to_bignum]
+\f[CB]string_to_number\fP \n[string_to_number]
+\f[CB]string_to_real\fP \n[string_to_real]
+\f[CB]string_to_symbol\fP \n[string_to_symbol]
+\f[CB]symbol_len\fP \n[symbol_len]
+\f[CB]symbol_name\fP \n[symbol_name]
+\f[CB]symbol_p\fP \n[symbol_p]
+\f[CB]symbol_ref\fP \n[symbol_ref]
+\f[CB]symbol_to_string\fP \n[symbol_to_string]
+\f[CB]syntax_p\fP \n[syntax_p]
+\f[CB]TRUE\fP \n[TRUE]
+\f[CB]Two\fP \n[Two]
+\f[CB]typecheck\fP \n[typecheck]
+\f[CB]T_ANY\fP \n[T_ANY]
+\f[CB]T_BOOLEAN\fP \n[T_BOOLEAN]
+\f[CB]T_CHAR\fP \n[T_CHAR]
+\f[CB]T_CONTINUATION\fP \n[T_CONTINUATION]
+\f[CB]T_FUNCTION\fP \n[T_FUNCTION]
+\f[CB]T_INPUT_PORT\fP \n[T_INPUT_PORT]
+\f[CB]T_INTEGER\fP \n[T_INTEGER]
+\f[CB]T_LIST\fP \n[T_LIST]
+\f[CB]T_OUTPUT_PORT\fP \n[T_OUTPUT_PORT]
+\f[CB]T_PAIR\fP \n[T_PAIR]
+\f[CB]T_PRIMITIVE\fP \n[T_PRIMITIVE]
+\f[CB]T_REAL\fP \n[T_REAL]
+\f[CB]T_STRING\fP \n[T_STRING]
+\f[CB]T_SYMBOL\fP \n[T_SYMBOL]
+\f[CB]T_SYNTAX\fP \n[T_SYNTAX]
+\f[CB]T_VECTOR\fP \n[T_VECTOR]
+\f[CB]UNDEFINED\fP \n[UNDEFINED]
+\f[CB]undefined_p\fP \n[undefined_p]
+\f[CB]unlock_port\fP \n[unlock_port]
+\f[CB]unsave\fP \n[unsave]
+\f[CB]UNSPECIFIC\fP \n[UNSPECIFIC]
+\f[CB]unspecific_p\fP \n[unspecific_p]
+\f[CB]USER_SPECIALS\fP \n[USER_SPECIALS]
+\f[CB]vector\fP \n[vector]
+\f[CB]vector_len\fP \n[vector_len]
+\f[CB]VECTOR_LIMIT\fP \n[VECTOR_LIMIT]
+\f[CB]vector_p\fP \n[vector_p]
+\f[CB]Zero\fP \n[Zero]
 .fi

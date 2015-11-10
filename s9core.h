@@ -240,8 +240,6 @@ struct Primitive_function {
  */
 
 #define nl()		prints("\n")
-#define reject(c)	ungetc(c, Ports[Input_port])
-#define readc()		getc(Ports[Input_port])
 
 /*
  * Access to fields of atoms
@@ -442,6 +440,7 @@ cell	bignum_to_string(cell x);
 int	blockread(char *s, int k);
 void	blockwrite(char *s, int k);
 void	close_port(int port);
+void	close_input_string(void);
 cell	cons3(cell pcar, cell pcdr, int ptag);
 void	cons_stats(int x);
 cell	copy_string(cell x);
@@ -458,14 +457,14 @@ void	gc_verbosity(int n);
 void	get_counters(counter **nc, counter **cc, counter **gc);
 void	mem_error_handler(void (*h)(int src));
 void	image_vars(cell **v);
-cell	input_port(void);
+int	input_port(void);
 int	integer_string_p(char *s);
 cell	intern_symbol(cell y);
 int	io_status(void);
 void	io_reset(void);
 int	length(cell n);
 char	*load_image(char *path, char *magic);
-int	lock_port(cell port);
+int	lock_port(int port);
 cell	make_char(int c);
 cell	make_integer(cell i);
 cell	make_norm_real(int flags, cell exp, cell mant);
@@ -479,14 +478,17 @@ cell	make_vector(int k);
 int	new_port(void);
 cell	new_vec(cell type, int size);
 int	open_input_port(char *path);
+char	*open_input_string(char *s);
 int	open_output_port(char *path, int append);
-cell	output_port(void);
+int	output_port(void);
+int	port_eof(int p);
 void	prints(char *s);
 int	printer_limit(void);
 void	print_bignum(cell n);
 void	print_expanded_real(cell n);
 void	print_real(cell n);
 void	print_sci_real(cell n);
+int	readc(void);
 cell	read_counter(counter *c);
 cell	real_abs(cell a);
 cell	real_add(cell a, cell b);
@@ -507,6 +509,7 @@ cell	real_to_bignum(cell r);
 cell	real_to_string(cell r, int mode);
 cell	real_trunc(cell x);
 cell	real_zero_p(cell a);
+void	reject(int c);
 void	reset_counter(counter *c);
 void	reset_std_ports(void);
 void	run_stats(int x);
@@ -526,7 +529,7 @@ cell	symbol_ref(char *s);
 cell	symbol_table(void);
 cell	symbol_to_string(cell x);
 char	*typecheck(cell f, cell a);
-int	unlock_port(cell port);
+int	unlock_port(int port);
 cell	unsave(int k);
 
 #ifdef S9FES
