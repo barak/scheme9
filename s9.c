@@ -4,7 +4,7 @@
  * In the public domain
  */
 
-#define VERSION "2015-08-10"
+#define VERSION "2015-11-08"
 
 #define S9FES
 #include "s9core.h"
@@ -1200,7 +1200,7 @@ cell lookup(cell v, cell env, int req) {
 		if (n != NIL)
 			return n;
 		if (e != NIL)
-			e = cdr(e);	/* skip over hash table */
+			e = cdr(e);	/* skip over hash slot */
 		while (e != NIL) {
 			if (v == caar(e))
 				return car(e);

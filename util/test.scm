@@ -51,8 +51,8 @@
   (if (not (equal? result expected))
       (fail expr result expected)))
 
-(define-syntax (test form result)
-  `(test3 ',form ,form ,result))
+(define-syntax (test form expected)
+  `(test3 ',form ,form ,expected))
 
 ; --- syntax ---
 

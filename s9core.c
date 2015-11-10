@@ -4,7 +4,7 @@
  * In the public domain
  */
 
-#define VERSION "20150810"
+#define VERSION "20151022"
 
 #include "s9core.h"
 
@@ -56,8 +56,10 @@ int		Input_port,
 		Output_port,
 		Error_port;
 
-char		*Str_port;
-int		Str_port_len;
+static char	*Str_outport;
+static int	Str_outport_len;
+static char	*Str_inport;
+static char	Rejected;
 
 static long     Node_limit,
 		Vector_limit;
@@ -174,6 +176,49 @@ void get_counters(counter **nc, counter **cc, counter **gc) {
  * Raw I/O
  */
 
+int readc(void) {
+	int	c;
+
+	if (Str_inport != NULL) {
+		if (Rejected > -1) {
+			c = Rejected;
+			Rejected = -1;
+			return c;
+		}
+		else if (0 == *Str_inport) {
+			return EOF;
+		}
+		else {
+			return *Str_inport++;
+		}
+	}
+	else {
+		return getc(Ports[Input_port]);
+	}
+}
+
+void reject(int c) {
+	if (Str_inport != NULL) {
+		Rejected = c;
+	}
+	else {
+		ungetc(c, Ports[Input_port]);
+	}
+}
+
+char *open_input_string(char *s) {
+	char	*os;
+
+	os = Str_inport;
+	Str_inport = s;
+	Rejected = -1;
+	return os;
+}
+
+void close_input_string(void) {
+	Str_inport = NULL;
+}
+
 void flush(void) {
 	if (fflush(Ports[Output_port]))
 		IO_error = 1;
@@ -189,15 +234,15 @@ int printer_limit(void) {
 }
 
 void blockwrite(char *s, int k) {
-	if (Str_port) {
-		if (k >= Str_port_len) {
-			k = Str_port_len;
+	if (Str_outport) {
+		if (k >= Str_outport_len) {
+			k = Str_outport_len;
 			IO_error = 1;
 		}
-		memcpy(Str_port, s, k);
-		Str_port += k;
-		Str_port_len -= k;
-		*Str_port = 0;
+		memcpy(Str_outport, s, k);
+		Str_outport += k;
+		Str_outport_len -= k;
+		*Str_outport = 0;
 		return;
 	}
 	if (Printer_limit && Printer_count > Printer_limit) {
@@ -1793,9 +1838,6 @@ cell string_to_bignum(char *s) {
 	cell	n, v, str;
 	int	k, j, sign;
 
-	str = make_string(s, strlen(s));
-	s = string(str);
-	save(str);
 	sign = 1;
 	if (s[0] == '-') {
 		s++;
@@ -1804,6 +1846,9 @@ cell string_to_bignum(char *s) {
 	else if (s[0] == '+') {
 		s++;
 	}
+	str = make_string(s, strlen(s));
+	save(str);
+	s = string(str);
 	k = (int) strlen(s);
 	n = NIL;
 	while (k) {
@@ -1811,11 +1856,11 @@ cell string_to_bignum(char *s) {
 		v = asctol(&s[k-j]);
 		s[k-j] = 0;
 		k -= j;
-		if (k == 0)
-			v *= sign;
 		n = new_atom(v, n);
+		s = string(str);
 	}
 	unsave(1);
+	car(n) = sign * car(n);
 	return new_atom(T_INTEGER, n);
 }
 
@@ -1980,7 +2025,7 @@ void print_real(cell n) {
 	m = Real_mantissa(n);
 	e = Real_exponent(n);
 	n_digits = count_digits(m);
-	if (e+n_digits > -4 && e+n_digits <= 6) {
+	if (e+n_digits > -MANTISSA_SIZE && e+n_digits <= MANTISSA_SIZE) {
 		print_expanded_real(n);
 		return;
 	}
@@ -1996,39 +2041,53 @@ cell bignum_to_int(cell x) {
 cell bignum_to_string(cell x) {
 	int	n;
 	cell	s;
+	int	ioe;
 
 	n = count_digits(cdr(x));
+	if (bignum_negative_p(x))
+		n++;
 	s = make_string("", n);
-	Str_port = string(s);
-	Str_port_len = n+1;
+	Str_outport = string(s);
+	Str_outport_len = n+1;
+	ioe = IO_error;
+	IO_error = 0;
 	print_bignum(x);
-	Str_port = NULL;
-	Str_port_len = 0;
-	if (IO_error)
+	n = IO_error;
+	IO_error = ioe;
+	Str_outport = NULL;
+	Str_outport_len = 0;
+	if (n) {
 		return UNDEFINED;
+	}
 	return s;
 }
 
 cell real_to_string(cell x, int mode) {
 	#define Z MANTISSA_SIZE+DIGITS_PER_CELL+10
 	char	buf[Z];
+	int	ioe, n;
 
-	Str_port = buf;
-	Str_port_len = Z;
+	Str_outport = buf;
+	Str_outport_len = Z;
+	ioe = IO_error;
+	IO_error = 0;
 	switch (mode) {
 	case 0:	print_real(x); break;
 	case 1:	print_sci_real(x); break;
 	case 2:	print_expanded_real(x); break;
 	default:
-		Str_port = NULL;
-		Str_port_len = 0;
+		Str_outport = NULL;
+		Str_outport_len = 0;
 		return UNDEFINED;
 		break;
 	}
-	Str_port = NULL;
-	Str_port_len = 0;
-	if (IO_error)
+	Str_outport = NULL;
+	Str_outport_len = 0;
+	n = IO_error;
+	IO_error = ioe;
+	if (n) {
 		return UNDEFINED;
+	}
 	return make_string(buf, strlen(buf));
 }
 
@@ -2084,11 +2143,17 @@ int open_output_port(char *path, int append) {
 	return i;
 }
 
-cell input_port(void) {
-	return Input_port;
+int port_eof(int p) {
+	if (p < 0 || p >= MAX_PORTS)
+		return -1;
+	return feof(Ports[p]);
 }
 
-cell output_port(void) {
+int input_port(void) {
+	return Str_inport? -1: Input_port;
+}
+
+int output_port(void) {
 	return Output_port;
 }
 
@@ -2115,14 +2180,14 @@ void reset_std_ports(void) {
 	Error_port = 2;
 }
 
-int lock_port(cell port) {
+int lock_port(int port) {
 	if (port < 0 || port >= MAX_PORTS)
 		return -1;
 	Port_flags[port] |= LOCK_TAG;
 	return 0;
 }
 
-int unlock_port(cell port) {
+int unlock_port(int port) {
 	if (port < 0 || port >= MAX_PORTS)
 		return -1;
 	Port_flags[port] &= ~LOCK_TAG;
@@ -2490,8 +2555,9 @@ void s9init(cell **extroots) {
 	Input_port = 0;
 	Output_port = 1;
 	Error_port = 2;
-	Str_port = NULL;
-	Str_port_len = 0;
+	Str_outport = NULL;
+	Str_outport_len = 0;
+	Str_inport = NULL;
 	resetpools();
 	Node_limit = NODE_LIMIT * 1024L;
 	Vector_limit = VECTOR_LIMIT * 1024L;
@@ -2512,7 +2578,7 @@ void s9init(cell **extroots) {
 	Zero = make_integer(0);
 	One = make_integer(1);
 	Two = make_integer(2);
-	Epsilon = Make_quick_real(0, -MANTISSA_SIZE+1, cdr(One));
+	Epsilon = Make_quick_real(0, -MANTISSA_SIZE, cdr(One));
 }
 
 void s9fini() {
