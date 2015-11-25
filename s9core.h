@@ -504,6 +504,8 @@ cell	real_multiply(cell a, cell b);
 cell	real_negate(cell a);
 cell	real_negative_p(cell a);
 cell	real_positive_p(cell a);
+cell	real_power(cell x, cell y);
+cell	real_sqrt(cell x);
 cell	real_subtract(cell a, cell b);
 cell	real_to_bignum(cell r);
 cell	real_to_string(cell r, int mode);

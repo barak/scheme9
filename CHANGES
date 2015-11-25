@@ -1,6 +1,12 @@
 
 Change Log
 
+2015-11-19
+	real_ceil(), real_floor(), real_trunc() could fail when being
+	passed an integer. Thanks, Alexander Shendi! (s9core.c)
+2015-11-17
+	Added real_power() function to s9core, added EXPT primitive
+	(unused, though; the Scheme version is faster). (s9core.[ch])
 2015-11-08
 	S9core: added the open_input_string(), close_input_string(),
 	and port_eof() functions. (s9core.[ch])

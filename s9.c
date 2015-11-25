@@ -4,7 +4,7 @@
  * In the public domain
  */
 
-#define VERSION "2015-11-08"
+#define VERSION "2015-11-19"
 
 #define S9FES
 #include "s9core.h"
@@ -1913,6 +1913,10 @@ cell pp_even_p(cell x) {
 	return even_p("even?", car(x))? TRUE: FALSE;
 }
 
+cell pp_expt(cell x) {
+	return real_power(car(x), cadr(x));
+}
+
 cell pp_greater(cell x) {
 	while (cdr(x) != NIL) {
 		if (!number_p(cadr(x)))
@@ -3214,6 +3218,7 @@ PRIM Core_primitives[] = {
  { "even?",               pp_even_p,              1,  1, { REA,___,___ } },
  { "exact->inexact",      pp_exact_to_inexact,    1,  1, { REA,___,___ } },
  { "exact?",              pp_exact_p,             1,  1, { REA,___,___ } },
+ { "expt",                pp_expt,                2,  2, { REA,REA,___ } },
  { "exponent",            pp_exponent,            1,  1, { REA,___,___ } },
  { "file-exists?",        pp_file_exists_p,       1,  1, { STR,___,___ } },
  { "floor",               pp_floor,               1,  1, { REA,___,___ } },
