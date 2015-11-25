@@ -4,7 +4,7 @@
  * In the public domain
  */
 
-#define VERSION "20151022"
+#define VERSION "20151119"
 
 #include "s9core.h"
 
@@ -72,7 +72,8 @@ static void	(*Mem_error_handler)(int src);
 /* Predefined bignum literals */
 cell	Zero,
 	One,
-	Two;
+	Two,
+	Ten;
 
 /* Smallest representable real number */
 cell	Epsilon;
@@ -80,7 +81,7 @@ cell	Epsilon;
 /* Internal GC roots */
 static cell	*GC_int_roots[] = { &Stack, &Symbols, &Tmp, &Tmp_car,
 					&Tmp_cdr, &Zero, &One, &Two,
-					&Epsilon, NULL };
+					&Ten, &Epsilon, NULL };
 
 /* External GC roots */
 static cell	**GC_ext_roots = NULL;
@@ -1184,7 +1185,7 @@ cell bignum_multiply(cell a, cell b) {
 
 /*
  * Equalize A and B, e.g.:
- * A=123, B=12345 ---> 12300, 100
+ * A=123, B=12345 --> 12300, 100
  * Return (scaled-a . scaling-factor)
  */
 static cell bignum_equalize(cell a, cell b) {
@@ -1727,11 +1728,166 @@ cell real_divide(cell a, cell b) {
 	return r;
 }
 
+cell real_sqrt(cell x) {
+	cell	n0, n1, d;
+	int	r;
+
+	if (real_negative_p(x))
+		return UNDEFINED;
+	if (real_zero_p(x))
+		return Zero;
+	save(x);
+	n0 = n1 = x;
+	save(n0);
+	while (1) {
+		n1 = real_divide(x, n0);
+		if (n1 == UNDEFINED)
+			break;
+		n1 = real_add(n1, n0);
+		n1 = real_divide(n1, Two);
+		save(n1);
+		d = real_subtract(n0, n1);
+		d = real_abs(d);
+		r = real_less_p(d, Epsilon);
+		n0 = unsave(1);
+		if (r) {
+			break;
+		}
+		car(Stack) = n0;
+	}
+	unsave(2);
+	return n1;
+}
+
+/*
+ * Real power algorithm from
+ * http://stackoverflow.com/questions/3518973
+ * Thanks, Tom Sirgedas!
+ */
+
+static cell rpower(cell x, cell y, cell prec) {
+	cell	n, nprec;
+
+	/*
+	if (Error)
+		return Zero;
+	*/
+	if (real_equal_p(y, One)) {
+		return x;
+	}
+	if (!real_less_p(y, Ten)) {
+		save(x);
+		n = real_divide(y, Two);
+		car(Stack) = n;
+		nprec = real_divide(prec, Two);
+		save(nprec);
+		n = rpower(x, n, nprec);
+		if (n == UNDEFINED) {
+			unsave(2);
+			return UNDEFINED;
+		}
+		unsave(1);
+		car(Stack) = n;
+		n = real_multiply(n, n);
+		unsave(1);
+		return n;
+	}
+	if (!real_less_p(y, One)) {
+		y = real_subtract(y, One);
+		save(y);
+		n = rpower(x, y, prec);
+		if (n == UNDEFINED) {
+			unsave(1);
+			return UNDEFINED;
+		}
+		unsave(1);
+		n = real_multiply(x, n);
+		return n;
+	}
+	if (!real_less_p(prec, One))
+		return real_sqrt(x);
+	y = real_multiply(y, Two);
+	save(y);
+	nprec = real_multiply(prec, Two);
+	save(nprec);
+	n = rpower(x, y, nprec);
+	if (n == UNDEFINED) {
+		unsave(2);
+		return UNDEFINED;
+	}
+	unsave(2);
+	return real_sqrt(n);
+}
+
+static cell npower(cell x, cell y) {
+	cell	n;
+	int	even;
+
+	/*
+	if (Error)
+		return Zero;
+	*/
+	if (real_zero_p(y))
+		return One;
+	if (real_equal_p(y, One))
+		return x; 
+	save(x);
+	n = bignum_divide(y, Two);
+	even = bignum_zero_p(cdr(n));
+	car(Stack) = n;
+	n = npower(x, car(n));
+	car(Stack) = n;
+	n = real_multiply(n, n);
+	car(Stack) = n;
+	if (!even) {
+		n = real_multiply(x, n);
+		car(Stack) = n;
+	}
+	unsave(1);
+	return n;
+}
+
+cell real_power(cell x, cell y) {
+	Tmp = x;
+	save(y);
+	save(x);
+	Tmp = NIL;
+	if (integer_p(y)) {
+		x = npower(x, y);
+		if (bignum_negative_p(y))
+			x = real_divide(One, x);
+		unsave(2);
+		if (real_p(x)) {
+			y = real_to_bignum(x);
+			if (y != UNDEFINED)
+				x = y;
+		}
+		return x;
+	}
+	if (real_negative_p(y)) {
+		y = real_abs(y);
+		save(y);
+		x = rpower(x, y, Epsilon);
+		unsave(3);
+		if (x == UNDEFINED)
+			return x;
+		return real_divide(One, x);
+	}
+	x = rpower(x, y, Epsilon);
+	unsave(2);
+	if (real_p(x)) {
+		y = real_to_bignum(x);
+		if (y != UNDEFINED)
+			x = y;
+	}
+	return x;
+}
+
 /* type: 0=trunc, 1=floor, 2=ceil */
 cell rround(cell x, int type) {
 	cell	n, m, e;
 
-	e = Real_exponent(x);
+	e = real_exponent(x);
 	if (e >= 0)
 		return x;
 	save(x);
@@ -2578,6 +2734,7 @@ void s9init(cell **extroots) {
 	Zero = make_integer(0);
 	One = make_integer(1);
 	Two = make_integer(2);
+	Ten = make_integer(10);
 	Epsilon = Make_quick_real(0, -MANTISSA_SIZE, cdr(One));
 }
 
@@ -2818,6 +2975,22 @@ void test_real(void) {
 	if (!result(N, -1, 12756)) error("real_subtract()");
 	N = real_to_bignum(A);
 	if (bignum_to_int(N) != 1230) error("real_to_bignum()");
+	N = real_multiply(Ten, Ten);
+	N = real_sqrt(N);
+	if (!real_equal_p(N, Ten)) error("real_sqrt(1)");
+	N = make_real(1, -2, make_integer(256));
+	N = real_sqrt(N);
+	A = make_real(1, -1, make_integer(16));
+	if (!real_equal_p(N, A)) error("real_sqrt(2)");
+	N = real_power(Two, Ten);
+	if (!real_equal_p(N, make_integer(1024))) error("real_power(1)");
+	N = real_power(Two, real_negate(Two));
+	A = make_real(1, -2, make_integer(25));
+	if (!real_equal_p(N, A)) error("real_power(2)");
+	A = real_sqrt(Two);
+	B = make_real(1, -1, make_integer(5));
+	B = real_power(Two, B);
+	if (!real_equal_p(A, B)) error("real_power(3)");
 }
 
 void print_test(char *name, void (*printer)(cell), cell n, char *s) {

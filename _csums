@@ -1,10 +1,10 @@
-39230 8 ./Makefile
-29894 13 ./s9core.h
-26401 93 ./s9.c
+12753 8 ./Makefile
+10960 13 ./s9core.h
+33372 93 ./s9.c
 23969 9 ./MASCOT.png
-20588 76 ./s9core.tr
+10766 76 ./s9core.tr
 160 35 ./s9.scm
-60416 59 ./s9core.c
+34985 62 ./s9core.c
 18002 19 ./s9.1.txt
 20304 1 ./ABOUT
 41089 38 ./contrib/format.scm
@@ -158,7 +158,7 @@
 46739 4 ./lib/char-plot.scm
 2895 2 ./lib/collect.scm
 58798 1 ./lib/cdf.scm
-16293 1 ./lib/erf.scm
+33407 1 ./lib/erf.scm
 990 1 ./lib/mean.scm
 14057 1 ./lib/median.scm
 63257 1 ./lib/mode.scm
@@ -616,7 +616,7 @@
 48144 1 ./util/s9.rc
 41741 13 ./util/fix-help-files
 14635 2 ./README.s9core
-5583 79 ./CHANGES
+55366 79 ./CHANGES
 32621 2 ./LICENSE
 47295 8 ./README
 3386 1 ./TODO

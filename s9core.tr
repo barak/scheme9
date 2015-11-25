@@ -2188,6 +2188,19 @@ line right 4.5i
 These predicates test whether the given number is zero, negative, or
 positive, respectively.
 .PQ
+.X real_power
+.CO "cell real_power(cell a, cell b);"
+.sp -0.7
+.PS
+line right 4.5i
+.PE
+.PA
+This function returns $a sup b$. Both $a$ and $b$ may be real numbers,
+but when $b$ has a fractional part, $a$ must be positive (i.e. the result
+of
+.K real_power()
+may not be a complex number).
+.PQ
 .X real_subtract
 .CO "cell real_subtract(cell a, cell b);"
 .sp -0.7
@@ -2275,6 +2288,7 @@ and
 are assigned to the port handles 0, 1, and 2 when S9core is initialized.
 These ports are locked from the beginning.
 .PQ
+.bp \&XXX
 .X blockread
 .CO "int blockread(char *s, int k);"
 .sp -0.7
@@ -2722,7 +2736,6 @@ are there options:
 .LI "Restart S9core by calling \f[CB]s9fini()\fP and then \f[CB]s9init()\fP
 .LI "Terminate the process with \f[CB]fatal()\fP
 .LE
-.bp \&XXX
 .sp -1
 .SH "Memory Management"
 .X gc
@@ -2785,6 +2798,7 @@ be used to denote exponents in the output of
 The default exponent characters are
 .K """eE""" .
 .PQ
+.bp \&XXX
 .X integer_string_p
 .X string_numeric_p
 .CO "int integer_string_p(char *s);"
@@ -2871,7 +2885,6 @@ real numbers. Its result is undefined for non-numeric strings. See also:
 .K string_to_real () ,
 .K integer_string_p() .
 .PQ
-.bp \&XXX
 .sp -1
 .SH "Counters"
 .X counter
@@ -3024,7 +3037,6 @@ instance, an O(1) destructive append. $"lastp"$ will be ignored, if $n$
 is
 .K NULL .
 .PQ
-.bp \&XXX
 .X length
 .CO "int length(cell n);"
 .sp -0.7
@@ -3356,9 +3368,10 @@ would be the proper way.
 \f[CB]Real_negative\fP \n[Real_negative]
 \f[CB]Real_negative_flag\fP \n[Real_negative_flag]
 \f[CB]real_negative_p\fP \n[real_negative_p]
+\f[CB]real_p\fP \n[real_p]
 \f[CB]Real_positive\fP \n[Real_positive]
 \f[CB]real_positive_p\fP \n[real_positive_p]
-\f[CB]real_p\fP \n[real_p]
+\f[CB]real_power\fP \n[real_power]
 \f[CB]real_subtract\fP \n[real_subtract]
 \f[CB]real_to_bignum\fP \n[real_to_bignum]
 \f[CB]real_trunc\fP \n[real_trunc]
