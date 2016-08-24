@@ -1,3 +1,12 @@
+scheme9 (2016.08.23-1) unstable; urgency=medium
+
+  * New Upstream Version
+  * bump debian version
+  * more secure url
+  * forward port quilt patches
+  
+ -- Barak A. Pearlmutter <bap@debian.org>  Wed, 24 Aug 2016 02:28:22 +0200
+
 scheme9 (2015.11.19-1) unstable; urgency=medium
 
   * New Upstream Version
