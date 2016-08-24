@@ -1,13 +1,14 @@
 
 	S9 CORE
 	A Toolkit for Implementing Dynamic Languages
-	By Nils M Holm, 2015
+	By Nils M Holm, 2015-2016
 	In the public domain
 
 
 	S9core is an easy-to-use toolbox for designers of programming
 	languages. It frees the implementor from re-inventing the wheel.
-	It is a single-file collection of functions providing
+	It is a single-file collection (plus some headers) of functions
+	providing
 
 	- a garbage collected heap
 
@@ -21,8 +22,8 @@
 
 	- etc
 
-	S9core is available on all platforms providing a C89 compiler
-	as well as on Plan9 (native).
+	S9core is available on all platforms providing a C99 compiler
+	(C89 on 32-bit machines) as well as on Plan9 (native).
 
 	See the documentation in s9core.pdf for further details.
 
@@ -35,14 +36,15 @@
 
 	To use S9core in your project, there are two options:
 
-	- copy the files "s9core.c" and "s9core.h" to you new project
-	  directory and just compile and link them against the other
-	  files
+	- copy the files "s9core.c", "s9core.h", and "s9import.h" to
+	  your new project directory and just compile and link S9core
+	  against the other files
 
-	- #include <s9core.h> in your project and link against s9core.a
+	- #include <s9core.h> and (optionally) <s9import.h> in your
+	  project and link against s9core.a
 
-	If you want to include the "s9core.c" and "s9core.h" files in
-	your project, note that you can compile s9core with
+	If you want to include the S9core files in your project, note
+	that you can compile s9core with
 
 		cc -DTEST -o s9core s9core.c
 

@@ -63,6 +63,78 @@ heap grows)"
 .TL ""
 .bp
 .HD "Reference Manual"
+.SH "Setup and Namespace"
+.PA
+A module that intends to use the S9core tool kit must include the
+S9core header using
+.PQ
+.CO "#include <s9core.h>"
+.PA
+As of Mk II, the tool kit has a separate name space which is implemented
+by beginning all symbol names with a
+.K S9_
+or
+.K s9_
+prefix. However, many symbols can be ``imported'' by adding
+.PQ
+.CO "#include <s9import.h>"
+.PA
+Doing so will create aliases of most definitions with the prefix removed,
+so you can write, for instance:
+.PQ
+.CO "cons(a, cons(b, NIL))"
+.PA
+instead of
+.PQ
+.CO "s9_cons(a, s9_cons(b, S9_NIL))"
+.PA
+There are some symbol names that will not have aliases \- mostly tuneable
+parameters of
+.K s9core.h .
+Those names will print with their prefixes in this text. All other names
+will have their prefixes removed.
+.PQ
+.PA
+When a module wants to use S9core functions without importing them, the
+following rules apply:
+.PQ
+.PA
+A lower-case function or macro name is prefixed with
+.K s9_ ,
+e.g.
+.K bignum_add
+becomes
+.K s9_bignum_add .
+.PQ
+.PA
+A capitalized function or macro name has its first letter converted to
+lower case and an
+.K S9_
+prefix attached, e.g.:
+.K Real_exponent
+becomes
+.K S9_real_exponent .
+.PQ
+.PA
+An upper-case symbol gets an
+.K S9_
+prefix, e.g.:
+.K NIL
+becomes
+.K S9_NIL .
+.PQ
+.X S9_VERSION
+.CO "S9_VERSION"
+.sp -0.7
+.PS
+line right 4.5i
+.PE
+.PA
+The
+.K S9_VERSION
+macro expands to a string holding the S9core version in
+``YYYYMMDD'' (year, month, day) format.
+.PQ
 .SH "C-Level Data Types"
 .PA
 At C level, there are only two data types in S9core. Dynamic typing is
@@ -85,7 +157,7 @@ Example:
 .PQ
 .CO "cell x, y;"
 .X PRIM
-.CO "PRIM (struct Primitive_procedure)"
+.CO "PRIM (struct S9_primitive)"
 .sp -0.7
 .PS
 line right 4.5i
@@ -96,7 +168,7 @@ A
 is a structure containing information about a primitive procedure:
 .PQ
 .CB
-struct Primitive_procedure { 
+struct S9_primitive { 
         char    *name;  
         cell    (*handler)(cell expr);
         int     min_args;
@@ -176,21 +248,21 @@ so it is safe, for example to write
 or
 .PQ
 .CB
-cell n = cons(a, NIL);
+cell n = cons(c, NIL);
 n = cons(b, n);
-n = cons(c, n);
+n = cons(a, n);
 .CE
 .PA
 In the first case, the integer created by
 .K make_integer()
 will be protected in the application of
 .K make_real() .
-In the second example, the object $a$ will be protected in the first
+In the second example, the object $c$ will be protected in the first
 call, and the list $n$ will be protected in all subsequent applications
 of 
 .K cons() .
-Note that the objects $b$ and $c$ are not protected during the first call
-and $c$ is not protected during the second call, though.
+Note that the objects $b$ and $a$ are not protected during the first call
+and $a$ is not protected during the second call, though.
 .PQ
 .PA
 Use
@@ -203,15 +275,15 @@ and
 .SH "Configuration"
 .sp -1
 .SU "Initialization and Shutdown"
-.X s9init
-.CO "void s9init(cell **extroots);"
+.X s9_init
+.CO "void s9_init(cell **extroots);"
 .sp -0.7
 .PS
 line right 4.5i
 .PE
 .PA
 The
-.K s9init()
+.K s9_init()
 function initializes the memory pools, connects the first three I/O ports
 to
 .K stdin ,
@@ -241,17 +313,17 @@ Example:
 cell Environment;
 cell *GC_roots[] = { &Environment, NULL };
 \&...
-s9init(GC_roots);
+s9_init(GC_roots);
 .CE
-.X s9fini
-.CO "void s9fini(void);"
+.X s9_fini
+.CO "void s9_fini(void);"
 .sp -0.7
 .PS
 line right 4.5i
 .PE
 .PA
 The
-.K s9fini()
+.K s9_fini()
 function shuts down S9core and releases all memory allocated by it.
 This function is normally never called, because clean-up is done by
 the operating system.
@@ -264,21 +336,21 @@ of the toolkit, for example to recover from a failed image load (see
 .PQ
 .sp -1
 .SU "Memory Allocation"
-.X NODE_LIMIT
-.X VECTOR_LIMIT
-.CO "NODE_LIMIT"
+.X S9_NODE_LIMIT
+.X S9_VECTOR_LIMIT
+.CO "S9_NODE_LIMIT"
 .sp -0.5
-.CO "VECTOR_LIMIT"
+.CO "S9_VECTOR_LIMIT"
 .sp -0.7
 .PS
 line right 4.5i
 .PE
 .PA
 The
-.K NODE_LIMIT
+.K S9_NODE_LIMIT
 and
-.K VECTOR_LIMIT
-constants specify the maximal sizes if the node pool and the vector pool,
+.K S9_VECTOR_LIMIT
+constants specify the maximal sizes of the node pool and the vector pool,
 respectively. The ``pools'' are used to allocate objects at run time. Their
 sizes are measured in ``nodes'' for the node pool and
 .K cell s
@@ -309,9 +381,9 @@ allocated to primitive functions at initialization time).
 .PA
 When S9core runs out of memory, it will print a message and terminate
 program execution. However, a program can request to handle memory
-allocation failure itself (see the
+allocation failure itself by passing a handler to the
 .K mem_error_handler()
-function for an explanation).
+function (further explanations can be found below).
 .PQ
 .PA
 The amount allocated to S9core can be changed by the user. See the
@@ -330,7 +402,7 @@ line right 4.5i
 When a function pointer is passed to
 .K mem_error_handler() ,
 S9core will no longer terminate program execution when a node or vector
-allocation request fails. Instead, the request will
+allocation request fails. The request will
 .I succeed
 and the function
 passed to
@@ -346,13 +418,13 @@ source of the error: 1 denotes the node allocator and 2 indicates the
 vector allocator.
 .PQ
 .PA
-Allocation requests can still succeed in case of a failed allocation, because
-S9core
+Allocation requests can still succeed in case of a low memory condition,
+because S9core
 .I never
-allocates more than 50% of each pool. This is done, because using more than
+allocates more than 50% of each pool. (This is done, because using more than
 half of a pool will result in
 .I "GC thrashing" ,
-which would reduce performance dramatically.
+which would reduce performance dramatically.)
 .PQ
 .PA
 As soon as a memory error handler has been invoked, thrashing
@@ -391,28 +463,25 @@ Setting either value to zero will disable the corresponding memory limit,
 i.e. S9core will grow the memory pools indefinitely until physical memory
 allocation fails. This may cause
 .I "massive swapping"
-in high-memory applications.
+in memory-heavy applications.
 .PQ
 .PA
-S9core memory both start with a size of 32768 units
-(\f[CB]INITIAL_SEGMENT_SIZE\fP constant)
-and grow exponentially to a base of $3/2$. With the default settings,
-the limit will be reached after growing either pool for 15 times.
+S9core memory pools both start with a size of 32768 units
+(\f[CB]S9_INITIAL_SEGMENT_SIZE\fP constant)
+and grow exponentially to a base of $size -3 {3 over 2}$. With the default
+settings, the limit will be reached after growing either pool for 15 times.
 .PQ
 .PA
-Note that actual memory limits all have the form
-.PQ
-.EE "$32768 times left ( {3} over {2} right ) sup n$"
-.PA
-so specifying a limit that is not constructed using the above formula
-will probably be smaller than expected. Reasonable memory limits (using
-the default segment size) are listed in figure 1.
+Note that actual memory limits all have the form $32768 times 1.5 sup n$,
+so a limit that is not constructed using the above formula will probably
+be smaller than expected. Reasonable memory limits (using the default
+segment size) are listed in figure 1.
 .PQ
 .PA
 As can be seen in the table, the minimal memory footprint of S9core is
-416K bytes on 32-bit and 800K bytes on 64-bit systems. If a smaller initial
-pool size is needed, the
-.K INITIAL_SEGMENT_SIZE
+416K bytes on 32-bit and 800K bytes on 64-bit systems. In order to obtain
+a smaller initial memory footprint, the
+.K S9_INITIAL_SEGMENT_SIZE
 constant has to be reduced and the table in figure 1 has to be recalculated.
 .PQ
 .S
@@ -463,32 +532,32 @@ Fig 1. Memory Limits
 .PQ
 .sp -1
 .SU "Arithmetics"
-.X DIGITS_PER_WORD
-.X INT_SEG_LIMIT
-.CO "DIGITS_PER_WORD"
+.X S9_DITIGS_PER_CELL
+.X S9_INT_SEG_LIMIT
+.CO "S9_DITIGS_PER_CELL"
 .sp -0.5
-.CO "INT_SEG_LIMIT"
+.CO "S9_INT_SEG_LIMIT"
 .sp -0.7
 .PS
 line right 4.5i
 .PE
 .PA
-.K DIGITS_PER_CELL
+.K S9_DIGITS_PER_CELL
 is the number of
 .I decimal
 digits that can be represented by a
 .K cell
 and
-.K INT_SEG_LIMIT
-is the smallest integer that
-.I cannot
+.K S9_INT_SEG_LIMIT
+is the smallest integer that can
+.I not
 be represented by an ``integer segment'' (which has the size of one
 .K cell ).
 The integer segment limit is equal to
 .PQ
 .S
 .EQ
-10 sup "DIGITS_PER_WORD"
+10 sup "S9_DITIGS_PER_CELL"
 .EN
 .PA
 A
@@ -500,7 +569,7 @@ represented by chains of
 .PQ
 .PA
 The practical use of the
-.K INT_SEG_LIMIT
+.K S9_INT_SEG_LIMIT
 constant is that bignums that are smaller than this limit can be converted
 to (long) integers just be extracting their first segment.
 .PQ
@@ -508,26 +577,37 @@ to (long) integers just be extracting their first segment.
 These values are
 .I not
 tunable.
-.K DIGITS_PER_CELL
+.K S9_DIGITS_PER_CELL
 is 18 on 64-bit machines, 9 on 32- bit machines, and (theoretically)
 4 on 16-bit machines.
 .PQ
-.X MANTISSA_SEGMENTS
-.CO "MANTISSA_SEGMENTS"
+.X S9_MANTISSA_SEGMENTS
+.X S9_MANTISSA_SIZE
+.CO "S9_MANTISSA_SEGMENTS"
+.sp -0.5
+.CO "S9_MANTISSA_SIZE"
 .sp -0.7
 .PS
 line right 4.5i
 .PE
 .PA
-This is the number of integer segments (see above) in the mantissae of
+.K S9_MANTISSA_SEGMENTS
+his is the number of integer segments (see above) in the mantissae of
 real numbers. The default is one segment (18 digits of precision) on
 64-bit hosts and two segments (also 18 digits) on 32-bit platforms.
 Each additional mantissa segment increases precision by
-.K DIGITS_PER_CELL
+.K S9_DIGITS_PER_CELL
 (see above), but also slows down real number computations.
 .PQ
 .PA
 This is a compile-time option and cannot be tweaked at run time.
+.PQ
+.PA
+.K S9_MANTISSA_SIZE
+is the number of decimal digits in a mantissa. It is used in the
+computation of various values, such as
+.K Epsilon
+[pg \n[Epsilon]].
 .PQ
 .sp -1
 .SH "S9core Types"
@@ -536,13 +616,12 @@ S9core data types are pretty LISP- or Scheme-centric, but most of
 them can be used in a variety of languages.
 .PQ
 .PA
-Each type tag may be associated with a predicate testing for the type,
+Each type may be associated with a predicate testing for the type,
 an allocator creating an object of the given type, and one or more
 accessors that extract values from the type. Predicates always return
 0 (false) or 1 (true). Type predicates succeed (return 1) if the object
 passed to them is of the given type.
 .PQ
-.bp \&XXX
 .sp -1
 .SU "Special Values"
 .PA
@@ -560,9 +639,9 @@ line right 4.5i
 .PE
 .PA
 .K NIL
-(``Not In List'') denotes the end of a list. For instance, to create
-a list of the objects $a$, $b$, and $c$, the following S9core code
-would be used:
+(``Not In List'') denotes the end of a list, an empty list, or an empty
+return value. For example, to create a list of the objects $a$, $b$, and
+$c$, the following S9core code would be used:
 .PQ
 .CB
 cell list = cons(c, NIL);
@@ -571,7 +650,8 @@ list = cons(a, list);
 .CE
 .PA
 See also:
-.K T_LIST .
+.K T_LIST
+[pg \n[T_LIST]]
 .PQ
 .X END_OF_FILE
 .X eof_p
@@ -623,14 +703,14 @@ line right 4.5i
 .PA
 The
 .K UNSPECIFIC
-value can be returned by functions to indicate that the return value is
+value can be returned by functions to indicate that their return value is
 of no importance and should be ignored.
 .PQ
 .X USER_SPECIALS
-.X special_value_p
+.X special_p
 .CO "USER_SPECIALS"
 .sp -0.5
-.CO "special_value_p(x)"
+.CO "special_p(x)"
 .sp -0.7
 .PS
 line right 4.5i
@@ -641,7 +721,7 @@ When more special values are needed, they should be assigned
 starting at the value of the
 .K USER_SPECIALS
 constant. The predicate
-.K special_value_p()
+.K special_p()
 will return truth for all special values, including user-defined ones.
 .PQ
 .PA
@@ -651,8 +731,36 @@ Example:
 #define TOP      (USER_SPECIALS-0)
 #define BOTTOM   (USER_SPECIALS-1)
 .CE
+.X VOID
+.EE "Type: \f[CB]VOID\fP"
+.sp -0.5
+.EE "Predicate: \f[CB]x == VOID\fP"
+.sp -0.7
+.PS
+line right 4.5i
+.PE
+.PA
+.K VOID
+denotes the absence of a value. While
+.K UNSPECIFIC
+is typically
+.I returned
+by a function to indicate that its value is uninteresting,
+.K VOID
+may be
+.I passed
+to a function to indicate that the corresponding
+argument may be ignored.
+.PQ
 .sp -1
 .SU "Tagged Types"
+.PA
+A ``tagged'' object is a compound data object (pair, tree) with a type tag
+in its first slot. Tagged objects typically carry some payload, such as an
+integer value, an I/O port, or a symbol name. The internal structure of
+a tagged object does not matter; it is created using an allocator function
+and its payload is accessed using one or multiple accessor functions.
+.PQ
 .X T_ANY
 .EE "Type: \f[CB]T_ANY\fP"
 .sp -0.7
@@ -731,7 +839,7 @@ line right 4.5i
 The
 .K make_port()
 allocator boxes a port handle. The port handle must be obtained by one
-of the I/O routines [pg \n[IO]] before.
+of the I/O routines [pg \n[IO]] before passing it to this function.
 .K port_no()
 returns the port handle stored in an
 .K T_INPUT_PORT
@@ -768,12 +876,12 @@ function creates a single-segment bignum integer in the range from
 .PQ
 .S
 .EQ
--10 sup{"DIGITS_PER_WORD"}+1 ~~"to"~~ 10 sup{"DIGITS_PER_WORD"}-1
+-10 sup{"S9_DITIGS_PER_CELL"}+1 ~~"to"~~ 10 sup{"S9_DITIGS_PER_CELL"}-1
 .EN
 .PA
 To create larger bignum integers, the
 .K string_to_bignum()
-[pg \n[string_to_bignum]] function has to be used.
+function [pg \n[string_to_bignum]] has to be used.
 .PQ
 .PA
 The
@@ -824,7 +932,7 @@ exclusively.
 .PA
 The
 .K cons()
-allocator returns an ordered ``pair'' of any two values. It is in fact
+allocator returns an ordered pair of any two values. It is in fact
 an incarnation of the LISP function of the same name. The accessors
 .K car()
 and
@@ -833,7 +941,7 @@ retrieve the first and second value from a pair, respectively.
 .PQ
 .PA
 .K pair_p()
-checks for a pair as created by
+succeeds for pairs created by
 .K cons() .
 .K T_LIST
 corresponds to
@@ -849,8 +957,8 @@ and friends, are also available and will be explained later in this text.
 Example:
 .PQ
 .CB
-cell x = cons(One, Two); /* pair */
 cons(One, NIL);          /* list */
+cell x = cons(One, Two); /* pair */
 car(x);                  /* One  */
 cdr(x);                  /* Two  */
 .CE
@@ -912,7 +1020,7 @@ function retrieves the stored information (as a
 The
 .K prim_slot()
 accessor returns the slot number allocated for a given primitive function
-object in the internal table. Table offsets can be used yo identify
+object in the internal table. Table offsets can be used to identify
 individual primitive functions.
 .PQ
 .PA
@@ -953,6 +1061,7 @@ For example, a LISP function allocator might look like this:
 .CB
 .ps -1
 cell make_function(cell args, cell body, cell env) {
+        /* args and body should be GC-protected! */
         cell fun = cons(env, NIL);
         fun = cons(body, fun);
         fun = cons(args, fun);
@@ -961,8 +1070,8 @@ cell make_function(cell args, cell body, cell env) {
 .ps
 .CE
 .PA
-Given the structure of the function objects, the corresponding accessors
-would look like this:
+Given the structure of this function object, the corresponding
+accessors would look like this:
 .PQ
 .CB
 #define fun_args(x) (cadr(x))
@@ -994,7 +1103,7 @@ line right 4.5i
 .PA
 A real number consists of three parts, a ``mantissa'' (the digits of the
 number), an exponent (the position of the decimal point), and a ``flags''
-field, containing the sign of the number.
+field, currently just containing the sign of the number.
 .PQ
 .PA
 The value of a real number is
@@ -1032,13 +1141,13 @@ The
 function is the principal real number allocator. It expects a sign $s$ ($-1$
 or $1$), an exponent as single
 .K cell ,
-and a mantissa in the form of a bignum integer. When the mantissa is too large,
-it will return
+and a mantissa in the form of a bignum integer. When the mantissa is too
+large, the function will return
 .K UNDEFINED .
 .PQ
 .PA
 .K Make_real()
-is a ``quick and dirty'' allocator. I expects a flags field in the place of
+is a ``quick and dirty'' allocator. It expects a flags field in the place of
 a sign, a chain of integer segments instead of a bignum, and it does not
 perform any overflow checking.
 .I "Caution: This function can create an invalid real number!"
@@ -1081,8 +1190,8 @@ Strings are counted
 NUL-terminated. The counted length of a given string is returned by the
 .K string_len()
 function, the C string length of $x$ is
+.K "strlen(string(x))" .
 .PQ
-.CO "strlen(string(x))"
 .PA
 The
 .K string()
@@ -1109,7 +1218,7 @@ memcpy(string(dest), string(source), k);
 .PA
 Alternatively, the
 .K copy_string()
-function may be used.
+function [pg \n[copy_string]] may be used.
 .PQ
 .X T_SYMBOL
 .X make_symbol
@@ -1185,7 +1294,6 @@ object.
 .PQ
 .X T_VECTOR
 .X make_vector
-.X make_byte_vector
 .X vector_p
 .X vector
 .X vector_len
@@ -1303,7 +1411,7 @@ given string object.
 .PQ
 .X new_atom
 .X atom_p
-.CO "new_atom(a, d)"
+.CO "new_atom(x, d)"
 .sp -0.5
 .CO "atom_p(x)"
 .sp -0.7
@@ -1316,16 +1424,16 @@ An
 is a node with its atom flag set. Unlike a ``cons'' node, as
 delivered by
 .K cons() ,
-an atom has no reference to another node in its ``car'' field. Instead
+an atom has no reference to another node in its car field. Instead
 of a reference, it can carry any value in the car field, for example:
-a character of a character object, a bignum integer segment, or a type tag.
+the character of a character object, a bignum integer segment, or a type tag.
 The
 .K new_atom()
-function expects any value in the $a$ parameter and a node reference in
+function expects any value in the $x$ parameter and a node reference in
 the $d$ parameter.
 .PQ
 .PA
-(Non-special) S9core types are composed of multiple atoms. For example,
+Tagged S9core objects are composed of multiple atoms. For example,
 the following program would create a ``character'' object containing the
 character
 .K 'x' :
@@ -1335,7 +1443,7 @@ cell n = new_atom('x', NIL);
 n = new_atom(T_CHAR, n);
 .CE
 .PA
-(Don't do this, though! Use
+(Don't do this, though; use
 .K make_char()
 instead!)
 .PQ
@@ -1388,10 +1496,10 @@ line right 4.5i
 .PA
 This function allocates a new
 .I vector .
-A vector object has a type tag in its car and a reference to the vector
-pool in its cdr field, that is, neither of its field reference any other
-nodes. The $"type"$ parameter is the type tag to be installed in the new
-vector atom and $"size"$ is the number
+A vector object has a type tag in its car field and a reference into the
+vector pool in its cdr field, that is, neither of its fields reference any
+other node. The $"type"$ parameter is the type tag to be installed in the
+new vector atom and $"size"$ is the number
 .I bytes
 to allocate in the vector pool. The newly allocated segment of the vector
 pool will be left uninitialized.
@@ -1420,7 +1528,7 @@ removes $n$ elements from the stack and returns the one last removed
 (i.e. the previously $n sup th$ element on the stack).
 .PQ
 .PA
-The S9core stack is frequently used to protect objects from being
+The S9core stack is mostly used to protect objects from being
 recycled by the GC.
 .PQ
 .PA
@@ -1449,7 +1557,7 @@ line right 4.5i
 .PA
 This predicate succeeds, if the object passed to it has its
 .K CONST_TAG
-set, i.e. should be considered to be immutable.
+set, i.e. if it should be considered to be immutable.
 .PQ
 .PA
 Example:
@@ -1494,7 +1602,30 @@ a car accessor, and each ``d'' a cdr, e.g.
 = car    of (9)
 =           9
 .CE
-.bp \&XXX
+.X tag
+.X S9_ATOM_TAG
+.EE "\f[CB]tag(x)\fP"
+.sp -0.7
+.PS
+line right 4.5i
+.PE
+.PA
+The
+.K tag()
+accessor extracts the ``tag'' field of a node. It is mostly used in the
+implementation of type predicates, to find out whether a node has its
+.K S9_ATOM_TAG
+set. For instance:
+.PQ
+.CB
+#define T_DICTIONARY (USER_SPECIALS-1)
+#define dictionary_p(n)            \\
+        (!special_p(n) &&          \\
+         (tag(n) & S9_ATOM_TAG) && \\
+         car(n) == T_DICTIONARY)
+.CE
+.PA
+.PQ
 .sp -1
 .SH "Primitive Procedures"
 .PA
@@ -1505,8 +1636,8 @@ it. Here is a
 .K PRIM
 structure describing the Scheme procedure
 .K list-tail
-which, given a list and an integer $n$, returns the $n sup th$ element of
-the list.
+which, given a list and an integer $n$, returns the tail starting at the
+$n sup th$ element of the list.
 .PQ
 .CB
   { "list-tail", p_list_tail, 2, 2,
@@ -1560,7 +1691,7 @@ some final error checking, it returns the tail of the given list.
 Primitive handlers usually do not have to type-check their arguments,
 because there is a function that can do that
 .I before
-dispatching the handler:
+dispatching the handler. See below.
 .PQ
 .X typecheck
 .CO "char *typecheck(cell f, cell a);"
@@ -1590,7 +1721,7 @@ would return the message
 .PQ
 .CO "list-tail: expected integer in argument #2"
 .PA
-Then program could then add a visual representation of the actual arguments
+The program could then add a visual representation of the actual arguments
 that were about to be passed to the handler.
 .PQ
 .X apply_prim
@@ -1645,8 +1776,8 @@ operator).
 .PA
 The
 .K intern_symbol()
-should only be used to intern ``uninterned'' symbols, i.e. symbols created
-by
+function should only be used to intern ``uninterned'' symbols, i.e.
+symbols created by
 .K make_symbol() .
 Symbols creates by
 .K symbol_ref()
@@ -1682,7 +1813,8 @@ linearly as numbers get bigger.
 .X Zero
 .X One
 .X Two
-.CO "Zero, One, Two"
+.X Ten
+.CO "Zero, One, Two, Ten"
 .sp -0.7
 .PS
 line right 4.5i
@@ -1720,8 +1852,8 @@ line right 4.5i
 .PE
 .PA
 .K bignum_divide()
-divides $a$ by $b$ and returns both the floored integer quotient
-$left floor a/b right floor$ and the truncated division remainder
+divides $a$ by $b$ and returns both the truncated integer quotient
+$trunc (a/b)$ and the truncated division remainder
 $a - "trunc" (a/b) times b$ (where $"trunc"$ removes any non-zero
 fractional digits from its argument).
 .PQ
@@ -1735,11 +1867,11 @@ cell a = make_integer(-23),
 cell r = bignum_divide(a, b);
 .CE
 .PA
-the result would be
+the result would be equal to
 .PQ
 .CB
 .ps -1
-car(r) = make_integer(-3); /* floor(-23/7) */
+car(r) = make_integer(-3); /* trunc(-23/7) */
 cdr(r) = make_integer(-2); /* -23 - trunc(-23/7)*7 */
 .ps
 .CE
@@ -1802,7 +1934,8 @@ line right 4.5i
 The
 .K bignum_shift_left()
 function shifts its argument $a$ to the left by one decimal digit and
-then replaced the rightmost digit with the digit $"fill"$.
+then replaces the rightmost digit with $"fill"$. Note that $0<=fill<=9$
+must hold!
 .PQ
 .PA
 Example:
@@ -1831,7 +1964,7 @@ cell n = make_integer(12345);
 cell r = bignum_shift_right(n);
 .CE
 .PA
-The result would be as follows:
+The result would be equal to the following:
 .PQ
 .CB
 car(r) = make_integer(1234);
@@ -1887,9 +2020,11 @@ big integers.
 .PA
 All real number operations except those with a
 .K Real_
-prefix (capital ``R'') except bignum operands as well and convert them
-to real numbers silently. Of course, this may cause a loss of precision
-when large bignums are involved in a computation
+or
+.K S9_
+prefix (capital first letter) accept bignum operands and convert
+them to real numbers silently. Of course, this may cause a loss of
+precision when large bignums are involved in a computation.
 .PQ
 .PA
 When
@@ -1911,7 +2046,7 @@ line right 4.5i
 .PE
 .PA
 .K Epsilon
-($epsilon$) is a very small number ($10 sup {-("MANTISSA_SIZE"+1)}$). By
+($epsilon$) is a very small number ($10 sup {-("S9_MANTISSA_SIZE"+1)}$). By
 all practical means, two numbers $a$ and $b$ should be considered to be
 equal, if their difference is not greater than $epsilon$, i.e.
 $|a-b|<={epsilon}$.
@@ -1919,9 +2054,9 @@ $|a-b|<={epsilon}$.
 .PA
 Of course, much smaller numbers can be expressed
 .I "and ordered 
-(by
-.K real_less_p() )
-using S9core, but the difference between two very small numbers becomes
+by S9core (using
+.K real_less_p() ),
+but the difference between two very small numbers becomes
 insignificant as it approaches $epsilon$.
 .PQ
 .PA
@@ -1974,7 +2109,7 @@ macros are just more efficient versions of the
 .K real_mantissa()
 and
 .K real_exponent()
-functions. Unlike their function counterparts [pg \n[real_exponent]], they
+functions. Unlike their function counterparts [pg\ \n[real_exponent]], they
 accept real number operands exclusively.
 .K Real_flags()
 is described in the section on tagged types [pg \n[Real_flags]].
@@ -2040,10 +2175,10 @@ This function returns the sum of its arguments.
 .PA
 .B Caveat :
 When the arguments $a$ and $b$ differ by $n$ orders of magnitude, where
-$n > "MANTISSA_SIZE"$, then the sum will be equal to the larger of the
+$n >= "S9_MANTISSA_SIZE"$, then the sum will be equal to the larger of the
 two arguments. E.g. (given a mantissa size of 9):
 .PQ
-.EE "1000000000 + 9 = 1000000000"
+.EE "1000000000.0 + 9.0 = 1000000000.0"
 .PA
 because the result (1000000009) would not fit in a mantissa. Even with
 values that overlap only partially, the result will be truncated, resulting
@@ -2094,7 +2229,8 @@ Generally, equality of real numbers implemented using a floating point
 representation should be considered with care. This applies not only to
 the S9core operations, but even to common hardware implementations of
 real numbers. See also:
-.K Epsilon .
+.K Epsilon
+[pg \n[Epsilon]].
 .PQ
 .X real_floor
 .X real_trunc
@@ -2110,16 +2246,6 @@ line right 4.5i
 .PE
 .PA
 These functions round the given real number as shown in figure 2.
-.PQ
-.X real_integer_p
-.CO "cell real_integer_p(cell x);"
-.sp -0.7
-.PS
-line right 4.5i
-.PE
-.PA
-This predicate succeeds, if the given number is an integer, i.e. has a
-fractional part of 0. This is trivially true for bignum integers.
 .PQ
 .S
 .TS
@@ -2139,11 +2265,21 @@ _
 real_ceil:$+ inf$:$1.5$:$2.0$
 ::$-1.5$:$-1.0$
 .TE
-.sp -0.5
 .PA
 .ps -2
 Fig 2. Rounding
 .ps
+.PQ
+.S
+.X real_integer_p
+.CO "cell real_integer_p(cell x);"
+.sp -0.7
+.PS
+line right 4.5i
+.PE
+.PA
+This predicate succeeds, if the given number is an integer, i.e. has a
+fractional part of 0. This is trivially true for bignum integers.
 .PQ
 .X real_less_p
 .CO "int real_less_p(cell a, cell b);"
@@ -2247,7 +2383,9 @@ than the mantissa size.
 .PA
 S9core input and output is based on ``ports''. A port is a handle to
 a garbage-collected object. On the C level, a port is a small integer
-(an index to the ports array). On the S9core level, a
+(an index to the
+.K Ports
+array). On the S9core level, a
 .K T_INPUT_PORT
 or
 .K T_OUTPUT_PORT
@@ -2272,7 +2410,7 @@ Input ports are finalized by closing them, output ports by flushing and
 closing them.
 .PQ
 .PA
-All I/O operations are performed on two implicit port called the
+All I/O operations are performed on two implicit ports called the
 .I "current input port
 and
 .I "current output port" .
@@ -2288,7 +2426,6 @@ and
 are assigned to the port handles 0, 1, and 2 when S9core is initialized.
 These ports are locked from the beginning.
 .PQ
-.bp \&XXX
 .X blockread
 .CO "int blockread(char *s, int k);"
 .sp -0.7
@@ -2302,10 +2439,10 @@ I/O error occurs, it updates the internal I/O status (see
 .K io_status() ).
 .PQ
 .X readc
-.X reject
+.X rejectc
 .CO "int readc(void)"
 .sp -0.5
-.CO "void reject(int c)"
+.CO "void rejectc(int c)"
 .sp -0.7
 .PS
 line right 4.5i
@@ -2317,22 +2454,26 @@ return value of $-1$ indicates the EOF or an error.
 .PQ
 .PA
 The
-.K reject()
+.K rejectc()
 function inserts a character into the input stream, so the next
 .K readc()
 (or
 .K blockread() )
 will return it. In combination with
 .K readc() ,
-it can be used to look ahead one character in the input stream.
+it can be used to look ahead in the input stream.
 .PQ
 .PA
 Example:
 .PQ
 .CB
 cell peek = readc();
-reject(peek);
+rejectc(peek);
 .CE
+.PA
+At most two characters may be rejected subsequently, i.e. the reject
+buffer has a length of two characters.
+.PQ
 .X blockwrite
 .CO "void blockwrite(char *s, int k);"
 .sp -0.7
@@ -2405,9 +2546,9 @@ function [pg \n[exponent_chars]] for details.
 .PA
 The
 .K print_real()
-function will print numbers with more than 4 fractional digits and/or more
-than 6 integer digits in scientific notation and all other numbers in
-expanded notation.
+function will print numbers in expanded notation when there is an exact
+representation for that number, and otherwise it will print it in scientific
+notation.
 .PQ
 .X nl
 .CO "nl()"
@@ -2443,7 +2584,7 @@ line right 4.5i
 The
 .K io_status()
 function returns the internal I/O state. When it returns 0, no I/O
-error occurred since the call of
+error has occurred since the call of
 .K io_reset()
 (or the initialization of S9core). When it returns $-1$, an I/O
 error has occurred in between.
@@ -2472,7 +2613,7 @@ line right 4.5i
 .PE
 .PA
 .K open_input_port()
-opens a file for reading an returns a port handle for accessing that file.
+opens a file for reading and returns a port handle for accessing that file.
 .K open_output_port()
 opens the given file for output and returns a handle. When the $"append"$
 flag is zero, it creates the file. It will truncate any preexisting file to
@@ -2504,10 +2645,10 @@ opens a string as input source and immediately redirects the current input
 port to that string.
 .K readc() ,
 and
-.K reject()
-work as expected on string input (but
+.K rejectc()
+work as expected on string input, but
 .K blockread()
-does not). The function returns the previous input string, if any, and
+does not. The function returns the previous input string, if any, and
 .K NULL
 otherwise.
 .PQ
@@ -2697,7 +2838,7 @@ but adds image variables to an existing list. Calling
 will clear any previously existing list.
 .PQ
 .PA
-All variables that are GC roots [pg \n[s9init]] and all global symbols
+All variables that are GC roots [pg \n[s9_init]] and all global symbols
 [pg \n[symbol_ref]] also have to be included in the image.
 .PQ
 .PA
@@ -2728,13 +2869,13 @@ plain English.
 .B Note:
 If
 .K load_image()
-fails, it leaves the heap in an undefined state. In this case, there
-are there options:
+fails, it leaves the heap in an undefined state. In this case, the
+following options exist:
 .PQ
 .LB
 .LI "Load a different image
-.LI "Restart S9core by calling \f[CB]s9fini()\fP and then \f[CB]s9init()\fP
-.LI "Terminate the process with \f[CB]fatal()\fP
+.LI "Restart S9core by calling \f[CB]s9_fini()\fP and then \f[CB]s9_init()\fP
+.LI "Terminate the S9core process by calling \f[CB]fatal()\fP
 .LE
 .sp -1
 .SH "Memory Management"
@@ -2772,7 +2913,7 @@ When the parameter $n$ of
 is set to $1$, S9core will print information about pool growth to
 .K stdout .
 When $n=2$, it will also print the number of nodes/cells reclaimed in
-each GC. $n=0$ disables informative messages.
+each GC. $n=0$ disables informational messages.
 .PQ
 .sp -1
 .SH "String/Number Conversion"
@@ -2798,7 +2939,6 @@ be used to denote exponents in the output of
 The default exponent characters are
 .K """eE""" .
 .PQ
-.bp \&XXX
 .X integer_string_p
 .X string_numeric_p
 .CO "int integer_string_p(char *s);"
@@ -2916,7 +3056,7 @@ line right 4.5i
 .PE
 .PA
 This function increments the given counter by one. Counters overflow
-at one quatrillion ($10 sup {15}$). There is no overflow checking.
+at one quadrillion ($10 sup {15}$). There is no overflow checking.
 .PQ
 .X read_counter
 .CO "cell read_counter(counter *c);"
@@ -2993,6 +3133,20 @@ to convert them to a (machine-)readable form.
 .PQ
 .sp -1
 .SH "Utility Functions"
+.X argv_to_list
+.CO "cell argv_to_list(char **argv);"
+.sp -0.7
+.PS
+line right 4.5i
+.PE
+.PA
+The
+.K argv_to_list()
+function converts a C-style
+.K argv
+argument vector to a LISP-style list of strings, containing one
+command line argument per string. It returns the list.
+.PQ
 .X asctol
 .CO "long asctol(char *s);"
 .sp -0.7
@@ -3102,8 +3256,8 @@ unsave(1);
 A less versatile, but more lightweight approach would be to create a
 temporary protection object ($"Tmp"$) and add that to the GC root as
 specified in
-.K s9init()
-[\n[s9init]]. Using such an object, you could write:
+.K s9_init()
+[\n[s9_init]]. Using such an object, you could write:
 .PQ
 .CB
 cell m, n = cons(One, NIL);
@@ -3173,7 +3327,7 @@ Things are more complicated in statements like
 .PQ
 .CO "make_string(string(S), strlen(string(S)));
 .PA
-As explained earlier [\n[T_STRING]], this statement will
+As explained earlier [pg \n[T_STRING]], this statement will
 .I not
 create a copy of the string $S$, because the location delivered by
 .K string(S)
@@ -3243,6 +3397,7 @@ would be the proper way.
 .nf
 \f[CB]add_image_vars\fP \n[add_image_vars]
 \f[CB]apply_prim\fP \n[apply_prim]
+\f[CB]argv_to_list\fP \n[argv_to_list]
 \f[CB]asctol\fP \n[asctol]
 \f[CB]atom_p\fP \n[atom_p]
 \f[CB]bignum_abs\fP \n[bignum_abs]
@@ -3277,7 +3432,7 @@ would be the proper way.
 \f[CB]copy_string\fP \n[copy_string]
 \f[CB]counter\fP \n[counter]
 \f[CB]count\fP \n[count]
-\f[CB]DIGITS_PER_WORD\fP \n[DIGITS_PER_WORD]
+\f[CB]S9_DITIGS_PER_CELL\fP \n[S9_DITIGS_PER_CELL]
 \f[CB]dump_image\fP \n[dump_image]
 \f[CB]END_OF_FILE\fP \n[END_OF_FILE]
 \f[CB]eof_p\fP \n[eof_p]
@@ -3299,14 +3454,13 @@ would be the proper way.
 \f[CB]integer_p\fP \n[integer_p]
 \f[CB]integer_string_p\fP \n[integer_string_p]
 \f[CB]intern_symbol\fP \n[intern_symbol]
-\f[CB]INT_SEG_LIMIT\fP \n[INT_SEG_LIMIT]
+\f[CB]S9_INT_SEG_LIMIT\fP \n[S9_INT_SEG_LIMIT]
 \f[CB]IO\fP \n[IO]
 \f[CB]io_reset\fP \n[io_reset]
 \f[CB]io_status\fP \n[io_status]
 \f[CB]length\fP \n[length]
 \f[CB]load_image\fP \n[load_image]
 \f[CB]lock_port\fP \n[lock_port]
-\f[CB]make_byte_vector\fP \n[make_byte_vector]
 \f[CB]make_char\fP \n[make_char]
 \f[CB]make_integer\fP \n[make_integer]
 \f[CB]make_port\fP \n[make_port]
@@ -3317,14 +3471,14 @@ would be the proper way.
 \f[CB]make_string\fP \n[make_string]
 \f[CB]make_symbol\fP \n[make_symbol]
 \f[CB]make_vector\fP \n[make_vector]
-\f[CB]MANTISSA_SEGMENTS\fP \n[MANTISSA_SEGMENTS]
+\f[CB]S9_MANTISSA_SEGMENTS\fP \n[S9_MANTISSA_SEGMENTS]
 \f[CB]mem_error_handler\fP \n[mem_error_handler]
 \f[CB]new_atom\fP \n[new_atom]
 \f[CB]new_port\fP \n[new_port]
 \f[CB]new_vec\fP \n[new_vec]
 \f[CB]NIL\fP \n[NIL]
 \f[CB]nl\fP \n[nl]
-\f[CB]NODE_LIMIT\fP \n[NODE_LIMIT]
+\f[CB]S9_NODE_LIMIT\fP \n[S9_NODE_LIMIT]
 \f[CB]number_p\fP \n[number_p]
 \f[CB]One\fP \n[One]
 \f[CB]open_input_port\fP \n[open_input_port]
@@ -3377,20 +3531,20 @@ would be the proper way.
 \f[CB]real_trunc\fP \n[real_trunc]
 \f[CB]Real_zero\fP \n[Real_zero]
 \f[CB]real_zero_p\fP \n[real_zero_p]
-\f[CB]reject\fP \n[reject]
+\f[CB]rejectc\fP \n[rejectc]
 \f[CB]reset_counter()\fP \n[reset_counter()]
 \f[CB]reset_std_ports\fP \n[reset_std_ports]
 \f[CB]run_stats\fP \n[run_stats]
 \f[CB]run_stats\fP \n[run_stats]
-\f[CB]s9fini\fP \n[s9fini]
-\f[CB]s9init\fP \n[s9init]
+\f[CB]s9_fini\fP \n[s9_fini]
+\f[CB]s9_init\fP \n[s9_init]
 \f[CB]save\fP \n[save]
 \f[CB]set_input_port\fP \n[set_input_port]
 \f[CB]set_node_limit\fP \n[set_node_limit]
 \f[CB]set_output_port\fP \n[set_output_port]
 \f[CB]set_printer_limit\fP \n[set_printer_limit]
 \f[CB]set_vector_limit\fP \n[set_vector_limit]
-\f[CB]special_value_p\fP \n[special_value_p]
+\f[CB]special_p\fP \n[special_p]
 \f[CB]string\fP \n[string]
 \f[CB]string_len\fP \n[string_len]
 \f[CB]string_numeric_p\fP \n[string_numeric_p]
@@ -3433,7 +3587,7 @@ would be the proper way.
 \f[CB]USER_SPECIALS\fP \n[USER_SPECIALS]
 \f[CB]vector\fP \n[vector]
 \f[CB]vector_len\fP \n[vector_len]
-\f[CB]VECTOR_LIMIT\fP \n[VECTOR_LIMIT]
+\f[CB]S9_VECTOR_LIMIT\fP \n[S9_VECTOR_LIMIT]
 \f[CB]vector_p\fP \n[vector_p]
 \f[CB]Zero\fP \n[Zero]
 .fi

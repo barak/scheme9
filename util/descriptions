@@ -98,6 +98,8 @@ package.scm|-|First-class packages|-
 parse-optionsb.scm|-|Parse command line options|-
 partition.scm|partition|-|Partition lists
 permute.scm|permute|-|Generate permutations of sets
+plan9-tools.scm|-|Plan 9 system tools|-
+plan9.scm|-|S9fES Plan 9 interface|-
 position.scm|-|Find positions of list elements|-
 pretty-print.scm|-|Pretty printer|-
 procedures.scm|-|Collect procedure names from help files|-

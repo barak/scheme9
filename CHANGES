@@ -1,6 +1,12 @@
 
 Change Log
 
+2016-08-23
+	The LENGTH fix of 2014-12-06 got reverted somewhere along the way.
+	Re-fixed. (s9.c)
+2016-08-05
+	Upgrade to S9core Mk II. (s9.c, s9*.h)
+	Added -e (eval) and -r (run) command line arguments. (s9.c)
 2015-11-19
 	real_ceil(), real_floor(), real_trunc() could fail when being
 	passed an integer. Thanks, Alexander Shendi! (s9core.c)

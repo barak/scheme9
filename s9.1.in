@@ -44,9 +44,9 @@
 .B "s9
 - Scheme Interpreter
 .SH USAGE
-.B "s9 [\-hv?] [\-i name|\-] [\-gqu] [\-d image] [\-k size[m]]
-.B "   [\-l prog] [\-n size[m]] [\-f prog [args]] [\-\- [args]]
-.B "   [prog [args]]"
+.B "s9 [\-hv?] [\-i name|\-] [\-gqu] [\-d image] [\-e expr]
+.B "   [\-k size[m]] [\-l prog] [\-n size[m]] [\-r expr]
+.B "   [\-f prog [args]] [\-\- [args]] [prog [args]]"
 .SH "DESCRIPTION
 .B "Scheme 9 from Empty Space
 is an interpreter for R4RS Scheme with some additional procedures
@@ -77,6 +77,13 @@ and the core library will be read from the source file `s9.scm'.
 Dump heap image to
 .I file
 and exit.
+.in -4
+.B "\-e expr
+.in +4
+Read expression from argument, evaluate, and print value. Multiple
+.B \-e
+options may be given, which will evaluate from left to right.
+Interactive mode will not be entered.
 .in -4
 .B "\-f program [argument ...]
 .in +4
@@ -122,6 +129,12 @@ means no limit; use with care!).
 .B "\-q
 .in +4
 Be quiet: skip banners and prompts, exit on errors.
+.in -4
+.B "\-r expr
+.in +4
+Like
+.BR \-e ,
+but no value will print. Used to run expressions for effect.
 .in -4
 .B "\-u
 .in +4
@@ -606,14 +619,14 @@ exists, it will be called at this point.
 Evaluate command line options.
 .in +4
 When a
-.I "\-l file
+.B "\-l file
 option is found, the program contained in the given file will be
 .BR load ed.
 When a
-.I "\-f file args
+.B "\-f file args
 option is found, the program contained in the file will be run and then
 S9 will exit.
-.I Args
+.B Args
 will be passed to the program.
 .in -4
 .sp
@@ -621,8 +634,11 @@ will be passed to the program.
 Enter REPL.
 .in +4
 Interactive mode is only entered, when no
-.I \-f
-option was specified.
+.BR \-e ,
+.BR \-f ,
+or
+.BR \-r
+option was given and no program was specified.
 .in -4
 .SH "ALLOCATION STRATEGY
 The S9fES memory pools grow exponentially until the memory limit

@@ -299,7 +299,7 @@ if [ $update_only = no -o $update_only = txt ]; then
 fi
 
 if [ $update_only = no -o $update_only = cee ]; then
-	format_C_files "" s9.c s9core.c s9core.h
+	format_C_files "" s9.c s9core.c s9core.h s9import.h s9ext.h
 	format_C_files sys-unix ext/sys-unix/unix.c
 	format_C_files sys-plan9 ext/sys-plan9/plan9.c
 	format_C_files sys-plan9 ext/sys-plan9/s9-ffi.c

@@ -1,13 +1,14 @@
 /*
  * Scheme 9 from Empty Space, Refactored
- * By Nils M Holm, 2007-2015
+ * By Nils M Holm, 2007-2016
  * In the public domain
  */
 
-#define VERSION "2015-11-19"
+#define VERSION "2016-08-23"
 
-#define S9FES
 #include "s9core.h"
+#include "s9import.h"
+#include "s9ext.h"
 
 #ifdef unix
  #include <signal.h>
@@ -135,16 +136,17 @@ static cell	S_and, S_arguments, S_arrow, S_begin, S_cond,
  * Type predicates
  */
 
-#define special_p(n)	((n) == S_quote	  || \
-			 (n) == S_begin	  || \
-			 (n) == S_if	  || \
-			 (n) == S_cond	  || \
-			 (n) == S_and	  || \
-			 (n) == S_or	  || \
-			 (n) == S_lambda  || \
-			 (n) == S_set_b	  || \
-			 (n) == S_define  || \
-			 (n) == S_define_syntax)
+#define special_form_p(n) \
+	((n) == S_quote	  || \
+	 (n) == S_begin	  || \
+	 (n) == S_if	  || \
+	 (n) == S_cond	  || \
+	 (n) == S_and	  || \
+	 (n) == S_or	  || \
+	 (n) == S_lambda  || \
+	 (n) == S_set_b	  || \
+	 (n) == S_define  || \
+	 (n) == S_define_syntax)
 
 #define auto_quoting_p(n) atom_p(n)
 
@@ -161,7 +163,7 @@ static cell	S_and, S_arguments, S_arrow, S_begin, S_cond,
  * Allocators
  */
 
-#define save_state(v)   (State_stack = cons3((v), State_stack, ATOM_TAG))
+#define save_state(v)   (State_stack = cons3((v), State_stack, S9_ATOM_TAG))
 
 /*
  * Error Handling
@@ -228,7 +230,7 @@ cell error(char *msg, cell expr) {
 		prints(buf);
 	}
 	prints(msg);
-	if (expr != NOEXPR) {
+	if (expr != VOID) {
 		prints(": ");
 		Error_flag = 0;
 		print_error_form(expr);
@@ -260,7 +262,7 @@ cell read_list(int flags, int delim) {
 	if (!Level)
 		Opening_line = Line_no;
 	if (++Level > MAX_IO_DEPTH) {
-		error("reader: too many nested lists or vectors", NOEXPR);
+		error("reader: too many nested lists or vectors", VOID);
 		return NIL;
 	}
 	m = cons3(NIL, NIL, flags);	/* root */
@@ -280,17 +282,17 @@ cell read_list(int flags, int delim) {
 			}
 			sprintf(msg, "missing ')', started in line %d",
 					Opening_line);
-			error(msg, NOEXPR);
+			error(msg, VOID);
 		}
 		if (n == DOT) {
 			if (c < 1) {
-				error(badpair, NOEXPR);
+				error(badpair, VOID);
 				continue;
 			}
 			n = read_form(flags);
 			cdr(a) = n;
 			if (n == delim || read_form(flags) != delim) {
-				error(badpair, NOEXPR);
+				error(badpair, VOID);
 				continue;
 			}
 			unsave(1);
@@ -302,7 +304,7 @@ cell read_list(int flags, int delim) {
 				error(n == RPAREN?
 				  "list starting with `[' ended with `)'":
 				  "list starting with `(' ended with `]'",
-				  NOEXPR);
+				  VOID);
 			break;
 		}
 		if (a == NIL)
@@ -363,7 +365,7 @@ cell read_character(void) {
 			break;
 		buf[i] = c;
 	}
-	reject(c);
+	rejectc(c);
 	buf[i] = 0;
 	if (i == 0)
 		c = ' ';
@@ -375,7 +377,7 @@ cell read_character(void) {
 		c = '\n';
 	else {
 		sprintf(msg, "unknown character: #\\%s", buf);
-		error(msg, NOEXPR);
+		error(msg, VOID);
 		c = 0;
 	}
 	return make_char(c);
@@ -396,11 +398,11 @@ cell read_string(void) {
 		if (c == '\n')
 			Line_no++;
 		if (c == EOF)
-			error("missing '\"' in string literal", NOEXPR);
+			error("missing '\"' in string literal", VOID);
 		if (Error_flag)
 			break;
 		if (i >= TOKEN_LENGTH-2) {
-			error("string literal too long", NOEXPR);
+			error("string literal too long", VOID);
 			i--;
 		}
 		if (q && c != '"' && c != '\\') {
@@ -415,7 +417,7 @@ cell read_string(void) {
 	}
 	s[i] = 0;
 	n = make_string(s, i);
-	Tag[n] |= CONST_TAG;
+	Tag[n] |= S9_CONST_TAG;
 	if (inv)
 		error("invalid escape sequence in string", n);
 	return n;
@@ -453,7 +455,7 @@ cell read_symbol_or_number(int c) {
 		if (!is_symbolic(c))
 			funny = c;
 		if (i >= TOKEN_LENGTH-2) {
-			error("symbol too long", NOEXPR);
+			error("symbol too long", VOID);
 			i--;
 		}
 		s[i] = c;
@@ -461,7 +463,7 @@ cell read_symbol_or_number(int c) {
 		c = readc_ci();
 	}
 	s[i] = 0;
-	reject(c);
+	rejectc(c);
 	if (funny)
 		return funny_char("funny character in symbol", funny);
 	if (string_numeric_p(s))
@@ -497,7 +499,7 @@ cell read_vector(void) {
 
 	n = read_list(0, RPAREN);
 	save(n);
-	n = list_to_vector(n, "invalid vector syntax", CONST_TAG);
+	n = list_to_vector(n, "invalid vector syntax", S9_CONST_TAG);
 	unsave(1);
 	return n;
 }
@@ -517,7 +519,7 @@ cell meta_command(void) {
 			s[i++] = c;
 		c = readc();
 	}
-	reject(c);
+	rejectc(c);
 	s[i] = 0;
 	n = make_string(s, strlen(s));
 	n = i == 0? NIL: cons(n, NIL);
@@ -542,7 +544,7 @@ int block_comment(void) {
 		c = readc_ci();
 		switch (c) {
 		case EOF:
-			error("missing |#", NOEXPR);
+			error("missing |#", VOID);
 			return 0;
 		case '|':
 			switch (state) {
@@ -571,7 +573,7 @@ int block_comment(void) {
 int closing_paren(void) {
 	int c = readc_ci();
 
-	reject(c);
+	rejectc(c);
 	return c == ')';
 }
 
@@ -614,9 +616,9 @@ cell bignum_read(char *pre, int radix) {
 	unsave(2);
 	if (!nd) {
 		sprintf(buf, "digits expected after %s", pre);
-		return error(buf, NOEXPR);
+		return error(buf, VOID);
 	}
-	reject(c);
+	rejectc(c);
 	return s? bignum_negate(num): num;
 }
 
@@ -632,7 +634,7 @@ cell read_real_number(int inexact) {
 			return n;
 		flags = bignum_negative_p(n)? REAL_NEGATIVE: 0;
 		m = bignum_abs(n);
-		return Make_real(flags, 0, cdr(m));
+		return S9_make_real(flags, 0, cdr(m));
 	}
 	else if (real_p(n)) {
 		if (inexact)
@@ -713,7 +715,7 @@ cell read_form(int flags) {
 				continue;
 			}
 			else {
-				reject(c);
+				rejectc(c);
 				c = '#';
 				break;
 			}
@@ -740,23 +742,23 @@ cell read_form(int flags) {
 
 		if (closing_paren())
 			return error("missing form after \"'\" or \"`\"",
-					NOEXPR);
+					VOID);
 		Level++;
-		n = quote(read_form(CONST_TAG), c=='`'? S_quasiquote:
-							S_quote);
+		n = quote(read_form(S9_CONST_TAG), c=='`'? S_quasiquote:
+								S_quote);
 		Level--;
 		return n;
 	}
 	else if (c == ',') {
 		if (closing_paren())
 			return error("missing form after \",\"",
-					NOEXPR);
+					VOID);
 		c = readc_ci();
 		if (c == '@') {
 			return quote(read_form(0), S_unquote_splicing);
 		}
 		else {
-			reject(c);
+			rejectc(c);
 			if (!Level)
 				return meta_command();
 			return quote(read_form(0), S_unquote);
@@ -777,26 +779,26 @@ cell read_form(int flags) {
 		case 'i':	return read_real_number(1);
 		case '<':	return unreadable();
 		default:	sprintf(buf, "unknown # syntax: #%c", c);
-				return error(buf, NOEXPR);
+				return error(buf, VOID);
 		}
 	}
 	else if (c == '"') {
 		return read_string();
 	}
 	else if (c == ')') {
-		if (!Level) return error("unexpected ')'", NOEXPR);
+		if (!Level) return error("unexpected ')'", VOID);
 		return RPAREN;
 	}
 	else if (c == ']') {
-		if (!Level) return error("unexpected ']'", NOEXPR);
+		if (!Level) return error("unexpected ']'", VOID);
 		return RBRACK;
 	}
 	else if (c == '.') {
 		c2 = readc_ci();
-		reject(c2);
+		rejectc(c2);
 		if (separator(c2)) {
 			if (!Level)
-				return error("unexpected '.'", NOEXPR);
+				return error("unexpected '.'", VOID);
 			return DOT;
 		}
 		return read_symbol_or_number(c);
@@ -812,6 +814,15 @@ cell read_form(int flags) {
 cell xread(void) {
 	Level = 0;
 	return read_form(0);
+}
+
+cell xsread(char *s) {
+	cell	n;
+
+	open_input_string(s);
+	n = read_form(0);
+	close_input_string();
+	return n;
 }
 
 /*
@@ -954,7 +965,7 @@ int print_symbol(cell n) {
 }
 
 int print_primitive(cell n) {
-	PRIM	*p;
+	S9_PRIM	*p;
 
 	if (!primitive_p(n))
 		return 0;
@@ -1004,7 +1015,7 @@ int print_port(cell n) {
 
 void x_print_form(cell n, int depth) {
 	if (depth > MAX_IO_DEPTH) {
-		error("printer: too many nested lists or vectors", NOEXPR);
+		error("printer: too many nested lists or vectors", VOID);
 		return;
 	}
 	if (n == NIL) {
@@ -1210,7 +1221,7 @@ cell lookup(cell v, cell env, int req) {
 	}
 	if (!req)
 		return NIL;
-	if (special_p(v))
+	if (special_form_p(v))
 		error("invalid syntax", v);
 	else
 		error("symbol not bound", v);
@@ -1618,11 +1629,11 @@ cell resume(cell x) {
 }
 
 cell pp_unquote(cell x) {
-	return error("unquote: not in quasiquote context", NOEXPR);
+	return error("unquote: not in quasiquote context", VOID);
 }
 
 cell pp_unquote_splicing(cell x) {
-	return error("unquote-splicing: not in quasiquote context", NOEXPR);
+	return error("unquote-splicing: not in quasiquote context", VOID);
 }
 
 /*
@@ -1793,7 +1804,7 @@ cell pp_length(cell x) {
 
 	for (p = car(x); p != NIL; p = cdr(p)) {
 		if (!pair_p(p))
-			return error("length: improper list", cadr(x));
+			return error("length: improper list", car(x));
 		k++;
 	}
 	return make_integer(k);
@@ -2147,7 +2158,7 @@ cell pp_exact_to_inexact(cell x) {
 	if (integer_p(x)) {
 		flags = bignum_negative_p(x)? REAL_NEGATIVE: 0;
 		n = bignum_abs(x);
-		n = Make_real(flags, 0, cdr(n));
+		n = S9_make_real(flags, 0, cdr(n));
 		if (n == UNDEFINED)
 			return error("exact->inexact: overflow", x);
 		return n;
@@ -2665,13 +2676,13 @@ cell pp_vector_copy(cell x) {
 		x = cdr(x);
 	}
 	if (k0 > kn)
-		return error("vector-copy: bad range", NOEXPR);
+		return error("vector-copy: bad range", VOID);
 	if (x != NIL) {
 		fill = car(x);
 		x = cdr(x);
 	}
 	if (x != NIL)
-		return error("vector-copy: too many arguments", NOEXPR);
+		return error("vector-copy: too many arguments", VOID);
 	n = new_vec(T_VECTOR, (kn-k0) * sizeof(cell));
 	nv = vector(n);
 	ov = vector(vec);
@@ -2729,7 +2740,7 @@ cell pp_vector_set_b(cell x) {
 cell pp_close_input_port(cell x) {
 	if (port_no(car(x)) < 2)
 		return error("please do not close the standard input port",
-				NOEXPR);
+				VOID);
 	close_port(port_no(car(x)));
 	return UNSPECIFIC;
 }
@@ -2737,7 +2748,7 @@ cell pp_close_input_port(cell x) {
 cell pp_close_output_port(cell x) {
 	if (port_no(car(x)) < 2)
 		return error("please do not close the standard output port",
-				NOEXPR);
+				VOID);
 	close_port(port_no(car(x)));
 	return UNSPECIFIC;
 }
@@ -2860,7 +2871,7 @@ cell read_char(cell x, int unget) {
 	set_input_port(new_port);
 	c = readc();
 	if (unget)
-		reject(c);
+		rejectc(c);
 	set_input_port(old_port);
 	return c == EOF? END_OF_FILE: make_char(c);
 }
@@ -2901,9 +2912,9 @@ cell pp_bit_op(cell x) {
 
 	if (mask == 0) {
 		mask = 1;
-		while (mask <= INT_SEG_LIMIT)
+		while (mask <= S9_INT_SEG_LIMIT)
 			mask <<= 1;
-		if (mask > INT_SEG_LIMIT)
+		if (mask > S9_INT_SEG_LIMIT)
 			mask >>= 1;
 		mask--;
 	}
@@ -2947,7 +2958,7 @@ cell pp_delete_file(cell x) {
 }
 
 cell pp_error(cell x) {
-	return error(string(car(x)), cdr(x) != NIL? cadr(x): NOEXPR);
+	return error(string(car(x)), cdr(x) != NIL? cadr(x): VOID);
 }
 
 cell pp_eval(cell x) {
@@ -3135,7 +3146,7 @@ cell pp_system(cell x) {
  * Evaluator
  */
 
-PRIM Core_primitives[] = {
+S9_PRIM Core_primitives[] = {
  { "*",                   pp_times,               0, -1, { REA,___,___ } },
  { "+",                   pp_plus,                0, -1, { REA,___,___ } },
  { "-",                   pp_minus,               1, -1, { REA,___,___ } },
@@ -3315,7 +3326,7 @@ PRIM Core_primitives[] = {
 
 cell expected(cell who, char *what, cell got) {
 	char	msg[100];
-	PRIM	*p;
+	S9_PRIM	*p;
 
 	p = &Primitives[cadr(who)];
 	sprintf(msg, "%s: expected %s, got", p->name, what);
@@ -3553,7 +3564,7 @@ cell xeval(cell x, int cbn) {
 			x = car(x);
 			save_state(s);
 			/* Check call-by-name built-ins and flag */
-			if (special_p(x) || cbn) {
+			if (special_form_p(x) || cbn) {
 				cbn = 0;
 				rib = cons(Acc, Acc);	/* result/source */
 				rib = cons(NIL, rib);	/* append */
@@ -3607,7 +3618,7 @@ cell xeval(cell x, int cbn) {
 					Acc = x = apply_primitive(Acc);
 					cons_stats(0);
 				}
-				else if (special_p(car(Acc))) {
+				else if (special_form_p(car(Acc))) {
 					Acc = x = apply_special(Acc, &c, &s);
 				}
 				else if (function_p(car(Acc))) {
@@ -3796,6 +3807,19 @@ cell eval(cell x) {
 	return x;
 }
 
+void evalstr(char *s, int echo) {
+	cell	x;
+
+	reset_calltrace();
+	if ((x = xsread(s)) == UNDEFINED)
+		return;
+	x = eval(x);
+	if (echo) {
+		print_form(x);
+		nl();
+	}
+}
+
 /*
  * REPL
  */
@@ -3808,7 +3832,7 @@ void clear_leftover_envs(void) {
 #ifdef unix
  void keyboard_interrupt(int sig) {
 	reset_std_ports();
-	error("interrupted", NOEXPR);
+	error("interrupted", VOID);
 	Intr_flag = 1;
 	signal(SIGINT, keyboard_interrupt);
  }
@@ -3828,7 +3852,7 @@ void clear_leftover_envs(void) {
 	if (strstr(note, "interrupt") == NULL)
 		noted(NDFLT);
 	reset_std_ports();
-	error("interrupted", NOEXPR);
+	error("interrupted", VOID);
 	Intr_flag = 1;
 	noted(NCONT);
  }
@@ -3836,9 +3860,9 @@ void clear_leftover_envs(void) {
 
 void mem_error(int src) {
 	if (src == 1)
-		error("hit node limit", NOEXPR);
+		error("hit node limit", VOID);
 	else
-		error("hit vector limit", NOEXPR);
+		error("hit vector limit", VOID);
 }
 
 void repl(void) {
@@ -3966,7 +3990,7 @@ void load_library(char *argv0) {
 	fatal("no suitable image file or library source found");
 }
 
-void add_primitives(char *name, PRIM *p) {
+void add_primitives(char *name, S9_PRIM *p) {
 	cell	v, n, new;
 	int	i;
 
@@ -4074,7 +4098,7 @@ NULL };
 void init(void) {
 	strcpy(S9magic, "S9:");
 	strcat(S9magic, VERSION);
-	s9init(GC_root);
+	s9_init(GC_root);
 	image_vars(Image_vars);
 	exponent_chars("eEdDfFlLsS");
 	Stack_bottom = NIL;
@@ -4145,10 +4169,10 @@ void init_extensions(void) {
 
 void usage(int q) {
 	prints("Usage: s9 [-hv?] [-i name|-] [-gqu] [-d image]");
-	prints(" [-k size[m]] [-l prog]");
+	prints(" [-e|-r expr] [-k size[m]]");
 	nl();
-	prints("          [-n size[m]] [[-f] prog [arg ...]]");
-	prints(" [-- [arg ...]]");
+	prints("          [-l prog] [-n size[m]]");
+	prints(" [[-f] prog [arg ...]] [-- [arg ...]]");
 	nl();
 	if (q) quit(1);
 }
@@ -4204,6 +4228,8 @@ void long_usage(void) {
 	nl();
 	prints("-i -      ignore image, load source file instead"); nl();
 	prints("-d file   dump heap image to file and exit"); nl();
+	prints("-e expr   evaluate expr, print value, do not enter REPL");
+	nl();
 	prints("-g        print GC summaries (-gg = more)"); nl();
 	prints("-f file   run program with args, then exit (-f is optional)");
 	nl();
@@ -4211,6 +4237,8 @@ void long_usage(void) {
 	prints("-l file   load program (may be repeated)"); nl();
 	prints("-n n[m]   set node limit to nK (or nM) nodes"); nl();
 	prints("-q        be quiet (no banner, no prompt, exit on errors)");
+	nl();
+	prints("-r expr   like -e, but don't print value (run for effect)");
 	nl();
 	prints("-u        use unlimited node and vector memory"); nl();
 	prints("-- args   bind remaining arguments to *arguments*");
@@ -4235,6 +4263,8 @@ int main(int argc, char **argv) {
 	int	vgc = 0;
 	int	f_opt = 0;
 	int	arg_opt = 0;
+	int	do_loop = 1;
+	int	echo;
 	char	*argv0;
 	char	*s;
 
@@ -4261,8 +4291,18 @@ int main(int argc, char **argv) {
 					usage(1);
 				s = dump_image(argv[1], S9magic);
 				if (s != NULL)
-					error(s, NOEXPR);
+					error(s, VOID);
 				quit(Error_flag? 1: 0);
+				break;
+			case 'e':
+			case 'r':
+				echo = **argv == 'e';
+				if (argv[1] == NULL)
+					usage(1);
+				evalstr(argv[1], echo);
+				argv++;
+				*argv = &(*argv)[strlen(*argv)];
+				do_loop = 0;
 				break;
 			case 'f':
 				if (argv[1] == NULL)
@@ -4321,6 +4361,8 @@ int main(int argc, char **argv) {
 		}
 		argv++;
 	}
+	if (do_loop == 0)
+		return 0;
 	gc_verbosity(vgc % 3);
 	if (argv[0] != NULL && !arg_opt) {
 		box_value(S_arguments) = get_args(argv+1);

@@ -2,7 +2,7 @@
 
 	Scheme 9 from Empty Space
 	A Portable Scheme Interpreter with a Unix Interface
-	By Nils M Holm, 2007-2015
+	By Nils M Holm, 2007-2016
 
 	S9fES is a mature, portable, and comprehensible public-domain
 	interpreter for R4RS Scheme offering
@@ -73,7 +73,7 @@
 
 	On 64-bit systems, you may have to add the -DBITS_PER_WORD_64
 	define to the Makefile. Not doing so will probably still work,
-	but result in slightly worse bignum performance.
+	but may result in slightly worse bignum performance.
 
 	You can install S9fES (including the goodies) on a Unix system
 	by typing "make install" as root, but before doing so, please
