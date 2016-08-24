@@ -8,10 +8,10 @@ default definition of MAXPATHLEN, for Hurd architecture.
  1 file changed, 5 insertions(+)
 
 diff --git a/s9core.h b/s9core.h
-index 85b49e0..160b36c 100644
+index 8cd4e9f..5a75065 100644
 --- a/s9core.h
 +++ b/s9core.h
-@@ -19,6 +19,11 @@
+@@ -21,6 +21,11 @@
  #define _DEFAULT_SOURCE
  #endif
  

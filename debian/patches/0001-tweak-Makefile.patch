@@ -25,7 +25,7 @@ Use ps2pdf for conversion of .ps to .pdf because pdfwrite is unavailable.
  1 file changed, 32 insertions(+), 16 deletions(-)
 
 diff --git a/Makefile b/Makefile
-index deb4a74..95ab49c 100644
+index f850c4b..81582dd 100644
 --- a/Makefile
 +++ b/Makefile
 @@ -3,8 +3,8 @@
@@ -38,7 +38,7 @@ index deb4a74..95ab49c 100644
 +PREFIX=$(prefix)
  
  # Base version and Release
- BASE=		20150612
+ BASE=		20160804
 @@ -39,30 +39,39 @@ EXTRA_LIBS+=	-lncurses
  #				# (requires the Curses extension)
  
@@ -81,11 +81,11 @@ index deb4a74..95ab49c 100644
  
  all:	default
  
- s9:	s9.o s9core.o s9core.h $(EXTRA_OBJS)
+ s9:	s9.o s9core.o $(EXTRA_OBJS)
 -	$(CC) -o s9 $(LDFLAGS) s9.o s9core.o $(EXTRA_OBJS) $(EXTRA_LIBS)
 +	$(CC) -o s9 $(CFLAGS) $(LDFLAGS) s9.o s9core.o $(EXTRA_OBJS) $(EXTRA_LIBS)
  
- s9.o:	s9.c s9core.h
+ s9.o:	s9.c s9core.h s9import.h s9ext.h
  	$(CC) -o s9.o $(CFLAGS) $(DEFS) -c s9.c
 @@ -76,8 +85,13 @@ s9.image:	s9 s9.scm ext/sys-unix/unix.scm ext/curses/curses.scm config.scm
  s9core.a: s9core.o
@@ -101,7 +101,7 @@ index deb4a74..95ab49c 100644
 +%.gz: %
 +	gzip -9 -n < $* > $@
  
- unix.o:	ext/sys-unix/unix.c s9core.h
+ unix.o:	ext/sys-unix/unix.c s9core.h s9import.h s9ext.h
  	$(CC) $(CFLAGS) $(DEFS) -I . -o unix.o -c ext/sys-unix/unix.c
 @@ -93,8 +107,8 @@ s9core.ps:	s9core.tr util/book
  		| sort -f >_ndx.tr
