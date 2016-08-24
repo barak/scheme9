@@ -1,21 +1,22 @@
 /*
  * Scheme 9 from Empty Space, Plan9 Interface
  * By Bakul Shah, 2009-2011,
- *    Nils M Holm, 2015
+ *    Nils M Holm, 2015-2016
  * Placed in the Public Domain
  */
 
-#define S9FES
 #include "s9core.h"
+#include "s9import.h"
+#include "s9ext.h"
 
 cell make_ulong_integer(unsigned long long u) {
 	cell	n;
 
-	n = new_atom(u % INT_SEG_LIMIT, NIL);
-	u /= INT_SEG_LIMIT;
+	n = new_atom(u % S9_INT_SEG_LIMIT, NIL);
+	u /= S9_INT_SEG_LIMIT;
 	while (u) {
-		n = new_atom(u % INT_SEG_LIMIT, n);
-		u /= INT_SEG_LIMIT;
+		n = new_atom(u % S9_INT_SEG_LIMIT, n);
+		u /= S9_INT_SEG_LIMIT;
 	}
 	return new_atom(T_INTEGER, n);
 }
@@ -43,8 +44,8 @@ unsigned long long uint64_value(char *src, cell x) {
 	p = cddr(x);
 	while (p != NIL) {
 		ov = v;
-		v = v * INT_SEG_LIMIT + car(p);
-		if ((v - car(p)) / INT_SEG_LIMIT != ov || v < ov) {
+		v = v * S9_INT_SEG_LIMIT + car(p);
+		if ((v - car(p)) / S9_INT_SEG_LIMIT != ov || v < ov) {
 			sprintf(msg, "%s: integer too big", src);
 			return error(msg, x);
 		}

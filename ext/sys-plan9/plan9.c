@@ -1,7 +1,7 @@
 /*
  * Scheme 9 from Empty Space, Plan9 Interface
  * By Bakul Shah, 2009-2011;
- *    Nils M Holm, 2015
+ *    Nils M Holm, 2015-2016
  * Placed in the Public Domain
  */
 
@@ -53,14 +53,15 @@
 
 ***********************************************************************/
 
-#define S9FES
 #include "s9core.h"
+#include "s9import.h"
+#include "s9ext.h"
 #include "s9-ffi.h"
 #include <fcall.h>
 
 /*
  *	Allow us at least to write
- *		assign(assign(car(x) = cons(foo, bar)));
+ *		assign(car(x), cons(foo, bar));
  *	in presence of that fact that C's
  *	order of evaluation messes up
  *		car(x) = cons(foo, bar);
@@ -738,7 +739,7 @@ cell pp_sys_exec(cell x) {
 	}
 	argv = malloc((length(cadr(x)) + 2) * sizeof(char *));
 	if (argv == NULL)
-		return sys_error("sys:exec", NOEXPR);
+		return sys_error("sys:exec", VOID);
 	argv[0] = string(car(x));
 	i = 1;
 	for (p = cadr(x); p != NIL; p = cdr(p))
@@ -760,7 +761,7 @@ cell pp_sys_fauth(cell x) {
 
 	r = fauth(integer_value(name, car(x)), string(cadr(x)));
 	if (r < 0)
-		return sys_error(name, NOEXPR);
+		return sys_error(name, VOID);
 	return make_long_integer(r);
 }
 
@@ -784,7 +785,7 @@ cell pp_sys_fork(cell) {
 
 	pid = fork();
 	if (pid < 0)
-		return sys_error("sys:fork", NOEXPR);
+		return sys_error("sys:fork", VOID);
 	return make_long_integer(pid);
 }
 
@@ -837,7 +838,7 @@ cell pp_sys_pipe(cell) {
 	cell	n;
 
 	if (pipe(fd) < 0)
-		return sys_error("sys:pipe", NOEXPR);
+		return sys_error("sys:pipe", VOID);
 	n = cons(make_long_integer(fd[1]), NIL);
 	save(n);
 	n = cons(make_long_integer(fd[0]), n);
@@ -927,7 +928,7 @@ cell pp_sys_rfork(cell x) {
 
 	pid = rfork(integer_value("sys:rfork", car(x)));
 	if (pid < 0)
-		return sys_error("sys:rfork", NOEXPR);
+		return sys_error("sys:rfork", VOID);
 	return make_long_integer(pid);
 }
 
@@ -977,7 +978,7 @@ cell pp_sys_wait(cell) {
 	char*	fld[5];
 
 	if (len < 0)
-		return sys_error("sys:wait", NOEXPR);
+		return sys_error("sys:wait", VOID);
 	tokenize(buf, fld, nelem(fld));
 	n = cons(make_string(fld[4], strlen(fld[4])), NIL);
 	save(n);
@@ -995,7 +996,7 @@ cell pp_sys_waitpid(cell) {
 	char*	fld[5];
 
 	if (len < 0)
-		return sys_error("sys:wait", NOEXPR);
+		return sys_error("sys:wait", VOID);
 	tokenize(buf, fld, nelem(fld));
 	return make_long_integer(atoi(fld[0]));
 }
@@ -1105,7 +1106,7 @@ cell pp_sys_magic_const(cell x) {
 }
 
 
-PRIM Plan9_primitives[] = {
+S9_PRIM Plan9_primitives[] = {
  {"sys:alarm",      pp_sys_alarm,      1, 1, { INT,___,___ } },
  {"sys:await",      pp_sys_await,      0, 0, { ___,___,___ } },
  {"sys:bind",       pp_sys_bind,       3, 3, { STR,STR,INT } },

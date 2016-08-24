@@ -6,8 +6,9 @@
  * A low-level interface to some CURSES(3) routines.
  */
 
-#define S9FES
 #include "s9core.h"
+#include "s9import.h"
+#include "s9ext.h"
 
 /*
  * XXX Because of major C "macro" preprocessor brain damage,
@@ -427,7 +428,7 @@ cell pp_curs_ungetch(cell x) {
 	return UNSPECIFIC;
 }
 
-PRIM Curs_primitives[] = {
+S9_PRIM Curs_primitives[] = {
  { "curs:addch",            pp_curs_addch,           1,  1, { CHR,___,___ } },
  { "curs:addstr",           pp_curs_addstr,          1,  1, { STR,___,___ } },
  { "curs:attrset",          pp_curs_attrset,         1,  1, { INT,___,___ } },

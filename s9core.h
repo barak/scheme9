@@ -1,8 +1,10 @@
 /*
- * S9 Core Toolkit
- * By Nils M Holm, 2007-2015
+ * S9 Core Toolkit, Mk II
+ * By Nils M Holm, 2007-2016
  * In the public domain
  */
+
+#define S9_VERSION "20160724"
 
 /*
  * Ugly prelude to figure out if
@@ -79,38 +81,47 @@
  #define bye(x)	exit((x)? EXIT_FAILURE: EXIT_SUCCESS);
 #endif
 
-/* A "cell" must be large enough to hold a pointer */
-#define cell	ptrdiff_t
+/* An "s9_cell" must be large enough to hold a pointer */
+#define s9_cell	ptrdiff_t
 
 /* Default memory limit in K-nodes, 0 = none */
-#define NODE_LIMIT	14013
-#define VECTOR_LIMIT	14013
+#define S9_NODE_LIMIT	14013
+#define S9_VECTOR_LIMIT	14013
+
+/* Initial pool size in nodes */
+#define S9_INITIAL_SEGMENT_SIZE	32768
+
+/* Primitive segment size (slots) */
+#define S9_PRIM_SEG_SIZE	256
+
+/* Maximum number of open I/O ports */
+#define S9_MAX_PORTS		32
 
 /* Pick one ... */
-/* #define BITS_PER_WORD_64 */
-/* #define BITS_PER_WORD_32 */
-/* #define BITS_PER_WORD_16 */
+/* #define S9_BITS_PER_WORD_64 */
+/* #define S9_BITS_PER_WORD_32 */
+/* #define S9_BITS_PER_WORD_16 */
 
 /* ... or try some magic constants (unreliable, though) ... */
 
 #ifdef __amd64__
- #define BITS_PER_WORD_64
+ #define S9_BITS_PER_WORD_64
 #endif
 #ifdef __amd64
- #define BITS_PER_WORD_64
+ #define S9_BITS_PER_WORD_64
 #endif
 #ifdef __x86_64__
- #define BITS_PER_WORD_64
+ #define S9_BITS_PER_WORD_64
 #endif
 #ifdef __x86_64
- #define BITS_PER_WORD_64
+ #define S9_BITS_PER_WORD_64
 #endif
 
 /* ... or assume a reasonable default */
-#ifndef BITS_PER_WORD_16
- #ifndef BITS_PER_WORD_32
-  #ifndef BITS_PER_WORD_64
-   #define BITS_PER_WORD_32
+#ifndef S9_BITS_PER_WORD_16
+ #ifndef S9_BITS_PER_WORD_32
+  #ifndef S9_BITS_PER_WORD_64
+   #define S9_BITS_PER_WORD_32
   #endif
  #endif
 #endif
@@ -119,35 +130,35 @@
  * Node tags
  */
 
-#define ATOM_TAG	0x01	/* Atom, Car = type, CDR = next */
-#define MARK_TAG	0x02	/* Mark */
-#define STATE_TAG	0x04	/* State */
-#define VECTOR_TAG	0x08	/* Vector, Car = type, CDR = content */
-#define PORT_TAG	0x10	/* Atom is an I/O port (with ATOM_TAG) */
-#define USED_TAG	0x20	/* Port: used flag */
-#define LOCK_TAG	0x40	/* Port: locked (do not close) */
-#define CONST_TAG	0x80	/* Node is immutable */
+#define S9_ATOM_TAG	0x01	/* Atom, car = type, CDR = next */
+#define S9_MARK_TAG	0x02	/* Mark */
+#define S9_STATE_TAG	0x04	/* State */
+#define S9_VECTOR_TAG	0x08	/* Vector, car = type, CDR = content */
+#define S9_PORT_TAG	0x10	/* Atom is an I/O port (with ATOM_TAG) */
+#define S9_USED_TAG	0x20	/* Port: used flag */
+#define S9_LOCK_TAG	0x40	/* Port: locked (do not close) */
+#define S9_CONST_TAG	0x80	/* Node is immutable */
 
 /*
  * Integer segment specs
  */
 
-#ifdef BITS_PER_WORD_64
- #define DIGITS_PER_CELL	18
- #define INT_SEG_LIMIT		1000000000000000000L
- #define MANTISSA_SEGMENTS	1
+#ifdef S9_BITS_PER_WORD_64
+ #define S9_DIGITS_PER_CELL	18
+ #define S9_INT_SEG_LIMIT	1000000000000000000LL
+ #define S9_MANTISSA_SEGMENTS	1
 #else
- #ifdef BITS_PER_WORD_32
-  #define DIGITS_PER_CELL	9
-  #define INT_SEG_LIMIT		1000000000L
-  #define MANTISSA_SEGMENTS	2
+ #ifdef S9_BITS_PER_WORD_32
+  #define S9_DIGITS_PER_CELL	9
+  #define S9_INT_SEG_LIMIT	1000000000L
+  #define S9_MANTISSA_SEGMENTS	2
  #else
-  #ifdef BITS_PER_WORD_16
-   #define DIGITS_PER_CELL	4
-   #define INT_SEG_LIMIT	10000
-   #define MANTISSA_SEGMENTS	2
+  #ifdef S9_BITS_PER_WORD_16
+   #define S9_DIGITS_PER_CELL	4
+   #define S9_INT_SEG_LIMIT	10000
+   #define S9_MANTISSA_SEGMENTS	2
   #else
-   #error "BITS_PER_WORD_* undefined (this should not happen)"
+   #error "S9_BITS_PER_WORD_* undefined (this should not happen)"
   #endif
  #endif
 #endif
@@ -156,386 +167,367 @@
  * Real number mantissa size
  */
 
-#define MANTISSA_SIZE		(MANTISSA_SEGMENTS * DIGITS_PER_CELL)
+#define S9_MANTISSA_SIZE	(S9_MANTISSA_SEGMENTS * S9_DIGITS_PER_CELL)
 
 /*
  * Special objects
  */
 
-#define special_value_p(x)	((x) < 0)
-#define NIL			(-1)
-#define TRUE			(-2)
-#define FALSE			(-3)
-#define END_OF_FILE		(-4)
-#define UNDEFINED		(-5)
-#define UNSPECIFIC		(-6)
-#define NOEXPR			(-7)
+#define s9_special_p(x)	((x) < 0)
+#define S9_NIL		(-1)
+#define S9_TRUE		(-2)
+#define S9_FALSE	(-3)
+#define S9_END_OF_FILE	(-4)
+#define S9_UNDEFINED	(-5)
+#define S9_UNSPECIFIC	(-6)
+#define S9_VOID		(-7)
 
 /*
  * Types
  */
 
-#define T_ANY		(-10)
-#define T_BOOLEAN	(-11)
-#define T_CHAR		(-12)
-#define T_INPUT_PORT	(-13)
-#define T_INTEGER	(-14)
-#define T_LIST		(-17)
-#define T_OUTPUT_PORT	(-15)
-#define T_PAIR		(-16)
-#define T_PRIMITIVE	(-18)
-#define T_FUNCTION	(-19)
-#define T_REAL		(-20)
-#define T_STRING	(-21)
-#define T_SYMBOL	(-22)
-#define T_SYNTAX	(-23)
-#define T_VECTOR	(-24)
-#define T_CONTINUATION	(-25)
+#define S9_T_ANY		(-10)
+#define S9_T_BOOLEAN		(-11)
+#define S9_T_CHAR		(-12)
+#define S9_T_INPUT_PORT		(-13)
+#define S9_T_INTEGER		(-14)
+#define S9_T_LIST		(-17)
+#define S9_T_OUTPUT_PORT	(-15)
+#define S9_T_PAIR		(-16)
+#define S9_T_PRIMITIVE		(-18)
+#define S9_T_FUNCTION		(-19)
+#define S9_T_REAL		(-20)
+#define S9_T_STRING		(-21)
+#define S9_T_SYMBOL		(-22)
+#define S9_T_SYNTAX		(-23)
+#define S9_T_VECTOR		(-24)
+#define S9_T_CONTINUATION	(-25)
 
-#define USER_SPECIALS		(-100)
-
-/*
- * Short cuts for primitive procedure definitions
- * Yes, ___ violates the C standard, but it's too tempting
- */
-
-#ifdef S9FES
- #define BOL T_BOOLEAN
- #define CHR T_CHAR
- #define INP T_INPUT_PORT
- #define INT T_INTEGER
- #define LST T_LIST
- #define OUP T_OUTPUT_PORT
- #define PAI T_PAIR
- #define FUN T_FUNCTION
- #define REA T_REAL
- #define STR T_STRING
- #define SYM T_SYMBOL
- #define VEC T_VECTOR
- #define ___ T_ANY
-#endif
+#define S9_USER_SPECIALS	(-100)
 
 /*
- * Globals
+ * Structures
  */
 
-struct Counter {
+struct S9_counter {
 	int	n, n1k, n1m, n1g, n1t;
 };
 
-#define counter	struct Counter
+#define s9_counter	struct S9_counter
 
-struct Primitive_function {
+struct S9_primitive {
 	char	*name;
-	cell	(*handler)(cell expr);
+	s9_cell	(*handler)(s9_cell expr);
 	int	min_args;
 	int	max_args;	/* -1 = variadic */
 	int	arg_types[3];
 };
 
-#define PRIM    struct Primitive_function
+#define S9_PRIM    struct S9_primitive
 
 /*
  * I/O
  */
 
-#define nl()		prints("\n")
+#define s9_nl()		s9_prints("\n")
 
 /*
  * Access to fields of atoms
  */
 
-#define string(n)	((char *) &Vectors[Cdr[n]])
-#define string_len(n)	(Vectors[Cdr[n] - 1])
-#define symbol_name(n)	(string(n))
-#define symbol_len(n)	(string_len(n))
-#define vector(n)	(&Vectors[Cdr[n]])
-#define vector_link(n)	(Vectors[Cdr[n] - 3])
-#define vector_index(n)	(Vectors[Cdr[n] - 2])
-#define vector_size(k)	(((k) + sizeof(cell)-1) / sizeof(cell) + 3)
-#define vector_len(n)	(vector_size(string_len(n)) - 3)
-#define port_no(n)	(cadr(n))
-#define char_value(n)	(cadr(n))
-#define prim_slot(n)	(cadr(n))
-#define prim_info(n)	(&Primitives[prim_slot(n)])
+#define tag(n)			(S9_tag[n])
+
+#define s9_string(n)		((char *) &Vectors[S9_cdr[n]])
+#define s9_string_len(n)	(Vectors[S9_cdr[n] - 1])
+#define s9_symbol_name(n)	(string(n))
+#define s9_symbol_len(n)	(string_len(n))
+#define s9_vector(n)		(&Vectors[S9_cdr[n]])
+#define s9_vector_link(n)	(Vectors[S9_cdr[n] - 3])
+#define s9_vector_index(n)	(Vectors[S9_cdr[n] - 2])
+#define s9_vector_size(k)	(((k) + sizeof(s9_cell)-1) / sizeof(s9_cell) + 3)
+#define s9_vector_len(n)	(vector_size(string_len(n)) - 3)
+#define s9_port_no(n)		(cadr(n))
+#define s9_char_value(n)	(cadr(n))
+#define s9_prim_slot(n)		(cadr(n))
+#define s9_prim_info(n)		(&Primitives[prim_slot(n)])
 
 /*
  * Nested lists
  */
 
-#define car(x)          (Car[x])
-#define cdr(x)          (Cdr[x])
-#define caar(x)         (Car[Car[x]])
-#define cadr(x)         (Car[Cdr[x]])
-#define cdar(x)         (Cdr[Car[x]])
-#define cddr(x)         (Cdr[Cdr[x]])
-#define caaar(x)        (Car[Car[Car[x]]])
-#define caadr(x)        (Car[Car[Cdr[x]]])
-#define cadar(x)        (Car[Cdr[Car[x]]])
-#define caddr(x)        (Car[Cdr[Cdr[x]]])
-#define cdaar(x)        (Cdr[Car[Car[x]]])
-#define cdadr(x)        (Cdr[Car[Cdr[x]]])
-#define cddar(x)        (Cdr[Cdr[Car[x]]])
-#define cdddr(x)        (Cdr[Cdr[Cdr[x]]])
-#define caaaar(x)       (Car[Car[Car[Car[x]]]])
-#define caaadr(x)       (Car[Car[Car[Cdr[x]]]])
-#define caadar(x)       (Car[Car[Cdr[Car[x]]]])
-#define caaddr(x)       (Car[Car[Cdr[Cdr[x]]]])
-#define cadaar(x)       (Car[Cdr[Car[Car[x]]]])
-#define cadadr(x)       (Car[Cdr[Car[Cdr[x]]]])
-#define caddar(x)       (Car[Cdr[Cdr[Car[x]]]])
-#define cadddr(x)       (Car[Cdr[Cdr[Cdr[x]]]])
-#define cdaaar(x)       (Cdr[Car[Car[Car[x]]]])
-#define cdaadr(x)       (Cdr[Car[Car[Cdr[x]]]])
-#define cdadar(x)       (Cdr[Car[Cdr[Car[x]]]])
-#define cdaddr(x)       (Cdr[Car[Cdr[Cdr[x]]]])
-#define cddaar(x)       (Cdr[Cdr[Car[Car[x]]]])
-#define cddadr(x)       (Cdr[Cdr[Car[Cdr[x]]]])
-#define cdddar(x)       (Cdr[Cdr[Cdr[Car[x]]]])
-#define cddddr(x)       (Cdr[Cdr[Cdr[Cdr[x]]]])
+#define s9_car(x)          (S9_car[x])
+#define s9_cdr(x)          (S9_cdr[x])
+#define s9_caar(x)         (S9_car[S9_car[x]])
+#define s9_cadr(x)         (S9_car[S9_cdr[x]])
+#define s9_cdar(x)         (S9_cdr[S9_car[x]])
+#define s9_cddr(x)         (S9_cdr[S9_cdr[x]])
+#define s9_caaar(x)        (S9_car[S9_car[S9_car[x]]])
+#define s9_caadr(x)        (S9_car[S9_car[S9_cdr[x]]])
+#define s9_cadar(x)        (S9_car[S9_cdr[S9_car[x]]])
+#define s9_caddr(x)        (S9_car[S9_cdr[S9_cdr[x]]])
+#define s9_cdaar(x)        (S9_cdr[S9_car[S9_car[x]]])
+#define s9_cdadr(x)        (S9_cdr[S9_car[S9_cdr[x]]])
+#define s9_cddar(x)        (S9_cdr[S9_cdr[S9_car[x]]])
+#define s9_cdddr(x)        (S9_cdr[S9_cdr[S9_cdr[x]]])
+#define s9_caaaar(x)       (S9_car[S9_car[S9_car[S9_car[x]]]])
+#define s9_caaadr(x)       (S9_car[S9_car[S9_car[S9_cdr[x]]]])
+#define s9_caadar(x)       (S9_car[S9_car[S9_cdr[S9_car[x]]]])
+#define s9_caaddr(x)       (S9_car[S9_car[S9_cdr[S9_cdr[x]]]])
+#define s9_cadaar(x)       (S9_car[S9_cdr[S9_car[S9_car[x]]]])
+#define s9_cadadr(x)       (S9_car[S9_cdr[S9_car[S9_cdr[x]]]])
+#define s9_caddar(x)       (S9_car[S9_cdr[S9_cdr[S9_car[x]]]])
+#define s9_cadddr(x)       (S9_car[S9_cdr[S9_cdr[S9_cdr[x]]]])
+#define s9_cdaaar(x)       (S9_cdr[S9_car[S9_car[S9_car[x]]]])
+#define s9_cdaadr(x)       (S9_cdr[S9_car[S9_car[S9_cdr[x]]]])
+#define s9_cdadar(x)       (S9_cdr[S9_car[S9_cdr[S9_car[x]]]])
+#define s9_cdaddr(x)       (S9_cdr[S9_car[S9_cdr[S9_cdr[x]]]])
+#define s9_cddaar(x)       (S9_cdr[S9_cdr[S9_car[S9_car[x]]]])
+#define s9_cddadr(x)       (S9_cdr[S9_cdr[S9_car[S9_cdr[x]]]])
+#define s9_cdddar(x)       (S9_cdr[S9_cdr[S9_cdr[S9_car[x]]]])
+#define s9_cddddr(x)       (S9_cdr[S9_cdr[S9_cdr[S9_cdr[x]]]])
 
 /*
  * Type predicates
  */
 
-#define eof_p(n)	((n) == END_OF_FILE)
-#define undefined_p(n)	((n) == UNDEFINED)
-#define unspecific_p(n)	((n) == UNSPECIFIC)
+#define s9_eof_p(n)		((n) == S9_END_OF_FILE)
+#define s9_undefined_p(n)	((n) == S9_UNDEFINED)
+#define s9_unspecific_p(n)	((n) == S9_UNSPECIFIC)
 
-#define boolean_p(n)	((n) == TRUE || (n) == FALSE)
+#define s9_boolean_p(n)	\
+	((n) == S9_TRUE || (n) == S9_FALSE)
 
-#define constant_p(n)	(!special_value_p(n) && (Tag[n] & CONST_TAG))
+#define s9_constant_p(n) \
+	(!s9_special_p(n) && (tag(n) & S9_CONST_TAG))
 
-#define integer_p(n) \
-	(!special_value_p(n) && (Tag[n] & ATOM_TAG) && Car[n] == T_INTEGER)
-#define number_p(n) \
-	(!special_value_p(n) && (Tag[n] & ATOM_TAG) && \
-		(Car[n] == T_REAL || Car[n] == T_INTEGER))
-#define primitive_p(n) \
-	(!special_value_p(n) && (Tag[n] & ATOM_TAG) && Car[n] == T_PRIMITIVE)
-#define function_p(n) \
-	(!special_value_p(n) && (Tag[n] & ATOM_TAG) && Car[n] == T_FUNCTION)
-#define continuation_p(n) \
-	(!special_value_p(n) && (Tag[n] & ATOM_TAG) && \
-		Car[n] == T_CONTINUATION)
-#define real_p(n) \
-	(!special_value_p(n) && (Tag[n] & ATOM_TAG) && Car[n] == T_REAL)
-#define char_p(n) \
-	(!special_value_p(n) && (Tag[n] & ATOM_TAG) && Car[n] == T_CHAR)
-#define syntax_p(n) \
-	(!special_value_p(n) && (Tag[n] & ATOM_TAG) && Car[n] == T_SYNTAX)
-#define input_port_p(n) \
-	(!special_value_p(n) && (Tag[n] & ATOM_TAG) && (Tag[n] & PORT_TAG) \
-	 && Car[n] == T_INPUT_PORT)
-#define output_port_p(n) \
-	(!special_value_p(n) && (Tag[n] & ATOM_TAG) && (Tag[n] & PORT_TAG) \
-	 && Car[n] == T_OUTPUT_PORT)
+#define s9_integer_p(n) \
+	(!s9_special_p(n) && (tag(n) & S9_ATOM_TAG) && car(n) == S9_T_INTEGER)
+#define s9_number_p(n) \
+	(!s9_special_p(n) && (tag(n) & S9_ATOM_TAG) && \
+	 (car(n) == S9_T_REAL || car(n) == S9_T_INTEGER))
+#define s9_primitive_p(n) \
+	(!s9_special_p(n) && (tag(n) & S9_ATOM_TAG) && \
+	 car(n) == S9_T_PRIMITIVE)
+#define s9_function_p(n) \
+	(!s9_special_p(n) && (tag(n) & S9_ATOM_TAG) && \
+	 car(n) == S9_T_FUNCTION)
+#define s9_continuation_p(n) \
+	(!s9_special_p(n) && (tag(n) & S9_ATOM_TAG) && \
+	 car(n) == S9_T_CONTINUATION)
+#define s9_real_p(n) \
+	(!s9_special_p(n) && (tag(n) & S9_ATOM_TAG) && car(n) == S9_T_REAL)
+#define s9_char_p(n) \
+	(!s9_special_p(n) && (tag(n) & S9_ATOM_TAG) && car(n) == S9_T_CHAR)
+#define s9_syntax_p(n) \
+	(!s9_special_p(n) && (tag(n) & S9_ATOM_TAG) && car(n) == S9_T_SYNTAX)
+#define s9_input_port_p(n) \
+	(!s9_special_p(n) && (tag(n) & S9_ATOM_TAG) && \
+	 (tag(n) & S9_PORT_TAG) && car(n) == S9_T_INPUT_PORT)
+#define s9_output_port_p(n) \
+	(!s9_special_p(n) && (tag(n) & S9_ATOM_TAG) && \
+	 (tag(n) & S9_PORT_TAG) && car(n) == S9_T_OUTPUT_PORT)
 
-#define symbol_p(n) \
-	(!special_value_p(n) && (Tag[n] & VECTOR_TAG) && Car[n] == T_SYMBOL)
-#define vector_p(n) \
-	(!special_value_p(n) && (Tag[n] & VECTOR_TAG) && Car[n] == T_VECTOR)
-#define string_p(n) \
-	(!special_value_p(n) && (Tag[n] & VECTOR_TAG) && Car[n] == T_STRING)
+#define s9_symbol_p(n) \
+	(!s9_special_p(n) && (tag(n) & S9_VECTOR_TAG) && car(n) == S9_T_SYMBOL)
+#define s9_vector_p(n) \
+	(!s9_special_p(n) && (tag(n) & S9_VECTOR_TAG) && car(n) == S9_T_VECTOR)
+#define s9_string_p(n) \
+	(!s9_special_p(n) && (tag(n) & S9_VECTOR_TAG) && car(n) == S9_T_STRING)
 
-#define atom_p(n) \
-	(special_value_p(n) || (Tag[n] & ATOM_TAG) || (Tag[n] & VECTOR_TAG))
+#define s9_atom_p(n) \
+	(s9_special_p(n) || (tag(n) & S9_ATOM_TAG) || (tag(n) & S9_VECTOR_TAG))
 
-#define pair_p(x) (!atom_p(x))
+#define s9_pair_p(x) (!s9_atom_p(x))
 
 /*
  * Allocators
  */
 
-#define cons(pa, pd)		cons3((pa), (pd), 0)
-#define new_atom(pa, pd)	cons3((pa), (pd), ATOM_TAG)
-#define save(n)			(Stack = cons((n), Stack))
+#define s9_cons(pa, pd)		s9_cons3((pa), (pd), 0)
+#define s9_new_atom(pa, pd)	s9_cons3((pa), (pd), S9_ATOM_TAG)
+#define s9_save(n)		(Stack = s9_cons((n), Stack))
 
 /*
  * Bignum arithmetics
  */
 
-#define bignum_negative_p(a)	((cadr(a)) < 0)
-#define bignum_zero_p(a)	((cadr(a)) == 0)
-#define bignum_positive_p(a)	((cadr(a)) > 0)
+#define s9_bignum_negative_p(a)	((cadr(a)) < 0)
+#define s9_bignum_zero_p(a)	((cadr(a)) == 0)
+#define s9_bignum_positive_p(a)	((cadr(a)) > 0)
 
 /*
  * Real number structure
  */
 
-#define Real_flags(x)		(cadr(x))
-#define Real_exponent(x)	(caddr(x))
-#define Real_mantissa(x)	(cdddr(x))
+#define S9_real_flags(x)	(cadr(x))
+#define S9_real_exponent(x)	(caddr(x))
+#define S9_real_mantissa(x)	(cdddr(x))
 
-#define REAL_NEGATIVE   0x01
+#define S9_REAL_NEGATIVE   0x01
 
-#define Real_negative_flag(x)	(Real_flags(x) & REAL_NEGATIVE)
+#define S9_real_negative_flag(x)	(S9_real_flags(x) & S9_REAL_NEGATIVE)
 
 /*
  * Real-number arithmetics
  */
 
-#define Real_zero_p(x) \
-	(car(Real_mantissa(x)) == 0 && cdr(Real_mantissa(x)) == NIL)
+#define S9_real_zero_p(x) \
+	(car(S9_real_mantissa(x)) == 0 && cdr(S9_real_mantissa(x)) == S9_NIL)
 
-#define Real_negative_p(x) \
-	(Real_negative_flag(x) && !Real_zero_p(x))
+#define S9_real_negative_p(x) \
+	(S9_real_negative_flag(x) && !S9_real_zero_p(x))
 
-#define Real_positive_p(x) \
-	(!Real_negative_flag(x) && !Real_zero_p(x))
+#define S9_real_positive_p(x) \
+	(!S9_real_negative_flag(x) && !S9_real_zero_p(x))
 
-#define Real_negate(a) \
-	Make_quick_real(Real_flags(a) & REAL_NEGATIVE?	\
-			Real_flags(a) & ~REAL_NEGATIVE: \
-			Real_flags(a) |  REAL_NEGATIVE, \
-			Real_exponent(a), Real_mantissa(a))
+#define S9_real_negate(a) \
+	S9_make_quick_real(S9_real_flags(a) & S9_REAL_NEGATIVE?	\
+			S9_real_flags(a) & ~S9_REAL_NEGATIVE: \
+			S9_real_flags(a) |  S9_REAL_NEGATIVE, \
+			S9_real_exponent(a), S9_real_mantissa(a))
 
 /*
  * Globals
  */
 
-extern cell	*Car,
-		*Cdr;
-extern char	*Tag;
+extern s9_cell	*S9_car,
+		*S9_cdr;
+extern char	*S9_tag;
 
-extern cell	*Vectors;
+extern s9_cell	*S9_vectors;
 
-extern cell	Stack;
+extern s9_cell	S9_stack;
 
-extern PRIM	*Primitives;
+extern S9_PRIM	*S9_primitives;
 
-extern cell	Zero,
-		One,
-		Two;
+extern s9_cell	S9_zero,
+		S9_one,
+		S9_two,
+		S9_ten;
 
-extern cell	Epsilon;
+extern s9_cell	S9_epsilon;
 
-extern FILE	*Ports[];
+extern FILE	*S9_ports[];
 
-extern int	Input_port,
-		Output_port,
-		Error_port;
+extern int	S9_input_port,
+		S9_output_port,
+		S9_error_port;
 
 /*
  * Prototypes
  */
 
-void	add_image_vars(cell **v);
-cell	apply_prim(cell f, cell a);
-long	asctol(char *s);
-cell	bignum_abs(cell a);
-cell	bignum_add(cell a, cell b);
-cell	bignum_divide(cell a, cell b);
-int	bignum_equal_p(cell a, cell b);
-int	bignum_even_p(cell a);
-int	bignum_less_p(cell a, cell b);
-cell	bignum_multiply(cell a, cell b);
-cell	bignum_negate(cell a);
-cell	bignum_shift_left(cell a, int fill);
-cell	bignum_shift_right(cell a);
-cell	bignum_subtract(cell a, cell b);
-cell	bignum_to_int(cell x);
-cell	bignum_to_real(cell a);
-cell	bignum_to_string(cell x);
-int	blockread(char *s, int k);
-void	blockwrite(char *s, int k);
-void	close_port(int port);
-void	close_input_string(void);
-cell	cons3(cell pcar, cell pcdr, int ptag);
-void	cons_stats(int x);
-cell	copy_string(cell x);
-void	count(counter *c);
-char	*dump_image(char *path, char *magic);
-void	exponent_chars(char *s);
-void	fatal(char *msg);
-cell	find_symbol(char *s);
-cell	flat_copy(cell n, cell *lastp);
-void	flush(void);
-int	gc(void);
-int	gcv(void);
-void	gc_verbosity(int n);
-void	get_counters(counter **nc, counter **cc, counter **gc);
-void	mem_error_handler(void (*h)(int src));
-void	image_vars(cell **v);
-int	input_port(void);
-int	integer_string_p(char *s);
-cell	intern_symbol(cell y);
-int	io_status(void);
-void	io_reset(void);
-int	length(cell n);
-char	*load_image(char *path, char *magic);
-int	lock_port(int port);
-cell	make_char(int c);
-cell	make_integer(cell i);
-cell	make_norm_real(int flags, cell exp, cell mant);
-cell	make_port(int portno, cell type);
-cell	make_primitive(PRIM *p);
-cell	Make_real(int flags, cell exp, cell mant);
-cell	make_real(int sign, cell exp, cell mant);
-cell	make_string(char *s, int k);
-cell	make_symbol(char *s, int k);
-cell	make_vector(int k);
-int	new_port(void);
-cell	new_vec(cell type, int size);
-int	open_input_port(char *path);
-char	*open_input_string(char *s);
-int	open_output_port(char *path, int append);
-int	output_port(void);
-int	port_eof(int p);
-void	prints(char *s);
-int	printer_limit(void);
-void	print_bignum(cell n);
-void	print_expanded_real(cell n);
-void	print_real(cell n);
-void	print_sci_real(cell n);
-int	readc(void);
-cell	read_counter(counter *c);
-cell	real_abs(cell a);
-cell	real_add(cell a, cell b);
-cell	real_ceil(cell x);
-cell	real_divide(cell a, cell b);
-int	real_equal_p(cell a, cell b);
-cell	real_exponent(cell x);
-cell	real_floor(cell x);
-cell	real_integer_p(cell x);
-int	real_less_p(cell a, cell b);
-cell	real_mantissa(cell x);
-cell	real_multiply(cell a, cell b);
-cell	real_negate(cell a);
-cell	real_negative_p(cell a);
-cell	real_positive_p(cell a);
-cell	real_power(cell x, cell y);
-cell	real_sqrt(cell x);
-cell	real_subtract(cell a, cell b);
-cell	real_to_bignum(cell r);
-cell	real_to_string(cell r, int mode);
-cell	real_trunc(cell x);
-cell	real_zero_p(cell a);
-void	reject(int c);
-void	reset_counter(counter *c);
-void	reset_std_ports(void);
-void	run_stats(int x);
-void	s9fini(void);
-void	s9init(cell **extroots);
-cell	set_input_port(cell port);
-void	set_node_limit(int k);
-cell	set_output_port(cell port);
-void	set_printer_limit(int k);
-void	set_vector_limit(int k);
-int	string_numeric_p(char *s);
-cell	string_to_bignum(char *s);
-cell	string_to_number(char *s);
-cell	string_to_real(char *s);
-cell	string_to_symbol(cell x);
-cell	symbol_ref(char *s);
-cell	symbol_table(void);
-cell	symbol_to_string(cell x);
-char	*typecheck(cell f, cell a);
-int	unlock_port(int port);
-cell	unsave(int k);
-
-#ifdef S9FES
-void	add_primitives(char *name, PRIM *p);
-cell	error(char *msg, cell expr);
-cell	integer_value(char *src, cell x);
-#endif
+void	s9_add_image_vars(s9_cell **v);
+s9_cell	s9_apply_prim(s9_cell f, s9_cell a);
+s9_cell	s9_argv_to_list(char **argv);
+long	s9_asctol(char *s);
+s9_cell	s9_bignum_abs(s9_cell a);
+s9_cell	s9_bignum_add(s9_cell a, s9_cell b);
+s9_cell	s9_bignum_divide(s9_cell a, s9_cell b);
+int	s9_bignum_equal_p(s9_cell a, s9_cell b);
+int	s9_bignum_even_p(s9_cell a);
+int	s9_bignum_less_p(s9_cell a, s9_cell b);
+s9_cell	s9_bignum_multiply(s9_cell a, s9_cell b);
+s9_cell	s9_bignum_negate(s9_cell a);
+s9_cell	s9_bignum_shift_left(s9_cell a, int fill);
+s9_cell	s9_bignum_shift_right(s9_cell a);
+s9_cell	s9_bignum_subtract(s9_cell a, s9_cell b);
+s9_cell	s9_bignum_to_int(s9_cell x);
+s9_cell	s9_bignum_to_real(s9_cell a);
+s9_cell	s9_bignum_to_string(s9_cell x);
+int	s9_blockread(char *s, int k);
+void	s9_blockwrite(char *s, int k);
+void	s9_close_port(int port);
+void	s9_close_input_string(void);
+s9_cell	s9_cons3(s9_cell pcar, s9_cell pcdr, int ptag);
+void	s9_cons_stats(int x);
+s9_cell	s9_copy_string(s9_cell x);
+void	s9_count(s9_counter *c);
+char	*s9_dump_image(char *path, char *magic);
+void	s9_exponent_chars(char *s);
+void	s9_fatal(char *msg);
+s9_cell	s9_find_symbol(char *s);
+s9_cell	s9_flat_copy(s9_cell n, s9_cell *lastp);
+void	s9_flush(void);
+int	s9_gc(void);
+int	s9_gcv(void);
+void	s9_gc_verbosity(int n);
+void	s9_get_counters(s9_counter **nc, s9_counter **cc, s9_counter **gc);
+void	s9_mem_error_handler(void (*h)(int src));
+void	s9_image_vars(s9_cell **v);
+int	s9_input_port(void);
+int	s9_integer_string_p(char *s);
+s9_cell	s9_intern_symbol(s9_cell y);
+int	s9_io_status(void);
+void	s9_io_reset(void);
+int	s9_length(s9_cell n);
+char	*s9_load_image(char *path, char *magic);
+int	s9_lock_port(int port);
+s9_cell	s9_make_char(int c);
+s9_cell	s9_make_integer(s9_cell i);
+s9_cell	s9_make_norm_real(int flags, s9_cell exp, s9_cell mant);
+s9_cell	s9_make_port(int portno, s9_cell type);
+s9_cell	s9_make_primitive(S9_PRIM *p);
+s9_cell	S9_make_real(int flags, s9_cell exp, s9_cell mant);
+s9_cell	s9_make_real(int sign, s9_cell exp, s9_cell mant);
+s9_cell	s9_make_string(char *s, int k);
+s9_cell	s9_make_symbol(char *s, int k);
+s9_cell	s9_make_vector(int k);
+int	s9_new_port(void);
+s9_cell	s9_new_vec(s9_cell type, int size);
+int	s9_open_input_port(char *path);
+char	*s9_open_input_string(char *s);
+int	s9_open_output_port(char *path, int append);
+int	s9_output_port(void);
+int	s9_port_eof(int p);
+void	s9_prints(char *s);
+int	s9_printer_limit(void);
+void	s9_print_bignum(s9_cell n);
+void	s9_print_expanded_real(s9_cell n);
+void	s9_print_real(s9_cell n);
+void	s9_print_sci_real(s9_cell n);
+int	s9_readc(void);
+s9_cell	s9_read_counter(s9_counter *c);
+s9_cell	s9_real_abs(s9_cell a);
+s9_cell	s9_real_add(s9_cell a, s9_cell b);
+s9_cell	s9_real_ceil(s9_cell x);
+s9_cell	s9_real_divide(s9_cell a, s9_cell b);
+int	s9_real_equal_p(s9_cell a, s9_cell b);
+s9_cell	s9_real_exponent(s9_cell x);
+s9_cell	s9_real_floor(s9_cell x);
+s9_cell	s9_real_integer_p(s9_cell x);
+int	s9_real_less_p(s9_cell a, s9_cell b);
+s9_cell	s9_real_mantissa(s9_cell x);
+s9_cell	s9_real_multiply(s9_cell a, s9_cell b);
+s9_cell	s9_real_negate(s9_cell a);
+s9_cell	s9_real_negative_p(s9_cell a);
+s9_cell	s9_real_positive_p(s9_cell a);
+s9_cell	s9_real_power(s9_cell x, s9_cell y);
+s9_cell	s9_real_sqrt(s9_cell x);
+s9_cell	s9_real_subtract(s9_cell a, s9_cell b);
+s9_cell	s9_real_to_bignum(s9_cell r);
+s9_cell	s9_real_to_string(s9_cell r, int mode);
+s9_cell	s9_real_trunc(s9_cell x);
+s9_cell	s9_real_zero_p(s9_cell a);
+void	s9_rejectc(int c);
+void	s9_reset_counter(s9_counter *c);
+void	s9_reset_std_ports(void);
+void	s9_run_stats(int x);
+void	s9_fini(void);
+void	s9_init(s9_cell **extroots);
+s9_cell	s9_set_input_port(s9_cell port);
+void	s9_set_node_limit(int k);
+s9_cell	s9_set_output_port(s9_cell port);
+void	s9_set_printer_limit(int k);
+void	s9_set_vector_limit(int k);
+int	s9_string_numeric_p(char *s);
+s9_cell	s9_string_to_bignum(char *s);
+s9_cell	s9_string_to_number(char *s);
+s9_cell	s9_string_to_real(char *s);
+s9_cell	s9_string_to_symbol(s9_cell x);
+s9_cell	s9_symbol_ref(char *s);
+s9_cell	s9_symbol_table(void);
+s9_cell	s9_symbol_to_string(s9_cell x);
+char	*s9_typecheck(s9_cell f, s9_cell a);
+int	s9_unlock_port(int port);
+s9_cell	s9_unsave(int k);

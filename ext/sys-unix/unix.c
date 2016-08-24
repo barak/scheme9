@@ -1,6 +1,6 @@
 /*
  * Scheme 9 from Empty Space, Unix Interface
- * By Nils M Holm, 2009-2015
+ * By Nils M Holm, 2009-2016
  * Placed in the Public Domain
  *
  * A low-level interface to some Unix system services.
@@ -25,8 +25,9 @@
  #endif
 #endif
 
-#define S9FES
 #include "s9core.h"
+#include "s9import.h"
+#include "s9ext.h"
 
 #include <stdlib.h>
 #include <stdio.h>
@@ -217,7 +218,7 @@ cell pp_sys_execv(cell x) {
 	}
 	argv = malloc((length(cadr(x)) + 2) * sizeof(char *));
 	if (argv == NULL)
-		return sys_error("sys:execv", NOEXPR);
+		return sys_error("sys:execv", VOID);
 	argv[0] = string(car(x));
 	i = 1;
 	for (p = cadr(x); p != NIL; p = cdr(p))
@@ -225,7 +226,7 @@ cell pp_sys_execv(cell x) {
 	argv[i] = NULL;
 	execv(string(car(x)), argv);
 	free(argv);
-	return sys_error("sys:execv", NOEXPR);
+	return sys_error("sys:execv", VOID);
 }
 
 cell pp_sys_exit(cell x) {
@@ -258,7 +259,7 @@ cell pp_sys_fork(cell x) {
 
 	pid = fork();
 	if (pid < 0)
-		return sys_error("sys:fork", NOEXPR);
+		return sys_error("sys:fork", VOID);
 	return make_integer(pid);
 }
 
@@ -498,7 +499,7 @@ cell pp_sys_make_input_port(cell x) {
 	int	in = new_port();
 
 	if (in < 0)
-		return error("sys:make-input-port: out of ports", NOEXPR);
+		return error("sys:make-input-port: out of ports", VOID);
 	Ports[in] = fdopen(integer_value("sys:make-input-port", car(x)),
 				"r");
 	return make_port(in, T_INPUT_PORT);
@@ -508,7 +509,7 @@ cell pp_sys_make_output_port(cell x) {
 	int	out = new_port();
 
 	if (out < 0)
-		return error("sys:make-output-port: out of ports", NOEXPR);
+		return error("sys:make-output-port: out of ports", VOID);
 	Ports[out] = fdopen(integer_value("sys:make-output-port", car(x)),
 				"w");
 	return make_port(out, T_OUTPUT_PORT);
@@ -534,7 +535,7 @@ cell pp_sys_pipe(cell x) {
 	cell	n;
 
 	if (pipe(fd) < 0)
-		return sys_error("sys:pipe", NOEXPR);
+		return sys_error("sys:pipe", VOID);
 	n = cons(make_integer(fd[1]), NIL);
 	save(n);
 	n = cons(make_integer(fd[0]), n);
@@ -705,7 +706,7 @@ cell sys_stat(int follow, cell x) {
 	cell		n, a;
 
 	if ((follow? stat: lstat)(string(car(x)), &sb) < 0)
-		return sys_error(NULL, NOEXPR);
+		return sys_error(NULL, VOID);
 	n = cons(NIL, NIL);
 	save(n);
 	assign(car(n), cons(symbol_ref("name"), car(x)));
@@ -904,7 +905,7 @@ cell pp_sys_wait(cell x) {
 
 	r = wait(&status);
 	if (r < 0)
-		return sys_error("sys:wait", NOEXPR);
+		return sys_error("sys:wait", VOID);
 	n = cons(make_integer(r), NIL);
 	save(n);
 	n = cons(make_integer(WEXITSTATUS(status)), n);
@@ -918,7 +919,7 @@ cell pp_sys_waitpid(cell x) {
 
 	r = waitpid(integer_value(name, car(x)), &status, WNOHANG);
 	if (r < 0)
-		return sys_error(name, NOEXPR);
+		return sys_error(name, VOID);
 	return r == 0? FALSE: make_integer(WEXITSTATUS(status));
 }
 
@@ -981,7 +982,7 @@ cell pp_sys_inet_getpeername(cell x) {
 	fd = integer_value("sys:inet-getpeername", car(x));
 	len = sizeof addr;
 	if (getpeername(fd, (struct sockaddr *) &addr, &len) < 0)
-		return sys_error(NULL, NOEXPR);
+		return sys_error(NULL, VOID);
 	if (addr.ss_family == AF_INET6) {
 		struct sockaddr_in6 *s = (struct sockaddr_in6 *) &addr;
 		port = ntohs(s->sin6_port);
@@ -1048,7 +1049,7 @@ cell pp_sys_inet_listen(cell x) {
 
 #endif /* NETWORK */
 
-PRIM Unix_primitives[] = {
+S9_PRIM Unix_primitives[] = {
  { "sys:access",           pp_sys_access,           2,  2, { STR,INT,___ } },
  { "sys:catch-errors",     pp_sys_catch_errors,     1,  1, { BOL,___,___ } },
  { "sys:chdir",            pp_sys_chdir,            1,  1, { STR,___,___ } },

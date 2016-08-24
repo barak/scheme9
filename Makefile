@@ -7,12 +7,12 @@
 PREFIX= /u
 
 # Base version and Release
-BASE=		20150612
-RELEASE=	20151119
+BASE=		20160804
+RELEASE=	20160823
 
 # Override default compiler and flags
 # CC=	cc
-CFLAGS=	-g -Wall -ansi -pedantic -O2
+CFLAGS=	-g -Wall -std=c99 -pedantic -O2
 
 # Which OS are we using (unix or plan9)?
 OSDEF=	-Dunix
@@ -61,10 +61,10 @@ default:	s9 s9.image s9.1.gz s9.1.txt s9core.a # s9core.pdf
 
 all:	default
 
-s9:	s9.o s9core.o s9core.h $(EXTRA_OBJS)
+s9:	s9.o s9core.o $(EXTRA_OBJS)
 	$(CC) -o s9 $(LDFLAGS) s9.o s9core.o $(EXTRA_OBJS) $(EXTRA_LIBS)
 
-s9.o:	s9.c s9core.h
+s9.o:	s9.c s9core.h s9import.h s9ext.h
 	$(CC) -o s9.o $(CFLAGS) $(DEFS) -c s9.c
 
 s9core.o:	s9core.c s9core.h
@@ -79,10 +79,10 @@ s9core.a: s9core.o
 s9.1.gz:	s9.1
 	sed -e "s,@S9DIR@,$(S9DIR)," <s9.1 |gzip -9 >s9.1.gz
 
-unix.o:	ext/sys-unix/unix.c s9core.h
+unix.o:	ext/sys-unix/unix.c s9core.h s9import.h s9ext.h
 	$(CC) $(CFLAGS) $(DEFS) -I . -o unix.o -c ext/sys-unix/unix.c
 
-curses.o:	ext/curses/curses.c s9core.h
+curses.o:	ext/curses/curses.c s9core.h s9import.h s9ext.h
 	$(CC) $(CFLAGS) $(DEFS) -I . -o curses.o -c ext/curses/curses.c
 
 s9core.ps:	s9core.tr util/book

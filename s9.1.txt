@@ -7,9 +7,9 @@ NAME
           s9 - Scheme Interpreter
 
 USAGE
-          s9 [-hv?] [-i name|-] [-gqu] [-d image] [-k size[m]]
-             [-l prog] [-n size[m]] [-f prog [args]] [-- [args]]
-             [prog [args]]
+          s9 [-hv?] [-i name|-] [-gqu] [-d image] [-e expr]
+             [-k size[m]] [-l prog] [-n size[m]] [-r expr]
+             [-f prog [args]] [-- [args]] [prog [args]]
 
 DESCRIPTION
           Scheme  9 from Empty Space is an interpreter for R4RS Scheme
@@ -31,35 +31,35 @@ OPTIONS
               source file `s9.scm'.
           -d file
               Dump heap image to file and exit.
+          -e expr
+              Read  expression  from  argument,  evaluate,  and  print
+              value.  Multiple  -e  options  may  be given, which will
+              evaluate from left to right.  Interactive mode will  not
+              be entered.
           -f program [argument ...]
-              Run program and exit (implies -q). When  there  are  any
-              arguments,  they  are  passed to the program, where they
-              can be extracted from  the  *arguments*  variable.  This
+              Run  program  and  exit (implies -q). When there are any
+              arguments, they are passed to the  program,  where  they
+              can  be  extracted  from  the *arguments* variable. This
               option must be the last one. The -f flag is optional.
           -g[g]
-              Print  GC  summaries.  A  single  `g'  will  report pool
-              growth, a second `g' will also include data  about  pool
+              Print GC  summaries.  A  single  `g'  will  report  pool
+              growth,  a  second `g' will also include data about pool
               usage after each collection.
           -k N[m]
-              Set  vector  limit to N kilo (or mega) nodes (-k 0 means
+              Set vector limit to N kilo (or mega) nodes (-k  0  means
               no limit; use with care!).
           -l program
-              Load program before entering the REPL or  processing  -f
+              Load  program  before entering the REPL or processing -f
               (may be repeated).
           -n N[m]
-              Set  node limit to N kilo (or mega) nodes (-n 0 means no
+              Set node limit to N kilo (or mega) nodes (-n 0 means  no
               limit; use with care!).
           -q
               Be quiet: skip banners and prompts, exit on errors.
+          -r expr
+              Like   -e,   but  no  value  will  print.  Used  to  run
+              expressions for effect.
           -u
-              Short for -k 0 -n 0 (use unlimited memory).
-          -- [argument ...]
-              Arguments following -- are not interpreted by S9fES, but
-              bound  to  the *arguments* variable instead. This option
-              must be the last one.
-
-
-
 
 
 S9 Interpreter                  Page 1                           S9(1)
@@ -68,6 +68,11 @@ S9 Interpreter                  Page 1                           S9(1)
 S9(1)                  Scheme 9 from Empty Space                 S9(1)
 
 
+              Short for -k 0 -n 0 (use unlimited memory).
+          -- [argument ...]
+              Arguments following -- are not interpreted by S9fES, but
+              bound  to  the *arguments* variable instead. This option
+              must be the last one.
 
 ONLINE HELP
           When the interpreter is running and the default  heap  image
@@ -122,11 +127,6 @@ ADDITIONS
               Retrieve the value of the  given  environment  variable.
               Return #f, if the variable is undefined.
 
-          (error string)         ==>  undefined
-          (error string object)  ==>  undefined
-              Print an error message of the form error: string: object
-              and terminate program execution.
-
 
 S9 Interpreter                  Page 2                           S9(1)
 
@@ -134,6 +134,11 @@ S9 Interpreter                  Page 2                           S9(1)
 S9(1)                  Scheme 9 from Empty Space                 S9(1)
 
 
+
+          (error string)         ==>  undefined
+          (error string object)  ==>  undefined
+              Print an error message of the form error: string: object
+              and terminate program execution.
 
           (eval object1)          ==>  object
           (eval object1 object2)  ==>  object
@@ -186,12 +191,7 @@ S9(1)                  Scheme 9 from Empty Space                 S9(1)
           (print object ...)  ==>  unspecific
               Write multiple objects separated by spaces.
 
-          (require-extension ext ...)  ==>  unspecific
-              Require the named extensions to be  compiled-in.  Signal
-              an  error  if  not  all  of  the required extensions are
-              present.  Ext may be of the form (or ext1 ext2 ...).  In
-              this case, it is sufficient if at least one of the given
-              exts is present.
+
 
 
 S9 Interpreter                  Page 3                           S9(1)
@@ -200,6 +200,12 @@ S9 Interpreter                  Page 3                           S9(1)
 S9(1)                  Scheme 9 from Empty Space                 S9(1)
 
 
+          (require-extension ext ...)  ==>  unspecific
+              Require the named extensions to be  compiled-in.  Signal
+              an  error  if  not  all  of  the required extensions are
+              present.  Ext may be of the form (or ext1 ext2 ...).  In
+              this case, it is sufficient if at least one of the given
+              exts is present.
 
           (reverse! list)  ==>  list
               Reverse list destructively and return the reverse  list.
@@ -251,12 +257,6 @@ S9(1)                  Scheme 9 from Empty Space                 S9(1)
               Return an unspecific value.
 
           Refer  to  the  help  pages for descriptions of the Scheme 9
-          extension procedures.
-
-SPECIAL VARIABLES
-          These variables are  predefined  in  the  dynamic  top-level
-          scope of the interpreter.
-
 
 
 
@@ -265,6 +265,12 @@ S9 Interpreter                  Page 4                           S9(1)
 
 S9(1)                  Scheme 9 from Empty Space                 S9(1)
 
+
+          extension procedures.
+
+SPECIAL VARIABLES
+          These variables are  predefined  in  the  dynamic  top-level
+          scope of the interpreter.
 
           ** (form)
               The   normal   form  of  the  expression  most  recently
@@ -318,12 +324,6 @@ MACROS
 
           (define-syntax (d x) (and (pair? x) (d (cdr x)))) ; wrong
 
-          The following version does work, though:
-
-          (define-syntax (d x) (and (pair? x) `(d ,(cdr x)))) ; OK
-
-          The body of define-syntax may be a syntax-rules transformer,
-          as described in R4RS, if the syntax-rules extension has been
 
 
 S9 Interpreter                  Page 5                           S9(1)
@@ -332,6 +332,12 @@ S9 Interpreter                  Page 5                           S9(1)
 S9(1)                  Scheme 9 from Empty Space                 S9(1)
 
 
+          The following version does work, though:
+
+          (define-syntax (d x) (and (pair? x) `(d ,(cdr x)))) ; OK
+
+          The body of define-syntax may be a syntax-rules transformer,
+          as described in R4RS, if the syntax-rules extension has been
           loaded.
 
 TECHNICAL DETAILS
@@ -373,8 +379,8 @@ INTERPRETER START-UP
               the program.
 
           Enter REPL.
-              Interactive mode is only entered, when no -f option  was
-              specified.
+              Interactive mode is only entered, when no -e, -f, or  -r
+              option was given and no program was specified.
 
 ALLOCATION STRATEGY
           The  S9fES  memory pools grow exponentially until the memory
@@ -384,12 +390,6 @@ ALLOCATION STRATEGY
           specified  in  units  of  1024  nodes/cells  (or in units of
           1024*1024 nodes/cells by appending an m suffix).
 
-          Note that computations may abort before the limit is reached
-          due  to  the  way  the  pool  grows. Use the -g command line
-          option to experiment with pool sizes.
-          Specifying a limit of zero (or using the -u option) disables
-          the   memory  limit  completely  and  the  interpreter  will
-          allocate as much memory as it can get.  This  option  should
 
 
 S9 Interpreter                  Page 6                           S9(1)
@@ -398,6 +398,12 @@ S9 Interpreter                  Page 6                           S9(1)
 S9(1)                  Scheme 9 from Empty Space                 S9(1)
 
 
+          Note that computations may abort before the limit is reached
+          due  to  the  way  the  pool  grows. Use the -g command line
+          option to experiment with pool sizes.
+          Specifying a limit of zero (or using the -u option) disables
+          the   memory  limit  completely  and  the  interpreter  will
+          allocate as much memory as it can get.  This  option  should
           be used with care.
 
 LIMITATIONS
@@ -450,12 +456,6 @@ FOOTNOTES
               <vhtzl9lupyp.fsf@maharal.csail.mit.edu>
               (Thu, 27 Aug 2009 13:27:42 -0400) and its follow-ups.
 
-REFERENCES
-          The Revised^4 Report on the Algorithmic Language Scheme.
-              http://www-swiss.ai.mit.edu/~jaffer/r4rs_toc.html
-
-
-
 
 
 S9 Interpreter                  Page 7                           S9(1)
@@ -464,17 +464,17 @@ S9 Interpreter                  Page 7                           S9(1)
 S9(1)                  Scheme 9 from Empty Space                 S9(1)
 
 
+
+REFERENCES
+          The Revised^4 Report on the Algorithmic Language Scheme.
+              http://www-swiss.ai.mit.edu/~jaffer/r4rs_toc.html
+
           Scheme 9 from Empty Space -- A Guide to Implementing  Scheme
           in C.
               Available at Lulu.com, see http://www.t3x.org
 
 AUTHOR
           Nils M Holm
-
-
-
-
-
 
 
 
