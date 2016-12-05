@@ -1,6 +1,11 @@
 
 Change Log
 
+2016-11-30
+	Upgrade to S9core Mk III. (s9core.*)
+	s9_make_integer() will now return pre-allocated objects for some
+	common values (0, 1, 2, 10). (Thanks, David Person!)
+	Added type_tag() accessor.
 2016-08-23
 	The LENGTH fix of 2014-12-06 got reverted somewhere along the way.
 	Re-fixed. (s9.c)

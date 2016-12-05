@@ -1,10 +1,10 @@
 /*
- * S9 Core Toolkit, Mk II
+ * S9 Core Toolkit, Mk III
  * By Nils M Holm, 2007-2016
  * In the public domain
  */
 
-#define S9_VERSION "20160724"
+#define S9_VERSION "20161130"
 
 /*
  * Ugly prelude to figure out if
@@ -202,6 +202,7 @@
 #define S9_T_SYNTAX		(-23)
 #define S9_T_VECTOR		(-24)
 #define S9_T_CONTINUATION	(-25)
+#define S9_T_NONE		(-99)
 
 #define S9_USER_SPECIALS	(-100)
 
@@ -338,6 +339,12 @@ struct S9_primitive {
 	(s9_special_p(n) || (tag(n) & S9_ATOM_TAG) || (tag(n) & S9_VECTOR_TAG))
 
 #define s9_pair_p(x) (!s9_atom_p(x))
+
+#define s9_type_tag(n) \
+	(S9_TRUE == (n)? S9_T_BOOLEAN: \
+	 S9_FALSE == (n)? S9_T_BOOLEAN: \
+	 (!s9_special_p(n) && (tag(n) & (S9_ATOM_TAG|S9_VECTOR_TAG))? car(n): \
+	 S9_T_NONE))
 
 /*
  * Allocators

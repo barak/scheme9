@@ -4,7 +4,7 @@
  * In the public domain
  */
 
-#define VERSION "2016-08-23"
+#define VERSION "2016-11-30"
 
 #include "s9core.h"
 #include "s9import.h"

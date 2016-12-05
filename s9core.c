@@ -1,5 +1,5 @@
 /*
- * S9 Core Toolkit, Mk II
+ * S9 Core Toolkit, Mk III
  * By Nils M Holm, 2007-2016
  * In the public domain
  */
@@ -688,6 +688,20 @@ cell s9_make_vector(int k) {
 }
 
 cell s9_make_integer(cell i) {
+	cell	n;
+
+	switch (i) {
+	case 0:		return Zero;
+	case 1:		return One;
+	case 2:		return Two;
+	case 10:	return Ten;
+	default:
+		n = new_atom(i, NIL);
+		return new_atom(T_INTEGER, n);
+	}
+}
+
+static cell make_init_integer(cell i) {
 	cell	n;
 
 	n = new_atom(i, NIL);
@@ -2759,10 +2773,10 @@ void s9_init(cell **extroots) {
 	new_cons_segment();
 	new_vec_segment();
 	s9_gc();
-	Zero = s9_make_integer(0);
-	One = s9_make_integer(1);
-	Two = s9_make_integer(2);
-	Ten = s9_make_integer(10);
+	Zero = make_init_integer(0);
+	One = make_init_integer(1);
+	Two = make_init_integer(2);
+	Ten = make_init_integer(10);
 	Epsilon = S9_make_quick_real(0, -S9_MANTISSA_SIZE, cdr(One));
 }
 
@@ -2910,6 +2924,13 @@ void test_types(void) {
 	if (s9_string_to_symbol(m) != n) error("string_to_symbol(1)");
 	s9_string_to_symbol(s9_make_string("xxyyzz", 6));
 	if (s9_find_symbol("xxyyzz") == NIL) error("string_to_symbol(2)");
+	if (s9_type_tag(Zero) != S9_T_INTEGER) error("type_tag(1)");
+	if (s9_type_tag(s9_make_string("", 0)) != S9_T_STRING)
+		error("type_tag(2)");
+	if (s9_type_tag(s9_symbol_ref("foo")) != S9_T_SYMBOL)
+		error("type_tag(3)");
+	if (s9_type_tag(S9_TRUE) != S9_T_BOOLEAN) error("type_tag(4)");
+	if (s9_type_tag(S9_NIL) != S9_T_NONE) error("type_tag(5)");
 }
 
 void test_bignum(void) {

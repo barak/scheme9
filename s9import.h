@@ -37,6 +37,7 @@
 #define T_SYNTAX	S9_T_SYNTAX
 #define T_VECTOR	S9_T_VECTOR
 #define T_CONTINUATION	S9_T_CONTINUATION
+#define T_NONE		S9_T_NONE
 
 #define USER_SPECIALS	S9_USER_SPECIALS
 
@@ -123,6 +124,7 @@
 #define string_p	s9_string_p
 #define atom_p		s9_atom_p
 #define pair_p		s9_pair_p
+#define type_tag	s9_type_tag
 
 #define cons		s9_cons
 #define new_atom	s9_new_atom

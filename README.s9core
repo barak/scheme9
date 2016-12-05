@@ -41,7 +41,7 @@
 	  against the other files
 
 	- #include <s9core.h> and (optionally) <s9import.h> in your
-	  project and link against s9core.a
+	  project and link against libs9core.a
 
 	If you want to include the S9core files in your project, note
 	that you can compile s9core with
