@@ -8,7 +8,7 @@ PREFIX= /u
 
 # Base version and Release
 BASE=		20160804
-RELEASE=	20160823
+RELEASE=	20161130
 
 # Override default compiler and flags
 # CC=	cc
@@ -57,7 +57,7 @@ BUILD_ENV=	env S9FES_LIBRARY_PATH=.:lib:ext/sys-unix:ext/curses:contrib
 
 SETPREFIX=	sed -e "s|^\#! /usr/local|\#! $(PREFIX)|"
 
-default:	s9 s9.image s9.1.gz s9.1.txt s9core.a # s9core.pdf
+default:	s9 s9.image s9.1.gz s9.1.txt libs9core.a # s9core.pdf
 
 all:	default
 
@@ -73,8 +73,8 @@ s9core.o:	s9core.c s9core.h
 s9.image:	s9 s9.scm ext/sys-unix/unix.scm ext/curses/curses.scm config.scm
 	$(BUILD_ENV) ./s9 -i - $(EXTRA_SCM) -l config.scm -d s9.image
 
-s9core.a: s9core.o
-	ar q s9core.a s9core.o
+libs9core.a: s9core.o
+	ar q libs9core.a s9core.o
 
 s9.1.gz:	s9.1
 	sed -e "s,@S9DIR@,$(S9DIR)," <s9.1 |gzip -9 >s9.1.gz
@@ -144,8 +144,9 @@ install-s9:	s9 s9.scm s9.image s9.1.gz
 	install $C -m 0644 contrib/* $(S9DIR)
 	install $C -m 0644 s9.1.gz $(MANDIR)
 	(tar cf - help | tar xfC - $(S9DIR))
-	install $C -m 0644 s9core.a $(LIBDIR)
+	install $C -m 0644 libs9core.a $(LIBDIR)
 	install $C -m 0644 s9core.h $(INCDIR)
+	install $C -m 0644 s9import.h $(INCDIR)
 	install $C -m 0755 util/make-help-links $(S9DIR)
 
 install-util:
@@ -208,7 +209,7 @@ cd:
 	./s9 -f util/check-descr.scm
 
 clean:
-	rm -f s9 s9.image s9core.a test.image s9.1.gz *.o *.core \
+	rm -f s9 s9.image libs9core.a test.image s9.1.gz *.o *.core \
 		CATEGORIES.html HACKING.html core s9fes-$(RELEASE).tgz \
 		s9fes-$(BASE).tgz s9core-$(RELEASE).tgz __testfile__ \
 		s9core.ps s9core.pdf _meta _toc.tr _xref.tr _ndx.tr

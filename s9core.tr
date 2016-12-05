@@ -9,7 +9,7 @@ gsize 12
 \f[HB]\s36S9 CORE\s0\fP
 .sp
 .ce
-\f[HB]A Toolkit for Implementing Dynamic Languages\fP
+\f[HB]A Toolkit for Implementing Dynamic Languages, Mk III\fP
 .HD "Contents"
 .nr VV 1
 .sp
@@ -760,6 +760,23 @@ in its first slot. Tagged objects typically carry some payload, such as an
 integer value, an I/O port, or a symbol name. The internal structure of
 a tagged object does not matter; it is created using an allocator function
 and its payload is accessed using one or multiple accessor functions.
+.PQ
+.X type_tag
+.CO "type_tag(x)"
+.sp -0.7
+.PS
+line right 4.5i
+.PE
+.PA
+The
+.K type_tag()
+accessor extracts the type tag, like
+.K T_BOOLEAN
+or
+.K T_INTEGER ,
+from the given object. When the object does not have a type tag,
+it returns a special value,
+.K T_NONE .
 .PQ
 .X T_ANY
 .EE "Type: \f[CB]T_ANY\fP"
