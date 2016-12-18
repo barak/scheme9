@@ -1,6 +1,9 @@
 
 Change Log
 
+2016-12-06
+	Fix: S9SOS mis-computed the precedence order for multi-methods.
+	Patch supplied by David Person, thank you!
 2016-11-30
 	Upgrade to S9core Mk III. (s9core.*)
 	s9_make_integer() will now return pre-allocated objects for some

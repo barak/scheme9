@@ -1,6 +1,6 @@
 # Scheme 9 from Empty Space
 # Makefile (obviously)
-# By Nils M Holm, 2007-2015
+# By Nils M Holm, 2007-2016
 # In the public domain
 
 # Change at least this line:
@@ -8,7 +8,7 @@ PREFIX= /u
 
 # Base version and Release
 BASE=		20160804
-RELEASE=	20161130
+RELEASE=	20161206
 
 # Override default compiler and flags
 # CC=	cc
