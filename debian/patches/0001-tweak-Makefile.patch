@@ -25,11 +25,11 @@ Use ps2pdf for conversion of .ps to .pdf because pdfwrite is unavailable.
  1 file changed, 31 insertions(+), 15 deletions(-)
 
 diff --git a/Makefile b/Makefile
-index 2211b38..6bddc93 100644
+index 67cb0ce..1736a96 100644
 --- a/Makefile
 +++ b/Makefile
 @@ -3,8 +3,8 @@
- # By Nils M Holm, 2007-2015
+ # By Nils M Holm, 2007-2016
  # In the public domain
  
 -# Change at least this line:
