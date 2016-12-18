@@ -345,8 +345,8 @@
       (let loop ((s1* (%method-specializer m1))
                  (s2* (%method-specializer m2))
                  (c*  cpl*))
-        (cond ((memq (car s2*) (memq (car s1*) (car c*))) #t)
-              ((memq (car s1*) (memq (car s2*) (car c*))) #f)
+        (cond ((memq (car s2*) (cdr (memq (car s1*) (car c*)))) #t)
+              ((memq (car s1*) (cdr (memq (car s2*) (car c*)))) #f)
               (else (loop (cdr s1*) (cdr s2*) (cdr c*))))))))
 
 (define (no-applicable-method)

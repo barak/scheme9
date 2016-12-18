@@ -1,5 +1,5 @@
 /*
- * S9 Core Toolkit, Mk II
+ * S9 Core Toolkit, Mk III
  * By Nils M Holm, 2007-2016
  * In the public domain
  */
