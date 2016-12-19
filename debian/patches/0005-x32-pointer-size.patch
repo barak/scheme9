@@ -1,0 +1,73 @@
+From: "Barak A. Pearlmutter" <barak+git@pearlmutter.net>
+Date: Mon, 19 Dec 2016 15:19:10 +0000
+Subject: x32 pointer size
+
+---
+ s9core.h | 42 ++++++++++++++++++++++++++++++++++++++++++
+ 1 file changed, 42 insertions(+)
+
+diff --git a/s9core.h b/s9core.h
+index abe5f81..d0c825a 100644
+--- a/s9core.h
++++ b/s9core.h
+@@ -124,18 +124,60 @@
+ 
+ /* ... or try some magic constants (unreliable, though) ... */
+ 
++#ifndef S9_BITS_PER_WORD_16
++ #ifndef S9_BITS_PER_WORD_32
++  #ifndef S9_BITS_PER_WORD_64
++#ifdef __ILP32__
++ #define S9_BITS_PER_WORD_32
++#endif
++  #endif
++ #endif
++#endif
++#ifndef S9_BITS_PER_WORD_16
++ #ifndef S9_BITS_PER_WORD_32
++  #ifndef S9_BITS_PER_WORD_64
++#ifdef __LP64__
++ #define S9_BITS_PER_WORD_64
++#endif
++  #endif
++ #endif
++#endif
++#ifndef S9_BITS_PER_WORD_16
++ #ifndef S9_BITS_PER_WORD_32
++  #ifndef S9_BITS_PER_WORD_64
+ #ifdef __amd64__
+  #define S9_BITS_PER_WORD_64
+ #endif
++  #endif
++ #endif
++#endif
++#ifndef S9_BITS_PER_WORD_16
++ #ifndef S9_BITS_PER_WORD_32
++  #ifndef S9_BITS_PER_WORD_64
+ #ifdef __amd64
+  #define S9_BITS_PER_WORD_64
+ #endif
++  #endif
++ #endif
++#endif
++#ifndef S9_BITS_PER_WORD_16
++ #ifndef S9_BITS_PER_WORD_32
++  #ifndef S9_BITS_PER_WORD_64
+ #ifdef __x86_64__
+  #define S9_BITS_PER_WORD_64
+ #endif
++  #endif
++ #endif
++#endif
++#ifndef S9_BITS_PER_WORD_16
++ #ifndef S9_BITS_PER_WORD_32
++  #ifndef S9_BITS_PER_WORD_64
+ #ifdef __x86_64
+  #define S9_BITS_PER_WORD_64
+ #endif
++  #endif
++ #endif
++#endif
+ 
+ /* ... or assume a reasonable default */
+ #ifndef S9_BITS_PER_WORD_16
