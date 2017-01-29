@@ -25,6 +25,7 @@ combine.scm|combine|-|Generate combinations of sets
 cond-expand.scm|cond-expand|-|Simple feature-based conditional expansion
 config.scm|-|S9fES heap image configuration file|-
 count.scm|count|-|Count atomic members of pairs
+csv.scm|-|Comma-separated value (CSV) functions|-
 curses.scm|-|S9fES Curses interface|-
 data-structures.scm|-|Various data structures|-
 define-structure.scm|define-structure|-|Define structure types

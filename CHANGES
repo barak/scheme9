@@ -1,6 +1,13 @@
 
 Change Log
 
+2017-01-25
+	Made CSV:READ translate subsequent commas as empty fields, e.g.:
+	(csv:read)"",,"" ==> ("" "" ""). (ext/csv)
+	Added CSV:READ and CSV:WRITE help pages. (help/csv/)
+2017-01-24
+	Added CSV (comma-separated values) extension containing CSV:READ
+	and CSV:WRITE primitives. (ext/csv/)
 2016-12-06
 	Fix: S9SOS mis-computed the precedence order for multi-methods.
 	Patch supplied by David Person, thank you!

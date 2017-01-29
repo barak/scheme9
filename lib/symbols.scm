@@ -95,7 +95,7 @@
     curs:mvgetch curs:mvinch curs:mvinsch curs:nl curs:nocbreak
     curs:nodelay curs:noecho curs:nonl curs:noraw curs:raw curs:refresh
     curs:resetty curs:savetty curs:scroll curs:scrollok curs:standend
-    curs:standout curs:unctrl curs:ungetch))
+    curs:standout curs:unctrl curs:ungetch csv:read csv:write))
 
 (define (s9fes-extension-symbols)
   '(sys:access-f-ok sys:access-r-ok sys:access-w-ok sys:access-x-ok
