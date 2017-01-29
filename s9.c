@@ -1,10 +1,10 @@
 /*
  * Scheme 9 from Empty Space, Refactored
- * By Nils M Holm, 2007-2016
+ * By Nils M Holm, 2007-2017
  * In the public domain
  */
 
-#define VERSION "2016-12-06"
+#define VERSION "2017-01-25"
 
 #include "s9core.h"
 #include "s9import.h"
@@ -28,6 +28,7 @@
 		"."				\
 		":lib"				\
 		":ext/unix"			\
+		":ext/csv"			\
 		":ext/curses"			\
 		":contrib"			\
 		":~/.s9fes"			\
@@ -37,6 +38,7 @@
   #define LIBRARY_PATH \
 		"."		\
 		":lib"		\
+		":ext/csv"	\
 		":ext/plan9"	\
 		":contrib"	\
 		":~/lib/s9fes"
@@ -4043,6 +4045,7 @@ cell get_args(char **argv) {
 /* Extension prototypes; add your own here. */
 void curs_init(void);
 void sys_init(void);
+void csv_init(void);
 
 void make_initial_env(void) {
 	cell	new;

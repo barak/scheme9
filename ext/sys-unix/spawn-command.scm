@@ -1,4 +1,4 @@
-; Scheme 9 from Empty Space, Function Library
+; Scheme 9 from Empty Space, Unix Function Library
 ; By Nils M Holm, 2010,2014
 ; Placed in the Public Domain
 ;

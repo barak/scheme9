@@ -37,6 +37,7 @@ if [ ! -d help-new ]; then
 	mkdir help-new/sys-unix
 	mkdir help-new/sys-plan9
 	mkdir help-new/curses
+	mkdir help-new/csv
 fi
 
 for file in lib/*.scm contrib/*.scm; do
@@ -47,7 +48,7 @@ for file in lib/*.scm contrib/*.scm; do
 	echo $file
 done
 
-for ext in sys-unix sys-plan9 curses; do
+for ext in sys-unix sys-plan9 curses csv; do
 	for file in ext/$ext/*.scm; do
 		format $file >help-new/$ext/$(basename $file .scm)
 		echo $file
@@ -56,7 +57,8 @@ done
 
 cd help-new
 
-rm -f	curses/curses	\
+rm -f	csv/csv		\
+	curses/curses	\
 	fluid-let-sr	\
 	format		\
 	io-tools	\

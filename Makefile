@@ -1,14 +1,14 @@
 # Scheme 9 from Empty Space
 # Makefile (obviously)
-# By Nils M Holm, 2007-2016
+# By Nils M Holm, 2007-2017
 # In the public domain
 
 # Change at least this line:
 PREFIX= /u
 
 # Base version and Release
-BASE=		20160804
-RELEASE=	20161206
+BASE=		20170124
+RELEASE=	20170125
 
 # Override default compiler and flags
 # CC=	cc
@@ -28,6 +28,12 @@ EXTRA_SCM+=	-l ext/curses/curses.scm
 EXTRA_OBJS+=	curses.o
 EXTRA_INIT+=	curs_init();
 EXTRA_LIBS+=	-lncurses
+
+# Uncomment these to include the CSV extensions
+EXTRA_SCM+=	-l ext/csv/csv.scm
+EXTRA_OBJS+=	csv.o
+EXTRA_INIT+=	csv_init();
+EXTRA_LIBS+=
 
 # Options to be added to $(DEFS)
 #	-DBITS_PER_WORD_64	# use 64-bit bignum arithmetics
@@ -53,7 +59,7 @@ LIBDIR=	$(PREFIX)/lib
 MANDIR=	$(PREFIX)/man/man1
 
 # Set up environment to be used during the build process
-BUILD_ENV=	env S9FES_LIBRARY_PATH=.:lib:ext/sys-unix:ext/curses:contrib
+BUILD_ENV=	env S9FES_LIBRARY_PATH=.:lib:ext/sys-unix:ext/curses:ext/csv:contrib
 
 SETPREFIX=	sed -e "s|^\#! /usr/local|\#! $(PREFIX)|"
 
@@ -70,7 +76,8 @@ s9.o:	s9.c s9core.h s9import.h s9ext.h
 s9core.o:	s9core.c s9core.h
 	$(CC) -o s9core.o $(CFLAGS) $(DEFS) -c s9core.c
 
-s9.image:	s9 s9.scm ext/sys-unix/unix.scm ext/curses/curses.scm config.scm
+s9.image:	s9 s9.scm ext/sys-unix/unix.scm ext/curses/curses.scm \
+		ext/csv/csv.scm config.scm
 	$(BUILD_ENV) ./s9 -i - $(EXTRA_SCM) -l config.scm -d s9.image
 
 libs9core.a: s9core.o
@@ -84,6 +91,9 @@ unix.o:	ext/sys-unix/unix.c s9core.h s9import.h s9ext.h
 
 curses.o:	ext/curses/curses.c s9core.h s9import.h s9ext.h
 	$(CC) $(CFLAGS) $(DEFS) -I . -o curses.o -c ext/curses/curses.c
+
+csv.o:	ext/csv/csv.c s9core.h s9import.h s9ext.h
+	$(CC) $(CFLAGS) $(DEFS) -I . -o csv.o -c ext/csv/csv.c
 
 s9core.ps:	s9core.tr util/book
 	groff -e -p -t -Tps -P-p9i,6i s9core.tr >s9core.ps 2>_meta
@@ -130,6 +140,7 @@ install-s9:	s9 s9.scm s9.image s9.1.gz
 	install -d -m 0755 $(S9DIR)/help
 	install -d -m 0755 $(S9DIR)/help/sys-unix
 	install -d -m 0755 $(S9DIR)/help/curses
+	install -d -m 0755 $(S9DIR)/help/csv
 	install -d -m 0755 $(BINDIR)
 	install -d -m 0755 $(LIBDIR)
 	install -d -m 0755 $(INCDIR)
@@ -141,6 +152,7 @@ install-s9:	s9 s9.scm s9.image s9.1.gz
 	install $C -m 0644 lib/* $(S9DIR)
 	install $C -m 0644 ext/sys-unix/*.scm $(S9DIR)
 	install $C -m 0644 ext/curses/*.scm $(S9DIR)
+	install $C -m 0644 ext/csv/*.scm $(S9DIR)
 	install $C -m 0644 contrib/* $(S9DIR)
 	install $C -m 0644 s9.1.gz $(MANDIR)
 	(tar cf - help | tar xfC - $(S9DIR))
@@ -234,13 +246,14 @@ s9.1.txt:	s9.1
 	nroff -c -mdoc s9.1 | ./rpp -a >s9.1.txt
 	rm -f rpp
 
-docs:	lib ext/sys-unix ext/sys-plan9 ext/curses contrib
+docs:	lib ext/sys-unix ext/sys-plan9 ext/curses ext/csv contrib
 	util/make-docs
 	mv -f help-new/sys-unix/* help/sys-unix
 #	mv -f help-new/sys-plan9/* help/sys-plan9
 	mv -f help-new/curses/* help/curses
+#	mv -f help-new/csv/* help/csv
 	rm help-new/sys-plan9/*
-	rmdir help-new/sys-unix help-new/sys-plan9 help-new/curses
+	rmdir help-new/sys-unix help-new/sys-plan9 help-new/curses help-new/csv
 	mv -f help-new/* help
 	rmdir help-new
 
