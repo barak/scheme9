@@ -1,3 +1,9 @@
+scheme9 (2017.01.25-1) unstable; urgency=medium
+
+  * New Upstream Release
+
+ -- Barak A. Pearlmutter <bap@debian.org>  Sun, 29 Jan 2017 17:30:24 +0000
+
 scheme9 (2016.12.06-2) unstable; urgency=medium
 
   * patch for x32
