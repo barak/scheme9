@@ -1,0 +1,6 @@
+*.a
+*.gz
+*.o
+/s9
+/s9.image
+/test.image
