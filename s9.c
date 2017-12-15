@@ -4,7 +4,7 @@
  * In the public domain
  */
 
-#define VERSION "2017-01-25"
+#define VERSION "2017-11-09"
 
 #include "s9core.h"
 #include "s9import.h"
@@ -1149,7 +1149,6 @@ void rehash(cell e) {
 	p = cdr(e);
 	while (p != NIL) {
 		s = symbol_name(caar(p));
-		h = 0;
 		hash(s, h);
 		new = cons(car(p), v[h%k]);
 		v = vector(car(e));

@@ -1,7 +1,10 @@
 /*
- * S9 Core Toolkit, Mk III
- * By Nils M Holm, 2007-2016
+ * S9core Toolkit, Mk IIIc
+ * By Nils M Holm, 2007-2017
  * In the public domain
+ *
+ * Added S9_error
+ * new_vec(T_VECTOR, ...) initializes vector elts with NIL
  */
 
 #include "s9core.h"
@@ -51,6 +54,8 @@ static char	Port_flags[S9_MAX_PORTS];
 int		Input_port,
 		Output_port,
 		Error_port;
+
+int		Error;
 
 static char	*Str_outport;
 static int	Str_outport_len;
@@ -351,7 +356,7 @@ static void mark(cell n) {
 
 	parent = NIL;	/* Initially, there is no parent node */
 	while (1) {
-		if (s9_special_p(n) || Tag[n] & S9_MARK_TAG) {
+		if (s9_special_p(n) || (Tag[n] & S9_MARK_TAG)) {
 			if (parent == NIL)
 				break;
 			if (Tag[parent] & S9_VECTOR_TAG) { /* S1 --> S1|done */
@@ -572,7 +577,7 @@ int s9_gcv(void) {
 /* Allocate vector from pool */
 cell s9_new_vec(cell type, int size) {
 	cell	n;
-	int	v, wsize;
+	int	i, v, wsize;
 	char	buf[100];
 
 	wsize = vector_size(size);
@@ -612,6 +617,10 @@ cell s9_new_vec(cell type, int size) {
 	Vectors[v + RAW_VECTOR_LINK] = n;
 	Vectors[v + RAW_VECTOR_INDEX] = 0;
 	Vectors[v + RAW_VECTOR_SIZE] = size;
+	if (type == T_VECTOR) {
+		for (i = RAW_VECTOR_DATA; i<wsize; i++)
+			Vectors[v+i] = NIL;
+	}
 	return n;
 }
 
@@ -1210,6 +1219,10 @@ cell s9_bignum_multiply(cell a, cell b) {
 		a = car(r);
 		caddr(Stack) = a;
 		while (i) {
+			if (Error) {
+				s9_unsave(5);
+				return Zero;
+			}
 			result = s9_bignum_add(result, b);
 			car(Stack) = result;
 			i--;
@@ -1331,7 +1344,7 @@ cell s9_bignum_divide(cell a, cell b) {
  */
 
 static cell count_digits(cell m) {
-	int	k = 0;
+	int	k;
 	cell	x;
 
 	x = car(m);
@@ -1777,7 +1790,7 @@ cell s9_real_sqrt(cell x) {
 	if (s9_real_zero_p(x))
 		return Zero;
 	save(x);
-	n0 = n1 = x;
+	n0 = x;
 	save(n0);
 	while (1) {
 		n1 = s9_real_divide(x, n0);
@@ -1808,13 +1821,10 @@ cell s9_real_sqrt(cell x) {
 static cell rpower(cell x, cell y, cell prec) {
 	cell	n, nprec;
 
-	/*
 	if (Error)
 		return Zero;
-	*/
-	if (s9_real_equal_p(y, One)) {
+	if (s9_real_equal_p(y, One))
 		return x;
-	}
 	if (!s9_real_less_p(y, Ten)) {
 		save(x);
 		n = s9_real_divide(y, Two);
@@ -1822,7 +1832,7 @@ static cell rpower(cell x, cell y, cell prec) {
 		nprec = s9_real_divide(prec, Two);
 		save(nprec);
 		n = rpower(x, n, nprec);
-		if (n == UNDEFINED) {
+		if (n == UNDEFINED || Error) {
 			s9_unsave(2);
 			return UNDEFINED;
 		}
@@ -1836,7 +1846,7 @@ static cell rpower(cell x, cell y, cell prec) {
 		y = s9_real_subtract(y, One);
 		save(y);
 		n = rpower(x, y, prec);
-		if (n == UNDEFINED) {
+		if (n == UNDEFINED || Error) {
 			s9_unsave(1);
 			return UNDEFINED;
 		}
@@ -1851,7 +1861,7 @@ static cell rpower(cell x, cell y, cell prec) {
 	nprec = s9_real_multiply(prec, Two);
 	save(nprec);
 	n = rpower(x, y, nprec);
-	if (n == UNDEFINED) {
+	if (n == UNDEFINED || Error) {
 		s9_unsave(2);
 		return UNDEFINED;
 	}
@@ -1863,10 +1873,8 @@ static cell npower(cell x, cell y) {
 	cell	n;
 	int	even;
 
-	/*
 	if (Error)
 		return Zero;
-	*/
 	if (s9_real_zero_p(y))
 		return One;
 	if (s9_real_equal_p(y, One))
@@ -1876,6 +1884,10 @@ static cell npower(cell x, cell y) {
 	even = bignum_zero_p(cdr(n));
 	car(Stack) = n;
 	n = npower(x, car(n));
+	if (Error) {
+		s9_unsave(1);
+		return Zero;
+	}
 	car(Stack) = n;
 	n = s9_real_multiply(n, n);
 	car(Stack) = n;

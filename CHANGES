@@ -1,6 +1,10 @@
 
 Change Log
 
+2017-11-09
+	Merged Plan 9 patches by McKay Marston. Thanks!
+	Upgrade to S9core Mk IIIc. (s9core.*)
+	Changed S9core documentation format from PDF to ASCII. (s9core.txt)
 2017-01-25
 	Made CSV:READ translate subsequent commas as empty fields, e.g.:
 	(csv:read)"",,"" ==> ("" "" ""). (ext/csv)
@@ -107,7 +111,7 @@ Change Log
 	Fixed (expt 0 r) where r is not integer. (s9.scm)
 2015-06-15
 	General:
-		- Factored out the S9 Core, providing a library for
+		- Factored out the S9core, providing a library for
 		  implementing dynamic languages. Discussed in s9core.pdf.
 		- Real number arithmetics are now a non-optional part of
 		  the interpreter.
@@ -148,7 +152,7 @@ Change Log
 		- Dropped the DUMP-IMAGE procedure. (Use -d)
 
 -------------------------------------------------------------------------------
-	S9 Core Refactoring
+	S9core Refactoring
 -------------------------------------------------------------------------------
 
 2015-06-08

@@ -44,9 +44,9 @@
 .B "s9
 - Scheme Interpreter
 .SH USAGE
-.B "s9 [\-hv?] [\-i name|\-] [\-gqu] [\-d image] [\-e expr]
-.B "   [\-k size[m]] [\-l prog] [\-n size[m]] [\-r expr]
-.B "   [\-f prog [args]] [\-\- [args]] [prog [args]]"
+.B "s9 [-hv?] [-i name|-] [-gqu] [-d image] [-e expr]
+.B "   [-k size[m]] [-l prog] [-n size[m]] [-r expr]
+.B "   [-f prog [args]] [-- [args]] [prog [args]]"
 .SH "DESCRIPTION
 .B "Scheme 9 from Empty Space
 is an interpreter for R4RS Scheme with some additional procedures
@@ -55,11 +55,11 @@ functions (if compiled-in). The
 .B s9
 command starts the interpreter.
 .SH "OPTIONS
-.B "\-h, \-v, or \-?
+.B "-h, -v, or -?
 .in +4
 Display a brief summary of options.
 .in -4
-.B "\-i name | \-
+.B "-i name | -
 .in +4
 Load alternative image file `\fIname\fP.image'. When no image file
 can be found, try to load `\fIname\fP.scm'. The file will be searched
@@ -69,27 +69,27 @@ in the entire
 .B must
 be the first one of the s9 command.
 .br
-When `\-' is specified as \fIname\fP, no heap image will be loaded,
+When `-' is specified as \fIname\fP, no heap image will be loaded,
 and the core library will be read from the source file `s9.scm'.
 .in -4
-.B "\-d file
+.B "-d file
 .in +4
 Dump heap image to
 .I file
 and exit.
 .in -4
-.B "\-e expr
+.B "-e expr
 .in +4
 Read expression from argument, evaluate, and print value. Multiple
-.B \-e
+.B -e
 options may be given, which will evaluate from left to right.
 Interactive mode will not be entered.
 .in -4
-.B "\-f program [argument ...]
+.B "-f program [argument ...]
 .in +4
 Run
 .I program
-and exit (implies \-q). When there are any
+and exit (implies -q). When there are any
 .IR argument s,
 they are passed to the
 .IR program ,
@@ -104,46 +104,46 @@ flag is optional.
 Print GC summaries. A single `g' will report pool growth, a second
 `g' will also include data about pool usage after each collection.
 .in -4
-.B "\-k N[m]
+.B "-k N[m]
 .in +4
 Set vector limit to
 .I N
 kilo (or mega) nodes (\fB-k 0\fP
 means no limit; use with care!).
 .in -4
-.B "\-l program
+.B "-l program
 .in +4
 Load
 .I program
 before entering the REPL or processing
-.BR \-f
+.BR -f
 (may be repeated).
 .in -4
-.B "\-n N[m]
+.B "-n N[m]
 .in +4
 Set node limit to
 .I N
-kilo (or mega) nodes (\fB\-n 0\fP
+kilo (or mega) nodes (\fB-n 0\fP
 means no limit; use with care!).
 .in -4
-.B "\-q
+.B "-q
 .in +4
 Be quiet: skip banners and prompts, exit on errors.
 .in -4
-.B "\-r expr
+.B "-r expr
 .in +4
 Like
-.BR \-e ,
+.BR -e ,
 but no value will print. Used to run expressions for effect.
 .in -4
-.B "\-u
+.B "-u
 .in +4
 Short for \fB-k 0 -n 0\fP (use unlimited memory).
 .in -4
-.B "\-\- [argument ...]
+.B "-- [argument ...]
 .in +4
 Arguments following
-.B \-\-
+.B --
 are not interpreted by S9fES, but bound to the
 .B *arguments*
 variable instead. This option must be the last one.
@@ -154,7 +154,7 @@ just type \fB(help)\fP or \fB,h\fP to invoke the online help system.
 When the online help system is not loaded, you will have to run the
 following command first:
 .sp
-\fB(load\-from\-library "help.scm")\fP
+\fB(load-from-library "help.scm")\fP
 .SH "META COMMANDS
 In order to facilitate the invocation of frequently-used top-level
 procedures,
@@ -168,7 +168,7 @@ prompt):
 .nf
 \fB,a text\fP  =  (apropos "text")
 \fB,h text\fP  =  (help "text")
-\fB,l file\fP  =  (load\-from\-library "file")
+\fB,l file\fP  =  (load-from-library "file")
 \fB,q     \fP  =  (sys:exit)
 .fi
 .in -4
@@ -204,15 +204,15 @@ Arguments start at 0.
 .in -4
 .sp
 .ne 3
-.B "(bit\-op integer1 integer2 integer3 ...)  ==>  integer | #f
+.B "(bit-op integer1 integer2 integer3 ...)  ==>  integer | #f
 .in +4
 Implement a variety of bitwise operations. See the
-.B bit\-op
+.B bit-op
 help page for details.
 .in -4
 .sp
 .ne 3
-.B "(delete\-file string)  ==>  unspecific
+.B "(delete-file string)  ==>  unspecific
 .in +4
 Delete the file specified in the
 .I string
@@ -257,7 +257,7 @@ Extract the exponent part from a real number.
 .in -4
 .sp
 .ne 3
-.B "(file\-exists? string)  ==>  boolean
+.B "(file-exists? string)  ==>  boolean
 .in +4
 Return
 .B "#t
@@ -267,7 +267,7 @@ argument exists and otherwise \fB#f\fP.
 .in -4
 .sp
 .ne 4
-.B "(fold\-left proc base list ...)  ==>  object
+.B "(fold-left proc base list ...)  ==>  object
 .in +4
 Combine the elements of the
 .IR list s
@@ -279,7 +279,7 @@ is the leftmost element.
 .in -4
 .sp
 .ne 4
-.B "(fold\-right proc base list ...)  ==>  object
+.B "(fold-right proc base list ...)  ==>  object
 .in +4
 Combine the elements of the
 .IR list s
@@ -304,7 +304,7 @@ argument is given, use it as prefix for the fresh symbol.
 .in -4
 .sp
 .ne 2
-.B "(load\-from\-library string)  ==>  unspecific
+.B "(load-from-library string)  ==>  unspecific
 .in +4
 Attempt to
 .B load
@@ -315,7 +315,7 @@ from each directory of
 .in -4
 .sp
 .ne 2
-.B "(locate\-file string)  ==>  string | #f
+.B "(locate-file string)  ==>  string | #f
 .in +4
 Search for the file
 .I string
@@ -327,17 +327,17 @@ return \fB#f\fP.
 .in -4
 .sp
 .ne 3
-.B "(macro\-expand object)  ==>  object
+.B "(macro-expand object)  ==>  object
 .br 
-.B "(macro\-expand\-1 object)  ==>  object
+.B "(macro-expand-1 object)  ==>  object
 .in +4
 If
 .I object
 is a list resembling a macro application, return the expanded form,
 else return the object.
-.B Macro\-expand\-1
+.B Macro-expand-1
 expands macros only once while
-.B macro\-expand
+.B macro-expand
 expands them recursively.
 .in -4
 .sp
@@ -356,7 +356,7 @@ separated by spaces.
 .in -4
 .sp
 .ne 2
-.B "(require\-extension ext ...)  ==>  unspecific
+.B "(require-extension ext ...)  ==>  unspecific
 .in +4
 Require the named extensions to be compiled-in. Signal an error
 if not all of the required extensions are present.
@@ -374,13 +374,13 @@ destructively and return the reverse list.
 .in -4
 .sp
 .ne 2
-.B "(set\-input\-port! input\-port)  ==>  unspecific
+.B "(set-input-port! input-port)  ==>  unspecific
 .in +4
 Destructively set the current input port.
 .in -4
 .sp
 .ne 2
-.B "(set\-output\-port! output\-port)  ==>  unspecific
+.B "(set-output-port! output-port)  ==>  unspecific
 .in +4
 Destructively set the current output port.
 .in -4
@@ -422,20 +422,20 @@ Run the given shell command and return its exit code.
 .in -4
 .sp
 .ne 3
-.B "(vector\-append vector ...)  ==>  vector
+.B "(vector-append vector ...)  ==>  vector
 .in +4
 Return a fresh vector containing the concatenation of the given
 vectors.
 .in -4
 .sp
 .ne 3
-.B "(vector\-copy vector)                           ==>  vector
+.B "(vector-copy vector)                           ==>  vector
 .br
-.B "(vector\-copy vector integer)                   ==>  vector
+.B "(vector-copy vector integer)                   ==>  vector
 .br
-.B "(vector\-copy vector integer1 integer2)         ==>  vector
+.B "(vector-copy vector integer1 integer2)         ==>  vector
 .br
-.B "(vector\-copy vector integer1 integer2 object)  ==>  vector
+.B "(vector-copy vector integer1 integer2 object)  ==>  vector
 .in +4
 Return a copy of the given vector. When
 .I integer1
@@ -516,9 +516,9 @@ its own application:
 .sp
 .ne 2
 .nf
-(define\-syntax (when p . c)
+(define-syntax (when p . c)
   `(if ,p (begin ,@c)))
-(macro\-expand '(when (= 1 1) (display "true") (newline) #t))
+(macro-expand '(when (= 1 1) (display "true") (newline) #t))
   ==>  (if (= 1 1)
            (begin (display "true")
                   (newline)
@@ -527,13 +527,13 @@ its own application:
 .fi
 .sp
 The
-.B define\-syntax
+.B define-syntax
 form introduces a new macro:
 .sp
 .ne 3
-.B "(define\-syntax name procedure)        ==>  unspecific
+.B "(define-syntax name procedure)        ==>  unspecific
 .br
-.B "(define\-syntax (name args ...) body)  ==>  unspecific
+.B "(define-syntax (name args ...) body)  ==>  unspecific
 .sp
 Both of these forms introduce the keyword
 .I name
@@ -554,20 +554,20 @@ work, because
 is undefined in the body of
 .IR d :
 .sp
-.B "(define\-syntax (d x) (and (pair? x) (d (cdr x)))) ; wrong"
+.B "(define-syntax (d x) (and (pair? x) (d (cdr x)))) ; wrong"
 .sp
 The following version
 .I does
 work, though:
 .sp
-.B "(define\-syntax (d x) (and (pair? x) `(d ,(cdr x)))) ; OK"
+.B "(define-syntax (d x) (and (pair? x) `(d ,(cdr x)))) ; OK"
 .sp
 The body of
-.B define\-syntax
+.B define-syntax
 may be a
-.B syntax\-rules
+.B syntax-rules
 transformer, as described in R4RS, if the
-.B syntax\-rules
+.B syntax-rules
 extension has been loaded.
 .SH "TECHNICAL DETAILS
 S9fES is a tree-walking interpreter using deep binding and hashed
@@ -592,7 +592,7 @@ for a heap image file or the library source code. The heap image file
 is the name of the interpreter with a
 .I .image
 suffix appended. An alternative name can be specified with the
-.B \-i
+.B -i
 option (see
 .BR OPTIONS ).
 The default library source code is named
@@ -619,11 +619,11 @@ exists, it will be called at this point.
 Evaluate command line options.
 .in +4
 When a
-.B "\-l file
+.B "-l file
 option is found, the program contained in the given file will be
 .BR load ed.
 When a
-.B "\-f file args
+.B "-f file args
 option is found, the program contained in the file will be run and then
 S9 will exit.
 .B Args
@@ -634,10 +634,10 @@ will be passed to the program.
 Enter REPL.
 .in +4
 Interactive mode is only entered, when no
-.BR \-e ,
-.BR \-f ,
+.BR -e ,
+.BR -f ,
 or
-.BR \-r
+.BR -r
 option was given and no program was specified.
 .in -4
 .SH "ALLOCATION STRATEGY
@@ -654,7 +654,7 @@ suffix).
 Note that computations may abort
 .I before
 the limit is reached due to the way the pool grows. Use the
-.B \-g
+.B -g
 command line option to experiment with pool sizes.
 .br
 Specifying a limit of zero (or using the
@@ -666,14 +666,14 @@ This option should be used with care.
 These parts of R4RS are not implemented:
 .sp
 I/O:
-.B char\-ready?
+.B char-ready?
 (this is in the
-.B sys\-unix
+.B sys-unix
 extension).
 .br
 Transcripts:
-.BR transcript\-off ,
-.BR transcript\-on .
+.BR transcript-off ,
+.BR transcript-on .
 .br
 Rational and complex numbers and related procedures.
 .br
@@ -731,7 +731,7 @@ Scheme source code.
 A colon-separated list of directories which will be searched for
 the s9 library when the interpreter is launched. The same directories
 will be searched by the
-.B locate\-file
+.B locate-file
 procedure.
 .br
 Default:
@@ -768,13 +768,13 @@ Usenet message
 .in +4
 .I "<vhtzl9lupyp.fsf@maharal.csail.mit.edu>
 .br
-(Thu, 27 Aug 2009 13:27:42 \-0400) and its follow-ups.
+(Thu, 27 Aug 2009 13:27:42 -0400) and its follow-ups.
 .in -4
 .SH "REFERENCES
 .ne 3
 The Revised^4 Report on the Algorithmic Language Scheme.
 .in +4
-.B "http://www\-swiss.ai.mit.edu/~jaffer/r4rs_toc.html
+.B "http://www-swiss.ai.mit.edu/~jaffer/r4rs_toc.html
 .in -4
 .sp
 .ne 3

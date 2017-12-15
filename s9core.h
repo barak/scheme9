@@ -1,6 +1,6 @@
 /*
- * S9 Core Toolkit, Mk III
- * By Nils M Holm, 2007-2016
+ * S9core Toolkit, Mk IIIc
+ * By Nils M Holm, 2007-2017
  * In the public domain
  */
 
@@ -419,6 +419,8 @@ extern FILE	*S9_ports[];
 extern int	S9_input_port,
 		S9_output_port,
 		S9_error_port;
+
+extern int	S9_error;
 
 /*
  * Prototypes
