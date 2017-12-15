@@ -8,7 +8,7 @@ PREFIX= /u
 
 # Base version and Release
 BASE=		20170124
-RELEASE=	20170125
+RELEASE=	20171109
 
 # Override default compiler and flags
 # CC=	cc
@@ -63,7 +63,7 @@ BUILD_ENV=	env S9FES_LIBRARY_PATH=.:lib:ext/sys-unix:ext/curses:ext/csv:contrib
 
 SETPREFIX=	sed -e "s|^\#! /usr/local|\#! $(PREFIX)|"
 
-default:	s9 s9.image s9.1.gz s9.1.txt libs9core.a # s9core.pdf
+default:	s9 s9.image s9.1.gz s9.1.txt libs9core.a
 
 all:	default
 
@@ -94,17 +94,6 @@ curses.o:	ext/curses/curses.c s9core.h s9import.h s9ext.h
 
 csv.o:	ext/csv/csv.c s9core.h s9import.h s9ext.h
 	$(CC) $(CFLAGS) $(DEFS) -I . -o csv.o -c ext/csv/csv.c
-
-s9core.ps:	s9core.tr util/book
-	groff -e -p -t -Tps -P-p9i,6i s9core.tr >s9core.ps 2>_meta
-	sed -nf util/mktoc.sed <_meta | sed -e 's/  *	/	/' >_toc.tr
-	sed -ne 's/^R;\(.*\)/\1/p' <_meta >_xref.tr
-	sed -e 's/\.nr \(.*\) \(.*\)/\\f\[CB]\1\\fP \\n\[\1\]/' <_xref.tr \
-		| sort -f >_ndx.tr
-	groff -e -p -t -Tps -P-p9i,6i s9core.tr >s9core.ps 2>/dev/null
-
-s9core.pdf:	s9core.ps
-	pdfwrite -p 432 648 s9core.ps
 
 lint:
 	cc -g -Wall -ansi -pedantic -O3 s9.c s9core.c && rm a.out
@@ -224,7 +213,7 @@ clean:
 	rm -f s9 s9.image libs9core.a test.image s9.1.gz *.o *.core \
 		CATEGORIES.html HACKING.html core s9fes-$(RELEASE).tgz \
 		s9fes-$(BASE).tgz s9core-$(RELEASE).tgz __testfile__ \
-		s9core.ps s9core.pdf _meta _toc.tr _xref.tr _ndx.tr
+		_meta _toc.tr _xref.tr _ndx.tr
 
 new-version:
 	vi Makefile s9.c CHANGES
@@ -281,20 +270,15 @@ mksums:	clean
 	find . -type f | grep -v _csums | csum >_csums
 
 dist:	clean s9.1.txt
-	make s9core.pdf && mv s9core.pdf _s9core.pdf
 	make clean
-	mv -f _s9core.pdf s9core.pdf
 	cd .. && \
 		tar cf - s9 | gzip -9 > s9fes-$(RELEASE).tgz && \
 		mv s9fes-$(RELEASE).tgz s9
-	rm -f s9core.pdf
 	ls -l s9fes-$(RELEASE).tgz | awk '{print int($$5/1024+.5)}'
 
 cdist:
-	make s9core.pdf
-	tar cf - s9core.[ch] s9core.pdf README.s9core \
+	tar cf - s9core.[ch] s9import.h s9core.txt README.s9core \
 		| gzip -9 > s9core-$(RELEASE).tgz 
-	rm -f s9core.pdf
 
 arc:	clean s9.1.txt
 	cd .. && tar cf - s9 | gzip -9 > s9fes-$(BASE).tgz && \

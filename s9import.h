@@ -1,6 +1,6 @@
 /*
- * S9 Core Toolkit, Mk III
- * By Nils M Holm, 2007-2016
+ * S9core Toolkit, Mk IIIc
+ * By Nils M Holm, 2007-2017
  * In the public domain
  */
 
@@ -103,6 +103,7 @@
 #define Input_port	S9_input_port
 #define Output_port	S9_output_port
 #define Error_port	S9_error_port
+#define Error		S9_error
 
 #define eof_p		s9_eof_p
 #define undefined_p	s9_undefined_p

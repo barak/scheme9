@@ -6,7 +6,8 @@ an interface to common <A href="sys-unix.html">Unix system calls</A>
 and <A href="curses.html">Curses routines</A>.</P>
 
 <P>The interpreter is built around the
-<A href="s9core-$V.tgz">S9 Core</A> toolkit (<A href="s9core.pdf">PDF</A>),
+<A href="s9core.txt.html">S9core toolkit</A>
+(<A href="s9core-$V.tgz">download</A>),
 which contains some basic building blocks for dynamic languages, such as a
 garbage collected heap, bignum arithmetics, etc. (The toolkit is
 included in the S9fES tarball).

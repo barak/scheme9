@@ -1,7 +1,7 @@
 /*
  * Scheme 9 from Empty Space, Plan9 Interface
  * By Bakul Shah, 2009-2011;
- *    Nils M Holm, 2015-2016
+ *    Nils M Holm, 2015-2017
  * Placed in the Public Domain
  */
 
@@ -58,6 +58,10 @@
 #include "s9ext.h"
 #include "s9-ffi.h"
 #include <fcall.h>
+
++#ifdef length
++#undef length
++#endif
 
 /*
  *	Allow us at least to write
@@ -737,7 +741,7 @@ cell pp_sys_exec(cell x) {
 				"sys:exec: expected list of string, got",
 				car(p));
 	}
-	argv = malloc((length(cadr(x)) + 2) * sizeof(char *));
+	argv = malloc((s9_length(cadr(x)) + 2) * sizeof(char *));
 	if (argv == NULL)
 		return sys_error("sys:exec", VOID);
 	argv[0] = string(car(x));
@@ -1190,7 +1194,7 @@ void sys_init(void) {
 	mksym(aqid);
 	mksym(aname);
 	mksym(atime);
-	mksym(count);
+	/* mksym(count); */
 	mksym(data);
 	mksym(dev);
 	mksym(ename);
@@ -1242,6 +1246,6 @@ void sys_init(void) {
 	mksym(Twrite);
 	mksym(Twstat);
 
-	add_image_vars(Plan9_image_vars);
+	s9_add_image_vars(Plan9_image_vars);
 	add_primitives("sys-plan9", Plan9_primitives);
 }

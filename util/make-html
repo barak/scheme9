@@ -244,14 +244,13 @@ dirlist() {
 
 if [ $update_only = no -o $update_only = dir ]; then
 	if [ $update_only = no ]; then
-		make s9core.pdf && mv -f s9core.pdf /tmp/s9core$$.pdf
 		make cdist && mv -f s9core-$V.tgz /tmp/s9core$$.tgz
 		make dist
 		s9 -f util/make-cats.scm
 	fi
 
 	if [ -d $dumpdir ]; then
-		rm -f /tmp/s9core$$.pdf /tmp/s9core$$.tgz
+		rm -f /tmp/s9core$$.tgz
 		if [ $update_only = no ]; then
 			echo -n "You may want to remove the $dumpdir"
 			echo " directory first!"
@@ -261,7 +260,6 @@ if [ $update_only = no -o $update_only = dir ]; then
 		mkdir $dumpdir
 		cp s9fes-$V.tgz MASCOT.png $dumpdir
 		cp prog/edoc.css contrib/scheme.css contrib/ccode.css $dumpdir
-		mv -f /tmp/s9core$$.pdf s9core.pdf
 		mv -f /tmp/s9core$$.tgz s9core-$V.tgz
 	fi
 
@@ -278,7 +276,6 @@ if [ $update_only = no -o $update_only = dir ]; then
 
 	if [ $update_only = no ]; then
 		mv -f CATEGORIES.html $dumpdir
-		mv -f s9core.pdf $dumpdir
 		mv -f s9core-$V.tgz $dumpdir
 		make
 	fi
@@ -287,7 +284,7 @@ fi
 if [ $update_only = no -o $update_only = txt ]; then
 	format_txt_files "" ABOUT CHANGES LICENSE
 	format_txt_files "" Makefile README TODO README.s9core
-	format_txt_files "" configure _csums mkfile s9.1.txt s9core.tr
+	format_txt_files "" configure _csums mkfile s9.1.txt s9core.txt
 	format_txt_files lib lib/_template
 	format_txt_files prog prog/adventure.adv prog/edoc.css
 	format_txt_files prog prog/advgen.txt
