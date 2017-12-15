@@ -1,3 +1,14 @@
+scheme9 (2017.11.09-1) unstable; urgency=medium
+
+  * New Upstream Release
+  * Bump policy version
+  * Manual for s9core now text rather than PDF, adjust accordingly
+  * Use modern format for debian/copyright
+  * Use secure URLs where possible
+  * Section: optional per policy
+
+ -- Barak A. Pearlmutter <bap@debian.org>  Fri, 15 Dec 2017 10:39:23 +0000
+
 scheme9 (2017.01.25-1) unstable; urgency=medium
 
   * New Upstream Release
@@ -29,7 +40,7 @@ scheme9 (2016.08.23-1) unstable; urgency=medium
   * bump debian version
   * more secure url
   * forward port quilt patches
-  
+
  -- Barak A. Pearlmutter <bap@debian.org>  Wed, 24 Aug 2016 02:28:22 +0200
 
 scheme9 (2015.11.19-1) unstable; urgency=medium
@@ -131,7 +142,7 @@ scheme9 (2013.01.09-2) unstable; urgency=low
 scheme9 (2013.01.09-1) unstable; urgency=low
 
   * New Upstream Version
-  
+
  -- Barak A. Pearlmutter <bap@debian.org>  Mon, 14 Jan 2013 15:05:02 +0000
 
 scheme9 (2012.12.17-1) unstable; urgency=low
