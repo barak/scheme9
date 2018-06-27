@@ -23,11 +23,11 @@ Install s9core.a library in multiarch directory as libs9core.a
  1 file changed, 29 insertions(+), 13 deletions(-)
 
 diff --git a/Makefile b/Makefile
-index 8e11a61..7bd38c3 100644
+index a2047f4..a407d86 100644
 --- a/Makefile
 +++ b/Makefile
 @@ -3,8 +3,8 @@
- # By Nils M Holm, 2007-2017
+ # By Nils M Holm, 2007-2018
  # In the public domain
  
 -# Change at least this line:
