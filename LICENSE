@@ -1,11 +1,15 @@
 
 Scheme 9 from Empty Space
 A Portable Scheme Interpreter with a Unix Interface
-By Nils M Holm, 2007-2015
+By Nils M Holm, 2007-2018
 
 This code is free. FREE! What's so hard to understand about this?
 It is in public domain. Neither mine nor yours. Do whatever you
 want with it!
+
+In case your jurisdiction does not have a concept like the public
+domain, the Creative Common's Zero (CC0) license applies instead:
+https://creativecommons.org/publicdomain/zero/1.0/
 
 The following section in short means: "If this code should break
 something, don't blame me." Just in case.

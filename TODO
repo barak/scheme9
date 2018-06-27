@@ -1,7 +1,4 @@
 
-	- Upgrade to S9core Mk II probably broke the Plan 9 extension
-	  Please submit patches!
-
 	- macro tests
 
 	- EDOC: handle white space in block comments properly

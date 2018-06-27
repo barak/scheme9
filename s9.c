@@ -1,10 +1,10 @@
 /*
  * Scheme 9 from Empty Space, Refactored
- * By Nils M Holm, 2007-2017
+ * By Nils M Holm, 2007-2018
  * In the public domain
  */
 
-#define VERSION "2017-11-09"
+#define VERSION "2018-06-05"
 
 #include "s9core.h"
 #include "s9import.h"
@@ -278,10 +278,6 @@ cell read_list(int flags, int delim) {
 		}
 		n = read_form(flags);
 		if (n == END_OF_FILE)  {
-			if (Load_level) {
-				unsave(1);
-				return END_OF_FILE;
-			}
 			sprintf(msg, "missing ')', started in line %d",
 					Opening_line);
 			error(msg, VOID);

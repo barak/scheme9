@@ -2,7 +2,7 @@
 
 	Scheme 9 from Empty Space
 	A Portable Scheme Interpreter with a Unix Interface
-	By Nils M Holm, 2007-2016
+	By Nils M Holm, 2007-2018
 
 	S9fES is a mature, portable, and comprehensible public-domain
 	interpreter for R4RS Scheme offering
@@ -14,10 +14,11 @@
 	- basic networking procedures
 	- loads of useful library functions
 
-	It is written in ANSI C (C89) and Scheme and it runs in many
-	popular environments, including *BSD, Linux, Plan 9, and the
-	unmentionable horror (although the Plan 9 and Horror versions
-	will exclude the Unix, Curses, and Networking extensions).
+	It is written in ANSI C (C89; C99 on 64-bit systems) and Scheme
+	and it runs in many popular environments, including *BSD, Linux,
+	Plan 9, and the unmentionable horror (although the Plan 9 and
+	Horror versions will exclude the Unix, Curses, and Networking
+	extensions).
 
 	The S9fES code strives to be simple and comprehensible. It is
 	particularly interesting to people who want to

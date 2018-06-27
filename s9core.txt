@@ -86,7 +86,7 @@
 	s9_cons(a, s9_cons(b, S9_NIL))
 
 	There are some symbol names that will not have aliases, mostly
-	tuneable parameters of s9core.h. Those names will print with
+	tunable parameters of s9core.h. Those names will print with
 	their prefixes in this text. All other names will have their
 	prefixes removed.
 
@@ -267,7 +267,7 @@
 	****************************************************************
 	The function is then required to handle the error as soon as
 	possible, for example by interrupting program execution and
-	returning to the REPL, or by signalling an exception.
+	returning to the REPL, or by signaling an exception.
 	****************************************************************
 
 	The integer argument passed to a memory error handler will
@@ -622,8 +622,8 @@
 	given primitive function object in the internal table. Table
 	offsets can be used to identify individual primitive functions.
 
-	See the the discussion of the PRIM structure for an example of
-	how to set up a primitive function. Given the table shown there,
+	See the discussion of the PRIM structure for an example of how
+	to set up a primitive function. Given the table shown there,
 	the following code would create the corresponding T_PRIMITIVE
 	objects:
 
@@ -1783,9 +1783,9 @@
 
 	----- void cons_stats(int on); ---------------------------------
 
-	Passing a non-zero value to cons_stats() activates the the
-	internal cons counter of S9core. Passing zero to the function
-	deactivates the counter (but does not reset it).
+	Passing a non-zero value to cons_stats() activates the internal
+	cons counter of S9core. Passing zero to the function deactivates
+	the counter (but does not reset it).
 
 	Cons counting is usually activated before dispatching a
 	primitive function and immediately deactivated thereafter.
@@ -1802,7 +1802,7 @@
 	- the number of nodes allocated by a program (/c/)
 	- the number of garbage collections performed (/g/)
 
-	The /n/, /c/, and /g/ varialbles can be passed to read_counter
+	The /n/, /c/, and /g/ variables can be passed to read_counter
 	to convert them to a (machine-)readable form.
 
 	===== UTILITY FUNCTIONS ========================================
@@ -1851,7 +1851,7 @@
 	A "temporary" value is a cell that is not part of any
 	GC-protected structure, like the symbol table, the stack,
 	or any other GC root. Temporary values are not protected in
-	S9core and subject to recycling by the garcage collector.
+	S9core and subject to recycling by the garbage collector.
 	E.g. the value /n/ in
 
 	cell n = cons(One, NIL);
