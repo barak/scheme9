@@ -17,7 +17,7 @@ included in the S9fES tarball).
 programming tool. The rendered EDOC source code to a previous version is
 available in <A href="../s9book/index.html">print and PDF form</A>. The C
 and Scheme code stripped from the EDOC files is in the <EM>public domain</EM>,
-though, and can be <A href="s9fes-$V.tgz">downloaded</A> here (~600KB).</P>
+though, and can be <A href="s9fes-$V.tgz">downloaded</A> here (~480KB).</P>
 
 <P>The interpreter is explained in detail
 in the <A href="../s9book/index.html">Scheme&nbsp;9 Book</A>!

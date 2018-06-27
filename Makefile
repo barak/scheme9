@@ -1,6 +1,6 @@
 # Scheme 9 from Empty Space
 # Makefile (obviously)
-# By Nils M Holm, 2007-2017
+# By Nils M Holm, 2007-2018
 # In the public domain
 
 # Change at least this line:
@@ -8,10 +8,10 @@ PREFIX= /u
 
 # Base version and Release
 BASE=		20170124
-RELEASE=	20171109
+RELEASE=	20180605
 
 # Override default compiler and flags
-# CC=	cc
+CC=	cc
 CFLAGS=	-g -Wall -std=c99 -pedantic -O2
 
 # Which OS are we using (unix or plan9)?

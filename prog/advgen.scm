@@ -257,9 +257,8 @@
              "</TITLE>" #\newline
              (cond ((opt-val style-sheet)
                      => (lambda (name)
-                          (string-append "<LINK rel=stylesheet title=\""
-                                         (basename name ".css")
-                                         "\" href=\""
+                          (string-append "<LINK rel=stylesheet "
+                                         "type=\"text/css\" href=\""
                                          name
                                          "\">"
                                          (string #\newline))))

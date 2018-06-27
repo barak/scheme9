@@ -1,6 +1,9 @@
 
 Change Log
 
+2018-06-05
+	Fix: LOADing a file with any missing closing parentheses did not
+	cause an error. (Removed some left-over code from reader.)
 2017-11-09
 	Merged Plan 9 patches by McKay Marston. Thanks!
 	Upgrade to S9core Mk IIIc. (s9core.*)
