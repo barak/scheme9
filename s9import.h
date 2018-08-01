@@ -1,7 +1,10 @@
 /*
  * S9core Toolkit, Mk IIIc
- * By Nils M Holm, 2007-2017
+ * By Nils M Holm, 2007-2018
  * In the public domain
+ *
+ * Under jurisdictions without a public domain, the CC0 applies:
+ * https://creativecommons.org/publicdomain/zero/1.0/
  */
 
 /*
@@ -183,6 +186,7 @@
  #define get_counters		s9_get_counters
  #define image_vars		s9_image_vars
  #define input_port		s9_input_port
+ #define inport_open_p		s9_inport_open_p
  #define integer_string_p	s9_integer_string_p
  #define intern_symbol		s9_intern_symbol
  #define io_reset		s9_io_reset
@@ -205,6 +209,7 @@
  #define open_input_string	s9_open_input_string
  #define open_output_port	s9_open_output_port
  #define output_port		s9_output_port
+ #define outport_open_p		s9_outport_open_p
  #define port_eof		s9_port_eof
  #define print_bignum		s9_print_bignum
  #define print_expanded_real	s9_print_expanded_real
@@ -216,6 +221,7 @@
  #define readc			s9_readc
  #define real_abs		s9_real_abs
  #define real_add		s9_real_add
+ #define real_approx_p		s9_real_approx_p
  #define real_ceil		s9_real_ceil
  #define real_divide		s9_real_divide
  #define real_equal_p		s9_real_equal_p
@@ -229,6 +235,7 @@
  #define real_negative_p	s9_real_negative_p
  #define real_positive_p	s9_real_positive_p
  #define real_power		s9_real_power
+ #define real_round		s9_real_round
  #define real_sqrt		s9_real_sqrt
  #define real_subtract		s9_real_subtract
  #define real_to_bignum		s9_real_to_bignum

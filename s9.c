@@ -4,7 +4,7 @@
  * In the public domain
  */
 
-#define VERSION "2018-06-05"
+#define VERSION "2018-07-22"
 
 #include "s9core.h"
 #include "s9import.h"
@@ -222,6 +222,7 @@ cell error(char *msg, cell expr) {
 	oport = output_port();
 	set_output_port(Quiet_mode? 2: 1);
 	Error_flag = 1;
+	Error = 1;
 	prints("error: ");
 	if (Load_level) {
 		if (File_list != NIL) {
@@ -2180,15 +2181,11 @@ cell pp_inexact_p(cell x) {
 }
 
 cell pp_inexact_to_exact(cell x) {
-	cell	n;
-
 	x = car(x);
 	if (integer_p(x))
 		return x;
-	n = real_to_bignum(x);
-	if (n != NIL)
-		return n;
-	return error("inexact->exact: no exact representation for", x);
+	x = real_round(x);
+	return real_to_bignum(x);
 }
 
 cell pp_mantissa(cell x) {
@@ -2197,6 +2194,10 @@ cell pp_mantissa(cell x) {
 
 cell pp_real_p(cell x) {
 	return number_p(car(x))? TRUE: FALSE;
+}
+
+cell pp_round(cell x) {
+	return real_round(car(x));
 }
 
 cell pp_truncate(cell x) {
@@ -2318,7 +2319,9 @@ cell pp_string_p(cell x) {
 }
 
 cell pp_symbol_to_string(cell x) {
-	return symbol_to_string(car(x));
+	x = symbol_to_string(car(x));
+	tag(x) |= S9_CONST_TAG;
+	return x;
 }
 
 cell pp_symbol_p(cell x) {
@@ -3269,6 +3272,7 @@ S9_PRIM Core_primitives[] = {
  { "remainder",           pp_remainder,           2,  2, { REA,REA,___ } },
  { "reverse",             pp_reverse,             1,  1, { LST,___,___ } },
  { "reverse!",            pp_reverse_b,           1,  1, { LST,___,___ } },
+ { "round",               pp_round,               1,  1, { REA,___,___ } },
  { "set-car!",            pp_set_car_b,           2,  2, { PAI,___,___ } },
  { "set-cdr!",            pp_set_cdr_b,           2,  2, { PAI,___,___ } },
  { "set-input-port!",     pp_set_input_port_b,    1,  1, { INP,___,___ } },

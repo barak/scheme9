@@ -2,11 +2,11 @@
 	================================================================
 	|                           S9CORE                             |
 	|         A Toolkit for Implementing Dynamic Languages         |
-	|                           Mk IIIc                            |
+	|                           Mk IIId                            |
 	================================================================
 
-	                     Nils M Holm, 2007-2017
-			      In the public domain
+	                     Nils M Holm, 2007-2018
+	                      In the public domain
 
 	----------------------------------------------------------------
 	RATIONALE
@@ -792,7 +792,7 @@
 	cell v = make_vector(100);
 	save(v);
 	for (i=0; i<100; i++) {
-		x = make_integer(i);
+	        x = make_integer(i);
 	        vector(v)[i] = x;
 	}
 	unsave(1);
@@ -911,7 +911,7 @@
 	Example:
 
 	cell a = cons(One, NIL);
-	save(a)		;
+	save(a)
 	cell b = cons(Two, NIL); /* a is protected */
 	b = cons(b, NIL);        /* still protected */
 	a = unsave(1);
@@ -1303,6 +1303,7 @@
 	both arguments are integers.
 
 	----- int real_equal_p(cell a, cell b); ------------------------
+	----- int real_approx_p(cell a, cell b); -----------------------
 
 	The real_equal_p() predicate succeeds, if its arguments are
 	equal. In S9core, two real numbers are equal, if they look
@@ -1316,11 +1317,20 @@
 	Generally, equality of real numbers implemented using a floating
 	point representation should be considered with care. This
 	applies not only to the S9core operations, but even to common
-	hardware implementations of real numbers. See also: Epsilon
+	hardware implementations of real numbers.
+
+	The real_approx_p() predicate is like real_equal_p(), but will
+	not consider the last digit of either operand, if the mantissae
+	of the operands have no leading zeros. E.g.,
+
+	(sqr(2)+.e*10)~sqr(2)
+
+	will be true, even if the results differ in the last digit.
 
 	----- cell real_floor(cell x); ---------------------------------
 	----- cell real_trunc(cell x); ---------------------------------
 	----- cell real_ceil(cell x); ----------------------------------
+	----- cell real_round(cell x); ---------------------------------
 
 	These functions round the given real number as shown in figure 2.
 
@@ -1335,6 +1345,11 @@
 	--------------------------------
 	real_ceil    +inf    1.5     2.0
 	                    -1.5    -1.0
+	--------------------------------
+	real_round   near    1.5     2.0
+	             w/o    -1.5    -2.0
+	             bias    2.5     2.0
+	                    -2.5    -2.0
 	--------------------------------
 	Fig 2. Rounding
 
