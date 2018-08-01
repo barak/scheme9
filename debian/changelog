@@ -1,3 +1,10 @@
+scheme9 (2018.07.22-1) unstable; urgency=medium
+
+  * New Upstream Release
+  * forward port x32 patch
+
+ -- Barak A. Pearlmutter <bap@debian.org>  Wed, 01 Aug 2018 11:02:07 +0200
+
 scheme9 (2018.06.05-1) unstable; urgency=medium
 
   * New Upstream Release
