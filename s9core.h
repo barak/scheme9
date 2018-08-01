@@ -1,7 +1,10 @@
 /*
  * S9core Toolkit, Mk IIIc
- * By Nils M Holm, 2007-2017
+ * By Nils M Holm, 2007-2018
  * In the public domain
+ *
+ * Under jurisdictions without a public domain, the CC0 applies:
+ * https://creativecommons.org/publicdomain/zero/1.0/
  */
 
 #define S9_VERSION "20161130"
@@ -78,7 +81,7 @@
  #include <stdio.h>
  #include <string.h>
  #include <ctype.h>
- #define bye(x)	exit((x)? EXIT_FAILURE: EXIT_SUCCESS);
+ #define bye(x)	exit((x)? EXIT_FAILURE: EXIT_SUCCESS)
 #endif
 
 /* An "s9_cell" must be large enough to hold a pointer */
@@ -104,17 +107,23 @@
 
 /* ... or try some magic constants (unreliable, though) ... */
 
-#ifdef __amd64__
- #define S9_BITS_PER_WORD_64
-#endif
-#ifdef __amd64
- #define S9_BITS_PER_WORD_64
-#endif
-#ifdef __x86_64__
- #define S9_BITS_PER_WORD_64
-#endif
-#ifdef __x86_64
- #define S9_BITS_PER_WORD_64
+#ifndef S9_BITS_PER_WORD_16
+ #ifndef S9_BITS_PER_WORD_32
+  #ifndef S9_BITS_PER_WORD_64
+   #ifdef __amd64__
+    #define S9_BITS_PER_WORD_64
+   #endif
+   #ifdef __amd64
+    #define S9_BITS_PER_WORD_64
+   #endif
+   #ifdef __x86_64__
+    #define S9_BITS_PER_WORD_64
+   #endif
+   #ifdef __x86_64
+    #define S9_BITS_PER_WORD_64
+   #endif
+  #endif
+ #endif
 #endif
 
 /* ... or assume a reasonable default */
@@ -465,6 +474,7 @@ void	s9_get_counters(s9_counter **nc, s9_counter **cc, s9_counter **gc);
 void	s9_mem_error_handler(void (*h)(int src));
 void	s9_image_vars(s9_cell **v);
 int	s9_input_port(void);
+int	s9_inport_open_p(void);
 int	s9_integer_string_p(char *s);
 s9_cell	s9_intern_symbol(s9_cell y);
 int	s9_io_status(void);
@@ -488,6 +498,7 @@ int	s9_open_input_port(char *path);
 char	*s9_open_input_string(char *s);
 int	s9_open_output_port(char *path, int append);
 int	s9_output_port(void);
+int	s9_outport_open_p(void);
 int	s9_port_eof(int p);
 void	s9_prints(char *s);
 int	s9_printer_limit(void);
@@ -499,6 +510,7 @@ int	s9_readc(void);
 s9_cell	s9_read_counter(s9_counter *c);
 s9_cell	s9_real_abs(s9_cell a);
 s9_cell	s9_real_add(s9_cell a, s9_cell b);
+int	s9_real_approx_p(s9_cell a, s9_cell b);
 s9_cell	s9_real_ceil(s9_cell x);
 s9_cell	s9_real_divide(s9_cell a, s9_cell b);
 int	s9_real_equal_p(s9_cell a, s9_cell b);
@@ -512,6 +524,7 @@ s9_cell	s9_real_negate(s9_cell a);
 s9_cell	s9_real_negative_p(s9_cell a);
 s9_cell	s9_real_positive_p(s9_cell a);
 s9_cell	s9_real_power(s9_cell x, s9_cell y);
+s9_cell	s9_real_round(s9_cell x);
 s9_cell	s9_real_sqrt(s9_cell x);
 s9_cell	s9_real_subtract(s9_cell a, s9_cell b);
 s9_cell	s9_real_to_bignum(s9_cell r);

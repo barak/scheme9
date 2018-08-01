@@ -1,10 +1,10 @@
 /*
- * S9core Toolkit, Mk IIIc
- * By Nils M Holm, 2007-2017
+ * S9core Toolkit, Mk IIId
+ * By Nils M Holm, 2007-2018
  * In the public domain
  *
- * Added S9_error
- * new_vec(T_VECTOR, ...) initializes vector elts with NIL
+ * Under jurisdictions without a public domain, the CC0 applies:
+ * https://creativecommons.org/publicdomain/zero/1.0/
  */
 
 #include "s9core.h"
@@ -180,6 +180,14 @@ void s9_get_counters(s9_counter **nc, s9_counter **cc, s9_counter **gc) {
  * Raw I/O
  */
 
+int s9_inport_open_p(void) {
+	return Ports[Input_port] != NULL;
+}
+
+int s9_outport_open_p(void) {
+	return Ports[Output_port] != NULL;
+}
+
 int s9_readc(void) {
 	int	c, i;
 
@@ -199,6 +207,8 @@ int s9_readc(void) {
 		}
 	}
 	else {
+		if (!s9_inport_open_p())
+			s9_fatal("s9_blockwrite(): input port is not open");
 		return getc(Ports[Input_port]);
 	}
 }
@@ -254,6 +264,8 @@ void s9_blockwrite(char *s, int k) {
 		*Str_outport = 0;
 		return;
 	}
+	if (!s9_outport_open_p())
+		s9_fatal("s9_blockwrite(): output port is not open");
 	if (Printer_limit && Printer_count > Printer_limit) {
 		if (Printer_limit > 0)
 			fwrite("...", 1, 3, Ports[Output_port]);
@@ -270,14 +282,14 @@ void s9_blockwrite(char *s, int k) {
 int s9_blockread(char *s, int k) {
 	int	n;
 
+	if (!s9_inport_open_p())
+		s9_fatal("s9_blockread(): input port is not open");
 	n = fread(s, 1, k, Ports[Input_port]);
 	if (n < 0) IO_error = 1;
 	return n;
 }
 
 void s9_prints(char *s) {
-	if (Ports[Output_port] == NULL)
-		s9_fatal("pr: output port is not open");
 	s9_blockwrite(s, strlen(s));
 }
 
@@ -294,7 +306,7 @@ void s9_io_reset(void) {
  */
 
 void s9_fatal(char *msg) {
-	fprintf(stderr, "S9core: s9_fatal error: ");
+	fprintf(stderr, "S9core: fatal error: ");
 	fprintf(stderr, "%s\n", msg);
 	bye(1);
 }
@@ -1490,42 +1502,6 @@ cell s9_real_abs(cell a) {
 	return a;
 }
 
-int s9_real_equal_p(cell a, cell b) {
-	cell	ma, mb;
-
-	if (integer_p(a) && integer_p(b))
-		return s9_bignum_equal_p(a, b);
-	Tmp = b;
-	save(a);
-	save(b);
-	Tmp = NIL;
-	if (integer_p(a))
-		a = s9_bignum_to_real(a);
-	if (integer_p(b)) {
-		save(a);
-		b = s9_bignum_to_real(b);
-		s9_unsave(1);
-	}
-	s9_unsave(2);
-	if (Real_exponent(a) != Real_exponent(b))
-		return 0;
-	if (Real_zero_p(a) && Real_zero_p(b))
-		return 1;
-	if (Real_negative_p(a) != Real_negative_p(b))
-		return 0;
-	ma = Real_mantissa(a);
-	mb = Real_mantissa(b);
-	while (ma != NIL && mb != NIL) {
-		if (car(ma) != car(mb))
-			return 0;
-		ma = cdr(ma);
-		mb = cdr(mb);
-	}
-	if (ma != mb)
-		return 0;
-	return 1;
-}
-
 /*
  * Scale the number R so that it gets exponent DESIRED_E
  * without changing its value. When there is not enough
@@ -1564,6 +1540,81 @@ static void autoscale(cell *pa, cell *pb) {
 		*pa = scale_mantissa(*pa, Real_exponent(*pb),
 					S9_MANTISSA_SIZE*2);
 	}
+}
+
+cell shift_mantissa(cell m) {    
+	m = new_atom(T_INTEGER, m);
+	save(m);
+	m = s9_bignum_shift_right(m);
+	s9_unsave(1);
+	return cdar(m);
+}
+
+static int real_compare(cell a, cell b, int approx) {
+	cell	ma, mb, d, e;
+	int	p;
+
+	if (integer_p(a) && integer_p(b))
+		return s9_bignum_equal_p(a, b);
+	Tmp = b;
+	save(a);
+	save(b);
+	Tmp = NIL;
+	if (integer_p(a)) {
+		a = s9_bignum_to_real(a);
+		cadr(Stack) = a;
+	}
+	if (integer_p(b)) {
+		save(a);
+		b = s9_bignum_to_real(b);
+		s9_unsave(1);
+		car(Stack) = b;
+	}
+	if (Real_zero_p(a) && Real_zero_p(b)) {
+		s9_unsave(2);
+		return 1;
+	}
+	if (Real_negative_p(a) != Real_negative_p(b)) {
+		s9_unsave(2);
+		return 0;
+	}
+	if (approx) {
+		d = s9_real_abs(s9_real_subtract(a, b));
+		/* integer magnitudes */
+		ma = count_digits(Real_mantissa(a))+Real_exponent(a);
+		mb = count_digits(Real_mantissa(b))+Real_exponent(b);
+		if (ma != mb) {
+			s9_unsave(2);
+			return 0;
+		}
+		p = ma-S9_MANTISSA_SIZE;
+		s9_save(d);
+		e = S9_make_quick_real(0, p, cdr(One));
+		s9_unsave(3);
+		return !s9_real_less_p(e, d);
+	}
+	s9_unsave(2);
+	if (Real_exponent(a) != Real_exponent(b))
+		return 0;
+	ma = Real_mantissa(a);
+	mb = Real_mantissa(b);
+	while (ma != NIL && mb != NIL) {
+		if (car(ma) != car(mb))
+			return 0;
+		ma = cdr(ma);
+		mb = cdr(mb);
+	}
+	if (ma != mb)
+		return 0;
+	return 1;
+}
+
+int s9_real_equal_p(cell a, cell b) {
+	return real_compare(a, b, 0);
+}
+
+int s9_real_approx_p(cell a, cell b) {
+	return real_compare(a, b, 1);
 }
 
 int s9_real_less_p(cell a, cell b) {
@@ -1782,7 +1833,7 @@ cell s9_real_divide(cell a, cell b) {
 }
 
 cell s9_real_sqrt(cell x) {
-	cell	n0, n1, d;
+	cell	n0, n1;
 	int	r;
 
 	if (s9_real_negative_p(x))
@@ -1799,9 +1850,7 @@ cell s9_real_sqrt(cell x) {
 		n1 = s9_real_add(n1, n0);
 		n1 = s9_real_divide(n1, Two);
 		save(n1);
-		d = s9_real_subtract(n0, n1);
-		d = s9_real_abs(d);
-		r = s9_real_less_p(d, Epsilon);
+		r = s9_real_approx_p(n0, n1);
 		n0 = s9_unsave(1);
 		if (r) {
 			break;
@@ -1909,11 +1958,16 @@ cell s9_real_power(cell x, cell y) {
 		if (bignum_negative_p(y))
 			x = s9_real_divide(One, x);
 		s9_unsave(2);
+		/*
+		 * Bad idea, because it can create large trails
+		 * of zeros and introduce rounding errors.
+		 *
 		if (s9_real_p(x)) {
 			y = s9_real_to_bignum(x);
 			if (y != UNDEFINED)
 				x = y;
 		}
+		 */
 		return x;
 	}
 	if (s9_real_negative_p(y)) {
@@ -1927,17 +1981,21 @@ cell s9_real_power(cell x, cell y) {
 	}
 	x = rpower(x, y, Epsilon);
 	s9_unsave(2);
+	/*
+	 * See above
+	 *
 	if (real_p(x)) {
 		y = s9_real_to_bignum(x);
 		if (y != UNDEFINED)
 			x = y;
 	}
+	 */
 	return x;
 }
 
-/* type: 0=trunc, 1=floor, 2=ceil */
+/* type: 0=trunc, 1=floor, 2=ceil, 3=round  */
 static cell rround(cell x, int type) {
-	cell	n, m, e;
+	cell	n, m, e, f, l;
 
 	e = s9_real_exponent(x);
 	if (e >= 0)
@@ -1947,12 +2005,16 @@ static cell rround(cell x, int type) {
 	save(m);
 	while (e < 0) {
 		m = s9_bignum_shift_right(m);
+		f = caddr(m);
 		m = car(m);
 		car(Stack) = m;
 		e++;
 	}
+	l = s9_bignum_shift_right(m);
+	l = caddr(l);
 	if (	(type == 1 && Real_negative_p(x)) ||
-		(type == 2 && Real_positive_p(x))
+		(type == 2 && Real_positive_p(x)) ||
+		(type == 3 && f >= 5 && l % 2 != 0)
 	) {
 		m = s9_bignum_add(m, One);
 	}
@@ -1964,6 +2026,7 @@ static cell rround(cell x, int type) {
 cell s9_real_trunc(cell x) { return rround(x, 0); }
 cell s9_real_floor(cell x) { return rround(x, 1); }
 cell s9_real_ceil (cell x) { return rround(x, 2); }
+cell s9_real_round(cell x) { return rround(x, 3); }
 
 cell s9_real_to_bignum(cell r) {
 	cell	n;
@@ -2408,7 +2471,7 @@ int s9_unlock_port(int port) {
  * Primitives
  */
 
-static char *expected(int n, cell who, char *what, cell got) {
+static char *expected(int n, cell who, char *what) {
 	static char	msg[100];
 	S9_PRIM		*p;
 
@@ -2445,54 +2508,54 @@ char *s9_typecheck(cell f, cell a) {
 			break;
 		case T_BOOLEAN:
 			if (!boolean_p(car(a)))
-				return expected(i, f, "boolean", car(a));
+				return expected(i, f, "boolean");
 			break;
 		case T_CHAR:
 			if (!char_p(car(a)))
-				return expected(i, f, "char", car(a));
+				return expected(i, f, "char");
 			break;
 		case T_INPUT_PORT:
 			if (!input_port_p(car(a)))
-				return expected(i, f, "input-port", car(a));
+				return expected(i, f, "input-port");
 			break;
 		case T_INTEGER:
 			if (!integer_p(car(a)))
-				return expected(i, f, "integer", car(a));
+				return expected(i, f, "integer");
 			break;
 		case T_OUTPUT_PORT:
 			if (!output_port_p(car(a)))
-				return expected(i, f, "output-port", car(a));
+				return expected(i, f, "output-port");
 			break;
 		case T_PAIR:
 			if (atom_p(car(a)))
-				return expected(i, f, "pair", car(a));
+				return expected(i, f, "pair");
 			break;
 		case T_LIST:
 			if (car(a) != NIL && atom_p(car(a)))
-				return expected(i, f, "list", car(a));
+				return expected(i, f, "list");
 			break;
 		case T_FUNCTION:
 			if (	!function_p(car(a)) &&
 				!primitive_p(car(a)) &&
 				!continuation_p(car(a))
 			)
-				return expected(i, f, "function", car(a));
+				return expected(i, f, "function");
 			break;
 		case T_REAL:
 			if (!integer_p(car(a)) && !real_p(car(a)))
-				return expected(i, f, "number", car(a));
+				return expected(i, f, "number");
 			break;
 		case T_STRING:
 			if (!string_p(car(a)))
-				return expected(i, f, "string", car(a));
+				return expected(i, f, "string");
 			break;
 		case T_SYMBOL:
 			if (!symbol_p(car(a)))
-				return expected(i, f, "symbol", car(a));
+				return expected(i, f, "symbol");
 			break;
 		case T_VECTOR:
 			if (!vector_p(car(a)))
-				return expected(i, f, "vector", car(a));
+				return expected(i, f, "vector");
 			break;
 		}
 		a = cdr(a);
@@ -2544,7 +2607,7 @@ char *s9_dump_image(char *path, char *magic) {
 	strncpy(m.version, S9_VERSION, sizeof(m.version));
 	m.cell_size[0] = sizeof(cell)+'0';
 	m.mantissa_size[0] = S9_MANTISSA_SEGMENTS+'0';
-#ifdef BITS_PER_WORD_64
+#ifdef S9_BITS_PER_WORD_64
 	n = 0x3132333435363738L;
 #else
 	n = 0x31323334L;
@@ -2617,7 +2680,7 @@ char *s9_load_image(char *path, char *magic) {
 		return "could not open file";
 	if ((s = xfread(&m, sizeof(m), 1, f)) != NULL)
 		return s;
-	if (memcmp(m.id, magic, 2)) {
+	if (memcmp(m.id, magic, 16)) {
 		fclose(f);
 		return "magic match failed";
 	}
@@ -2634,7 +2697,7 @@ char *s9_load_image(char *path, char *magic) {
 		return "wrong mantissa size";
 	}
 	memcpy(&n, m.byte_order, sizeof(cell));
-#ifdef BITS_PER_WORD_64
+#ifdef S9_BITS_PER_WORD_64
 	if (n != 0x3132333435363738L) {
 #else
 	if (n != 0x31323334L) {

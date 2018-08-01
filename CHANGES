@@ -1,6 +1,15 @@
 
 Change Log
 
+2018-07-22
+	INEXACT->EXACT now returns an integer even if its argument has
+	fractional digits, e.g. (inexact->exact 1.5) ==> 2. (s9.c)
+2018-07-21
+	Strings returned by SYMBOL->STRING are now immutable, as specified
+	in R4RS, section 3.5. (s9.c)
+	Upgraded S9core to Mk IIId. (s9core.*)
+	Added s9_real_round() function. (s9core.*)
+	Made ROUND a primitive function. (s9.c)
 2018-06-05
 	Fix: LOADing a file with any missing closing parentheses did not
 	cause an error. (Removed some left-over code from reader.)

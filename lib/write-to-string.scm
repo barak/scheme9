@@ -101,6 +101,10 @@
               (string-append "#" (to-string (vector->list x))))
             ((procedure? x)
               "#<procedure>")
+            ((input-port? x)
+              "#<input port>")
+            ((output-port? x)
+              "#<output port>")
             ((eof-object? x)
               "#<eof>")
             (else
