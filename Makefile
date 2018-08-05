@@ -8,7 +8,7 @@ PREFIX= /u
 
 # Base version and Release
 BASE=		20170124
-RELEASE=	20180722
+RELEASE=	20180801
 
 # Override default compiler and flags
 CC=	cc

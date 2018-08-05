@@ -1,5 +1,5 @@
 3386 1 ./TODO
-63534 94 ./s9.c
+19619 94 ./s9.c
 20304 1 ./ABOUT
 18959 35 ./s9.scm
 20933 15 ./s9core.h
@@ -619,13 +619,13 @@
 48144 1 ./util/s9.rc
 41741 13 ./util/fix-help-files
 9613 8 ./README
-44353 8 ./Makefile
+29779 8 ./Makefile
 48690 1 ./config.scm
 43017 1 ./configure
 49810 2 ./mkfile
 11686 16 ./s9.1
 37273 67 ./s9core.c
-26873 81 ./CHANGES
+56772 81 ./CHANGES
 1999 71 ./s9core.txt
 45074 9 ./s9import.h
 23969 9 ./MASCOT.png
