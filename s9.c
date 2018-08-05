@@ -4,7 +4,7 @@
  * In the public domain
  */
 
-#define VERSION "2018-07-22"
+#define VERSION "2018-08-01"
 
 #include "s9core.h"
 #include "s9import.h"
@@ -4349,6 +4349,7 @@ int main(int argc, char **argv) {
 			case 'u':
 				set_node_limit(0);
 				set_vector_limit(0);
+				(*argv)++;
 				break;
 			case 'h':
 			case 'v':

@@ -1,6 +1,9 @@
 
 Change Log
 
+2018-08-01
+	Fix: -u command line option caused an infinite loop. (s9.c)
+	So nobody ever uses this option? :)
 2018-07-22
 	INEXACT->EXACT now returns an integer even if its argument has
 	fractional digits, e.g. (inexact->exact 1.5) ==> 2. (s9.c)
