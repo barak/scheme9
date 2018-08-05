@@ -1,3 +1,10 @@
+scheme9 (2018.08.01-1) unstable; urgency=medium
+
+  * New Upstream Release
+  * Bump policy version
+
+ -- Barak A. Pearlmutter <bap@debian.org>  Sun, 05 Aug 2018 09:12:19 +0200
+
 scheme9 (2018.07.22-1) unstable; urgency=medium
 
   * New Upstream Release
