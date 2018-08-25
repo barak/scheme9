@@ -1,5 +1,5 @@
 /*
- * S9core Toolkit, Mk IIIc
+ * S9core Toolkit, Mk IIIe
  * By Nils M Holm, 2007-2018
  * In the public domain
  *
@@ -7,7 +7,7 @@
  * https://creativecommons.org/publicdomain/zero/1.0/
  */
 
-#define S9_VERSION "20161130"
+#define S9_VERSION "20180823"
 
 /*
  * Ugly prelude to figure out if
@@ -435,6 +435,7 @@ extern int	S9_error;
  * Prototypes
  */
 
+void	s9_abort(void);
 void	s9_add_image_vars(s9_cell **v);
 s9_cell	s9_apply_prim(s9_cell f, s9_cell a);
 s9_cell	s9_argv_to_list(char **argv);
@@ -458,10 +459,12 @@ void	s9_blockwrite(char *s, int k);
 void	s9_close_port(int port);
 void	s9_close_input_string(void);
 s9_cell	s9_cons3(s9_cell pcar, s9_cell pcdr, int ptag);
+int	s9_conses(s9_cell a);
 void	s9_cons_stats(int x);
 s9_cell	s9_copy_string(s9_cell x);
 void	s9_count(s9_counter *c);
 char	*s9_dump_image(char *path, char *magic);
+int	s9_error_port(void);
 void	s9_exponent_chars(char *s);
 void	s9_fatal(char *msg);
 s9_cell	s9_find_symbol(char *s);
@@ -532,11 +535,12 @@ s9_cell	s9_real_to_string(s9_cell r, int mode);
 s9_cell	s9_real_trunc(s9_cell x);
 s9_cell	s9_real_zero_p(s9_cell a);
 void	s9_rejectc(int c);
+void	s9_reset(void);
 void	s9_reset_counter(s9_counter *c);
 void	s9_reset_std_ports(void);
 void	s9_run_stats(int x);
 void	s9_fini(void);
-void	s9_init(s9_cell **extroots);
+void	s9_init(s9_cell **extroots, s9_cell *stack, int *stkptr);
 s9_cell	s9_set_input_port(s9_cell port);
 void	s9_set_node_limit(int k);
 s9_cell	s9_set_output_port(s9_cell port);
@@ -553,3 +557,4 @@ s9_cell	s9_symbol_to_string(s9_cell x);
 char	*s9_typecheck(s9_cell f, s9_cell a);
 int	s9_unlock_port(int port);
 s9_cell	s9_unsave(int k);
+void	s9_writec(int c);

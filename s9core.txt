@@ -2,7 +2,7 @@
 	================================================================
 	|                           S9CORE                             |
 	|         A Toolkit for Implementing Dynamic Languages         |
-	|                           Mk IIId                            |
+	|                           Mk IIIe                            |
 	================================================================
 
 	                     Nils M Holm, 2007-2018
@@ -189,7 +189,7 @@
 
 	===== INITIALIZATION AND SHUTDOWN ==============================
 
-	----- void s9_init(cell **extroots); ---------------------------
+	----- void s9_init(cell **extroots, cell *stk, int *ptr); ------
 
 	The s9_init() function initializes the memory pools, connects
 	the first three I/O ports to stdin, stdout, and stderr, and sets
@@ -203,12 +203,30 @@
 	structures may be protected from GC by including their handles
 	in this array.
 
+	The stk (stack) and ptr (stack pointer) parameters specify a
+	stack and stack pointer that will be managed by the S9 garbage
+	collector. The stack must be an S9 vector and the stack pointer
+	must be a C integer. Objects on the stack between (and including)
+	zero and ptr will be protected from the GC. That is, a ptr value
+	of -1 indicates that the stack is empty.
+
+	The stack vector stk itself must also included in the extroots
+	parameter in order to protect it from GC recycling.
+
+	When a stack is used, it should be set to NIL before calling
+	s9_init(). When no stack is to be used, both stk and ptr should
+	be NULL.
+
 	Example:
 
+	#define STACK_SIZE 1000
 	cell Environment;
-	cell *GC_roots[] = { &Environment, NULL };
+	cell *GC_roots[] = { &Environment, &Stack, NULL };
+	cell Stack = NIL;
+	int  Ptr = -1;
 	...
-	s9_init(GC_roots);
+	s9_init(GC_roots, &Stack, &Ptr);
+	Stack = make_vector(STACK_SIZE);
 
 	----- void s9_fini(void); --------------------------------------
 
@@ -219,6 +237,24 @@
 	The only reason to call it is to prepare for the
 	re-initialization of the toolkit, for example to
 	recover from a failed image load (see load_image()).
+
+	----- void s9_abort(void); -------------------------------------
+	----- void s9_reset(void); -------------------------------------
+
+	The s9_abort() function will set an internal flag in the S9core
+	toolkit that aborts complex operations like bignum arithmetics
+	early and attempts to return to the caller as soon as possible.
+	It should be set when handling an error at the level of the
+	language being implemented on top of S9core.
+
+	s9_reset() resets the abort condition. It should be called when
+	recovering from an error condition and before using any other
+	S9core functions. Otherwise erroneous results will be delivered.
+
+	----- void fatal(char *msg); -----------------------------------
+
+	This function prints the given message and then aborts program
+	execution.
 
 	----- MEMORY ALLOCATION ----------------------------------------
 
@@ -1330,7 +1366,6 @@
 	----- cell real_floor(cell x); ---------------------------------
 	----- cell real_trunc(cell x); ---------------------------------
 	----- cell real_ceil(cell x); ----------------------------------
-	----- cell real_round(cell x); ---------------------------------
 
 	These functions round the given real number as shown in figure 2.
 
@@ -1345,11 +1380,6 @@
 	--------------------------------
 	real_ceil    +inf    1.5     2.0
 	                    -1.5    -1.0
-	--------------------------------
-	real_round   near    1.5     2.0
-	             w/o    -1.5    -2.0
-	             bias    2.5     2.0
-	                    -2.5    -2.0
 	--------------------------------
 	Fig 2. Rounding
 
@@ -1833,11 +1863,6 @@
 	The asctol() function is like atol(), but does not interpret a
 	leading 0 as a base-8 prefix, like Plan 9's atol() does.
 
-	----- void fatal(char *msg); -----------------------------------
-
-	This function prints the given message and then aborts program
-	execution.
-
 	----- cell flat_copy(cell n, cell *lastp); ---------------------
 
 	flat_copy() copies the "spine" of the list /n/, i.e. the cons
@@ -1850,8 +1875,20 @@
 	append. /lastp/ will be ignored, if /n/ is NULL.
 
 	----- int length(cell n); --------------------------------------
+	----- int conses(cell n); --------------------------------------
 
-	This function returns the number of elements in the list /n/.
+	Both functions count the cells forming the "spine" of the object
+	/n/, where the spine is a linked list of objects from which all
+	other elements of /n/ are linked to.
+
+	length() counts cells until it encounters a NIL object, so it
+	is used to measure the length of NIL-terminated lists and the
+	internal structures of atoms.
+
+	conses() counts cells until it encounters an atom, so it is used
+	to measure the lengthts of NIL-terminated /or/ improper (dotted)
+	lists. Because it only counts pairs/conses, It cannot be used to
+	measure chains of atoms.
 
 	----------------------------------------------------------------
 	CAVEATS

@@ -1,5 +1,5 @@
 /*
- * S9core Toolkit, Mk IIId
+ * S9core Toolkit, Mk IIIe
  * By Nils M Holm, 2007-2018
  * In the public domain
  *
@@ -27,6 +27,7 @@ s9_cell		*Car,
 char		*Tag;
 
 s9_cell		*Vectors;
+s9_cell		Nullvec;
 
 cell		Stack;
 
@@ -55,7 +56,7 @@ int		Input_port,
 		Output_port,
 		Error_port;
 
-int		Error;
+static volatile int	Abort_flag;
 
 static char	*Str_outport;
 static int	Str_outport_len;
@@ -84,10 +85,14 @@ cell	Epsilon;
 /* Internal GC roots */
 static cell	*GC_int_roots[] = { &Stack, &Symbols, &Tmp, &Tmp_car,
 					&Tmp_cdr, &Zero, &One, &Two,
-					&Ten, &Epsilon, NULL };
+					&Ten, &Epsilon, &Nullvec, NULL };
 
 /* External GC roots */
 static cell	**GC_ext_roots = NULL;
+
+/* GC stack */
+static cell	*GC_stack;
+int		*GC_stkptr;
 
 /*
  * Internal vector representation
@@ -208,7 +213,7 @@ int s9_readc(void) {
 	}
 	else {
 		if (!s9_inport_open_p())
-			s9_fatal("s9_blockwrite(): input port is not open");
+			s9_fatal("s9_readc(): input port is not open");
 		return getc(Ports[Input_port]);
 	}
 }
@@ -223,6 +228,12 @@ void s9_rejectc(int c) {
 	else {
 		ungetc(c, Ports[Input_port]);
 	}
+}
+
+void s9_writec(int c) {
+	if (!s9_outport_open_p())
+		s9_fatal("s9_writec(): output port is not open");
+	putc(c, Ports[Output_port]);
 }
 
 char *s9_open_input_string(char *s) {
@@ -309,6 +320,14 @@ void s9_fatal(char *msg) {
 	fprintf(stderr, "S9core: fatal error: ");
 	fprintf(stderr, "%s\n", msg);
 	bye(1);
+}
+
+void s9_abort(void) {
+	Abort_flag = 1;
+}
+
+void s9_reset(void) {
+	Abort_flag = 0;
 }
 
 /*
@@ -444,21 +463,31 @@ static void mark(cell n) {
 
 /* Mark and sweep GC. */
 int s9_gc(void) {
-	int	i, k;
+	int	i, k, sk;
 	char	buf[100];
 
 	if (Run_stats)
 		s9_count(&Collections);
-	for (i=0; i<S9_MAX_PORTS; i++)
+	for (i=0; i<S9_MAX_PORTS; i++) {
 		if (Port_flags[i] & S9_LOCK_TAG)
 			Port_flags[i] |= S9_USED_TAG;
 		else
 			Port_flags[i] &= ~S9_USED_TAG;
-	for (i=0; GC_int_roots[i] != NULL; i++)
-		mark(GC_int_roots[i][0]);
-	if (GC_ext_roots)
+	}
+	for (i=0; GC_int_roots[i] != NULL; i++) {
+		mark(*GC_int_roots[i]);
+	}
+	if (GC_stack && GC_stack[0] != NIL) {
+		sk = string_len(*GC_stack);
+		string_len(*GC_stack) = 1 + *GC_stkptr * sizeof(cell);
+	}
+	if (GC_ext_roots) {
 		for (i=0; GC_ext_roots[i] != NULL; i++)
-			mark(GC_ext_roots[i][0]);
+			mark(*GC_ext_roots[i]);
+	}
+	if (GC_stack && GC_stack[0] != NIL) {
+		string_len(*GC_stack) = sk;
+	}
 	k = 0;
 	Free_list = NIL;
 	for (i=0; i<Cons_pool_size; i++) {
@@ -480,6 +509,7 @@ int s9_gc(void) {
 	if (Verbose_GC > 1) {
 		sprintf(buf, "GC: %d nodes reclaimed", k);
 		s9_prints(buf); nl();
+		s9_flush();
 	}
 	return k;
 }
@@ -526,6 +556,7 @@ cell s9_cons3(cell pcar, cell pcdr, int ptag) {
 						Cons_pool_size,
 						Cons_segment_size);
 					s9_prints(buf); nl();
+					s9_flush();
 				}
 				s9_gc();
 			}
@@ -581,6 +612,7 @@ int s9_gcv(void) {
 	if (Verbose_GC > 1) {
 		sprintf(buf, "GC: gcv: %d cells reclaimed", k);
 		s9_prints(buf); nl();
+		s9_flush();
 	}
 	Free_vecs = to;
 	return k;
@@ -617,6 +649,7 @@ cell s9_new_vec(cell type, int size) {
 						 " cells = %d",
 						Vec_pool_size);
 					s9_prints(buf); nl();
+					s9_flush();
 				}
 			}
 		}
@@ -701,6 +734,7 @@ cell s9_make_vector(int k) {
 	cell	n, *v;
 	int	i;
 
+	if (0 == k) return Nullvec;
 	n = s9_new_vec(T_VECTOR, k * sizeof(cell));
 	v = vector(n);
 	for (i=0; i<k; i++)
@@ -850,6 +884,14 @@ int s9_length(cell n) {
 	int	k;
 
 	for (k = 0; n != NIL; n = cdr(n))
+		k++;
+	return k;
+}
+
+int s9_conses(cell n) {
+	int	k;
+
+	for (k = 0; pair_p(n); n = cdr(n))
 		k++;
 	return k;
 }
@@ -1231,7 +1273,7 @@ cell s9_bignum_multiply(cell a, cell b) {
 		a = car(r);
 		caddr(Stack) = a;
 		while (i) {
-			if (Error) {
+			if (Abort_flag) {
 				s9_unsave(5);
 				return Zero;
 			}
@@ -1870,7 +1912,7 @@ cell s9_real_sqrt(cell x) {
 static cell rpower(cell x, cell y, cell prec) {
 	cell	n, nprec;
 
-	if (Error)
+	if (Abort_flag)
 		return Zero;
 	if (s9_real_equal_p(y, One))
 		return x;
@@ -1881,7 +1923,7 @@ static cell rpower(cell x, cell y, cell prec) {
 		nprec = s9_real_divide(prec, Two);
 		save(nprec);
 		n = rpower(x, n, nprec);
-		if (n == UNDEFINED || Error) {
+		if (n == UNDEFINED || Abort_flag) {
 			s9_unsave(2);
 			return UNDEFINED;
 		}
@@ -1895,7 +1937,7 @@ static cell rpower(cell x, cell y, cell prec) {
 		y = s9_real_subtract(y, One);
 		save(y);
 		n = rpower(x, y, prec);
-		if (n == UNDEFINED || Error) {
+		if (n == UNDEFINED || Abort_flag) {
 			s9_unsave(1);
 			return UNDEFINED;
 		}
@@ -1910,7 +1952,7 @@ static cell rpower(cell x, cell y, cell prec) {
 	nprec = s9_real_multiply(prec, Two);
 	save(nprec);
 	n = rpower(x, y, nprec);
-	if (n == UNDEFINED || Error) {
+	if (n == UNDEFINED || Abort_flag) {
 		s9_unsave(2);
 		return UNDEFINED;
 	}
@@ -1922,7 +1964,7 @@ static cell npower(cell x, cell y) {
 	cell	n;
 	int	even;
 
-	if (Error)
+	if (Abort_flag)
 		return Zero;
 	if (s9_real_zero_p(y))
 		return One;
@@ -1933,7 +1975,7 @@ static cell npower(cell x, cell y) {
 	even = bignum_zero_p(cdr(n));
 	car(Stack) = n;
 	n = npower(x, car(n));
-	if (Error) {
+	if (Abort_flag) {
 		s9_unsave(1);
 		return Zero;
 	}
@@ -1993,7 +2035,7 @@ cell s9_real_power(cell x, cell y) {
 	return x;
 }
 
-/* type: 0=trunc, 1=floor, 2=ceil, 3=round  */
+/* type: 0=trunc, 1=floor, 2=ceil */
 static cell rround(cell x, int type) {
 	cell	n, m, e, f, l;
 
@@ -2026,7 +2068,6 @@ static cell rround(cell x, int type) {
 cell s9_real_trunc(cell x) { return rround(x, 0); }
 cell s9_real_floor(cell x) { return rround(x, 1); }
 cell s9_real_ceil (cell x) { return rround(x, 2); }
-cell s9_real_round(cell x) { return rround(x, 3); }
 
 cell s9_real_to_bignum(cell r) {
 	cell	n;
@@ -2422,6 +2463,10 @@ int s9_port_eof(int p) {
 	return feof(Ports[p]);
 }
 
+int s9_error_port(void) {
+	return Error_port;
+}
+
 int s9_input_port(void) {
 	return Str_inport? -1: Input_port;
 }
@@ -2813,10 +2858,12 @@ static void resetpools(void) {
 	Max_prims = 0;
 }
 
-void s9_init(cell **extroots) {
+void s9_init(cell **extroots, cell *stack, int *stkptr) {
 	int	i;
 
 	GC_ext_roots = extroots;
+	GC_stack = stack;
+	GC_stkptr = stkptr;
 	for (i=2; i<S9_MAX_PORTS; i++)
 		Ports[i] = NULL;
 	Ports[0] = stdin;
@@ -2831,6 +2878,7 @@ void s9_init(cell **extroots) {
 	Str_outport = NULL;
 	Str_outport_len = 0;
 	Str_inport = NULL;
+	Abort_flag = 0;
 	resetpools();
 	Node_limit = S9_NODE_LIMIT * 1024L;
 	Vector_limit = S9_VECTOR_LIMIT * 1024L;
@@ -2852,6 +2900,7 @@ void s9_init(cell **extroots) {
 	One = make_init_integer(1);
 	Two = make_init_integer(2);
 	Ten = make_init_integer(10);
+	Nullvec = s9_new_vec(T_VECTOR, 0);
 	Epsilon = S9_make_quick_real(0, -S9_MANTISSA_SIZE, cdr(One));
 }
 
