@@ -1,6 +1,18 @@
 
 Change Log
 
+2018-08-23
+	Fix: Null vector constant was unprotected from GC. (s9core.c)
+2018-08-19
+	The S9 interpreter failed to recover from error conditions
+	because of a missing s9_reset() call. (s9.c)
+	Upgraded S9core to Mk IIIe. (s9core.*)
+2018-08-18
+	Rolled back changes of 2018-07-22. INEXACT->EXACT of a real number
+	with a non-zero fractional part is an error. Use ROUND in combination
+	with INEXACT->EXACT if that is what you intend. (s9.c, s9.scm)
+	Removed ROUND primitive. (s9.c)
+	Removed REAL_ROUND() function (it's better done in Scheme). (s9core.c)
 2018-08-01
 	Fix: -u command line option caused an infinite loop. (s9.c)
 	So nobody ever uses this option? :)

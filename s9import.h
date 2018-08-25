@@ -1,5 +1,5 @@
 /*
- * S9core Toolkit, Mk IIIc
+ * S9core Toolkit, Mk IIIe
  * By Nils M Holm, 2007-2018
  * In the public domain
  *
@@ -106,7 +106,6 @@
 #define Input_port	S9_input_port
 #define Output_port	S9_output_port
 #define Error_port	S9_error_port
-#define Error		S9_error
 
 #define eof_p		s9_eof_p
 #define undefined_p	s9_undefined_p
@@ -171,10 +170,12 @@
  #define close_input_string	s9_close_input_string
  #define close_port		s9_close_port
  #define cons3			s9_cons3
+ #define conses			s9_conses
  #define cons_stats		s9_cons_stats
  #define copy_string		s9_copy_string
  #define count			s9_count
  #define dump_image		s9_dump_image
+ #define error_port		s9_error_port
  #define exponent_chars		s9_exponent_chars
  #define fatal			s9_fatal
  #define find_symbol		s9_find_symbol
@@ -262,4 +263,5 @@
  #define typecheck		s9_typecheck
  #define unlock_port		s9_unlock_port
  #define unsave			s9_unsave
+ #define writec			s9_writec
 #endif

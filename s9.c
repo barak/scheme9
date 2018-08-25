@@ -4,7 +4,7 @@
  * In the public domain
  */
 
-#define VERSION "2018-08-01"
+#define VERSION "2018-08-23"
 
 #include "s9core.h"
 #include "s9import.h"
@@ -222,7 +222,7 @@ cell error(char *msg, cell expr) {
 	oport = output_port();
 	set_output_port(Quiet_mode? 2: 1);
 	Error_flag = 1;
-	Error = 1;
+	s9_abort();
 	prints("error: ");
 	if (Load_level) {
 		if (File_list != NIL) {
@@ -2181,11 +2181,15 @@ cell pp_inexact_p(cell x) {
 }
 
 cell pp_inexact_to_exact(cell x) {
+	cell	n;
+
 	x = car(x);
 	if (integer_p(x))
 		return x;
-	x = real_round(x);
-	return real_to_bignum(x);
+	n = real_to_bignum(x);
+	if (n == UNDEFINED)
+		error("inexact->exact: no exact representation", x);
+	return n;
 }
 
 cell pp_mantissa(cell x) {
@@ -2194,10 +2198,6 @@ cell pp_mantissa(cell x) {
 
 cell pp_real_p(cell x) {
 	return number_p(car(x))? TRUE: FALSE;
-}
-
-cell pp_round(cell x) {
-	return real_round(car(x));
 }
 
 cell pp_truncate(cell x) {
@@ -3272,7 +3272,6 @@ S9_PRIM Core_primitives[] = {
  { "remainder",           pp_remainder,           2,  2, { REA,REA,___ } },
  { "reverse",             pp_reverse,             1,  1, { LST,___,___ } },
  { "reverse!",            pp_reverse_b,           1,  1, { LST,___,___ } },
- { "round",               pp_round,               1,  1, { REA,___,___ } },
  { "set-car!",            pp_set_car_b,           2,  2, { PAI,___,___ } },
  { "set-cdr!",            pp_set_cdr_b,           2,  2, { PAI,___,___ } },
  { "set-input-port!",     pp_set_input_port_b,    1,  1, { INP,___,___ } },
@@ -3879,6 +3878,7 @@ void repl(void) {
 	while (1) {
 		reset_tty();
 		Error_flag = 0;
+		s9_reset();
 		reset_std_ports();
 		clear_leftover_envs();
 		reset_calltrace();
@@ -4100,7 +4100,7 @@ NULL };
 void init(void) {
 	strcpy(S9magic, "S9:");
 	strcat(S9magic, VERSION);
-	s9_init(GC_root);
+	s9_init(GC_root, NULL, NULL);
 	image_vars(Image_vars);
 	exponent_chars("eEdDfFlLsS");
 	Stack_bottom = NIL;

@@ -547,13 +547,13 @@
           (else
             (exp (* y (log x)))))))
 
-; (define (round x)
-;   (let ((x+ (+ 0.5 x)))
-;     (let ((rx (floor x+)))
-;       (if (and (odd? (inexact->exact rx))
-;                (= x+ rx))
-;           (- rx 1)
-;           rx))))
+(define (round x)
+  (let ((x+ (+ 0.5 x)))
+    (let ((rx (floor x+)))
+      (if (and (odd? (inexact->exact rx))
+               (= x+ rx))
+          (- rx 1)
+          rx))))
 
 (define (exp x)
   (letrec
