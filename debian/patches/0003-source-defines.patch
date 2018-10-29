@@ -10,12 +10,12 @@ define _DEFAULT_SOURCE for S_ISSOCK() etc.
  1 file changed, 15 insertions(+)
 
 diff --git a/s9core.h b/s9core.h
-index 477e0e6..66f1b6b 100644
+index 4a22eb2..ab96abc 100644
 --- a/s9core.h
 +++ b/s9core.h
 @@ -9,6 +9,21 @@
  
- #define S9_VERSION "20180823"
+ #define S9_VERSION "20181022"
  
 +#ifndef _POSIX_SOURCE
 +#define _POSIX_SOURCE
