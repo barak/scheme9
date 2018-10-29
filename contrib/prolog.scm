@@ -200,10 +200,10 @@
       (list-env2 env '())))
 
   ; version without memoization
-  (define (prove goals env id)
-    (if (null? goals)
-        (list-env env)
-        (try-rules db goals env id '())))
+  ; (define (prove goals env id)
+  ;   (if (null? goals)
+  ;       (list-env env)
+  ;       (try-rules db goals env id '())))
 
   (define proven (make-hash-table))
 

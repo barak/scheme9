@@ -126,17 +126,6 @@
   (bitwise-shift-right 10 1)       ==>  5
 )
 
-(load-from-library "catch.scm")
-(%test
-  (let ((v #f))
-    (let ((r (catch 'foo
-               (set! v 0)
-               (throw 'foo 1)
-               (set! v 2)
-               3)))
-      (list v r)))             ==>  (0 1)
-)
-
 (load-from-library "cdf.scm")
 (%test
   (cdf 0)  ==>  0.5
@@ -186,13 +175,14 @@
 )
 
 (load-from-library "define-structure.scm")
+(define-structure point (x 0) (y 0) (color #f))
+;
+
 (%test
-  (begin
-    (define-structure point (x 0) (y 0) (color #f))
-    (let ((p (make-point)))
-      (point-set-color! p 'yellow)
-      (list (point? p)
-            (point-color p))))               ==>  (#t yellow)
+  (let ((p (make-point)))
+    (point-set-color! p 'yellow)
+    (list (point? p)
+          (point-color p)))       ==>  (#t yellow)
 )
 
 (load-from-library "depth.scm")
@@ -437,12 +427,13 @@
 )
 
 (load-from-library "matcher.scm")
+(define-matcher len
+  (()      => 0)
+  ((_ . x) => (+ 1 (len x))))
+;
+
 (%test
-  (begin
-    (define-matcher len
-      (()      => 0)
-      ((_ . x) => (+ 1 (len x))))
-    (len '(a b c d e f)))                  ==>  6
+  (len '(a b c d e f))                     ==>  6
 ;
   (let-matcher how-many
     ((nil
@@ -510,21 +501,22 @@
 )
 
 (load-from-library "package.scm")
+(package bar
+  (:export foo2 foo3)
+  (:make-aliases)
+  (define (foo-maker n x)
+    (if (zero? n)
+        (lambda ()
+          x)
+        (foo-maker
+          (- n 1)
+          (cons n x))))
+  (define foo2 (foo-maker 2 '()))
+  (define foo3 (foo-maker 3 '())))
+;
+
 (%test
-  (begin
-    (package bar
-      (:export foo2 foo3)
-      (:make-aliases)
-      (define (foo-maker n x)
-        (if (zero? n)
-            (lambda ()
-              x)
-            (foo-maker
-              (- n 1)
-              (cons n x))))
-      (define foo2 (foo-maker 2 '()))
-      (define foo3 (foo-maker 3 '())))
-    (list (bar:foo2) (foo3)))           ==>  ((1 2) (1 2 3))
+  (list (bar:foo2) (foo3))          ==>  ((1 2) (1 2 3))
 )
 
 (load-from-library "partition.scm")
@@ -582,14 +574,15 @@
 
 (load-from-library "random-sort.scm")
 (%test
-  (random-sort '(1 2 3 4 5))  ==>  (2 3 5 1 4)
+  (random-sort '(1 2 3 4 5))  ==>  (2 5 1 4 3)
 )
 
 (load-from-library "random.scm")
 (%test
-  (list (random 100)
-        (random 100)
-        (random 100))  ==>  (5 47 68)
+  (let* ((a (random 100))
+         (b (random 100))
+         (c (random 100)))
+    (list a b c))           ==>  (5 47 68)
 )
 
 (load-from-library "range.scm")
@@ -709,13 +702,14 @@
 )
 
 (load-from-library "simple-modules.scm")
+(module math
+  (define* (fact x)
+    (if (= 0 x) 1 (* x (fact (- x 1))))))
+;
+
 (%test
-  (begin ; Note: BEGIN is only needed for automatic testing
-    (module math
-      (define* (fact x)
-        (if (= 0 x) 1 (* x (fact (- x 1))))))
-    (using math (fact)
-      (fact 5)))                               ==> 120
+  (using math (fact)
+    (fact 5))         ==> 120
 )
 
 (load-from-library "sort.scm")
@@ -898,7 +892,7 @@
 
 (load-from-library "symbols.scm")
 (%test
-  (s9fes-syntax-objects)  ==>  ()
+  (s9fes-syntax-objects)  ==>  (if*)
 )
 
 (load-from-library "t-sort.scm")
@@ -1118,37 +1112,32 @@
 )
 
 (load-from-library "s9sos.scm")
+(define-generic mul)
+(define-method (mul (x <integer>) (y <integer>))
+  (* x y))
+(define-method (mul (x <integer>) (a <pair>))
+  (map (lambda (i) (* i x)) a))
+(define-method (mul (a <pair>) (x <integer>))
+  (map (lambda (i) (* i x)) a))
+(define-method (mul (a <pair>) (b <pair>))
+  (map * a b))
+;
+
 (%test
-  (begin
-    (define-generic mul)
-;
-    (define-method (mul (x <integer>) (y <integer>))
-      (* x y))
-;
-    (define-method (mul (x <integer>) (a <pair>))
-      (map (lambda (i) (* i x)) a))
-;
-    (define-method (mul (a <pair>) (x <integer>))
-      (map (lambda (i) (* i x)) a))
-;
-    (define-method (mul (a <pair>) (b <pair>))
-      (map * a b))
-;
-    (list (mul 5 7)
-          (mul 2 '(1 2 3))
-          (mul '(1 2 3) 2)
-          (mul '(1 2 3) '(4 5 6))))  ==>  (35
-                                           (2 4 6)
-                                           (2 4 6)
-                                           (4 10 18))
+  (list (mul 5 7)
+        (mul 2 '(1 2 3))
+        (mul '(1 2 3) 2)
+        (mul '(1 2 3) '(4 5 6)))  ==>  (35
+                                       (2 4 6)
+                                       (2 4 6)
+                                       (4 10 18))
 ;
   ; Don't do this! Generic application takes ages.
-  (begin
-    (define-generic len)
-    (define-method (len (x <null>)) 0)
-    (define-method (len (x <pair>))
-      (+ 1 (len (cdr x))))
-    (len '(1 2 3 4 5)))                 ==>  5
+  ; (define-generic len)
+  ; (define-method (len (x <null>)) 0)
+  ; (define-method (len (x <pair>))
+  ;   (+ 1 (len (cdr x))))
+  ; (len '(1 2 3 4 5))             ==>  5
 )
 
 (load-from-library "scm2html.scm")

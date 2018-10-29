@@ -13,6 +13,7 @@ for (i in . $objtype lib ext contrib)
  	bind -a $s9dir/$i $home/lib/s9fes
 
 S9FES_LIBRARY_PATH=$home/lib/s9fes
+S9FES_IMAGE_DIR=$home/lib/s9fes/$objtype
 /$objtype/bin/s9fes $*
 
 unmount $home/lib/s9fes

@@ -1,5 +1,5 @@
 /*
- * S9core Toolkit, Mk IIIe
+ * S9core Toolkit, Mk IV
  * By Nils M Holm, 2007-2018
  * In the public domain
  *
@@ -95,6 +95,7 @@
 #define Cdr		S9_cdr
 #define Tag		S9_tag
 #define Vectors		S9_vectors
+#define Nullvec		S9_nullvec
 #define Stack		S9_stack
 #define Primitives	S9_primitives
 #define Zero		S9_zero
@@ -137,6 +138,7 @@
 #define bignum_zero_p		s9_bignum_zero_p
 #define bignum_positive_p	s9_bignum_positive_p
 
+#define Make_real		S9_make_real
 #define Real_flags		S9_real_flags
 #define Real_exponent		S9_real_exponent
 #define Real_mantissa		S9_real_mantissa

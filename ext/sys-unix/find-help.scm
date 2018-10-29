@@ -84,7 +84,6 @@
 (define find-help
   (let ((find-help-path   find-help-path)
         (search-help-page search-help-page)
-        (print-results    print-results)
         (scan-help-pages  scan-help-pages)
         (print-results    print-results))
     (lambda (what . opts)

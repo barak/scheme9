@@ -1,7 +1,7 @@
 
 	S9CORE
 	A Toolkit for Implementing Dynamic Languages
-	By Nils M Holm, 2015-2017
+	By Nils M Holm, 2015-2018
 	In the public domain
 
 
@@ -22,8 +22,8 @@
 
 	- etc
 
-	S9core is available on all platforms providing a C99 compiler
-	(C89 on 32-bit machines) as well as on Plan9 (native).
+	S9core is available on all platforms providing a C89 compiler
+	as well as on Plan9 (native).
 
 	See the documentation in s9core.txt for further details.
 

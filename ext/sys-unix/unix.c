@@ -83,7 +83,7 @@
  */
 
 static cell		New_node;
-#define assign(n,v)	{ New_node = (v); n = New_node; }
+#define assign(n,v)	do { New_node = (v); n = New_node; } while(0)
 
 cell	Last_errno = 0;
 cell	Catch_errors = 0;
@@ -208,12 +208,10 @@ cell pp_sys_execv(cell x) {
 
 	for (p = cadr(x); p != NIL; p = cdr(p)) {
 		if (!pair_p(p))
-			return error(
-				"sys:execv: improper list, last element is",
+			error("sys:execv: improper list, last element is",
 				p);
 		if (!string_p(car(p)))
-			return error(
-				"sys:execv: expected list of string, got",
+			error("sys:execv: expected list of string, got",
 				car(p));
 	}
 	argv = malloc((length(cadr(x)) + 2) * sizeof(char *));
@@ -234,7 +232,7 @@ cell pp_sys_exit(cell x) {
 
 	r = integer_value("sys:exit", car(x));
 	if (r > 255 || r < 0)
-		return error("sys:exit: value out of range", car(x));
+		error("sys:exit: value out of range", car(x));
 	exit(r);
 	fatal("exit() failed");
 	return sys_ok();
@@ -242,7 +240,7 @@ cell pp_sys_exit(cell x) {
 
 cell pp_sys_fileno(cell x) {
 	if (!input_port_p(car(x)) && !output_port_p(car(x)))
-		return error("sys:fileno: expected port, got", car(x));
+		error("sys:fileno: expected port, got", car(x));
 	if (Ports[port_no(car(x))] == NULL)
 		return sys_error("sys:fileno", x);
 	return make_integer(fileno(Ports[port_no(car(x))]));
@@ -431,7 +429,7 @@ cell pp_sys_lock(cell x) {
 
 	s = string(car(x));
 	if (strlen(s) > 248)
-		return error("sys:lock: path too long", car(x));
+		error("sys:lock: path too long", car(x));
 	sprintf(p, "%s.lock", s);
 	return (mkdir(p, 0700) < 0)? FALSE: TRUE;
 }
@@ -491,15 +489,16 @@ cell pp_sys_get_magic_value(cell x) {
 	if (!strcmp(s, "S_IROTH")) return make_integer(S_IROTH);
 	if (!strcmp(s, "S_IWOTH")) return make_integer(S_IWOTH);
 	if (!strcmp(s, "S_IXOTH")) return make_integer(S_IXOTH);
-	else return error("sys:get-magic-value: requested value not found",
+	else error("sys:get-magic-value: requested value not found",
 			car(x));
+	return UNDEFINED;
 }
 
 cell pp_sys_make_input_port(cell x) {
 	int	in = new_port();
 
 	if (in < 0)
-		return error("sys:make-input-port: out of ports", VOID);
+		error("sys:make-input-port: out of ports", VOID);
 	Ports[in] = fdopen(integer_value("sys:make-input-port", car(x)),
 				"r");
 	return make_port(in, T_INPUT_PORT);
@@ -509,7 +508,7 @@ cell pp_sys_make_output_port(cell x) {
 	int	out = new_port();
 
 	if (out < 0)
-		return error("sys:make-output-port: out of ports", VOID);
+		error("sys:make-output-port: out of ports", VOID);
 	Ports[out] = fdopen(integer_value("sys:make-output-port", car(x)),
 				"w");
 	return make_port(out, T_OUTPUT_PORT);
@@ -636,15 +635,15 @@ cell pp_sys_select(cell x) {
 		 !integer_p(cadar(x)) ||
 		 cddar(x) != NIL)
 	) {
-		return error(msg, car(x));
+		error(msg, car(x));
 	}
 	FD_ZERO(&rset);
 	nfd = 0;
 	for (p = cadr(x); p != NIL; p = cdr(p)) {
 		if (!pair_p(p))
-			return error("sys:select: improper list", cadr(x));
+			error("sys:select: improper list", cadr(x));
 		if (!integer_p(car(p)))
-			return error(msg, cadr(x));
+			error(msg, cadr(x));
 		k = integer_value(name, car(p));
 		FD_SET(k, &rset);
 		if (k > nfd) nfd = k;
@@ -652,9 +651,9 @@ cell pp_sys_select(cell x) {
 	FD_ZERO(&wset);
 	for (p = caddr(x); p != NIL; p = cdr(p)) {
 		if (!pair_p(p))
-			return error("sys:select: improper list", caddr(x));
+			error("sys:select: improper list", caddr(x));
 		if (!integer_p(car(p)))
-			return error(msg, caddr(x));
+			error(msg, caddr(x));
 		k = integer_value(name, car(p));
 		FD_SET(k, &wset);
 		if (k > nfd) nfd = k;
@@ -878,7 +877,7 @@ cell pp_sys_unlock(cell x) {
 
 	s = string(car(x));
 	if (strlen(s) > 248)
-		return error("sys:unlock: path too long", car(x));
+		error("sys:unlock: path too long", car(x));
 	sprintf(p, "%s.lock", s);
 	rmdir(p);
 	return sys_ok();
@@ -1019,8 +1018,9 @@ cell pp_sys_inet_listen(cell x) {
 		host = u.nodename;
 	}
 	else {
-		return error("sys:inet-listen: expected string or #t, got",
-				car(x));
+		error("sys:inet-listen: expected string or #t, got",
+			car(x));
+		return UNDEFINED; /*LINT*/
 	}
 	memset(&hints, 0, sizeof(hints));
 	hints.ai_family = AF_UNSPEC;

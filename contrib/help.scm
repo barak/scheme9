@@ -68,7 +68,8 @@
                       ((and *lines-per-page*
                             (= lno *lines-per-page*))
                         (if (more? tty)
-                            (print line 0)))
+                            (print line 0)
+                            (void)))
                       (else
                         (display line)
                         (newline)

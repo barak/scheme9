@@ -50,12 +50,12 @@
 ; of X to V. When X is not of the type <type>, an error will be signalled.
 ; (<type>-set-<slot-N>! x v) does the same, but changes <slot-N>.
 ;
-; Example:   (begin
-;              (define-structure point (x 0) (y 0) (color #f))
-;              (let ((p (make-point)))
-;                (point-set-color! p 'yellow)
-;                (list (point? p)
-;                      (point-color p))))               ==>  (#t yellow)
+; Given:     (define-structure point (x 0) (y 0) (color #f))
+;
+; Example:   (let ((p (make-point)))
+;              (point-set-color! p 'yellow)
+;              (list (point? p)
+;                    (point-color p)))       ==>  (#t yellow)
 
 (load-from-library "iota.scm")
 (load-from-library "subvector.scm")

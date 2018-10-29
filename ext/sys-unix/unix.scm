@@ -364,3 +364,4 @@
          #t)))
 
 (define (sys-unix:sys-unix) #t)
+(define (net-unix:net-unix) #t)

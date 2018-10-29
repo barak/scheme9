@@ -10,7 +10,7 @@
 ; When no seed or the same seed is specified, RANDOM-SORT will
 ; always deliver the same permutation.
 ;
-; Example:   (random-sort '(1 2 3 4 5))  ==>  (2 3 5 1 4)
+; Example:   (random-sort '(1 2 3 4 5))  ==>  (2 5 1 4 3)
 
 (load-from-library "hof.scm")
 (load-from-library "random.scm")

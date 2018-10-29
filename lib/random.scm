@@ -1,6 +1,6 @@
 ; Scheme 9 from Empty Space, Function Library
-; By Nils M Holm, 2010
-; Placed in the Public Domain
+; By Nils M Holm, 2010, 2018
+; In the public domain
 ;
 ; (random integer)        ==>  integer
 ; (random-state integer)  ==>  procedure
@@ -19,9 +19,10 @@
 ; RANDOM-STATE uses a 19-bit linear feedback shift register. Hence
 ; its limited range.
 ;
-; Example:   (list (random 100)
-;                  (random 100)
-;                  (random 100))  ==>  (5 47 68)
+; Example:   (let* ((a (random 100))
+;                   (b (random 100))
+;                   (c (random 100)))
+;              (list a b c))           ==>  (5 47 68)
 
 (define (random-state . seed)
   (let ((seed (if (not (null? seed))

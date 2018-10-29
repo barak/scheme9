@@ -39,7 +39,7 @@ unsigned long long uint64_value(char *src, cell x) {
 	v = seg = cadr(x);
 	if (seg < 0) {
 		sprintf(msg, "%s: expected positive value, got", src);
-		return error(msg, x);
+		error(msg, x);
 	}
 	p = cddr(x);
 	while (p != NIL) {
@@ -47,7 +47,7 @@ unsigned long long uint64_value(char *src, cell x) {
 		v = v * S9_INT_SEG_LIMIT + car(p);
 		if ((v - car(p)) / S9_INT_SEG_LIMIT != ov || v < ov) {
 			sprintf(msg, "%s: integer too big", src);
-			return error(msg, x);
+			error(msg, x);
 		}
 		p = cdr(p);
 	}

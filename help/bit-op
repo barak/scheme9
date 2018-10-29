@@ -1,4 +1,4 @@
-S9fES  (bit-op integer1 integer2 integer3 ...)  ==>  integer | #f
+S9fES  (bit-op integer1 integer2 integer3 ...)  ==>  integer
 
 BIT-OP implements the bitwise operators summarized in the below
 table. The operation itself is passed to BIT-OP as INTEGER1
@@ -30,22 +30,17 @@ and INTEGER3 (B), etc.
 operand does not matter.
 
 When more than two operands are present, the operation will be
-performed on all operands, left-associatively, e.g.:
+performed left-associatively on all operands, e.g.:
 
 (bit-op 16 1 2 3 4)  ==>  512  ; ((1 shl 2) shl 3) shl 4
 
 Note that BIT-OP operates only on an implementation-dependent subset
 of integers. The maximum value of an operand A or B is equal to the
 value of (bit-op 15 0 0). When passing a larger operand or a negative
-operand to BIT-OP, it will return #F. The same happens when OP is
-outside of the range 0..17.
+operand to BIT-OP, it will signal an error. The same happens when OP
+is outside of the range 0..17.
 
 (bit-op  0 123 456)  ==>    0  ; clear
 (bit-op  1   7  10)  ==>    2  ; and
 (bit-op  7   7   8)  ==>   15  ; or
 (bit-op 16   1   8)  ==>  256  ; shift left
-
-(bit-op -1  0   0)  ==>  #f  ; wrong operator
-
-(let ((limit (bit-op 15 0 0)))
-  (bit-op 0 (+ 1 limit) 0))     ==>  #f  ; argument A too big

@@ -45,6 +45,16 @@
 (test (iff #t then 'foo else (error "error")) 'foo)
 (test (iff #f then (error "error") else 'bar) 'bar)
 
+(define-syntax lett
+  (syntax-rules ()
+    ((_ ((v a) ...) x ...)
+     ((lambda (v ...) x ...) a ...))))
+(test (lett () 1) 1)
+(test (lett ((a 1)) a) 1)
+(test (lett ((a 1) (b 2)) (+ a b)) 3)
+(test (lett ((a 1) (b 2)) 1 2 (+ a b)) 3)
+(test (lett () 1 2 3) 3)
+
 (define-syntax foo-syntax
   (syntax-rules ()
     ((_ x) x)
