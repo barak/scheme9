@@ -19,3 +19,6 @@ override_dh_auto_install:
 	 for f in advgen c2html cols dupes edoc htmlify scm2html scmpp soccat; do \
 	  mv --verbose $$f s9$$f || true; \
 	 done
+
+override_dh_installchangelogs:
+	dh_installchangelogs -- HISTORY
