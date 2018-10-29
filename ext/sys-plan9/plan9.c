@@ -59,9 +59,12 @@
 #include "s9-ffi.h"
 #include <fcall.h>
 
-+#ifdef length
-+#undef length
-+#endif
+#ifdef length
+#undef length
+#endif
+#ifdef bind
+#undef bind
+#endif
 
 /*
  *	Allow us at least to write
@@ -733,17 +736,15 @@ cell pp_sys_exec(cell x) {
 
 	for (p = cadr(x); p != NIL; p = cdr(p)) {
 		if (!pair_p(p))
-			return error(
-				"sys:exec: improper list, last element is",
+			error("sys:exec: improper list, last element is",
 				p);
 		if (!string_p(car(p)))
-			return error(
-				"sys:exec: expected list of string, got",
+			error("sys:exec: expected list of string, got",
 				car(p));
 	}
 	argv = malloc((s9_length(cadr(x)) + 2) * sizeof(char *));
 	if (argv == NULL)
-		return sys_error("sys:exec", VOID);
+		error("sys:exec failed (no memory)", VOID);
 	argv[0] = string(car(x));
 	i = 1;
 	for (p = cadr(x); p != NIL; p = cdr(p))
@@ -818,9 +819,9 @@ cell pp_sys_mount(cell x) {
 	cell	y = cdddr(x);
 
 	if (!integer_p(car(y)))
-		return error("sys:mount: expected integer, got", car(y));
+		error("sys:mount: expected integer, got", car(y));
 	if (!string_p(cadr(y)))
-		return error("sys:mount: expected string, got", cadr(y));
+		error("sys:mount: expected string, got", cadr(y));
 	return mount(integer_value(name, car(x)),
 		     integer_value(name, cadr(x)), 
 		     string(caddr(x)), 
@@ -1109,6 +1110,9 @@ cell pp_sys_magic_const(cell x) {
 	return FALSE;
 }
 
+int system(const char* cmd) {
+	return 1;
+}
 
 S9_PRIM Plan9_primitives[] = {
  {"sys:alarm",      pp_sys_alarm,      1, 1, { INT,___,___ } },

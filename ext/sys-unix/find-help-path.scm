@@ -1,6 +1,6 @@
 ; Scheme 9 from Empty Space, Unix Function Library
-; By Nils M Holm, 2010
-; Placed in the Public Domain
+; By Nils M Holm, 2010, 2018
+; In the public domain
 ;
 ; (find-help-path)  ==>  string | #f
 ;
@@ -11,10 +11,8 @@
 
 (require-extension sys-unix)
 
-(load-from-library "string-split.scm")
-
 (define (find-help-path)
-  (let loop ((dirs (string-split #\: *library-path*)))
+  (let loop ((dirs *library-path*))
     (if (null? dirs)
         #f
         (let ((path (string-append (car dirs) "/help")))

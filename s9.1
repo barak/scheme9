@@ -44,9 +44,11 @@
 .B "s9
 - Scheme Interpreter
 .SH USAGE
-.B "s9 [-hv?] [-i name|-] [-gqu] [-d image] [-e expr]
-.B "   [-k size[m]] [-l prog] [-n size[m]] [-r expr]
-.B "   [-f prog [args]] [-- [args]] [prog [args]]"
+.B "s9 [-i file | -] [-hv?] [-gqu] [-e expr] [-d file]
+.br
+.B "   [-k cells] [-l file] [-n nodes] [-r expr]
+.br
+.B "   [-- argument ... | [-f] file argument ...]
 .SH "DESCRIPTION
 .B "Scheme 9 from Empty Space
 is an interpreter for R4RS Scheme with some additional procedures
@@ -59,33 +61,105 @@ command starts the interpreter.
 .in +4
 Display a brief summary of options.
 .in -4
-.B "-i name | -
+.sp
+.B "-i file | -
 .in +4
-Load alternative image file `\fIname\fP.image'. When no image file
-can be found, try to load `\fIname\fP.scm'. The file will be searched
-in the entire
-.I S9FES_LIBRARY_PATH
-(see below). When this option is used, it
+Load alternative image file `\fIfile\fP'. Image files will be
+searched in the directory specified in
+.I S9FES_IMAGE_DIR
+(see below) except when the file name begins with a `.' or `/'
+character. When this option is used, it
 .B must
 be the first one of the s9 command.
 .br
-When `-' is specified as \fIname\fP, no heap image will be loaded,
-and the core library will be read from the source file `s9.scm'.
+When `-' is specified as \fIfile\fP, no heap image will be loaded,
+and the core library will be read from the source file `s9.scm' in
+the current directory.
 .in -4
+.sp
 .B "-d file
 .in +4
 Dump heap image to
 .I file
 and exit.
 .in -4
+.sp
 .B "-e expr
 .in +4
-Read expression from argument, evaluate, and print value. Multiple
+Read expression from
+.IR expr ,
+evaluate it, and print its value. Multiple
 .B -e
 options may be given, which will evaluate from left to right.
 Interactive mode will not be entered.
 .in -4
-.B "-f program [argument ...]
+.sp
+.B "-g[g]
+.in +4
+Print GC summaries. A single `g' will report pool growth, a second
+`g' will also include data about pool usage after each collection.
+.in -4
+.sp
+.B "-k N[m]
+.in +4
+Set vector limit to
+.I N
+kilo (or mega) cells (\fB-k 0\fP
+means no limit; use with care!). An
+.I m
+suffix indicates 2^20*cells, the default is 2^10*cells.
+.in -4
+.sp
+.B "-l program
+.in +4
+Load
+.I program
+before entering the REPL or processing
+.B -e
+and
+.B -r
+options or running a final program. May be repeated.
+.in -4
+.sp
+.B "-n N[m]
+.in +4
+Set node limit to
+.I N
+kilo (or mega) nodes (\fB-n 0\fP
+means no limit; use with care!).
+An
+.I m
+suffix indicates 2^20*nodes, the default is 2^10*nodes.
+.in -4
+.sp
+.B "-q
+.in +4
+Be quiet: skip banners and prompts, exit on errors.
+.in -4
+.sp
+.B "-r expr
+.in +4
+Like
+.BR -e ,
+but no value will print. Used to run expressions for effect.
+.in -4
+.sp
+.B "-u
+.in +4
+Short for \fB-k 0 -n 0\fP (use unlimited memory).
+.in -4
+.sp
+.B "-- [argument ...]
+.in +4
+Arguments following
+.B --
+are not interpreted by S9fES, but passed to the interpreted
+program, which can extract them using the
+.B command-line
+procedure. This option must be the last one.
+.in -4
+.sp
+.B "[-f] program [argument ...]
 .in +4
 Run
 .I program
@@ -93,60 +167,11 @@ and exit (implies -q). When there are any
 .IR argument s,
 they are passed to the
 .IR program ,
-where they can be extracted from the
-.B *arguments*
-variable. This option must be the last one. The
+where they can be extracted using the
+.B command-line
+procedure. This option must be the last one. The
 .B -f
-flag is optional.
-.in -4
-.B "-g[g]
-.in +4
-Print GC summaries. A single `g' will report pool growth, a second
-`g' will also include data about pool usage after each collection.
-.in -4
-.B "-k N[m]
-.in +4
-Set vector limit to
-.I N
-kilo (or mega) nodes (\fB-k 0\fP
-means no limit; use with care!).
-.in -4
-.B "-l program
-.in +4
-Load
-.I program
-before entering the REPL or processing
-.BR -f
-(may be repeated).
-.in -4
-.B "-n N[m]
-.in +4
-Set node limit to
-.I N
-kilo (or mega) nodes (\fB-n 0\fP
-means no limit; use with care!).
-.in -4
-.B "-q
-.in +4
-Be quiet: skip banners and prompts, exit on errors.
-.in -4
-.B "-r expr
-.in +4
-Like
-.BR -e ,
-but no value will print. Used to run expressions for effect.
-.in -4
-.B "-u
-.in +4
-Short for \fB-k 0 -n 0\fP (use unlimited memory).
-.in -4
-.B "-- [argument ...]
-.in +4
-Arguments following
-.B --
-are not interpreted by S9fES, but bound to the
-.B *arguments*
-variable instead. This option must be the last one.
+flag is deprecated.
 .in -4
 .SH "ONLINE HELP
 When the interpreter is running and the default heap image is loaded,
@@ -159,7 +184,7 @@ following command first:
 In order to facilitate the invocation of frequently-used top-level
 procedures,
 .B s9
-provides the following "meta commands" (they work only when entered
+provides the following `meta commands' (they work only when entered
 directly at the
 .B s9
 prompt):
@@ -169,7 +194,7 @@ prompt):
 \fB,a text\fP  =  (apropos "text")
 \fB,h text\fP  =  (help "text")
 \fB,l file\fP  =  (load-from-library "file")
-\fB,q     \fP  =  (sys:exit)
+\fB,q     \fP  =  (quit)
 .fi
 .in -4
 .sp
@@ -179,7 +204,7 @@ S9fES supports nestable block comments of the form
 .sp
 .in +4
 .nf
-\fB#|\fP \fIcomment ...\fP \fB|#\fP.
+\fB#|\fP \fIcomment\fP \fB|#\fP
 .fi
 .in -4
 .sp
@@ -187,7 +212,7 @@ Square brackets may be used in the places of parentheses:
 .sp
 .in +4
 .nf
-\fB(cond [(foo) (bar)])\fP.
+\fB(cond [(foo) (bar)])\fP
 .fi
 .in -4
 .sp
@@ -196,19 +221,20 @@ The same type of bracket must be used on both ends of a list.
 These S9fES procedures are not in R4RS:
 .sp
 .ne 3
-.B "(argv integer)  ==>  string | #f
-.in +4
-Retrieve the value of the given command line argument. Return
-\fB#f\fP, if there are less than \fIinteger\fP+1 arguments.
-Arguments start at 0.
-.in -4
-.sp
-.ne 3
-.B "(bit-op integer1 integer2 integer3 ...)  ==>  integer | #f
+.B "(bit-op integer1 integer2 integer3 ...)  ==>  integer
 .in +4
 Implement a variety of bitwise operations. See the
 .B bit-op
 help page for details.
+.in -4
+.sp
+.ne 3
+.B "(command-line)  ==>  list
+.in +4
+Return a list of command line arguments passed to the a program
+being interpreted or following the
+.B --
+command line option.
 .in -4
 .sp
 .ne 3
@@ -221,7 +247,7 @@ or cannot be deleted, report an error.
 .in -4
 .sp
 .ne 3
-.B "(environ string)  ==>  string | #f
+.B "(environment-variable string)  ==>  string | #f
 .in +4
 Retrieve the value of the given environment variable. Return
 \fB#f\fP, if the variable is undefined.
@@ -234,26 +260,23 @@ Retrieve the value of the given environment variable. Return
 .in +4
 Print an error message of the form
 .I "error: string: object
-and terminate program execution.
+and terminate program execution. When no
+.I object
+argument is given, this part will be omitted in the message.
 .in -4
 .sp
 .ne 3
-.B "(eval object1)          ==>  object
-.br
-.B "(eval object1 object2)  ==>  object
+.B "(eval object)  ==>  object
 .in +4
 Evaluate
-.I object1
+.I object
 in the current environment and return its normal form.
-If
-.I object2
-is also specified, it is ignored.
 .in -4
 .sp
 .ne 3
-.B "(exponent real)  ==>  integer
+.B "(exponent number)  ==>  integer
 .in +4
-Extract the exponent part from a real number.
+Extract the exponent part from a number. This will be 0 for integers.
 .in -4
 .sp
 .ne 3
@@ -290,17 +313,9 @@ Combine elements right-associatively.
 is the rightmost element.
 .in -4
 .sp
-.B "(gensym)         ==>  symbol
-.br
-.B "(gensym symbol)  ==>  symbol
-.br
-.B "(gensym string)  ==>  symbol
+.B "(gensym)  ==>  symbol
 .in +4
-Return a fresh symbol. When a
-.I string
-or
-.I symbol
-argument is given, use it as prefix for the fresh symbol.
+Return a fresh symbol.
 .in -4
 .sp
 .ne 2
@@ -310,8 +325,8 @@ Attempt to
 .B load
 the file
 .I string
-from each directory of
-.IR S9FES_LIBRARY_PATH .
+from each directory listed in the top-level variable
+.BR *library-path* .
 .in -4
 .sp
 .ne 2
@@ -319,22 +334,22 @@ from each directory of
 .in +4
 Search for the file
 .I string
-in each  directory of
-.I S9FES_LIBRARY_PATH
+in each  directory listed in
+.B *library-path*
 in sequence.
 When the file can be located, return its full path, else
 return \fB#f\fP.
 .in -4
 .sp
 .ne 3
-.B "(macro-expand object)  ==>  object
+.B "(macro-expand object)    ==>  object
 .br 
 .B "(macro-expand-1 object)  ==>  object
 .in +4
 If
 .I object
-is a list resembling a macro application, return the expanded form,
-else return the object.
+contains a macro application, return its expanded form,
+else return the object unchanged.
 .B Macro-expand-1
 expands macros only once while
 .B macro-expand
@@ -342,9 +357,10 @@ expands them recursively.
 .in -4
 .sp
 .ne 3
-.B "(mantissa real)  ==>  integer
+.B "(mantissa number)  ==>  integer
 .in +4
-Extract the mantissa part from a real number.
+Extract the mantissa part from a number. This will be the
+number itself for integers.
 .in -4
 .sp
 .ne 2
@@ -352,7 +368,7 @@ Extract the mantissa part from a real number.
 .in +4
 Write multiple
 .IR object s
-separated by spaces.
+separated by spaces and with a trailing newline.
 .in -4
 .sp
 .ne 2
@@ -362,7 +378,9 @@ Require the named extensions to be compiled-in. Signal an error
 if not all of the required extensions are present.
 .I Ext
 may be of the form \fI(or ext1 ext2 ...)\fP. In this case,
-it is sufficient if at least one of the given \fIext\fPs is present.
+it is sufficient if at least one of the \fIext\fPs gven in
+.I or
+is present.
 .in -4
 .sp
 .ne 2
@@ -386,25 +404,24 @@ Destructively set the current output port.
 .in -4
 .sp
 .ne 2
-.B "(stats form)  ==>  form
+.B "(stats expr)  ==>  object
 .in +4
-Evaluate the given
-.I form
-and return a list containing its normal form plus a summary
-of the resources used to compute that normal form:
+Evaluate the given expression and return a list containing its
+normal form plus a summary of the resources used to compute that
+normal form:
 .sp
 .in +4
 .nf
-- reduction steps
-- conses allocated
 - total nodes allocated
+- conses allocated
+- vector cells allocated
 - garbage collections
 .fi
 .in -4
 .sp
 Each resource count will be returned as a group of integers
 representing ones, thousands, millions, etc. Note that
-.I form
+.I expr
 must be quoted or it will be evaluated before passing it to
 .BR stats .
 .in -4
@@ -416,7 +433,7 @@ Return a list of all defined symbols.
 .in -4
 .sp
 .ne 3
-.B "(system string)  ==>  number
+.B "(system-command string)  ==>  number
 .in +4
 Run the given shell command and return its exit code.
 .in -4
@@ -447,8 +464,8 @@ up to, but not including,
 .IR integer2 .
 When
 .I integer2
-exceeds the size of the original vector, add unspecific slots to the
-copy. When an
+exceeds the size of the original vector, add slots of an unspecific
+value to the copy. When an
 .I object
 argument is given, fill extra slots with that argument.
 .in -4
@@ -459,18 +476,21 @@ argument is given, fill extra slots with that argument.
 Return an unspecific value.
 .in -4
 .sp
-Refer to the help pages for descriptions of the Scheme 9 extension
-procedures.
+Refer to the help pages for more detailed descriptions of the Scheme 9
+extension procedures.
 .SH "SPECIAL VARIABLES
-These variables are predefined in the dynamic top-level scope of the
+These variables are predefined in the top-level scope of the
 interpreter.
 .sp
 .ne 2
-.B "** (form)
+.B "** (object)
 .in +4
 The normal form of the expression most recently evaluated at the
-top level.
+top level. Unspecific results and aborted computations do not
+change the value of
+.BR ** .
 .in -4
+.sp
 .ne 2
 .B "*arguments* (list of strings)
 .in +4
@@ -478,33 +498,58 @@ A list of command line arguments passed to the
 .I "Scheme program
 (not to the interpreter), i.e. the
 .I args
-in \fIs9 -f file args\fP.
+in \fIs9 file args\fP
+or \fIs9 -- args\fP.
 .in -4
+.sp
+.ne 2
+.B "*epsilon* (real number)
+.in +4
+The smallest difference between two real numbers.
+.in -4
+.sp
 .ne 2
 .B "*extensions* (list of symbols)
 .in +4
-Compiled-in extensions.
+Identifiers naming the compiled-in extensions.
 .in -4
+.sp
 .ne 2
 .B "*host-system* (symbol)
 .in +4
 The host system running the \fBs9\fP interpreter: \fBunix\fP, \fBplan9\fP, or
-.B "#F
-(unknown).
+.BR "unknown" .
 .in -4
+.sp
 .ne 2
-.B "*library-path* (string)
+.B "*image-file* (string or #f)
 .in +4
-A verbatim copy of the
+The name of the heap image file loaded at startup time. When no image
+is loaded, the variable is set to
+.BR #f .
+.in -4
+.sp
+.ne 2
+.B "*library-path* (list of strings)
+.in +4
+A list containing each path contained in the
 .I S9FES_LIBRARY_PATH
 environment variable (see below).
 .in -4
+.sp
 .ne 2
 .B "*loading* (boolean)
 .in +4
 Set to
 .B #t
 when \fBload\fPing a file, else \fB#f\fP.
+.in -4
+.sp
+.ne 2
+.B "*release-date* (string)
+.in +4
+A string containing the release date of the S9 interpreter in the form
+`YYYY-MM-DD'.
 .in -4
 .SH "MACROS
 A macro is a procedure that is applied to its unevaluated arguments.
@@ -570,45 +615,48 @@ transformer, as described in R4RS, if the
 .B syntax-rules
 extension has been loaded.
 .SH "TECHNICAL DETAILS
-S9fES is a tree-walking interpreter using deep binding and hashed
-environments. It employs an extremely reliable[1] constant-space mark
-and sweep garbage collector with in-situ string and vector pool
-compaction. Memory pools grow on demand. The interpreter uses
-arbitrary-precision integer arithmetics and decimal-based real number
-arithmetics.
+S9fES is a bytecode compiler and SECD abstract machine using
+shallow binding, primitive procedure inlining, and in-situ lambda
+lifting.  It employs an extremely reliable[1] constant-space mark
+and sweep garbage collector with in-situ vector pool compaction.
+Memory pools grow on demand. The interpreter uses arbitrary-precision
+integer arithmetics and decimal-based real number arithmetics.
 .SH "INTERPRETER START-UP
 When the
 .B s9
 interpreter is started, the following steps will be performed in this
 order:
 .sp
-Load library.
+Load heap image or library.
 .in +4
-The interpreter searches its library path (either built-in or specified
-in the
-.I S9FES_LIBRARY_PATH
-environment variable)
-for a heap image file or the library source code. The heap image file
-is the name of the interpreter with a
-.I .image
-suffix appended. An alternative name can be specified with the
+The interpreter searches the
+.I "image directory
+for a heap image file and loads it. The image directory is taken
+from the
+.I S9FES_IMAGE_DIR
+environment variable. When the variable is undefined, a compiled-in
+default will be used. The default image file is named
+.IR s9.image .
+An alternative name can be specified with the
 .B -i
 option (see
 .BR OPTIONS ).
-The default library source code is named
-.IR s9.scm .
-First all directories of the library path are searched for images,
-then the directories are searched for library sources.
+When no image file is found in
+.IR S9FES_IMAGE_DIR ,
+a fallback image is loaded from a file named
+.I s9.image
+in the local directory. When no fallback image can be found, an error
+is signalled and the interpreter will not start.
 .in -4
 .sp
 Initialize extensions.
 .in +4
 Any extensions compiled into the interpreter are initialized by calling
 the nullary procedure
-.B ext:ext
-(where
+.BR ext:ext ,
+where
 .B ext
-is the name of the extension). The procedures are optional. The last
+is the name of the extension. The procedures are optional. The last
 `extension' being initialized is
 .B S9
 itself, so when a procedure named
@@ -618,16 +666,22 @@ exists, it will be called at this point.
 .sp
 Evaluate command line options.
 .in +4
-When a
+First all files specified in
 .B "-l file
-option is found, the program contained in the given file will be
-.BR load ed.
-When a
-.B "-f file args
-option is found, the program contained in the file will be run and then
-S9 will exit.
-.B Args
-will be passed to the program.
+options will be loaded in the specified order. Then all expressions
+specified in
+.B "-e expr
+and
+.B "-r expr
+command line options will be evaluated in the given order. After
+that, a
+.B "-d file
+option will be evaluated, if present. After processing such an
+option, the interpreter will exit immediately.
+Finally, if a program is being passed to the interpreter,
+the program will be run and any options following the program
+name will be passed to the program. In this case S9
+will exit after program execution.
 .in -4
 .sp
 .ne 2
@@ -635,9 +689,9 @@ Enter REPL.
 .in +4
 Interactive mode is only entered, when no
 .BR -e ,
-.BR -f ,
+.BR -r ,
 or
-.BR -r
+.B -d
 option was given and no program was specified.
 .in -4
 .SH "ALLOCATION STRATEGY
@@ -656,7 +710,7 @@ Note that computations may abort
 the limit is reached due to the way the pool grows. Use the
 .B -g
 command line option to experiment with pool sizes.
-.br
+.sp
 Specifying a limit of zero (or using the
 .B -u
 option) disables the memory limit completely
@@ -680,6 +734,9 @@ Rational and complex numbers and related procedures.
 The
 .B atan
 procedure does not accept a second argument.
+.br
+Inexact digits of the form
+.IR # .
 .SH "BUGS
 You may not quasiquote
 .B quasiquote
@@ -691,24 +748,8 @@ does not work, but
 .B `,`x
 does).
 .br
-The macro expander will expand
-.B (x)
-in \fB(cond (x))\fP,
-if
-.B x
-is a macro.
-.br
 .B Syntax-rules
 is not fully hygienic.
-.br
-.B Call/cc
-must be the only argument when used in
-.B lambda
-(or derived binding syntax, such as
-.BR let ).
-Not observing this rule
-.I will
-break the interpreter.
 .SH "FILES
 .ne 2
 .B @S9DIR@
@@ -716,7 +757,7 @@ break the interpreter.
 The S9fES procedure library (source code).
 .in -4
 .ne 2
-.B @S9DIR@/s9.image
+.B s9.image
 .in +4
 The interpreter heap image.
 .in -4
@@ -726,13 +767,23 @@ The interpreter heap image.
 Scheme source code.
 .in -4
 .SH "ENVIRONMENT
+.B S9FES_IMAGE_DIR
+.in +4
+The directory that will be searched for heap image files when the
+s9 interpreter starts.
+.in -4
+.sp
 .B S9FES_LIBRARY_PATH
 .in +4
 A colon-separated list of directories which will be searched for
-the s9 library when the interpreter is launched. The same directories
-will be searched by the
+library files by the
+.B load-from-library
+and
 .B locate-file
-procedure.
+procedures. The value of this variable will be split at the colons
+and copied to the
+.B *library-path*
+variable when S9 starts.
 .br
 Default:
 .I \&.:~/.s9fes:@S9DIR@
@@ -747,10 +798,6 @@ Abort input or terminate program execution.
 .B "SIGQUIT
 .in +4
 Terminate the interpreter process (emergency exit).
-.in -4
-.B "SIGTERM
-.in +4
-Silently terminate the interpreter process.
 .in -4
 .B """interrupt"""
 .in +4

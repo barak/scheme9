@@ -116,6 +116,7 @@ random-sort.scm|random-sort|-|Generate random permutations
 random.scm|random|-|Generate pseudo-random numbers
 range.scm|range|-|Range of a sample (minimal/maximal value)
 rb-tree.scm|-|Red-Black Trees|-
+rdb.scm|rdb|-|Simple CSV database tool
 read-file.scm|read-file|-|Read all lines of a text file
 read-from-string.scm|read-from-string|-|Read S-expression from string
 read-line.scm|read-line|-|Read lines from a text file

@@ -1,6 +1,6 @@
 ; Scheme 9 from Empty Space, Function Library
-; By Nils M Holm, 2009
-; Placed in the Public Domain
+; By Nils M Holm, 2009, 2018
+; In the public domain
 ;
 ; (program? object)  ==>  boolean
 ;
@@ -129,8 +129,8 @@
   (define (valid-let/*/rec? x named)
     (and (of-length? 2 INF (cdr x))
          (let* ((name (and named
-                           (of-length? 3 INF (cdr x))
-                           (symbol? (cadr x))))
+                           (symbol? (cadr x))
+                           (of-length? 3 INF (cdr x))))
                 (bind (if name
                           (caddr x)
                           (cadr x)))

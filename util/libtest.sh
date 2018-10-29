@@ -55,7 +55,14 @@ fi
 
 for f in $cases; do
 	if grep '^; Example: ' $f >/dev/null 2>&1; then
-		echo "(load-from-library \"`basename $f`\")" >>$testfile
+		# echo "(display \"$f\") (newline)" >>$testfile
+	  	echo "(load-from-library \"`basename $f`\")" >>$testfile
+		if grep '^; Given: ' $f >/dev/null 2>&1; then
+			sed -ne '/^; Given: /,/^;$/p' <$f | \
+				sed -e '/^$/d' | \
+				sed -e 's/^;............//' >>$testfile
+			echo "" >>$testfile
+		fi
 		echo "(%test" >>$testfile
 		sed -ne '/^; Example: /,/^$/p' <$f | \
 			sed -e '/^$/d' | \
@@ -75,4 +82,5 @@ trap '
 	exit 1
 ' 1 2 3 15
 
-./s9 -i test -f $testfile
+export S9FES_LIBRARY_PATH
+./s9 -i ./test.image $testfile

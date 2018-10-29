@@ -1,5 +1,5 @@
 /*
- * S9core Toolkit, Mk IIIe
+ * S9core Toolkit, Mk IV
  * By Nils M Holm, 2007-2018
  * In the public domain
  *
@@ -7,7 +7,7 @@
  * https://creativecommons.org/publicdomain/zero/1.0/
  */
 
-#define S9_VERSION "20180823"
+#define S9_VERSION "20181022"
 
 /*
  * Ugly prelude to figure out if
@@ -50,11 +50,7 @@
  #endif
 #endif
 
-/*
- * Tell later MSC compilers to let us use the standard CLIB API.
- * Blake McBride < b l a k e @ m c b r i d e . n a m e >
- */
-
+/* Tell later MSC compilers to let us use the standard CLIB API. */
 #ifdef _MSC_VER
  #if _MSC_VER > 1200
   #ifndef _CRT_SECURE_NO_DEPRECATE
@@ -84,8 +80,15 @@
  #define bye(x)	exit((x)? EXIT_FAILURE: EXIT_SUCCESS)
 #endif
 
-/* An "s9_cell" must be large enough to hold a pointer */
-#define s9_cell	ptrdiff_t
+/*
+ * An "s9_cell" must be large enough to hold an integer segment;
+ * see S9_INT_SEG_LIMIT, below.
+ */
+#ifdef S9_BITS_PER_WORD_64
+ #define s9_cell	ptrdiff_t
+#else
+ #define s9_cell	int
+#endif
 
 /* Default memory limit in K-nodes, 0 = none */
 #define S9_NODE_LIMIT	14013
@@ -105,33 +108,40 @@
 /* #define S9_BITS_PER_WORD_32 */
 /* #define S9_BITS_PER_WORD_16 */
 
-/* ... or try some magic constants (unreliable, though) ... */
-
-#ifndef S9_BITS_PER_WORD_16
- #ifndef S9_BITS_PER_WORD_32
-  #ifndef S9_BITS_PER_WORD_64
-   #ifdef __amd64__
-    #define S9_BITS_PER_WORD_64
-   #endif
-   #ifdef __amd64
-    #define S9_BITS_PER_WORD_64
-   #endif
-   #ifdef __x86_64__
-    #define S9_BITS_PER_WORD_64
-   #endif
-   #ifdef __x86_64
-    #define S9_BITS_PER_WORD_64
-   #endif
-  #endif
- #endif
-#endif
-
 /* ... or assume a reasonable default */
 #ifndef S9_BITS_PER_WORD_16
  #ifndef S9_BITS_PER_WORD_32
   #ifndef S9_BITS_PER_WORD_64
    #define S9_BITS_PER_WORD_32
   #endif
+ #endif
+#endif
+
+/* Make sure we have made up our minds */
+#ifdef S9_BITS_PER_WORD_16
+ #ifdef S9_BITS_PER_WORD_32
+  #error "Pick only one cell size!"
+ #endif
+ #ifdef S9_BITS_PER_WORD_64
+  #error "Pick only one cell size!"
+ #endif
+#endif
+
+#ifdef S9_BITS_PER_WORD_32
+ #ifdef S9_BITS_PER_WORD_16
+  #error "Pick only one cell size!"
+ #endif
+ #ifdef S9_BITS_PER_WORD_64
+  #error "Pick only one cell size!"
+ #endif
+#endif
+
+#ifdef S9_BITS_PER_WORD_64
+ #ifdef S9_BITS_PER_WORD_16
+  #error "Pick only one cell size!"
+ #endif
+ #ifdef S9_BITS_PER_WORD_32
+  #error "Pick only one cell size!"
  #endif
 #endif
 
@@ -254,7 +264,7 @@ struct S9_primitive {
 #define s9_vector(n)		(&Vectors[S9_cdr[n]])
 #define s9_vector_link(n)	(Vectors[S9_cdr[n] - 3])
 #define s9_vector_index(n)	(Vectors[S9_cdr[n] - 2])
-#define s9_vector_size(k)	(((k) + sizeof(s9_cell)-1) / sizeof(s9_cell) + 3)
+#define s9_vector_size(k)	(((k)+sizeof(s9_cell)-1) / sizeof(s9_cell) + 3)
 #define s9_vector_len(n)	(vector_size(string_len(n)) - 3)
 #define s9_port_no(n)		(cadr(n))
 #define s9_char_value(n)	(cadr(n))
@@ -463,6 +473,7 @@ int	s9_conses(s9_cell a);
 void	s9_cons_stats(int x);
 s9_cell	s9_copy_string(s9_cell x);
 void	s9_count(s9_counter *c);
+void	s9_countn(s9_counter *c, int n);
 char	*s9_dump_image(char *path, char *magic);
 int	s9_error_port(void);
 void	s9_exponent_chars(char *s);
@@ -473,7 +484,8 @@ void	s9_flush(void);
 int	s9_gc(void);
 int	s9_gcv(void);
 void	s9_gc_verbosity(int n);
-void	s9_get_counters(s9_counter **nc, s9_counter **cc, s9_counter **gc);
+void	s9_get_counters(s9_counter **nc, s9_counter **cc, s9_counter **vc,
+			s9_counter **gc);
 void	s9_mem_error_handler(void (*h)(int src));
 void	s9_image_vars(s9_cell **v);
 int	s9_input_port(void);

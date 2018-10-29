@@ -2,11 +2,15 @@
 	================================================================
 	|                           S9CORE                             |
 	|         A Toolkit for Implementing Dynamic Languages         |
-	|                           Mk IIIe                            |
+	|                           Mk IV                              |
 	================================================================
 
 	                     Nils M Holm, 2007-2018
 	                      In the public domain
+
+	 If your country does not have a public domain, the CC0 applies:
+	 https://creativecommons.org/share-your-work/public-domain/cc0/
+
 
 	----------------------------------------------------------------
 	RATIONALE
@@ -53,6 +57,8 @@
 	- A basis for implementing interpreters, runtime libraries, etc
 
 	- Statically or dynamically linked
+
+	- A system() function for Plan 9
 
 	- Available on Unix, Plan 9, and in C89/POSIX environments
 
@@ -116,8 +122,14 @@
 	----- cell -----------------------------------------------------
 
 	A "cell" is a reference to an object on the heap. All objects
-	are addressed using cells. A cell is wide enough to hold a
-	pointer on the host platform (typically a ptrdiff_t.
+	are addressed using cells. A cell is wide enough to hold an
+	offset to any object on the heap.
+
+	As of S9core Mk IV, the preferred cell type is "int", even in
+	64-bit environments. Use of 64-bit types can be forced by
+	compiling S9core with the S9_BITS_PER_WORD_64 definition, but
+	doing so is discouraged, because it increases the size of the
+	heap significantly and has little benefits.
 
 	Example: cell x, y;
 
@@ -270,14 +282,18 @@
 
 	The size of a cell is the size of a pointer on the host
 	platform. The size of a node is two cells plus a char. So the
-	total node memory limit using the default settings on a 64-bit
-	host would be:
+	total node memory limit using the default settings on a 32-bit
+	or 64-bit host would be:
 
-	14013 times 1024 times (2 times 8+1)  =  243,938,304 bytes
+	14013 times 1024 times (2 times 4+1)  =  129,143,808 bytes
 
 	The default vector pool limit would be:
 
-	14013K cells  =  114,794,496 bytes
+	14013K cells  =  57,397,248 bytes
+
+	The sizes grow significantly when using a 64-bit version of
+	S9core (which is not recommended), as can be seen on the
+	section on set_node_limit(), below.
 
 	At run time, the S9core toolbox will /never/ allocate more
 	memory than the sum of the above (plus the small amount
@@ -350,10 +366,12 @@
 	(using the default segment size) are listed in figure 1.
 
 	As can be seen in the table, the minimal memory footprint of
-	S9core is 416K bytes on 32-bit and 800K bytes on 64-bit systems.
-	In order to obtain a smaller initial memory footprint, the
-	S9_INITIAL_SEGMENT_SIZE constant has to be reduced and the table
-	in figure 1 has to be recalculated.
+	S9core is 416K bytes on 32-bit and 800K bytes on 64-bit system
+	using a 64-bit version of S9core (the default is to use a 32-bit
+	version even on 64-bit systems). In order to obtain a smaller
+	initial memory footprint, the S9_INITIAL_SEGMENT_SIZE constant
+	has to be reduced and the table in figure 1 has to be
+	recalculated.
 
 	    Limit  64-bit memory  32-bit memory
 	---------  -------------  -------------
@@ -411,19 +429,22 @@
 	bignums that are smaller than this limit can be converted to
 	(long) integers just be extracting their first segment.
 
-	These values are /not/ tunable. S9_DIGITS_PER_CELL is 18 on
-	64-bit machines, 9 on 32- bit machines, and (theoretically) 4 on
-	16-bit machines.
+	These values are /not/ tunable. S9_DIGITS_PER_CELL is 9 on both
+	32-bit and 64-bit machines and (theoretically) 4 on 16-bit
+	machines. It can be extended to 18 by compiling a 64-bit
+	version of S9core (using S9_BITS_PER_WORD_64), but doing so
+	is not recommended.
 
 	----- S9_MANTISSA_SEGMENTS -------------------------------------
 	----- S9_MANTISSA_SIZE -----------------------------------------
 
 	S9_MANTISSA_SEGMENTS his is the number of integer segments (see
-	above) in the mantissae of real numbers. The default is one
-	segment (18 digits of precision) on 64-bit hosts and two segments
-	(also 18 digits) on 32-bit platforms. Each additional mantissa
-	segment increases precision by S9_DIGITS_PER_CELL (see above),
-	but also slows down real number computations.
+	above) in the mantissae of real numbers. The default is two
+	segments (18 digits) on both 32-bit and 64-bit platforms. When
+	doing a 64-bit build, the default is one segment (which is also
+	18 digits). Each additional mantissa segment increases precision
+	by S9_DIGITS_PER_CELL (see above), but also slows down real
+	number computations.
 
 	This is a compile-time option and cannot be tweaked at run time.
 
@@ -585,7 +606,7 @@
 	-10^S9_DITIGS_PER_CELL + 1  to  10^S9_DITIGS_PER_CELL - 1
 
 	To create larger bignum integers, the string_to_bignum()
-	function  has to be used.
+	function has to be used.
 
 	The bignum_to_int() accessor returns the value of a
 	single-segment bignum integer or UNDEFINED, if the bignum
@@ -1431,8 +1452,8 @@
 	terminate the S9core process or, in case the memory limit has
 	been removed, result in allocation of huge amounts of memory.
 	For example, converting the number 1e+1000000 would create a
-	string of 1 million zeros (and one one) and allocate about 25M
-	bytes of memory in the process (on a 64-bit system). Also, the
+	string of 1 million zeros (and one one) and allocate about 13M
+	bytes of memory in the process (on a 32-bit system). Also, the
 	process would take a very long time.
 
 	This function is most useful for real numbers with a magnitude
@@ -1708,7 +1729,7 @@
 	----- int gcv(void); -------------------------------------------
 
 	The gc() function starts a node pool garbage collection and
-	returns the number of nodes reclaimed. gcv() starts a vector
+	returns the number of available nodes. gcv() starts a vector
 	pool garbage collection and compaction and returns the number
 	of free cells in the vector pool.
 
@@ -1801,10 +1822,13 @@
 	This function resets the given counter to zero.
 
 	----- void count(counter *c); ----------------------------------
+	----- void countn(counter *c, int n); --------------------------
 
-	This function increments the given counter by one. Counters
-	overflow at one quadrillion (10^15). There is no overflow
-	checking.
+	The count() function increments the given counter by one and
+	countn() increments the counter by /n/.
+
+	Counters overflow at one quadrillion (10^15). There is no
+	overflow checking.
 
 	----- cell read_counter(counter *c); ---------------------------
 
@@ -1889,6 +1913,12 @@
 	to measure the lengthts of NIL-terminated /or/ improper (dotted)
 	lists. Because it only counts pairs/conses, It cannot be used to
 	measure chains of atoms.
+
+	----- int system(char *cmd); -----------------------------------
+
+	This is an implementation of the ANSI C system() function for
+	Plan 9. It does not support system(NULL), but should be otherwise
+	compatible.
 
 	----------------------------------------------------------------
 	CAVEATS

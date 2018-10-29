@@ -30,20 +30,20 @@
 ; defined in a package by the same name inside and outside of the
 ; package.
 ;
-; Example:   (begin
-;              (package bar
-;                (:export foo2 foo3)
-;                (:make-aliases)
-;                (define (foo-maker n x)
-;                  (if (zero? n)
-;                      (lambda ()
-;                        x)
-;                      (foo-maker
-;                        (- n 1)
-;                        (cons n x))))
-;                (define foo2 (foo-maker 2 '()))
-;                (define foo3 (foo-maker 3 '())))
-;              (list (bar:foo2) (foo3)))           ==>  ((1 2) (1 2 3))
+; Given:     (package bar
+;              (:export foo2 foo3)
+;              (:make-aliases)
+;              (define (foo-maker n x)
+;                (if (zero? n)
+;                    (lambda ()
+;                      x)
+;                    (foo-maker
+;                      (- n 1)
+;                      (cons n x))))
+;              (define foo2 (foo-maker 2 '()))
+;              (define foo3 (foo-maker 3 '())))
+;
+; Example:   (list (bar:foo2) (foo3))          ==>  ((1 2) (1 2 3))
 
 (load-from-library "filter.scm")
 (load-from-library "for-all.scm")

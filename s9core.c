@@ -1,5 +1,5 @@
 /*
- * S9core Toolkit, Mk IIIe
+ * S9core Toolkit, Mk IVa
  * By Nils M Holm, 2007-2018
  * In the public domain
  *
@@ -28,6 +28,8 @@ char		*Tag;
 
 s9_cell		*Vectors;
 s9_cell		Nullvec;
+s9_cell		Nullstr;
+s9_cell		Blank;
 
 cell		Stack;
 
@@ -43,6 +45,7 @@ static cell	Tmp_car,
 		Tmp;
 
 static cell	Symbols;
+static cell	Symhash;
 
 static int	Printer_count,
 		Printer_limit;
@@ -83,9 +86,10 @@ cell	Zero,
 cell	Epsilon;
 
 /* Internal GC roots */
-static cell	*GC_int_roots[] = { &Stack, &Symbols, &Tmp, &Tmp_car,
-					&Tmp_cdr, &Zero, &One, &Two,
-					&Ten, &Epsilon, &Nullvec, NULL };
+static cell	*GC_int_roots[] = {
+			&Stack, &Symbols, &Symhash, &Tmp, &Tmp_car,
+			&Tmp_cdr, &Zero, &One, &Two, &Ten, &Epsilon,
+			&Nullvec, &Nullstr, &Blank, NULL };
 
 /* External GC roots */
 static cell	**GC_ext_roots = NULL;
@@ -111,6 +115,7 @@ static int	Run_stats, Cons_stats;
 
 static s9_counter	Conses,
 			Nodes,
+			Vecspace,
 			Collections;
 
 void s9_run_stats(int x) {
@@ -118,6 +123,7 @@ void s9_run_stats(int x) {
 	if (Run_stats) {
 		s9_reset_counter(&Nodes);
 		s9_reset_counter(&Conses);
+		s9_reset_counter(&Vecspace);
 		s9_reset_counter(&Collections);
 	}
 }
@@ -154,6 +160,26 @@ void s9_count(s9_counter *c) {
 	}
 }
 
+void s9_countn(s9_counter *c, int n) {
+	c->n += n;
+	if (c->n >= 1000) {
+		c->n1k += c->n / 1000;
+		c->n = c->n % 1000;
+		if (c->n1k >= 1000) {
+			c->n1m += c->n1k / 1000;
+			c->n1k = c->n1k % 1000;
+			if (c->n1m >= 1000) {
+				c->n1g += c->n1m / 1000;
+				c->n1m = c->n1m % 1000;
+				if (c->n1g >= 1000) {
+					c->n1t += c->n1g / 1000;
+					c->n1g = c->n1g % 1000;
+				}
+			}
+		}
+	}
+}
+
 cell s9_read_counter(s9_counter *c) {
 	cell	n, m;
 
@@ -175,9 +201,11 @@ cell s9_read_counter(s9_counter *c) {
 	return n;
 }
 
-void s9_get_counters(s9_counter **nc, s9_counter **cc, s9_counter **gc) {
+void s9_get_counters(s9_counter **nc, s9_counter **cc, s9_counter **vc,
+			s9_counter **gc) {
 	*nc = &Nodes;
 	*cc = &Conses;
+	*vc = &Vecspace;
 	*gc = &Collections;
 }
 
@@ -385,7 +413,7 @@ static void mark(cell n) {
 	cell	p, parent, *v;
 	int	i;
 
-	parent = NIL;	/* Initially, there is no parent node */
+	parent = NIL;
 	while (1) {
 		if (s9_special_p(n) || (Tag[n] & S9_MARK_TAG)) {
 			if (parent == NIL)
@@ -403,6 +431,7 @@ static void mark(cell n) {
 					vector_index(parent) = i+1;
 				}
 				else {			/* S1 --> done */
+					Tag[parent] &= ~S9_STATE_TAG;
 					p = parent;
 					parent = v[i];
 					v[i] = n;
@@ -414,7 +443,7 @@ static void mark(cell n) {
 				cdr(parent) = car(parent);
 				car(parent) = n;
 				Tag[parent] &= ~S9_STATE_TAG;
-				Tag[parent] |=  S9_MARK_TAG;
+				/* Tag[parent] |=  S9_MARK_TAG; */
 				n = p;
 			}
 			else {				/* S2 --> done */
@@ -424,46 +453,44 @@ static void mark(cell n) {
 				n = p;
 			}
 		}
-		else {
-			if (Tag[n] & S9_VECTOR_TAG) {	/* S0 --> S1|S2 */
-				Tag[n] |= S9_MARK_TAG;
-				/* Tag[n] &= ~S9_STATE_TAG; */
-				vector_link(n) = n;
-				if (car(n) == T_VECTOR && vector_len(n) != 0) {
-					Tag[n] |= S9_STATE_TAG;
-					vector_index(n) = 0;
-					v = vector(n);
-					p = v[0];
-					v[0] = parent;
-					parent = n;
-					n = p;
-				}
-			}
-			else if (Tag[n] & S9_ATOM_TAG) { /* S0 --> S2 */
-				if (input_port_p(n) || output_port_p(n))
-					Port_flags[port_no(n)] |= S9_USED_TAG;
-				p = cdr(n);
-				cdr(n) = parent;
-				/*Tag[n] &= ~S9_STATE_TAG;*/
+		else if (Tag[n] & S9_VECTOR_TAG) {	/* S0 --> S1|S2 */
+			Tag[n] |= S9_MARK_TAG;
+			/* Tag[n] &= ~S9_STATE_TAG; */
+			vector_link(n) = n;
+			if (car(n) == T_VECTOR && vector_len(n) != 0) {
+				Tag[n] |= S9_STATE_TAG;
+				vector_index(n) = 0;
+				v = vector(n);
+				p = v[0];
+				v[0] = parent;
 				parent = n;
 				n = p;
-				Tag[parent] |= S9_MARK_TAG;
 			}
-			else {				/* S0 --> S1 */
-				p = car(n);
-				car(n) = parent;
-				Tag[n] |= S9_MARK_TAG;
-				parent = n;
-				n = p;
-				Tag[parent] |= S9_STATE_TAG;
-			}
+		}
+		else if (Tag[n] & S9_ATOM_TAG) {	/* S0 --> S2 */
+			if (input_port_p(n) || output_port_p(n))
+				Port_flags[port_no(n)] |= S9_USED_TAG;
+			p = cdr(n);
+			cdr(n) = parent;
+			/*Tag[n] &= ~S9_STATE_TAG;*/
+			parent = n;
+			n = p;
+			Tag[parent] |= S9_MARK_TAG;
+		}
+		else {					/* S0 --> S1 */
+			p = car(n);
+			car(n) = parent;
+			Tag[n] |= S9_MARK_TAG;
+			parent = n;
+			n = p;
+			Tag[parent] |= S9_STATE_TAG;
 		}
 	}
 }
 
 /* Mark and sweep GC. */
 int s9_gc(void) {
-	int	i, k, sk;
+	int	i, k, sk = 0;
 	char	buf[100];
 
 	if (Run_stats)
@@ -474,18 +501,18 @@ int s9_gc(void) {
 		else
 			Port_flags[i] &= ~S9_USED_TAG;
 	}
+	if (GC_stack && *GC_stack != NIL) {
+		sk = string_len(*GC_stack);
+		string_len(*GC_stack) = (1 + *GC_stkptr) * sizeof(cell);
+	}
 	for (i=0; GC_int_roots[i] != NULL; i++) {
 		mark(*GC_int_roots[i]);
-	}
-	if (GC_stack && GC_stack[0] != NIL) {
-		sk = string_len(*GC_stack);
-		string_len(*GC_stack) = 1 + *GC_stkptr * sizeof(cell);
 	}
 	if (GC_ext_roots) {
 		for (i=0; GC_ext_roots[i] != NULL; i++)
 			mark(*GC_ext_roots[i]);
 	}
-	if (GC_stack && GC_stack[0] != NIL) {
+	if (GC_stack && *GC_stack != NIL) {
 		string_len(*GC_stack) = sk;
 	}
 	k = 0;
@@ -522,7 +549,9 @@ cell s9_cons3(cell pcar, cell pcdr, int ptag) {
 
 	if (Run_stats) {
 		s9_count(&Nodes);
-		if (Cons_stats)
+		if (	Cons_stats &&
+			0 == (ptag & (S9_ATOM_TAG|S9_VECTOR_TAG|S9_PORT_TAG))
+		)
 			s9_count(&Conses);
 	}
 	if (Free_list == NIL) {
@@ -564,7 +593,8 @@ cell s9_cons3(cell pcar, cell pcdr, int ptag) {
 		Tmp_car = Tmp_cdr = NIL;
 	}
 	if (Free_list == NIL)
-		s9_fatal("s9_cons3: failed to recover from low memory condition");
+		s9_fatal(
+		  "s9_cons3: failed to recover from low memory condition");
 	n = Free_list;
 	Free_list = cdr(Free_list);
 	car(n) = pcar;
@@ -625,6 +655,9 @@ cell s9_new_vec(cell type, int size) {
 	char	buf[100];
 
 	wsize = vector_size(size);
+	if (Run_stats) {
+		s9_countn(&Vecspace, wsize);
+	}
 	if (Free_vecs + wsize >= Vec_pool_size) {
 		s9_gcv();
 		while (	Free_vecs + wsize >=
@@ -655,7 +688,8 @@ cell s9_new_vec(cell type, int size) {
 		}
 	}
 	if (Free_vecs + wsize >= Vec_pool_size)
-		s9_fatal("new_vec: failed to recover from low memory condition");
+		s9_fatal(
+		  "new_vec: failed to recover from low memory condition");
 	v = Free_vecs;
 	Free_vecs += wsize;
 	n = s9_cons3(type, v + RAW_VECTOR_DATA, S9_VECTOR_TAG);
@@ -664,7 +698,7 @@ cell s9_new_vec(cell type, int size) {
 	Vectors[v + RAW_VECTOR_SIZE] = size;
 	if (type == T_VECTOR) {
 		for (i = RAW_VECTOR_DATA; i<wsize; i++)
-			Vectors[v+i] = NIL;
+			Vectors[v+i] = UNDEFINED;
 	}
 	return n;
 }
@@ -683,6 +717,86 @@ cell s9_unsave(int k) {
 	return n;
 }
 
+static unsigned hash(char *s) {
+	unsigned int	h = 0;
+
+	while (*s) h = ((h<<5)+h) ^ *s++;
+	return h;
+}
+
+static int hash_size(int n) {
+	if (n < 47) return 47;
+	if (n < 97) return 97;
+	if (n < 199) return 199;
+	if (n < 499) return 499;
+	if (n < 997) return 997;
+	if (n < 9973) return 9973;
+	if (n < 19997) return 19997;
+	return 39989;
+}
+
+#define intval(x) cadr(x)
+
+static void rehash_symbols(void) {
+	unsigned int	i;
+	cell		*v, n, p, new;
+	unsigned int	h, k;
+
+	if (NIL == Symhash)
+		k = hash_size(s9_length(Symbols));
+	else
+		k = hash_size(intval(vector(Symhash)[0]));
+	Symhash = s9_new_vec(T_VECTOR, (k+1) * sizeof(cell));
+	v = vector(Symhash);
+	for (i=1; i<=k; i++) v[i] = NIL;
+	i = 0;
+	for (p = Symbols; p != NIL; p = cdr(p)) {
+		h = hash(symbol_name(car(p)));
+		n = cons(car(p), NIL);
+		n = cons(n, vector(Symhash)[h%k+1]);
+		vector(Symhash)[h%k+1] = n;
+		i++;
+	}
+	new = s9_make_integer(i);
+	vector(Symhash)[0] = new;
+}
+
+void add_symhash(cell x) {
+	cell		n, new;
+	unsigned int	h, i, k;
+
+	if (NIL == Symhash) {
+		rehash_symbols();
+		return;
+	}
+	i = intval(vector(Symhash)[0]);
+	k = vector_len(Symhash)-1;
+	if (i > k) {
+		rehash_symbols();
+		return;
+	}
+	h = hash(symbol_name(x));
+	n = cons(x, NIL);
+	n = cons(n, vector(Symhash)[h%k+1]);
+	vector(Symhash)[h%k+1] = n;
+	new = s9_make_integer(i+1);
+	vector(Symhash)[0] = new;
+}
+
+int s9_find_symbol(char *s) {
+	unsigned int	h, k;
+	cell		n;
+
+	if (NIL == Symhash) return NIL;
+	k = vector_len(Symhash)-1;
+	h = hash(s);
+	for (n = vector(Symhash)[h%k+1]; n != NIL; n = cdr(n))
+		if (!strcmp(s, symbol_name(caar(n))))
+			return caar(n);
+	return NIL;
+}
+
+/*
 cell s9_find_symbol(char *s) {
 	cell	y;
 
@@ -694,6 +808,7 @@ cell s9_find_symbol(char *s) {
 	}
 	return NIL;
 }
+*/
 
 cell s9_make_symbol(char *s, int k) {
 	cell	n;
@@ -705,6 +820,7 @@ cell s9_make_symbol(char *s, int k) {
 
 cell s9_intern_symbol(cell y) {
 	Symbols = cons(y, Symbols);
+	add_symhash(y);
 	return y;
 }
 
@@ -725,21 +841,15 @@ cell s9_symbol_ref(char *s) {
 cell s9_make_string(char *s, int k) {
 	cell	n;
 
+	if (0 == k) return Nullstr;
 	n = s9_new_vec(T_STRING, k+1);
 	strncpy(string(n), s, k+1);
 	return n;
 }
 
 cell s9_make_vector(int k) {
-	cell	n, *v;
-	int	i;
-
 	if (0 == k) return Nullvec;
-	n = s9_new_vec(T_VECTOR, k * sizeof(cell));
-	v = vector(n);
-	for (i=0; i<k; i++)
-		v[i] = UNDEFINED;
-	return n;
+	return s9_new_vec(T_VECTOR, k * sizeof(cell));
 }
 
 cell s9_make_integer(cell i) {
@@ -766,6 +876,7 @@ static cell make_init_integer(cell i) {
 cell s9_make_char(int x) {
 	cell n;
 
+	if (' ' == x) return Blank;
 	n = new_atom(x & 0xff, NIL);
 	return new_atom(T_CHAR, n);
 }
@@ -967,8 +1078,7 @@ cell s9_argv_to_list(char **argv) {
 	int	i;
 	cell	a, n;
 
-	if (argv[0] == NULL)
-		return NIL;
+	if (argv[0] == NULL) return NIL;
 	a = cons(NIL, NIL);
 	save(a);
 	for (i = 0; argv[i] != NULL; i++) {
@@ -982,6 +1092,37 @@ cell s9_argv_to_list(char **argv) {
 	}
 	return s9_unsave(1);
 }
+
+#ifdef plan9
+
+int system(char *cmd) {
+	Waitmsg	*w;
+	int	pid;
+	char	*argv[] = { "/bin/rc", "-c", cmd, NULL };
+	
+	switch (pid = fork()) {
+	case -1:
+		return -1;
+	case 0:
+		exec(argv[0], argv);
+		bye(1);
+	default:
+		while ((w = wait()) != NULL) {
+			if (w->pid == pid) {
+				if (w->msg[0] == 0) {
+					free(w);
+					return 0;
+				}
+				free(w);
+				return 1;
+			}
+			free(w);
+		}
+		return 0;
+	}
+}
+
+#endif /* plan9 */
 
 /*
  * Bignums
@@ -1417,8 +1558,7 @@ static cell count_digits(cell m) {
 }
 
 cell s9_real_exponent(cell x) {
-	if (integer_p(x))
-		return Zero;
+	if (integer_p(x)) return 0;
 	return Real_exponent(x);
 }
 
@@ -2676,7 +2816,8 @@ char *s9_dump_image(char *path, char *magic) {
 	}
 	if (	(s = xfwrite(&Free_list, sizeof(cell), 1, f)) != NULL ||
 		(s = xfwrite(&Free_vecs, sizeof(cell), 1, f)) != NULL ||
-		(s = xfwrite(&Symbols, sizeof(cell), 1, f)) != NULL
+		(s = xfwrite(&Symbols, sizeof(cell), 1, f)) != NULL ||
+		(s = xfwrite(&Symhash, sizeof(cell), 1, f)) != NULL
 	) {
 		fclose(f);
 		return s;
@@ -2780,7 +2921,8 @@ char *s9_load_image(char *path, char *magic) {
 	}
 	if (	(s = xfread(&Free_list, sizeof(cell), 1, f)) != NULL ||
 		(s = xfread(&Free_vecs, sizeof(cell), 1, f)) != NULL ||
-		(s = xfread(&Symbols, sizeof(cell), 1, f)) != NULL
+		(s = xfread(&Symbols, sizeof(cell), 1, f)) != NULL ||
+		(s = xfread(&Symhash, sizeof(cell), 1, f)) != NULL
 	) {
 		fclose(f);
 		return s;
@@ -2861,6 +3003,10 @@ static void resetpools(void) {
 void s9_init(cell **extroots, cell *stack, int *stkptr) {
 	int	i;
 
+#ifdef S9_BITS_PER_WORD_64
+	if (sizeof(cell) != 8)
+		s9_fatal("improper 64-bit build");
+#endif
 	GC_ext_roots = extroots;
 	GC_stack = stack;
 	GC_stkptr = stkptr;
@@ -2887,6 +3033,7 @@ void s9_init(cell **extroots, cell *stack, int *stkptr) {
 	Tmp_cdr = NIL;
 	Tmp = NIL;
 	Symbols = NIL;
+	Symhash = NIL;
 	Printer_limit = 0;
 	IO_error = 0;
 	Exponent_chars = "eE";
@@ -2901,6 +3048,8 @@ void s9_init(cell **extroots, cell *stack, int *stkptr) {
 	Two = make_init_integer(2);
 	Ten = make_init_integer(10);
 	Nullvec = s9_new_vec(T_VECTOR, 0);
+	Nullstr = s9_new_vec(T_STRING, 1);
+	Blank = new_atom(T_CHAR, new_atom(' ', NIL));
 	Epsilon = S9_make_quick_real(0, -S9_MANTISSA_SIZE, cdr(One));
 }
 
@@ -3268,7 +3417,7 @@ void test_conv(void) {
 
 void test_util(void) {
 	int	i;
-	cell	a;
+	cell	a, b;
 
 	if (s9_asctol("12345") != 12345) error("asctol()");
 	N = cons(NIL, NIL);
@@ -3277,7 +3426,8 @@ void test_util(void) {
 	if (s9_length(N) != 101) error("length()");
 	N = s9_flat_copy(N, &a);
 	if (s9_length(N) != 101) error("flat_copy(1)");
-	cdr(a) = cons(NIL, NIL);
+	b = cons(NIL, NIL);
+	cdr(a) = b;
 	if (s9_length(N) != 102) error("flat_copy(2)");
 }
 

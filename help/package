@@ -26,17 +26,17 @@ symbol named <name>:X, i.e. it will allow to refer to an object
 defined in a package by the same name inside and outside of the
 package.
 
-(begin
-  (package bar
-    (:export foo2 foo3)
-    (:make-aliases)
-    (define (foo-maker n x)
-      (if (zero? n)
-          (lambda ()
-            x)
-          (foo-maker
-            (- n 1)
-            (cons n x))))
-    (define foo2 (foo-maker 2 '()))
-    (define foo3 (foo-maker 3 '())))
-  (list (bar:foo2) (foo3)))           ==>  ((1 2) (1 2 3))
+(package bar
+  (:export foo2 foo3)
+  (:make-aliases)
+  (define (foo-maker n x)
+    (if (zero? n)
+        (lambda ()
+          x)
+        (foo-maker
+          (- n 1)
+          (cons n x))))
+  (define foo2 (foo-maker 2 '()))
+  (define foo3 (foo-maker 3 '())))
+
+(list (bar:foo2) (foo3))          ==>  ((1 2) (1 2 3))

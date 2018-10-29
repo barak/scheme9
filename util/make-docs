@@ -19,12 +19,21 @@ format() {
 	    -e 's/; (load-from-library/;         (load-from-library/' \
 	    <$tmp >$tmp2 && mv -f $tmp2 $tmp
 
-	sed -ne '1,/^;.*Example)*:/p' <$tmp | \
-		sed -e 's/^; //' -e 's/^;$//' -e '$d' >$prose
+	if grep '^; Given: ' $tmp >/dev/null; then
+		sed -ne '1,/^;.*Given:   /p' <$tmp | \
+			sed -e 's/^; //' -e 's/^;$//' -e '$d' >$prose
 
-	sed -ne '/^;.*Example)*:/,/^$/p' <$tmp | sed -e '$d' | \
-		sed -e 's/^;$//' | \
-		sed -e 's/^.............//' >$exms
+		sed -ne '/^;.*Given:   /,/^$/p' <$tmp | sed -e '$d' | \
+			sed -e 's/^;$//' | \
+			sed -e 's/^.............//' >$exms
+	else
+		sed -ne '1,/^;.*Example)*:/p' <$tmp | \
+			sed -e 's/^; //' -e 's/^;$//' -e '$d' >$prose
+
+		sed -ne '/^;.*Example)*:/,/^$/p' <$tmp | sed -e '$d' | \
+			sed -e 's/^;$//' | \
+			sed -e 's/^.............//' >$exms
+	fi
 
 	sed -e '1s/^/S9 LIB  /' -e '2,$s/^/        /' <$sigs
 	echo

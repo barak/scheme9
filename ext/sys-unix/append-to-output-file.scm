@@ -10,6 +10,9 @@
 ; file does not exist when this procedure is called, it will
 ; be created. If the file cannot be opened, an error is signalled.
 ;
+; This function has been superseded by the OPEN-APPEND-FILE
+; primitive procedure in S9fES Reimagined.
+;
 ; (Example): (append-to-output-file "logfile")  ==>  #<output-port>
 
 (require-extension sys-unix)

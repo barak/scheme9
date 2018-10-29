@@ -1,6 +1,6 @@
 ; Scheme 9 from Empty Space, Unix Function Library
-; By Nils M Holm, 2010,2012
-; Placed in the Public Domain
+; By Nils M Holm, 2010-2018
+; In the public domain
 ;
 ; (standard-error-port)                ==>  #<output-port>
 ; (call-with-stderr procedure^1)       ==>  object
@@ -8,12 +8,15 @@
 ;
 ; (load-from-library "standard-error.scm")
 ;
-; STANDARD-ERROR returns an output-file for accessing the Unix
+; STANDARD-ERROR-PORT returns an output-file for accessing the Unix
 ; standard error file descriptor (stderr). CALL-WITH-STDERR passes
 ; that output-file to a unary procedure, which may use it for writing
 ; data to stderr. WITH-OUTPUT-TO-STDERR temporarily sets the current
 ; output port) to the stderr descriptor while running the given nullary
 ; procedure. CALL-WITH-STDERR returns the value returned by PROCEDURE^1.
+;
+; Instead of STANDARD-ERROR-PORT you may want to use the built-in
+; CURRENT-ERROR-PORT procedure in S9fES Reimagined.
 ;
 ; (Example): (call-with-stderr
 ;              (lambda (stderr)

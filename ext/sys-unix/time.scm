@@ -1,27 +1,26 @@
 ; Scheme 9 from Empty Space, Unix Function Library
-; By Nils M Holm, 2010
-; Placed in the Public Domain
+; By Nils M Holm, 2010, 2018
+; In the public domain
 ;
 ; (time* expression)  ==>  object
 ; (time  form)        ==>  object
 ;
 ; The TIME* procedures evaluates EXPRESSION, measuring the number
-; of allocations, reductions, etc with the STATS procedure. It also
-; measures the time spent reducing FORM. When finished, it prints
-; some interesting data and returns the normal form of FORM.
+; of allocations and garbage collections with the STATS procedure.
+; It also measures the time spent reducing FORM. When finished, it
+; prints some interesting data and returns the normal form of FORM.
 ; The FORM must be quoted or it will be reduced *before* running
-; TIME.
+; TIME*.
 ;
 ; The TIME special form is like TIME*, but does not require its
 ; argument to be quoted.
 ;
 ; (Example): (time (begin (expt 2 10000) #t))  ==>  #t
-;            ;               1.8990 seconds
-;            ;                  350 reduction steps
-;            ;            8,327,846 conses allocated
-;            ;            8,329,127 total nodes allocated
-;            ;                   73 garbage collections
-
+;            ;    0.4086 seconds
+;            ; 8,334,993 total nodes allocated
+;            ; 8,334,993 conses allocated
+;            ;     3,456 vector cells allocated
+;            ;        22 garbage collections
 
 (require-extension sys-unix)
 
@@ -58,9 +57,9 @@
          (sval*  (cdr result))
          (tn     (sys:gettimeofday)))
     (format #t "; ~15@A.~4,,,'0:A seconds~%~
-                ; ~20,,:D reduction steps~%~
-                ; ~20,,:D conses allocated~%~
                 ; ~20,,:D total nodes allocated~%~
+                ; ~20,,:D conses allocated~%~
+                ; ~20,,:D vector cells allocated~%~
                 ; ~20,,:D garbage collections~%"
                (seconds t0 tn)
                (useconds t0 tn)

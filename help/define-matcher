@@ -21,7 +21,7 @@ Each pattern is matched against the corresponding argument as
 follows:
 
 - Atomic objects, except for symbols, match themselves;
-- The symbol NIL matches the empty argument list (so
+- The symbol NIL matches the empty argument list, so
   (nil => foo) is equal to (=> foo);
 - The symbol @ binds the remaining arguments to the subsequent
   symbol and ends the match successfully -- it is the matcher's
@@ -42,11 +42,11 @@ The DEFINE-MATCHER syntax binds a matcher to a symbol at the
 top-level. LET-MATCHER binds a matcher locally. These constructs
 correspond to DEFINE and LETREC.
 
-(begin
-  (define-matcher len
-    (()      => 0)
-    ((_ . x) => (+ 1 (len x))))
-  (len '(a b c d e f)))                  ==>  6
+(define-matcher len
+  (()      => 0)
+  ((_ . x) => (+ 1 (len x))))
+
+(len '(a b c d e f))                     ==>  6
 
 (let-matcher how-many
   ((nil

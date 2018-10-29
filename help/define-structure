@@ -46,9 +46,9 @@ of X. When X is not of the type <type>, an error will be signalled.
 of X to V. When X is not of the type <type>, an error will be signalled.
 (<type>-set-<slot-N>! x v) does the same, but changes <slot-N>.
 
-(begin
-  (define-structure point (x 0) (y 0) (color #f))
-  (let ((p (make-point)))
-    (point-set-color! p 'yellow)
-    (list (point? p)
-          (point-color p))))               ==>  (#t yellow)
+(define-structure point (x 0) (y 0) (color #f))
+
+(let ((p (make-point)))
+  (point-set-color! p 'yellow)
+  (list (point? p)
+        (point-color p)))       ==>  (#t yellow)

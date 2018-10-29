@@ -1,6 +1,6 @@
 /*
  * Scheme 9 from Empty Space, Refactored
- * By Nils M Holm, 2007-2016
+ * By Nils M Holm, 2007-2018
  * In the public domain
  *
  * Interface for extension procedures.
@@ -21,5 +21,5 @@
 #define ___ T_ANY
 
 void add_primitives(char *name, S9_PRIM *p);
-cell error(char *msg, cell expr);
+void error(char *msg, cell expr);
 cell integer_value(char *src, cell x);

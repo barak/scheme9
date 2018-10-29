@@ -91,36 +91,30 @@
 ; SLOT-SET! stores the given OBJECT in the slot named SLOT of
 ; the given INSTANCE, thereby removing its prior value.
 ;
-; Example:   (begin
-;              (define-generic mul)
+; Given:     (define-generic mul)
+;            (define-method (mul (x <integer>) (y <integer>))
+;              (* x y))
+;            (define-method (mul (x <integer>) (a <pair>))
+;              (map (lambda (i) (* i x)) a))
+;            (define-method (mul (a <pair>) (x <integer>))
+;              (map (lambda (i) (* i x)) a))
+;            (define-method (mul (a <pair>) (b <pair>))
+;              (map * a b))
 ;
-;              (define-method (mul (x <integer>) (y <integer>))
-;                (* x y))
-;
-;              (define-method (mul (x <integer>) (a <pair>))
-;                (map (lambda (i) (* i x)) a))
-;
-;              (define-method (mul (a <pair>) (x <integer>))
-;                (map (lambda (i) (* i x)) a))
-;
-;              (define-method (mul (a <pair>) (b <pair>))
-;                (map * a b))
-;
-;              (list (mul 5 7)
-;                    (mul 2 '(1 2 3))
-;                    (mul '(1 2 3) 2)
-;                    (mul '(1 2 3) '(4 5 6))))  ==>  (35
-;                                                     (2 4 6)
-;                                                     (2 4 6)
-;                                                     (4 10 18))
+; Example:   (list (mul 5 7)
+;                  (mul 2 '(1 2 3))
+;                  (mul '(1 2 3) 2)
+;                  (mul '(1 2 3) '(4 5 6)))  ==>  (35
+;                                                 (2 4 6)
+;                                                 (2 4 6)
+;                                                 (4 10 18))
 ;
 ;            ; Don't do this! Generic application takes ages.
-;            (begin
-;              (define-generic len)
-;              (define-method (len (x <null>)) 0)
-;              (define-method (len (x <pair>))
-;                (+ 1 (len (cdr x))))
-;              (len '(1 2 3 4 5)))                 ==>  5
+;            ; (define-generic len)
+;            ; (define-method (len (x <null>)) 0)
+;            ; (define-method (len (x <pair>))
+;            ;   (+ 1 (len (cdr x))))
+;            ; (len '(1 2 3 4 5))             ==>  5
 
 (load-from-library "hof.scm")
 (load-from-library "and-letstar.scm")

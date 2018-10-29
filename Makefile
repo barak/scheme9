@@ -7,8 +7,8 @@
 PREFIX= /u
 
 # Base version and Release
-BASE=		20170124
-RELEASE=	20180823
+BASE=		20181002
+RELEASE=	20181028
 
 # Override default compiler and flags
 CC=	cc
@@ -36,9 +36,10 @@ EXTRA_INIT+=	csv_init();
 EXTRA_LIBS+=
 
 # Options to be added to $(DEFS)
-#	-DBITS_PER_WORD_64	# use 64-bit bignum arithmetics
+#	-DS9_BITS_PER_WORD_64	# 64-bit build (don't do this!)
 #	-DLIBRARY_PATH="\"dir:...\""
 #				# search path for LOCATE-FILE, etc
+#	-DIMAGE_DIR="\"dir\""	# location of image file
 #	-DNETWORK		# include socket code in the Unix extension
 #	-DCURSES_COLOR		# enable the CURS:SET-COLOR primitive
 #	-DCURSES_RESET		# automatically run CURS:ENDWIN on the REPL
@@ -46,6 +47,7 @@ EXTRA_LIBS+=
 
 DEFS=	$(OSDEF) \
 	-DLIBRARY_PATH="\".:~/s9fes:$(S9DIR)\"" \
+	-DIMAGE_DIR="\"$(S9DIR)\"" \
 	-DEXTENSIONS="$(EXTRA_INIT)" \
 	-DNETWORK \
 	-DCURSES_COLOR \
@@ -59,11 +61,11 @@ LIBDIR=	$(PREFIX)/lib
 MANDIR=	$(PREFIX)/man/man1
 
 # Set up environment to be used during the build process
-BUILD_ENV=	env S9FES_LIBRARY_PATH=.:lib:ext/sys-unix:ext/curses:ext/csv:contrib
+BUILD_ENV=	env S9FES_LIBRARY_PATH=.:lib:ext/sys-unix:ext/curses:ext/csv:contrib S9FES_IMAGE_DIR=.
 
 SETPREFIX=	sed -e "s|^\#! /usr/local|\#! $(PREFIX)|"
 
-default:	s9 s9.image s9.1.gz s9.1.txt libs9core.a
+default:	s9 s9.image s9.1.gz s9.1.txt libs9core.a help/apropos
 
 all:	default
 
@@ -83,6 +85,9 @@ s9.image:	s9 s9.scm ext/sys-unix/unix.scm ext/curses/curses.scm \
 libs9core.a: s9core.o
 	ar q libs9core.a s9core.o
 
+help/apropos:
+	sh util/fix-links.sh
+
 s9.1.gz:	s9.1
 	sed -e "s,@S9DIR@,$(S9DIR)," <s9.1 |gzip -9 >s9.1.gz
 
@@ -99,19 +104,19 @@ lint:
 	cc -g -Wall -ansi -pedantic -O3 s9.c s9core.c && rm a.out
 
 test:	s9 test.image
-	$(BUILD_ENV) ./s9 -i test -f util/test.scm
+	$(BUILD_ENV) ./s9 -i test.image util/test.scm
 
 libtest:	s9 test.image
 	$(BUILD_ENV) sh util/libtest.sh
 
 systest:	s9 test.image s9.image
-	$(BUILD_ENV) ./s9 -i test -f util/systest.scm
+	$(BUILD_ENV) ./s9 -i test.image util/systest.scm
 
 srtest:	s9 test.image
-	$(BUILD_ENV) ./s9 -i test -f util/srtest.scm
+	$(BUILD_ENV) ./s9 -i test.image util/srtest.scm
 
 realtest:	s9 test.image
-	$(BUILD_ENV) ./s9 -i test -f util/realtest.scm
+	$(BUILD_ENV) ./s9 -i test.image util/realtest.scm
 
 test.image:	s9 s9.scm
 	$(BUILD_ENV) ./s9 -i - $(EXTRA_SCM) -d test.image
@@ -124,7 +129,7 @@ install-all:	install-s9 install-util install-progs
 
 # old version of install(1) may need -c
 #C=-c
-install-s9:	s9 s9.scm s9.image s9.1.gz
+install-s9:	s9 s9.scm s9.image s9.1.gz libs9core.a
 	install -d -m 0755 $(S9DIR)
 	install -d -m 0755 $(S9DIR)/help
 	install -d -m 0755 $(S9DIR)/help/sys-unix
@@ -148,7 +153,6 @@ install-s9:	s9 s9.scm s9.image s9.1.gz
 	install $C -m 0644 libs9core.a $(LIBDIR)
 	install $C -m 0644 s9core.h $(INCDIR)
 	install $C -m 0644 s9import.h $(INCDIR)
-	install $C -m 0755 util/make-help-links $(S9DIR)
 
 install-util:
 	$(SETPREFIX) <prog/s9help.scm >$(BINDIR)/s9help
@@ -207,7 +211,7 @@ tabs:
 	@find . -name \*.scm -exec grep -l "	" {} \;
 
 cd:
-	./s9 -f util/check-descr.scm
+	./s9 -i s9.image -f util/check-descr.scm
 
 clean:
 	rm -f s9 s9.image libs9core.a test.image s9.1.gz *.o *.core \
@@ -216,7 +220,7 @@ clean:
 		_meta _toc.tr _xref.tr _ndx.tr
 
 new-version:
-	vi Makefile s9.c CHANGES
+	vi Makefile s9.c HISTORY
 	make s9.c
 
 update-library:
@@ -228,7 +232,7 @@ update-library:
 	cd help && s9 -f ../util/procedures.scm >INDEX
 	@echo
 	@echo "Now copy the new help pages from help-new to help"
-	@echo "and run util/make-help-links."
+	@echo "and run util/fix-links.sh"
 
 s9.1.txt:	s9.1
 	$(CC) -o rpp util/rpp.c
@@ -271,8 +275,9 @@ mksums:	clean
 
 dist:	clean s9.1.txt
 	make clean
+	cd .. && find s9 -type f | sort >s9/MANIFEST
 	cd .. && \
-		tar cf - s9 | gzip -9 > s9fes-$(RELEASE).tgz && \
+		tar cfT - s9/MANIFEST | gzip -9 > s9fes-$(RELEASE).tgz && \
 		mv s9fes-$(RELEASE).tgz s9
 	ls -l s9fes-$(RELEASE).tgz | awk '{print int($$5/1024+.5)}'
 
@@ -281,6 +286,8 @@ cdist:
 		| gzip -9 > s9core-$(RELEASE).tgz 
 
 arc:	clean s9.1.txt
-	cd .. && tar cf - s9 | gzip -9 > s9fes-$(BASE).tgz && \
+	cd .. && find s9 -type f | sort >s9/MANIFEST
+	cd .. && tar cfT - s9/MANIFEST | gzip -9 > s9fes-$(BASE).tgz && \
 		mv s9fes-$(BASE).tgz s9
+	rm MANIFEST
 	ls -l s9fes-$(BASE).tgz | awk '{print int($$5/1024+.5)}'

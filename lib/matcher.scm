@@ -27,7 +27,7 @@
 ; follows:
 ;
 ; - Atomic objects, except for symbols, match themselves;
-; - The symbol NIL matches the empty argument list (so
+; - The symbol NIL matches the empty argument list, so
 ;   (nil => foo) is equal to (=> foo);
 ; - The symbol @ binds the remaining arguments to the subsequent
 ;   symbol and ends the match successfully -- it is the matcher's
@@ -48,11 +48,11 @@
 ; top-level. LET-MATCHER binds a matcher locally. These constructs
 ; correspond to DEFINE and LETREC.
 ;
-; Example:   (begin
-;              (define-matcher len
-;                (()      => 0)
-;                ((_ . x) => (+ 1 (len x))))
-;              (len '(a b c d e f)))                  ==>  6
+; Given:     (define-matcher len
+;              (()      => 0)
+;              ((_ . x) => (+ 1 (len x))))
+;
+; Example:   (len '(a b c d e f))                     ==>  6
 ;
 ;            (let-matcher how-many
 ;              ((nil

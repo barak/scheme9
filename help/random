@@ -15,6 +15,7 @@ a different seed by running:
 RANDOM-STATE uses a 19-bit linear feedback shift register. Hence
 its limited range.
 
-(list (random 100)
-      (random 100)
-      (random 100))  ==>  (5 47 68)
+(let* ((a (random 100))
+       (b (random 100))
+       (c (random 100)))
+  (list a b c))           ==>  (5 47 68)

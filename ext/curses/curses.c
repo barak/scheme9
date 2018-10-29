@@ -11,8 +11,9 @@
 #include "s9ext.h"
 
 /*
- * XXX Because of major C "macro" preprocessor brain damage,
- * the following values have to be *copied* from s9core.h. *Sigh*
+ * XXX The C "macro" preprocessor does not allow to do this
+ * in a more consistent way, so the following values have to
+ * be *copied* from s9core.h. *Sigh*
  */
 
 #define S9_TRUE  (-2)
@@ -25,58 +26,58 @@
 #include <stdlib.h>
 #include <curses.h>
 
-int	Running = 0;
+static int	Curses_running = 0;
 
 cell pp_curs_addch(cell x) {
-	if (!Running) return UNSPECIFIC;
+	if (!Curses_running) return UNSPECIFIC;
 	addch(char_value(car(x)));
 	return UNSPECIFIC;
 }
 
 cell pp_curs_addstr(cell x) {
-	if (!Running) return UNSPECIFIC;
+	if (!Curses_running) return UNSPECIFIC;
 	addstr(string(car(x)));
 	return UNSPECIFIC;
 }
 
 cell pp_curs_attrset(cell x) {
-	if (!Running) return UNSPECIFIC;
+	if (!Curses_running) return UNSPECIFIC;
 	attrset(integer_value("curs:attrset", car(x)));
 	return UNSPECIFIC;
 }
 
 cell pp_curs_beep(cell x) {
-	if (!Running) return UNSPECIFIC;
+	if (!Curses_running) return UNSPECIFIC;
 	beep();
 	return UNSPECIFIC;
 }
 
 cell pp_curs_cbreak(cell x) {
-	if (!Running) return UNSPECIFIC;
+	if (!Curses_running) return UNSPECIFIC;
 	cbreak();
 	return UNSPECIFIC;
 }
 
 cell pp_curs_clear(cell x) {
-	if (!Running) return UNSPECIFIC;
+	if (!Curses_running) return UNSPECIFIC;
 	clear();
 	return UNSPECIFIC;
 }
 
 cell pp_curs_clearok(cell x) {
-	if (!Running) return UNSPECIFIC;
+	if (!Curses_running) return UNSPECIFIC;
 	clearok(stdscr, car(x) == S9_TRUE? TRUE: FALSE);
 	return UNSPECIFIC;
 }
 
 cell pp_curs_clrtobot(cell x) {
-	if (!Running) return UNSPECIFIC;
+	if (!Curses_running) return UNSPECIFIC;
 	clrtobot();
 	return UNSPECIFIC;
 }
 
 cell pp_curs_clrtoeol(cell x) {
-	if (!Running) return UNSPECIFIC;
+	if (!Curses_running) return UNSPECIFIC;
 	clrtoeol();
 	return UNSPECIFIC;
 }
@@ -86,50 +87,50 @@ cell pp_curs_cols(cell x) {
 }
 
 cell pp_curs_cursoff(cell x) {
-	if (!Running) return UNSPECIFIC;
+	if (!Curses_running) return UNSPECIFIC;
 	curs_set(0);
 	return UNSPECIFIC;
 }
 
 cell pp_curs_curson(cell x) {
-	if (!Running) return UNSPECIFIC;
+	if (!Curses_running) return UNSPECIFIC;
 	curs_set(1);
 	return UNSPECIFIC;
 }
 
 cell pp_curs_delch(cell x) {
-	if (!Running) return UNSPECIFIC;
+	if (!Curses_running) return UNSPECIFIC;
 	delch();
 	return UNSPECIFIC;
 }
 
 cell pp_curs_deleteln(cell x) {
-	if (!Running) return UNSPECIFIC;
+	if (!Curses_running) return UNSPECIFIC;
 	deleteln();
 	return UNSPECIFIC;
 }
 
 cell pp_curs_echo(cell x) {
-	if (!Running) return UNSPECIFIC;
+	if (!Curses_running) return UNSPECIFIC;
 	echo();
 	return UNSPECIFIC;
 }
 
 cell pp_curs_endwin(cell x) {
-	if (!Running) return UNSPECIFIC;
+	if (!Curses_running) return UNSPECIFIC;
 	endwin();
-	Running = 0;
+	Curses_running = 0;
 	return UNSPECIFIC;
 }
 
 cell pp_curs_flash(cell x) {
-	if (!Running) return UNSPECIFIC;
+	if (!Curses_running) return UNSPECIFIC;
 	flash();
 	return UNSPECIFIC;
 }
 
 cell pp_curs_flushinp(cell x) {
-	if (!Running) return UNSPECIFIC;
+	if (!Curses_running) return UNSPECIFIC;
 	flushinp();
 	return UNSPECIFIC;
 }
@@ -152,14 +153,15 @@ cell pp_curs_get_magic_value(cell x) {
 	if (!strcmp(s, "KEY_PPAGE")) return make_integer(KEY_PPAGE);
 	if (!strcmp(s, "KEY_RIGHT")) return make_integer(KEY_RIGHT);
 	if (!strcmp(s, "KEY_UP")) return make_integer(KEY_UP);
-	return error("curs:get-magic-value: requested value not found",
-			car(x));
+	error("curs:get-magic-value: requested value not found",
+		car(x));
+	return UNDEFINED;
 }
 
 cell pp_curs_getch(cell x) {
 	int	c;
 
-	if (!Running) return UNSPECIFIC;
+	if (!Curses_running) return UNSPECIFIC;
 	c = getch();
 	if (c == ERR)
 		return S9_FALSE;
@@ -170,7 +172,7 @@ cell pp_curs_getyx(cell x) {
 	int	cx, cy;
 	cell	n;
 
-	if (!Running) return UNSPECIFIC;
+	if (!Curses_running) return UNSPECIFIC;
 	getyx(stdscr, cy, cx);
 	n = make_integer(cx);
 	n = cons(n, NIL);
@@ -181,18 +183,18 @@ cell pp_curs_getyx(cell x) {
 }
 
 cell pp_curs_idlok(cell x) {
-	if (!Running) return UNSPECIFIC;
+	if (!Curses_running) return UNSPECIFIC;
 	idlok(stdscr, car(x) == S9_TRUE? TRUE: FALSE);
 	return UNSPECIFIC;
 }
 
 cell pp_curs_inch(cell x) {
-	if (!Running) return UNSPECIFIC;
+	if (!Curses_running) return UNSPECIFIC;
 	return make_char(inch());
 }
 
 cell pp_curs_insch(cell x) {
-	if (!Running) return UNSPECIFIC;
+	if (!Curses_running) return UNSPECIFIC;
 	insch(char_value(car(x)));
 	return UNSPECIFIC;
 }
@@ -205,7 +207,7 @@ cell pp_curs_initscr(cell x) {
 			 COLOR_YELLOW, COLOR_WHITE };
 	int	f, b;
 
-	if (Running) return UNSPECIFIC;
+	if (Curses_running) return UNSPECIFIC;
 	initscr();
 	start_color();
 	for (b=0; b<8; b++) {
@@ -213,7 +215,7 @@ cell pp_curs_initscr(cell x) {
 			init_pair(b*8+f, colors[f], colors[b]);
 		}
 	}
-	Running = 1;
+	Curses_running = 1;
 	return UNSPECIFIC;
 }
 
@@ -237,22 +239,22 @@ cell pp_curs_has_colors(cell x) {
 	return S9_FALSE;
 }
 cell pp_curs_initscr(cell x) {
-	if (Running) return UNSPECIFIC;
+	if (Curses_running) return UNSPECIFIC;
 	initscr();
-	Running = 1;
+	Curses_running = 1;
 	return UNSPECIFIC;
 }
 
 #endif /* !CURSES_COLOR */
 
 cell pp_curs_insertln(cell x) {
-	if (!Running) return UNSPECIFIC;
+	if (!Curses_running) return UNSPECIFIC;
 	insertln();
 	return UNSPECIFIC;
 }
 
 cell pp_curs_keypad(cell x) {
-	if (!Running) return UNSPECIFIC;
+	if (!Curses_running) return UNSPECIFIC;
 	keypad(stdscr, car(x) == S9_TRUE? TRUE: FALSE);
 	return UNSPECIFIC;
 }
@@ -264,7 +266,7 @@ cell pp_curs_lines(cell x) {
 cell pp_curs_move(cell x) {
 	char	name[] = "curs:move";
 
-	if (!Running) return UNSPECIFIC;
+	if (!Curses_running) return UNSPECIFIC;
 	move(integer_value(name, car(x)), integer_value(name, cadr(x)));
 	return UNSPECIFIC;
 }
@@ -272,7 +274,7 @@ cell pp_curs_move(cell x) {
 cell pp_curs_mvaddch(cell x) {
 	char	name[] = "curs:mvaddch";
 
-	if (!Running) return UNSPECIFIC;
+	if (!Curses_running) return UNSPECIFIC;
 	mvaddch(integer_value(name, car(x)),
 		integer_value(name, cadr(x)),
 		char_value(caddr(x)));
@@ -282,7 +284,7 @@ cell pp_curs_mvaddch(cell x) {
 cell pp_curs_mvaddstr(cell x) {
 	char	name[] = "curs:mvaddstr";
 
-	if (!Running) return UNSPECIFIC;
+	if (!Curses_running) return UNSPECIFIC;
 	mvaddstr(integer_value(name, car(x)),
 		integer_value(name, cadr(x)),
 		string(caddr(x)));
@@ -292,10 +294,10 @@ cell pp_curs_mvaddstr(cell x) {
 cell pp_curs_mvcur(cell x) {
 	char	name[] = "curs:mvcur";
 
-	if (!Running) return UNSPECIFIC;
+	if (!Curses_running) return UNSPECIFIC;
 	if (!integer_p(cadddr(x)))
-		return error("curs:mvcur: expected integer, got",
-				caddr(cdr(x)));
+		error("curs:mvcur: expected integer, got",
+			caddr(cdr(x)));
 	mvcur(integer_value(name, car(x)),
 		integer_value(name, cadr(x)),
 		integer_value(name, caddr(x)),
@@ -306,7 +308,7 @@ cell pp_curs_mvcur(cell x) {
 cell pp_curs_mvdelch(cell x) {
 	char	name[] = "curs:mvdelch";
 
-	if (!Running) return UNSPECIFIC;
+	if (!Curses_running) return UNSPECIFIC;
 	mvdelch(integer_value(name, car(x)),
 		integer_value(name, cadr(x)));
 	return UNSPECIFIC;
@@ -316,7 +318,7 @@ cell pp_curs_mvgetch(cell x) {
 	char	name[] = "curs:mvgetch";
 	int	c;
 
-	if (!Running) return UNSPECIFIC;
+	if (!Curses_running) return UNSPECIFIC;
 	c = mvgetch(integer_value(name, car(x)),
 			integer_value(name, cadr(x)));
 	if (c == ERR)
@@ -327,7 +329,7 @@ cell pp_curs_mvgetch(cell x) {
 cell pp_curs_mvinch(cell x) {
 	char	name[] = "curs:mvinch";
 
-	if (!Running) return UNSPECIFIC;
+	if (!Curses_running) return UNSPECIFIC;
 	return make_char((int) mvinch(integer_value(name, car(x)),
 			integer_value(name, cadr(x))));
 }
@@ -335,7 +337,7 @@ cell pp_curs_mvinch(cell x) {
 cell pp_curs_mvinsch(cell x) {
 	char	name[] = "curs:mvinsch";
 
-	if (!Running) return UNSPECIFIC;
+	if (!Curses_running) return UNSPECIFIC;
 	mvinsch(integer_value(name, car(x)),
 		integer_value(name, cadr(x)),
 		char_value(caddr(x)));
@@ -343,73 +345,73 @@ cell pp_curs_mvinsch(cell x) {
 }
 
 cell pp_curs_nl(cell x) {
-	if (!Running) return UNSPECIFIC;
+	if (!Curses_running) return UNSPECIFIC;
 	nl();
 	return UNSPECIFIC;
 }
 
 cell pp_curs_nocbreak(cell x) {
-	if (!Running) return UNSPECIFIC;
+	if (!Curses_running) return UNSPECIFIC;
 	nocbreak();
 	return UNSPECIFIC;
 }
 
 cell pp_curs_nodelay(cell x) {
-	if (!Running) return UNSPECIFIC;
+	if (!Curses_running) return UNSPECIFIC;
 	nodelay(stdscr, car(x) == S9_TRUE? TRUE: FALSE);
 	return UNSPECIFIC;
 }
 
 cell pp_curs_noecho(cell x) {
-	if (!Running) return UNSPECIFIC;
+	if (!Curses_running) return UNSPECIFIC;
 	noecho();
 	return UNSPECIFIC;
 }
 
 cell pp_curs_nonl(cell x) {
-	if (!Running) return UNSPECIFIC;
+	if (!Curses_running) return UNSPECIFIC;
 	nonl();
 	return UNSPECIFIC;
 }
 
 cell pp_curs_noraw(cell x) {
-	if (!Running) return UNSPECIFIC;
+	if (!Curses_running) return UNSPECIFIC;
 	noraw();
 	return UNSPECIFIC;
 }
 
 cell pp_curs_raw(cell x) {
-	if (!Running) return UNSPECIFIC;
+	if (!Curses_running) return UNSPECIFIC;
 	raw();
 	return UNSPECIFIC;
 }
 
 cell pp_curs_refresh(cell x) {
-	if (!Running) return UNSPECIFIC;
+	if (!Curses_running) return UNSPECIFIC;
 	refresh();
 	return UNSPECIFIC;
 }
 
 cell pp_curs_resetty(cell x) {
-	if (!Running) return UNSPECIFIC;
+	if (!Curses_running) return UNSPECIFIC;
 	resetty();
 	return UNSPECIFIC;
 }
 
 cell pp_curs_savetty(cell x) {
-	if (!Running) return UNSPECIFIC;
+	if (!Curses_running) return UNSPECIFIC;
 	savetty();
 	return UNSPECIFIC;
 }
 
 cell pp_curs_scroll(cell x) {
-	if (!Running) return UNSPECIFIC;
+	if (!Curses_running) return UNSPECIFIC;
 	scrl(integer_value("curs:scroll", car(x)));
 	return UNSPECIFIC;
 }
 
 cell pp_curs_scrollok(cell x) {
-	if (!Running) return UNSPECIFIC;
+	if (!Curses_running) return UNSPECIFIC;
 	scrollok(stdscr, car(x) == S9_TRUE? TRUE: FALSE);
 	return UNSPECIFIC;
 }
@@ -417,13 +419,13 @@ cell pp_curs_scrollok(cell x) {
 cell pp_curs_unctrl(cell x) {
 	char	*s;
 
-	if (!Running) return UNSPECIFIC;
+	if (!Curses_running) return UNSPECIFIC;
 	s = (char *) unctrl(integer_value("curs:unctrl", car(x)));
 	return make_string(s, strlen(s));
 }
 
 cell pp_curs_ungetch(cell x) {
-	if (!Running) return UNSPECIFIC;
+	if (!Curses_running) return UNSPECIFIC;
 	ungetch(integer_value("curs:ungetch", car(x)));
 	return UNSPECIFIC;
 }

@@ -1,6 +1,6 @@
 ; Scheme 9 from Empty Space, Unix Function Library
-; By Nils M Holm, 2010,2012
-; Placed in the Public Domain
+; By Nils M Holm, 2010, 2012, 2018
+; In the public domain
 ;
 ; (runtime-stats procedure <option> ...)  ==>  list
 ;
@@ -9,15 +9,15 @@
 ; containing the data it gathered. Each entry of the list has
 ; the following form:
 ;
-;       (value (seconds microsecs) reductions conses nodes gcs)
+;       (value (seconds microsecs) conses nodes vcells gcs)
 ;
 ; VALUE is the valued passed to the procedure. The sum of SECONDS
 ; and MICROSECS is the time the procedure took to complete.
-; REDUCTIONS is the number of reductions (i.e.: primitive S9
-; operations) that the compuation of the procedure value took.
 ; CONSES and NODES are the number of cons cells and the total
-; amount of storage allocated, respectively. GCs is the number
-; of garbage collections performed during the computation.
+; amount of node storage allocated, respectively. VCELLS is the
+; total number of vector cells allocated (which is used for
+; strings, vectors, and symbol names).GCs is the number of
+; garbage collections performed during the computation.
 ;
 ; The following options are used to pass ranges to RUNTIME-STATS:
 ;
@@ -30,8 +30,7 @@
 ;
 ; 'PLOT: SYMBOL    Instead of returning the data, plot them.
 ;                  SYMBOL is used to specify the field to plot:
-;                  'VALUE, 'TIME, 'REDUCTIONS, 'CONSES, 'STORAGE
-;                  'GC.
+;                  'VALUE, 'TIME, 'CONSES, 'NODES, VCELLS, 'GC.
 ; 'WIDTH: INTEGER  The width and height of the graph printed by
 ; 'HEIGHT: INTEGER the 'PLOT: option (default: h x w = 77x22 plus
 ;                  border).
@@ -77,7 +76,7 @@
 
   (:make-aliases)
 
-  (define data-names '(value time reductions conses storage gcs))
+  (define data-names '(value time nodes conses vcells gcs))
 
   (define (map-data-ref data what)
     (let* ((pos  (posq what data-names))

@@ -6,4 +6,4 @@ is specified, use it to initialize a random state (see RANDOM).
 When no seed or the same seed is specified, RANDOM-SORT will
 always deliver the same permutation.
 
-(random-sort '(1 2 3 4 5))  ==>  (2 3 5 1 4)
+(random-sort '(1 2 3 4 5))  ==>  (2 5 1 4 3)

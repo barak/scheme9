@@ -14,12 +14,12 @@
 ; Expressions inside of USING may use all <name_i>'s that are
 ; being imported from the module <name>.
 ;
-; Example:   (begin ; Note: BEGIN is only needed for automatic testing
-;              (module math
-;                (define* (fact x)
-;                  (if (= 0 x) 1 (* x (fact (- x 1))))))
-;              (using math (fact)
-;                (fact 5)))                               ==> 120
+; Given:     (module math
+;              (define* (fact x)
+;                (if (= 0 x) 1 (* x (fact (- x 1))))))
+;
+; Example:   (using math (fact)
+;              (fact 5))         ==> 120
 
 (load-from-library "syntax-rules.scm")
 
