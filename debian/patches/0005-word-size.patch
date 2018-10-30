@@ -1,0 +1,31 @@
+From: "Barak A. Pearlmutter" <barak+git@pearlmutter.net>
+Date: Tue, 30 Oct 2018 18:01:44 +0000
+Subject: word size
+
+---
+ s9core.h | 12 ++++++++++++
+ 1 file changed, 12 insertions(+)
+
+diff --git a/s9core.h b/s9core.h
+index 2905b23..aa904b2 100644
+--- a/s9core.h
++++ b/s9core.h
+@@ -29,6 +29,18 @@
+ #define MAXPATHLEN 4096
+ #endif
+ 
++/* Patch to determine word size.  Should maybe check pointer size instead? */
++#include <stdint.h>
++#if __WORDSIZE == 64
++ #define S9_BITS_PER_WORD_64
++#endif
++#if __WORDSIZE == 32
++ #define S9_BITS_PER_WORD_32
++#endif
++#if __WORDSIZE == 16
++ #define S9_BITS_PER_WORD_16
++#endif
++
+ /*
+  * Ugly prelude to figure out if
+  * we are compiling on a Un*x system.
