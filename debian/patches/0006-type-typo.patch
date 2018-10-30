@@ -1,0 +1,21 @@
+From: "Barak A. Pearlmutter" <barak+git@pearlmutter.net>
+Date: Tue, 30 Oct 2018 18:13:38 +0000
+Subject: type typo
+
+---
+ s9core.c | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
+
+diff --git a/s9core.c b/s9core.c
+index 891574c..9ce901b 100644
+--- a/s9core.c
++++ b/s9core.c
+@@ -783,7 +783,7 @@ void add_symhash(cell x) {
+ 	vector(Symhash)[0] = new;
+ }
+ 
+-int s9_find_symbol(char *s) {
++s9_cell s9_find_symbol(char *s) {
+ 	unsigned int	h, k;
+ 	cell		n;
+ 
