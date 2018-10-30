@@ -1,3 +1,12 @@
+scheme9 (2018.10.28-1) unstable; urgency=medium
+
+  * New upstream version
+  * Forward port patches
+  * Add somewhat-portable word size determination patch
+  * Patch declaration bug
+
+ -- Barak A. Pearlmutter <bap@debian.org>  Tue, 30 Oct 2018 18:15:24 +0000
+
 scheme9 (2018.08.23-1) unstable; urgency=medium
 
   * New upstream version
