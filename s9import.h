@@ -40,6 +40,7 @@
 #define T_SYNTAX	S9_T_SYNTAX
 #define T_VECTOR	S9_T_VECTOR
 #define T_CONTINUATION	S9_T_CONTINUATION
+#define T_FIXNUM	S9_T_FIXNUM
 #define T_NONE		S9_T_NONE
 
 #define USER_SPECIALS	S9_USER_SPECIALS
@@ -56,6 +57,7 @@
 #define vector_size	s9_vector_size
 #define vector_len	s9_vector_len
 #define port_no		s9_port_no
+#define fixval		s9_fixval
 #define char_value	s9_char_value
 #define prim_slot	s9_prim_slot
 #define prim_info	s9_prim_info
@@ -119,6 +121,7 @@
 #define function_p	s9_function_p
 #define continuation_p	s9_continuation_p
 #define real_p		s9_real_p
+#define fix_p		s9_fix_p
 #define char_p		s9_char_p
 #define syntax_p	s9_syntax_p
 #define input_port_p	s9_input_port_p
@@ -206,6 +209,7 @@
  #define make_symbol		s9_make_symbol
  #define make_vector		s9_make_vector
  #define mem_error_handler	s9_mem_error_handler
+ #define mkfix			s9_mkfix
  #define new_port		s9_new_port
  #define new_vec		s9_new_vec
  #define open_input_port	s9_open_input_port

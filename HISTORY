@@ -1,4 +1,72 @@
 
+2018-11-01
+
+	Cleaned up help directory: removed left-over pages, linked
+	missing pages. Reorganized the help system structure so that
+	no links, symlinks, or duplicate files are needed. INDEX
+	files are now local to subdirectories of help/.
+
+	Retired FIND-HELP-PATH and FIND-HELP procedures from the
+	SYS-UNIX extension.
+
+	Retired S9SYMBOLS command. (prog/)
+
+	Added FIND-HELP-PAGE procedure , which returns the full path
+	of the help file describing a given syntactic keyword or
+	procedure (or #F if no such page exists). (lib/)
+
+	Added SCAN-HELP-PAGES procedure, which searches all help pages
+	for a given keyword. This procedure replaces FIND-HELP. Unlike
+	FIND-HELP it does not require the SYS-UNIX extension. (lib/)
+
+	Updated S9HELP command and added -c (check database) option.
+	(prog/)
+
+-------------------------------------------------------------------------------
+	Major Change: argument passing to extension procedures
+-------------------------------------------------------------------------------
+
+2018-10-31
+
+	As of this release, arguments to extension procedures (extprocs)
+	are passed on the stack. In functions implementing extprocs, the
+	n'th argument is now retrieved by calling parg(n). The number
+	of arguments is returned by narg(). The extproc handler type
+	was changed from  cell (*f)(cell x)  to  cell (f)(void).
+
+	All extproc handlers need to be adapted to use the new calling
+	conventions. The csv, curses, and sys-unix extensions already
+	have been modified accordingly.
+
+	Rationale:
+
+	In previous versions of S9fES arguments were passed as lists.
+	This method was still used in S9 Reimagined when applying
+	extension procecures. However, this approach required to
+	convert arguments on the stack to lists before passing them
+	to extension procedures. This caused unnecessary consing.
+
+2018-10-30
+
+	Retired Plan 9 system extension (ext/sys-plan9). Please see
+	https://github.com/bakul/s9fes for a more up to date version.
+
+	Note that S9fES will continue to compile and run on Plan 9,
+	but the stock version will no longer provide functions like
+	SYS:OPEN, SYS:BIND, etc. Use Bakul's version if you need
+	those!
+
+	Replaced symlinks in help/ with links (which will hopefully
+	extract to copies on non-Unix systems).
+
+2018-10-29
+
+	Added bytecode disassembler. (lib/disassemble.scm)
+
+	Fixed a bug in the library test suite ("make libtest") that
+	would report a failed image load when upgrading to a new
+	version. (util/)
+
 2018-10-28
 
 	Added system() function for Plan 9 to S9core. Thanks, Bakul!

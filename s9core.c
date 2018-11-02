@@ -1,5 +1,5 @@
 /*
- * S9core Toolkit, Mk IVa
+ * S9core Toolkit, Mk IVb
  * By Nils M Holm, 2007-2018
  * In the public domain
  *
@@ -10,6 +10,7 @@
 #include "s9core.h"
 #define S9_S9CORE
 #include "s9import.h"
+#include "s9ext.h"
 
 /*
  * Global state
@@ -850,6 +851,13 @@ cell s9_make_string(char *s, int k) {
 cell s9_make_vector(int k) {
 	if (0 == k) return Nullvec;
 	return s9_new_vec(T_VECTOR, k * sizeof(cell));
+}
+
+cell s9_mkfix(int v) {
+	cell	n;
+
+	n = new_atom(v, NIL);
+	return new_atom(T_FIXNUM, n);
 }
 
 cell s9_make_integer(cell i) {
@@ -2672,12 +2680,12 @@ static char *wrongargs(char *name, char *what) {
 	return buf;
 }
 
-char *s9_typecheck(cell f, cell a) {
+char *s9_typecheck(cell f) {
 	S9_PRIM	*p;
-	int	k, na, i;
+	int	na, i, k;
 
+	k = narg();
 	p = prim_info(f);
-	k = s9_length(a);
 	if (k < p->min_args)
 		return wrongargs(p->name, "few");
 	if (k > p->max_args && p->max_args >= 0)
@@ -2692,67 +2700,66 @@ char *s9_typecheck(cell f, cell a) {
 		case T_ANY:
 			break;
 		case T_BOOLEAN:
-			if (!boolean_p(car(a)))
+			if (!boolean_p(parg(i)))
 				return expected(i, f, "boolean");
 			break;
 		case T_CHAR:
-			if (!char_p(car(a)))
+			if (!char_p(parg(i)))
 				return expected(i, f, "char");
 			break;
 		case T_INPUT_PORT:
-			if (!input_port_p(car(a)))
+			if (!input_port_p(parg(i)))
 				return expected(i, f, "input-port");
 			break;
 		case T_INTEGER:
-			if (!integer_p(car(a)))
+			if (!integer_p(parg(i)))
 				return expected(i, f, "integer");
 			break;
 		case T_OUTPUT_PORT:
-			if (!output_port_p(car(a)))
+			if (!output_port_p(parg(i)))
 				return expected(i, f, "output-port");
 			break;
 		case T_PAIR:
-			if (atom_p(car(a)))
+			if (atom_p(parg(i)))
 				return expected(i, f, "pair");
 			break;
 		case T_LIST:
-			if (car(a) != NIL && atom_p(car(a)))
+			if (parg(i) != NIL && atom_p(parg(i)))
 				return expected(i, f, "list");
 			break;
 		case T_FUNCTION:
-			if (	!function_p(car(a)) &&
-				!primitive_p(car(a)) &&
-				!continuation_p(car(a))
+			if (	!function_p(parg(i)) &&
+				!primitive_p(parg(i)) &&
+				!continuation_p(parg(i))
 			)
 				return expected(i, f, "function");
 			break;
 		case T_REAL:
-			if (!integer_p(car(a)) && !real_p(car(a)))
+			if (!integer_p(parg(i)) && !real_p(parg(i)))
 				return expected(i, f, "number");
 			break;
 		case T_STRING:
-			if (!string_p(car(a)))
+			if (!string_p(parg(i)))
 				return expected(i, f, "string");
 			break;
 		case T_SYMBOL:
-			if (!symbol_p(car(a)))
+			if (!symbol_p(parg(i)))
 				return expected(i, f, "symbol");
 			break;
 		case T_VECTOR:
-			if (!vector_p(car(a)))
+			if (!vector_p(parg(i)))
 				return expected(i, f, "vector");
 			break;
 		}
-		a = cdr(a);
 	}
 	return NULL;
 }
 
-cell s9_apply_prim(cell f, cell a) {
+cell s9_apply_prim(cell f) {
 	S9_PRIM	*p;
 
 	p = prim_info(f);
-	return (*p->handler)(a);
+	return (*p->handler)();
 }
 
 /*

@@ -1110,10 +1110,6 @@ cell pp_sys_magic_const(cell x) {
 	return FALSE;
 }
 
-int system(const char* cmd) {
-	return 1;
-}
-
 S9_PRIM Plan9_primitives[] = {
  {"sys:alarm",      pp_sys_alarm,      1, 1, { INT,___,___ } },
  {"sys:await",      pp_sys_await,      0, 0, { ___,___,___ } },

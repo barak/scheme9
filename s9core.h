@@ -1,5 +1,5 @@
 /*
- * S9core Toolkit, Mk IV
+ * S9core Toolkit, Mk IVb
  * By Nils M Holm, 2007-2018
  * In the public domain
  *
@@ -221,6 +221,7 @@
 #define S9_T_SYNTAX		(-23)
 #define S9_T_VECTOR		(-24)
 #define S9_T_CONTINUATION	(-25)
+#define S9_T_FIXNUM		(-26)
 #define S9_T_NONE		(-99)
 
 #define S9_USER_SPECIALS	(-100)
@@ -237,7 +238,7 @@ struct S9_counter {
 
 struct S9_primitive {
 	char	*name;
-	s9_cell	(*handler)(s9_cell expr);
+	s9_cell	(*handler)(void);
 	int	min_args;
 	int	max_args;	/* -1 = variadic */
 	int	arg_types[3];
@@ -266,6 +267,7 @@ struct S9_primitive {
 #define s9_vector_index(n)	(Vectors[S9_cdr[n] - 2])
 #define s9_vector_size(k)	(((k)+sizeof(s9_cell)-1) / sizeof(s9_cell) + 3)
 #define s9_vector_len(n)	(vector_size(string_len(n)) - 3)
+#define s9_fixval(x)		cadr(x)
 #define s9_port_no(n)		(cadr(n))
 #define s9_char_value(n)	(cadr(n))
 #define s9_prim_slot(n)		(cadr(n))
@@ -336,6 +338,8 @@ struct S9_primitive {
 	 car(n) == S9_T_CONTINUATION)
 #define s9_real_p(n) \
 	(!s9_special_p(n) && (tag(n) & S9_ATOM_TAG) && car(n) == S9_T_REAL)
+#define s9_fix_p(n) \
+        (!s9_special_p(n) && (tag(n) & S9_ATOM_TAG) && T_FIXNUM == car(n))
 #define s9_char_p(n) \
 	(!s9_special_p(n) && (tag(n) & S9_ATOM_TAG) && car(n) == S9_T_CHAR)
 #define s9_syntax_p(n) \
@@ -447,7 +451,7 @@ extern int	S9_error;
 
 void	s9_abort(void);
 void	s9_add_image_vars(s9_cell **v);
-s9_cell	s9_apply_prim(s9_cell f, s9_cell a);
+s9_cell	s9_apply_prim(s9_cell f);
 s9_cell	s9_argv_to_list(char **argv);
 long	s9_asctol(char *s);
 s9_cell	s9_bignum_abs(s9_cell a);
@@ -507,6 +511,7 @@ s9_cell	s9_make_real(int sign, s9_cell exp, s9_cell mant);
 s9_cell	s9_make_string(char *s, int k);
 s9_cell	s9_make_symbol(char *s, int k);
 s9_cell	s9_make_vector(int k);
+s9_cell	s9_mkfix(s9_cell i);
 int	s9_new_port(void);
 s9_cell	s9_new_vec(s9_cell type, int size);
 int	s9_open_input_port(char *path);
@@ -566,7 +571,7 @@ s9_cell	s9_string_to_symbol(s9_cell x);
 s9_cell	s9_symbol_ref(char *s);
 s9_cell	s9_symbol_table(void);
 s9_cell	s9_symbol_to_string(s9_cell x);
-char	*s9_typecheck(s9_cell f, s9_cell a);
+char	*s9_typecheck(s9_cell f);
 int	s9_unlock_port(int port);
 s9_cell	s9_unsave(int k);
 void	s9_writec(int c);

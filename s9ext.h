@@ -6,6 +6,12 @@
  * Interface for extension procedures.
  */
 
+extern cell	Rts;
+extern int	Sp;
+
+#define parg(n)	car(vector(Rts)[Sp-(n)])
+#define narg()	fixval(vector(Rts)[Sp])
+
 #define BOL T_BOOLEAN  
 #define CHR T_CHAR     
 #define INP T_INPUT_PORT
