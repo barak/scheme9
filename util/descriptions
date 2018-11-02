@@ -31,6 +31,7 @@ data-structures.scm|-|Various data structures|-
 define-structure.scm|define-structure|-|Define structure types
 depth.scm|depth|-|Compute depth of an object
 dirname.scm|dirname|-|Extract the directory part of a path
+disassemble.scm|-|S9fES bytecode disassembler|-
 displaystar.scm|display*|-|Display multiple objects
 draw-tree.scm|draw-tree|-|Draw S-expressions in box notation
 dupes.scm|-|Find duplicate file names|-
@@ -43,6 +44,7 @@ explode.scm|explode|-|Explode symbols
 factor.scm|factor|-|Compute prime factors
 factorial.scm|factorial|-|Compute factorials
 filter.scm|filter|-|Extract objects from lists
+find-help-page.scm|find-help-page|-|Locate pages in the online help database
 find-help-path.scm|find-help-path|-|Locate the S9fES online help pages
 find-help.scm|find-help|-|Search S9fES online help pages
 flatten.scm|flatten|-|Convert trees to flat lists
@@ -99,8 +101,6 @@ package.scm|-|First-class packages|-
 parse-optionsb.scm|-|Parse command line options|-
 partition.scm|partition|-|Partition lists
 permute.scm|permute|-|Generate permutations of sets
-plan9-tools.scm|-|Plan 9 system tools|-
-plan9.scm|-|S9fES Plan 9 interface|-
 position.scm|-|Find positions of list elements|-
 pretty-print.scm|-|Pretty printer|-
 procedures.scm|-|Collect procedure names from help files|-
@@ -133,6 +133,7 @@ s9hts.scm|-|Hypertext server|-
 s9resolve.scm|-|Resolve S9fES library references|-
 s9sos.scm|-|S9fES Simple Object System|-
 s9symbols.scm|-|Extract S9 symbols from help pages|-
+scan-help-pages.scm|scan-help-pages|-|Search help pages for keywords
 scm2html.scm|-|Render Scheme code in HTML|-
 scm2html1.scm|-|SCM2HTML command line wrapper|-
 scmpp.scm|-|PRETTY-PRINT command line wrapper|-

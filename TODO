@@ -1,7 +1,11 @@
 
-	- Plan 9 build
+	- document in s9core.txt: mkfix, fixval, fix_p
 
-	- disassembler
+	- factor out make-help-index
+
+	- list->set: use hash table
+
+	- s9core: int_to_bignum(), bignum_to_int()
 
 	- clean up the library
 
