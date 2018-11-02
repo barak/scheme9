@@ -1,3 +1,11 @@
+scheme9 (2018.11.01-1) unstable; urgency=medium
+
+  * New upstream version
+  * Disable encryption in uscan until server grows longer keys
+  * Forward port patches
+
+ -- Barak A. Pearlmutter <bap@debian.org>  Fri, 02 Nov 2018 10:01:45 +0000
+
 scheme9 (2018.10.28-1) unstable; urgency=medium
 
   * New upstream version
