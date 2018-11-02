@@ -7,10 +7,10 @@ Subject: type typo
  1 file changed, 1 insertion(+), 1 deletion(-)
 
 diff --git a/s9core.c b/s9core.c
-index 891574c..9ce901b 100644
+index a43b8a5..a256d29 100644
 --- a/s9core.c
 +++ b/s9core.c
-@@ -783,7 +783,7 @@ void add_symhash(cell x) {
+@@ -784,7 +784,7 @@ void add_symhash(cell x) {
  	vector(Symhash)[0] = new;
  }
  
