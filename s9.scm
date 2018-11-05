@@ -506,7 +506,8 @@
           (if (inexact? y)
               (if (positive? y)
                   0
-                  (/ 1 0))
+                  (error "expt: range error"
+                         (cons x (cons y '()))))
               (expt2 x y)))
         ((integer? y)
           (expt2 x y))
@@ -553,7 +554,7 @@
     (let ((x (/ (- x 1) (+ x 1))))
       (l-series6 x y x r last lim)))
   (cond ((not (positive? x))
-          (/ 0))
+          (error "log: range error" x))
         ((< 0.1 x 5)
           (l-series x 1 0.0 1.0 #f))
         (else

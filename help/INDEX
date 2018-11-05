@@ -149,6 +149,7 @@
   canvas-plot-line)
  (make-hash-table alist->hash-table hash-table->alist hash-table-length
   hash-table-ref hash-table-remove! hash-table-set!)
+ (make-help-index)
  (make-partitions)
  (make-queue queue! queue-empty? unqueue! unqueue*)
  (make-rbt rbt-find rbt-insert rbt-rebuild rbt-remove)

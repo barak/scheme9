@@ -9,8 +9,8 @@
 extern cell	Rts;
 extern int	Sp;
 
-#define parg(n)	car(vector(Rts)[Sp-(n)])
-#define narg()	fixval(vector(Rts)[Sp])
+#define parg(n)	car(vector(*GC_stack)[*GC_stkptr-(n)])
+#define narg()	fixval(vector(*GC_stack)[*GC_stkptr])
 
 #define BOL T_BOOLEAN  
 #define CHR T_CHAR     

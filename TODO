@@ -1,19 +1,7 @@
 
-	- document in s9core.txt: mkfix, fixval, fix_p
-
-	- factor out make-help-index
-
-	- list->set: use hash table
-
-	- s9core: int_to_bignum(), bignum_to_int()
-
 	- clean up the library
 
 	- review systest
-
-	- optimizations:
-		variadic string-append
-		variadic vector-append
 
 	- EDOC: handle white space in block comments properly
 

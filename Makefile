@@ -8,7 +8,7 @@ PREFIX= /u
 
 # Base version and Release
 BASE=		20181030
-RELEASE=	20181101
+RELEASE=	20181104
 
 # Override default compiler and flags
 CC=	cc
@@ -36,7 +36,6 @@ EXTRA_INIT+=	csv_init();
 EXTRA_LIBS+=
 
 # Options to be added to $(DEFS)
-#	-DS9_BITS_PER_WORD_64	# 64-bit build (don't do this!)
 #	-DLIBRARY_PATH="\"dir:...\""
 #				# search path for LOCATE-FILE, etc
 #	-DIMAGE_DIR="\"dir\""	# location of image file
@@ -211,7 +210,7 @@ cd:
 	./s9 -i ./s9.image -f util/check-descr.scm
 
 clean:
-	rm -f s9 s9.image libs9core.a test.image s9.1.gz *.o *.core \
+	rm -f s9 s9.image libs9core.a test.image s9.1.gz *.o *.core a.out \
 		CATEGORIES.html HACKING.html core s9fes-$(RELEASE).tgz \
 		s9fes-$(BASE).tgz s9core-$(RELEASE).tgz __testfile__ \
 		_meta _toc.tr _xref.tr _ndx.tr

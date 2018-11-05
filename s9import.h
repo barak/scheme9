@@ -1,5 +1,5 @@
 /*
- * S9core Toolkit, Mk IV
+ * S9core Toolkit, Mk IVc
  * By Nils M Holm, 2007-2018
  * In the public domain
  *
@@ -58,6 +58,7 @@
 #define vector_len	s9_vector_len
 #define port_no		s9_port_no
 #define fixval		s9_fixval
+#define small_int_value	s9_small_int_value
 #define char_value	s9_char_value
 #define prim_slot	s9_prim_slot
 #define prim_info	s9_prim_info
@@ -131,6 +132,7 @@
 #define string_p	s9_string_p
 #define atom_p		s9_atom_p
 #define pair_p		s9_pair_p
+#define small_int_p	s9_small_int_p
 #define type_tag	s9_type_tag
 
 #define cons		s9_cons
@@ -151,6 +153,9 @@
 #define Real_negative_p		S9_real_negative_p
 #define Real_positive_p		S9_real_positive_p
 #define Real_negate		S9_real_negate
+
+#define GC_stack	S9_gc_stack
+#define GC_stkptr	S9_gc_stkptr
 
 #ifndef S9_S9CORE
  #define apply_prim		s9_apply_prim
@@ -195,6 +200,7 @@
  #define inport_open_p		s9_inport_open_p
  #define integer_string_p	s9_integer_string_p
  #define intern_symbol		s9_intern_symbol
+ #define int_to_bignum		s9_int_to_bignum
  #define io_reset		s9_io_reset
  #define io_status		s9_io_status
  #define length			s9_length
