@@ -35,6 +35,7 @@
 ;                    (symbol? '())           ==>  #f
 ;                    (symbol? #f)            ==>  #f
 
+(load-from-library "make-help-index.scm")
 (load-from-library "find-help-page.scm")
 (load-from-library "read-line.scm")
 (load-from-library "string-find.scm")
@@ -90,33 +91,6 @@
         (error "help: no such help page" name))))
 
 (define (apropos . sym)
-
-  (define (make-index)
-
-    (define index '())
-
-    (let dirloop ((dirs *library-path*))
-      (let extloop ((exts (cons "" (map symbol->string
-                                        *extensions*))))
-        (cond ((null? dirs)
-                index)
-              ((null? exts)
-                (dirloop (cdr dirs)))
-              (else
-                (let ((path (string-append
-                              (car dirs)
-                              (if (string=? "" (car exts))
-                                  "/help"
-                                  "/help/")
-                              (car exts)
-                              "/INDEX")))
-                  (set! index
-                        (append (if (file-exists? path)
-                                    (with-input-from-file path read)
-                                    '())
-                                index))
-                  (extloop (cdr exts))))))))
-
   (let* ((name (cond ((null? sym)
                        "")
                      ((symbol? (car sym))
@@ -126,12 +100,7 @@
                      (else
                        (error "apropos: expected string or symbol, got"
                               (car sym))))))
-    (mergesort
-      (lambda (a b)
-        (string<=? (symbol->string a)
-                   (symbol->string b)))
-      (list->set
-        (filter
-          (lambda (x)
-            (string-find name (symbol->string x)))
-          (flatten (make-index)))))))
+    (filter
+      (lambda (x)
+        (string-find name (symbol->string x)))
+      (make-help-index))))

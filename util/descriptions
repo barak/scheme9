@@ -84,6 +84,7 @@ list-tools.scm|-|List tools|-
 listq.scm|listq|-|Create list of quoted objects
 loutify-char.scm|-|Convert text to Lout input|-
 make-cats.scm|-|Create CATEGORIES.html file|-
+make-help-index.scm|make-help-index|-|Return list of all help keywords
 make-partitions.scm|make-partitions|-|Compute number-theoretic partitions
 matcher.scm|-|Pattern-based procedure dispatch|-
 math-tools.scm|-|Math tools|-

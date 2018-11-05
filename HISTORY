@@ -1,4 +1,39 @@
 
+2018-11-04
+
+	S9core uses a more efficient way to GC-protect internal nodes
+	now, resulting in a 20% to 30% increase in real and bignum
+	performance. (s9core.c)
+
+	STRING-APPEND and VECTOR-APPEND now allocate only one single
+	fresh vector when appending multiple arguments. They basically
+	folded over their arguments before. (s9.c)
+
+2018-11-03
+
+	The / procedure signals an error now when the divisor is 0.
+	Use CATCH-ERRORS to intercept this condition and deliver
+	some value. (s9.c)
+
+	(Expt 0 0.0) and (log x) for non-positive x now signal a range
+	error. (s9.scm)
+
+	Fixed some type mismatches in the 64-bit build.
+
+	Removed 64-bit build option from Makefile and README.
+	*** Note: S9 will still build on 64-bit systems, but will use
+	*** 32-bit structures internally. This should not make any
+	*** difference to anybody. If it does, let me know!
+
+2018-11-02
+
+	Factored out MAKE-HELP-INDEX procedure. (lib/)
+
+	LIST->SET now uses a hash table when its argument exceeds
+	a certain size.
+
+	Misc. small changes to S9core. (s9core.*, s9import.h)
+
 2018-11-01
 
 	Cleaned up help directory: removed left-over pages, linked
@@ -11,7 +46,7 @@
 
 	Retired S9SYMBOLS command. (prog/)
 
-	Added FIND-HELP-PAGE procedure , which returns the full path
+	Added FIND-HELP-PAGE procedure, which returns the full path
 	of the help file describing a given syntactic keyword or
 	procedure (or #F if no such page exists). (lib/)
 
@@ -32,7 +67,7 @@
 	are passed on the stack. In functions implementing extprocs, the
 	n'th argument is now retrieved by calling parg(n). The number
 	of arguments is returned by narg(). The extproc handler type
-	was changed from  cell (*f)(cell x)  to  cell (f)(void).
+	was changed from  cell (*f)(cell x)  to  cell (*f)(void).
 
 	All extproc handlers need to be adapted to use the new calling
 	conventions. The csv, curses, and sys-unix extensions already
@@ -94,7 +129,7 @@
 	and McKay Marston. Thank you very much! (If it still does not
 	work, it's my fault alone!)
 
-	Fix: Reference trace was in wrong order in error messages. (s9.c)
+	Fix: reference trace was in wrong order in error messages. (s9.c)
 
 	Fix: GC leak in the compiler. (s9.c)
 
@@ -229,6 +264,6 @@
 
 -------------------------------------------------------------------------------
 
-The change log of S9fes (Reimagined) ends here.
+The change log of S9fES (Reimagined) ends here.
 For previous changes, see the file PREHISTORY.
 
