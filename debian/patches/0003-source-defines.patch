@@ -15,7 +15,7 @@ index 474bb3f..6bd5a95 100644
 +++ b/s9core.h
 @@ -9,6 +9,21 @@
  
- #define S9_VERSION "20181022"
+ #define S9_VERSION "20181102"
  
 +#ifndef _POSIX_SOURCE
 +#define _POSIX_SOURCE
