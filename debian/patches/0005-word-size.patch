@@ -7,7 +7,7 @@ Subject: word size
  1 file changed, 12 insertions(+)
 
 diff --git a/s9core.h b/s9core.h
-index 232b0ac..0e970cb 100644
+index fe8946a..7159084 100644
 --- a/s9core.h
 +++ b/s9core.h
 @@ -29,6 +29,18 @@
