@@ -13,14 +13,27 @@
 #ifndef _BSD_SOURCE
  #define _BSD_SOURCE
 #endif
+
 #ifndef __FreeBSD__
  #ifndef __NetBSD__
-  #ifndef _POSIX_SOURCE
-   #define _POSIX_SOURCE
-   #define _POSIX_C_SOURCE 200112L
-  #endif
-  #ifndef _XOPEN_SOURCE
-   #define _XOPEN_SOURCE 500
+  #ifndef __OpenBSD__
+
+   #ifndef _POSIX_SOURCE
+    #define _POSIX_SOURCE
+   #endif
+
+   #ifndef _XOPEN_SOURCE
+    #define _XOPEN_SOURCE
+   #endif
+
+   #ifndef _XOPEN_SOURCE_EXTENDED
+    #define _XOPEN_SOURCE_EXTENDED
+   #endif
+
+   #ifndef _DEFAULT_SOURCE
+    #define _DEFAULT_SOURCE
+   #endif
+
   #endif
  #endif
 #endif
@@ -575,8 +588,7 @@ cell pp_sys_readdir(void) {
 		a = cdr(a);
 	}
 	cdr(pa) = NIL;
-	if (car(n) == NIL)
-		n = NIL;
+	if (car(n) == NIL) n = NIL;
 	closedir(dir);
 	unsave(1);
 	return n;

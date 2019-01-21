@@ -290,6 +290,7 @@
  (tree-copy)
  (tree-equal?)
  (tree-map)
+ (troffify-char troffify-string)
  (type-case type-of)
  (union)
  (unix-time->time)

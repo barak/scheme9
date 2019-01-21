@@ -1122,12 +1122,22 @@
           (apply print (cdr xs)))))
 
 (define (locate-file file)
-  (let loop ((paths *library-path*))
-    (and (not (null? paths))
-         (let ((full-path (string-append (car paths) "/" file)))
-           (if (file-exists? full-path)
-               full-path
-               (loop (cdr paths)))))))
+  (let* ((home      (environment-variable "HOME"))
+         (home-path (lambda (s)
+                      (if (not home)
+                          (error "locate-file: cannot locate home directory")
+                          (string-append
+                            home
+                            (substring s 1 (string-length s)))))))
+    (let loop ((paths *library-path*))
+      (and (not (null? paths))
+           (let* ((full-path (string-append (car paths) "/" file))
+                  (full-path (if (char=? #\~ (string-ref full-path 0))
+                                 (home-path full-path)
+                                 full-path)))
+             (if (file-exists? full-path)
+                 full-path
+                 (loop (cdr paths))))))))
 
 (define load-from-library 
   (let ((locate-file locate-file))

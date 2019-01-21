@@ -115,7 +115,11 @@ int	*S9_gc_stkptr;
  * Internal node protection
  */
 
-#define PROT_STACK_LEN	100
+#ifdef S9_BITS_PER_WORD_64
+ #define PROT_STACK_LEN	400
+#else
+ #define PROT_STACK_LEN	200
+#endif
 
 static void prot(cell x) {
 	if (Protp >= PROT_STACK_LEN-1)
@@ -292,7 +296,7 @@ void s9_rejectc(int c) {
 void s9_writec(int c) {
 	if (!s9_outport_open_p())
 		s9_fatal("s9_writec(): output port is not open");
-	putc(c, Ports[Output_port]);
+	(void) putc(c, Ports[Output_port]);
 }
 
 char *s9_open_input_string(char *s) {
@@ -2196,7 +2200,7 @@ cell s9_real_power(cell x, cell y) {
 
 /* type: 0=trunc, 1=floor, 2=ceil */
 static cell rround(cell x, int type) {
-	cell	n, m, e, f, l;
+	cell	n, m, e;
 
 	e = s9_real_exponent(x);
 	if (e >= 0)
@@ -2206,16 +2210,12 @@ static cell rround(cell x, int type) {
 	prot(m);
 	while (e < 0) {
 		m = s9_bignum_shift_right(m);
-		f = caddr(m);
 		m = car(m);
 		pref(0) = m;
 		e++;
 	}
-	l = s9_bignum_shift_right(m);
-	l = caddr(l);
 	if (	(type == 1 && Real_negative_p(x)) ||
-		(type == 2 && Real_positive_p(x)) ||
-		(type == 3 && f >= 5 && l % 2 != 0)
+		(type == 2 && Real_positive_p(x))
 	) {
 		m = s9_bignum_add(m, One);
 	}
@@ -3288,7 +3288,10 @@ void test_fixnum(void) {
 
 void test_bignum(void) {
 	cell	n;
-	int	v, of;
+	int	of;
+
+#ifndef S9_BITS_PER_WORD_64
+	int	v;
 
 	v = INT_MAX;
 	A = s9_int_to_bignum(v);
@@ -3297,18 +3300,20 @@ void test_bignum(void) {
 	A = s9_int_to_bignum(-v);
 	if (!integer_p(A)) fail("s9_int_to_bignum(2)");
 	if (s9_bignum_to_int(A, &of) != -v) fail("s9_bignum_to_int(2)");
-	A = s9_string_to_bignum("123456789012345678901234567890");
-	s9_bignum_to_int(A, &of);
-	if (0 == of) fail("s9_bignum_to_int(3)");
 	A = s9_int_to_bignum(INT_MAX);
 	A = s9_bignum_add(A, One);
 	s9_bignum_to_int(A, &of);
+	if (0 == of) fail("s9_bignum_to_int(3)");
+	A = s9_string_to_bignum("123456789012345678901234567890");
+	s9_bignum_to_int(A, &of);
 	if (0 == of) fail("s9_bignum_to_int(4)");
+#endif
 	if (s9_bignum_to_int(Zero, &of) != 0) fail("Zero");
 	if (s9_bignum_to_int(One, &of) != 1) fail("One");
 	if (s9_bignum_to_int(Two, &of) != 2) fail("Two");
 	n = s9_make_integer(-123);
-	if (s9_bignum_to_int(s9_bignum_abs(n), &of) != 123) fail("bignum_abs()");
+	if (s9_bignum_to_int(s9_bignum_abs(n), &of) != 123)
+		fail("bignum_abs()");
 	A = s9_make_integer(1235);
 	B = s9_make_integer(5678);
 	if (s9_bignum_to_int(s9_bignum_add(A, B), &of) != 6913)
@@ -3415,6 +3420,8 @@ void test_real(void) {
 	B = s9_make_real(1, -1, s9_make_integer(5));
 	B = s9_real_power(Two, B);
 	if (!s9_real_equal_p(A, B)) fail("real_power(3)");
+	A = s9_make_real(1, -1, s9_make_integer(1));
+	B = s9_real_power(Two, A);
 }
 
 void print_test(char *name, void (*printer)(cell), cell n, char *s) {
@@ -3548,5 +3555,6 @@ int main(void) {
 	s9_fini();
 	remove(TESTFILE);
 	bye(Errors);
+	return 0;
 }
 #endif /* TEST */
