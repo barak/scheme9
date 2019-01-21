@@ -1,3 +1,11 @@
+scheme9 (2018.12.05-1) unstable; urgency=medium
+
+  * New upstream version
+  * bump policy version
+  * bump to debhelper 12
+
+ -- Barak A. Pearlmutter <bap@debian.org>  Mon, 21 Jan 2019 15:46:27 +0000
+
 scheme9 (2018.11.04-1) unstable; urgency=medium
 
   * New upstream version
