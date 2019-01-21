@@ -1,4 +1,4 @@
-#! /usr/local/bin/s9 -f
+#! /usr/local/bin/s9
 
 ; s9help -- find and display S9fES help pages
 ; by Nils M Holm, 2010,2015,2018

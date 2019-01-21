@@ -7,8 +7,8 @@
 PREFIX= /u
 
 # Base version and Release
-BASE=		20181030
-RELEASE=	20181104
+BASE=		20181115
+RELEASE=	20181205
 
 # Override default compiler and flags
 CC=	cc
@@ -114,10 +114,13 @@ srtest:	s9 test.image
 realtest:	s9 test.image
 	$(BUILD_ENV) ./s9 -i test.image util/realtest.scm
 
+coretest:	s9core.c s9core.h s9import.h
+	$(CC) $(CFLAGS) $(DEFS) -DTEST s9core.c && ./a.out && rm -f a.out
+
 test.image:	s9 s9.scm
 	$(BUILD_ENV) ./s9 -i - $(EXTRA_SCM) -d test.image
 
-tests: test realtest srtest libtest systest
+tests: coretest test realtest srtest libtest systest
 
 install:	install-s9 install-util
 

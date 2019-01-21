@@ -6,7 +6,7 @@
  * https://creativecommons.org/share-your-work/public-domain/cc0/
  */
 
-#define RELEASE_DATE	"2018-11-04"
+#define RELEASE_DATE	"2018-12-05"
 #define PATCHLEVEL	0
 
 #include "s9core.h"
@@ -911,7 +911,7 @@ void add_primitives(char *name, S9_PRIM *p) {
 	Glob = nconc(Glob, b);
 }
 
-cell eval(cell x);
+cell eval(cell x, int r);
 
 void init_extensions(void) {
 	cell	n, p;
@@ -927,13 +927,13 @@ void init_extensions(void) {
 		p = assq(p, Glob);
 		if (FALSE == p) continue;
 		p = cons(cadr(p), NIL);
-		eval(p);
+		eval(p, 1);
 	}
 	p = symbol_ref("s9:s9");
 	p = assq(p, Glob);
 	if (FALSE == p) return;
 	p = cons(cadr(p), NIL);
-	eval(p);
+	eval(p, 1);
 }
 
 void init_rts(void) {
@@ -1926,6 +1926,10 @@ void x_print_form(cell n, int depth) {
 		error("printer: too many nested lists or vectors", UNDEFINED);
 		return;
 	}
+	if (Intr) {
+		Intr = 0;
+		error("interrupted", UNDEFINED);
+	}
 	if (NIL == n) {
 		prints("()");
 	}
@@ -2168,7 +2172,7 @@ cell free_vars(cell x, cell e) {
 		x = cdr(x);
 	}
 	n = unsave(1);
-	if (lam) e = unsave(3);
+	if (lam) unsave(3);
 	return n;
 }
 
@@ -3287,7 +3291,7 @@ cell expand(cell x, int all) {
 		n = cons(n, NIL);
 		n = cons(cdr(m), n);
 		n = cons(S_apply, n);
-		n = eval(n);
+		n = eval(n, 1);
 		if (all) {
 			save(n);
 			n = expand(n, all);
@@ -3333,11 +3337,19 @@ void stkalloc(int k) {
 	int	i;
 
 	if (Sp + k >= Sz) {
-		n = make_vector(Sz + CHUNK_SIZE);
+		/* allocate multiples of CHUNK_SIZE */
+		if (k >= CHUNK_SIZE) {
+			k = Sp+k-Sz;
+			k = CHUNK_SIZE * (1 + (k / CHUNK_SIZE));
+		}
+		else {
+			k = CHUNK_SIZE;
+		}
+		n = make_vector(Sz + k);
 		vs = vector(Rts);
 		vn = vector(n);
 		for (i=0; i<Sz; i++) vn[i] = vs[i];
-		Sz += CHUNK_SIZE;
+		Sz += k;
 		Rts = n;
 	}
 }
@@ -3589,6 +3601,7 @@ cell append(cell a, cell b) {
 	if (NIL == a) return b;
 	if (NIL == b) return a;
 	save(n = cons(NIL, NIL));
+	pn = n; /*LINT*/
 	for (p = a; pair_p(p); p = cdr(p)) {
 		car(n) = car(p);
 		pn = n;
@@ -4179,7 +4192,7 @@ cell readchar(cell p, int rej) {
 	return make_char(c);
 }
 
-cell read_obj(cell p, int rej) {
+cell read_obj(cell p) {
 	int	pp;
 	cell	n;
 
@@ -4229,6 +4242,9 @@ void dump_image_file(cell s) {
 	setbind(S_image_file, s);
 }
 
+void begin_rec(void);
+void end_rec(void);
+
 void loadfile(char *s) {
 	int	ldport, rdport;
 	cell	x, ld;
@@ -4247,13 +4263,15 @@ void loadfile(char *s) {
 	save(make_string(Srcfile, strlen(Srcfile)));
 	strncpy(Srcfile, s, TOKEN_LENGTH);
 	Srcfile[TOKEN_LENGTH] = 0;
+	begin_rec();
 	for (;;) {
 		set_input_port(ldport);
 		x = xread();
 		set_input_port(rdport);
 		if (END_OF_FILE == x) break;
-		eval(x);
+		eval(x, 0);
 	}
+	end_rec();
 	strcpy(Srcfile, string(unsave(1)));
 	Line_no = oline;
 	setbind(S_loading, ld);
@@ -4276,7 +4294,7 @@ cell stats(cell x) {
 
 	gcv();
 	Stats = 1;
-	x = eval(x);
+	x = eval(x, 1);
 	Stats = 0;
 	save(x);
 	get_counters(&ncs, &ccs, &vcs, &gcs);
@@ -4691,7 +4709,7 @@ void run(cell x) {
 		skip(1);
 		break;
 	case OP_EVAL:
-		Acc = eval(Acc);
+		Acc = eval(Acc, 1);
 		skip(1);
 		break;
 	case OP_EVEN_P:
@@ -4851,7 +4869,7 @@ void run(cell x) {
 		break;
 	case OP_READ:
 		if (!input_port_p(Acc)) expect("read", "input port", Acc);
-		Acc = read_obj(port_no(Acc), 0);
+		Acc = read_obj(port_no(Acc));
 		skip(1);
 		break;
 	case OP_READ_CHAR:
@@ -4870,6 +4888,7 @@ void run(cell x) {
 		break;
 	case OP_REVERSE_B:
 		if (!list_p(Acc)) expect("reverse!", "list", Acc);
+		if (constant_p(Acc)) error("reverse!: immutable", Acc);
 		Acc = nreverse(Acc);
 		skip(1);
 		break;
@@ -5325,8 +5344,6 @@ cell interpret(cell x) {
 	int	i;
 
 	Ip = 0;
-	/*Sp = -1;
-	Fp = -1;*/
 	E0 = make_vector(length(Glob));
 	i = 0;
 	v = vector(E0);
@@ -5369,9 +5386,9 @@ void end_rec(void) {
 	Prog = unsave(1);
 }
 
-cell eval(cell x) {
+cell eval(cell x, int r) {
 	Tmp = x;
-	begin_rec();
+	if (r) begin_rec();
 	save(x);
 	Tmp = NIL;
 	x = expand(x, 1);
@@ -5383,7 +5400,7 @@ cell eval(cell x) {
 	car(Stack) = x;
 	x = interpret(x);
 	unsave(1);
-	end_rec();
+	if (r) end_rec();
 	return x;
 }
 
@@ -5455,7 +5472,7 @@ void repl(void) {
 		Intr = 0;
 		x = xread();
 		if (END_OF_FILE == x && 0 == Intr) break;
-		x = eval(x);
+		x = eval(x, 1);
 		if (x != UNSPECIFIC) {
 			setbind(S_starstar, x);
 			print_form(x);
@@ -5475,7 +5492,7 @@ void evalstr(char *s, int echo) {
 	clear_trace();
 	x = xsread(s);
 	if (UNDEFINED == x) return;
-	x = eval(x);
+	x = eval(x, 1);
 	if (echo) {
 		print_form(x);
 		nl();
@@ -5497,7 +5514,7 @@ void longusage(void) {
 	prints("Scheme 9 from Empty Space by Nils M Holm, ");
 	prints(RELEASE_DATE);
 	if (PATCHLEVEL) {
-		prints(" pl");
+		prints(" p");
 		writec(PATCHLEVEL+'0');
 	}
 	nl();

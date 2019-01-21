@@ -193,6 +193,7 @@ transpose.scm|transpose|-|Transpose matrixes
 tree-copy.scm|tree-copy|-|Copy cons structures
 tree-equalp.scm|tree-equal?|-|Compare cons structures
 tree-map.scm|tree-map|-|Map functions over trees
+troffify-char.scm|-|Convert text to TROFF input|-
 type-case.scm|-|Type-based dispatch|-
 union.scm|union|-|Union of sets
 unix-time-to-time.scm|unix-time-\&gt;time|-|Convert time spec to Unix time
