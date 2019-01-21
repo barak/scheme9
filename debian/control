@@ -2,10 +2,10 @@ Source: scheme9
 Section: lisp
 Priority: optional
 Maintainer: Barak A. Pearlmutter <bap@debian.org>
-Build-Depends: debhelper (>= 11),
+Build-Depends: debhelper (>= 12),
 	libncurses5-dev | libncurses-dev | ncurses-dev,
 	libx11-dev
-Standards-Version: 4.2.1
+Standards-Version: 4.3.0
 Homepage: https://www.t3x.org/s9fes/index.html
 Vcs-Git: https://salsa.debian.org/debian/scheme9.git
 Vcs-Browser: https://salsa.debian.org/debian/scheme9
