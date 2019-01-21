@@ -7,7 +7,7 @@ Subject: word size
  1 file changed, 12 insertions(+)
 
 diff --git a/s9core.h b/s9core.h
-index fe8946a..7159084 100644
+index 3809b4f..3823817 100644
 --- a/s9core.h
 +++ b/s9core.h
 @@ -29,6 +29,18 @@
@@ -27,5 +27,5 @@ index fe8946a..7159084 100644
 +#endif
 +
  /*
-  * Ugly prelude to figure out if
-  * we are compiling on a Un*x system.
+  * Ugly prelude to deal with some system-dependent stuff.
+  */

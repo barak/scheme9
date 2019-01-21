@@ -8,7 +8,7 @@ default definition of MAXPATHLEN, for Hurd architecture.
  1 file changed, 5 insertions(+)
 
 diff --git a/s9core.h b/s9core.h
-index 5b6a27d..fe8946a 100644
+index 9dcdecd..3809b4f 100644
 --- a/s9core.h
 +++ b/s9core.h
 @@ -24,6 +24,11 @@
@@ -21,5 +21,5 @@ index 5b6a27d..fe8946a 100644
 +#endif
 +
  /*
-  * Ugly prelude to figure out if
-  * we are compiling on a Un*x system.
+  * Ugly prelude to deal with some system-dependent stuff.
+  */
