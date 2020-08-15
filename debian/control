@@ -2,7 +2,7 @@ Source: scheme9
 Section: lisp
 Priority: optional
 Maintainer: Barak A. Pearlmutter <bap@debian.org>
-Build-Depends: debhelper (>= 12),
+Build-Depends: debhelper-compat (= 12),
 	libncurses5-dev | libncurses-dev | ncurses-dev,
 	libx11-dev
 Standards-Version: 4.3.0
