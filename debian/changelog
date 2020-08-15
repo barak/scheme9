@@ -1,9 +1,10 @@
-scheme9 (2018.12.05-2) UNRELEASED; urgency=low
+scheme9 (2018.12.05-2) unstable; urgency=low
 
   * Set debhelper-compat version in Build-Depends.
   * Update standards version to 4.5.0, no changes needed.
+  * bump to debhelper 12
 
- -- Barak A. Pearlmutter <bap@debian.org>  Sat, 15 Aug 2020 16:07:08 -0000
+ -- Barak A. Pearlmutter <bap@debian.org>  Sat, 15 Aug 2020 16:08:20 +0100
 
 scheme9 (2018.12.05-1) unstable; urgency=medium
 
