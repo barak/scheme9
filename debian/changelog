@@ -1,6 +1,7 @@
 scheme9 (2018.12.05-3) UNRELEASED; urgency=medium
 
   * Update standards version to 4.5.1, no changes needed.
+  * Update watch file format version to 4.
 
  -- Barak A. Pearlmutter <bap@debian.org>  Fri, 23 Jul 2021 21:05:17 -0000
 
