@@ -1,41 +1,53 @@
-<P>S9fES is a mature, portable, and comprehensible interpreter for
+S9fES is a mature, portable, and comprehensible interpreter for
 R4RS Scheme. The core interpreter is written in pure ANSI C (C89), so it
-runs on all platforms offering a C compiler. It can even be compiled
-natively on Plan&nbsp;9. On Unix-based systems (or MinGW), it also offers 
-an interface to common <A href="sys-unix.html">Unix system calls</A>
-and <A href="curses.html">Curses routines</A>.</P>
+runs on all (32-bit or larger) platforms offering a C compiler. It can
+even be compiled natively on Plan::_9. On Unix-based systems (or MinGW),
+it also offers an interface to common [Unix system calls|sys-unix] and
+[Curses routines|curses].
 
-<P><I>S9fES Reimagined</I> is a new version of the S9 interpreter in
-which wide parts of the system have been rewritten. There is a
-separate page explaining <A href="../s9fes-reimagined/index.html">what's
-new</A>. If you are looking for a legacy version of the S9fES interpreter,
-check out the <A href="../index.html#past">attic</A>.
-</P>
+The current version of the S9 interpreter uses the [LISP9|../lisp9/index]
+bytecode compiler and VM, while the first versions used a tree walker
+and later versions (S9fES Reimagined) used a slightly different bytecode
+compiler and interpreter. Here is a short summary of 
+[the differences|../s9fes-reimagined/index] between the bytecode interpreter 
+and the tree-walker.
 
-<P>The interpreter is built around the
-<A href="s9core.txt.html">S9core toolkit</A>
-(<A href="s9core-$V.tgz">download</A>),
+Here are some versions of the S9fES system. When in doubt get the current
+or the Reimagined version. Future work (if any) will be done on the current
+version.
+
+.dl
+.dd
+{S9fES, bleeding edge version|s9fes-20250811.tgz} (current, ~500KB)
+.dd
+{S9fES, Reimagined|s9fes-20181205.tgz} (2018, ~500KB)
+.dd
+{S9fES, last tree-walker version|../files/s9fes-2018.tgz} (2018, ~480KB)
+.dd
+{S9fES, 3rd edition book version|../files/s9fes-2014.tgz} (2014, ~440KB)
+.dd
+{S9fES, 1st edition book version|../files/s9fes-2007.tgz} (2007, ~40KB)
+..
+
+The later S9fES interpreters are built around the
+[S9core toolkit|s9core.txt] ({download|s9core-$V.tgz}),
 which contains some basic building blocks for dynamic languages, such as a
-garbage collected heap, bignum arithmetics, etc. (The toolkit is
-included in the S9fES tarball).
-</P>
+garbage collected heap, bignum arithmetics, etc. The toolkit is
+included in the S9fES tarball.
 
-<P>S9fES has been developed using <A href="edoc.html">EDOC</A>, a literate
+S9fES has been developed using [EDOC|edoc], a literate
 programming tool. The rendered EDOC source code to a previous version is
-available in <A href="../s9book/index.html">print and PDF form</A>. The C
-and Scheme code stripped from the EDOC files is in the <EM>public domain</EM>,
-though, and can be <A href="s9fes-$V.tgz">downloaded</A> here (~500KB).</P>
+available in [print and PDF form|../s9book/index]. The C
+and Scheme code stripped from the EDOC files is in the _public domain_,
+though, and can be {downloaded|s9fes-$V.tgz} here (~500KB).
 
-<P>Bakul Shah maintains a
-<A href="https://github.com/bakul/s9fes">downstream repository</A>
-with extended Plan&nbsp;9 support, like access to system functions and
-an FFI. Please send any feedback regarding the Plan&nbsp;9 extension
+Bakul Shah maintains a
+[downstream repository|https://github.com/bakul/s9fes]
+with extended Plan::_9 support, like access to system functions and
+an FFI. Please send any feedback regarding the Plan::_9 extension
 directly to him.
-</P>
 
-<P>The original S9fES interpreter (not this version!) is explained in detail
-in the <A href="../s9book/index.html">Scheme&nbsp;9 Book</A>! The book
-<EM>might</EM> eventually get an update, if circumstances permit.
-</P>
+The original S9fES interpreter (3rd edition, above) is
+explained in detail in the [Scheme::_9 Book|../s9book/index]!
 
-<H2>The S9fES Distribution Archive</H2>
+.h2 The S9fES Distribution Archive

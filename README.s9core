@@ -1,7 +1,7 @@
 
 	S9CORE
 	A Toolkit for Implementing Dynamic Languages
-	By Nils M Holm, 2015-2018
+	By Nils M Holm, 2015-2025
 	In the public domain
 
 
@@ -14,7 +14,7 @@
 
 	- bignum (arbitrary precision) integer arithmetics
 
-	- platform-independent real number arithmetics
+	- platform-independent, decimal-based real number arithmetics
 
 	- garbage collected I/O ports
 

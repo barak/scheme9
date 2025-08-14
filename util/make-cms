@@ -1,6 +1,6 @@
 #!/bin/sh
 
-dumpdir=webdump
+dumpdir=cmsdump
 update_only=no
 tmpfile=/tmp/mkhtml.$$
 
@@ -44,36 +44,32 @@ format_scm_files() {
 		fname=$(basename $file)
 		name=$(grep "^$fname|" util/descriptions | cut -f 2 -d "|")
 		desc=$(grep "^$fname|" util/descriptions | cut -f 3 -d "|")
-		oname=$dumpdir/`basename $fname`.html
+		oname=$dumpdir/`basename $fname`
 		echo -n $oname' ...'
 		if [ "x$name" = "x" ]; then
 			echo -n " NO DESCRIPTION!"
 		fi
-		sed -e "s|@BASE@|<A href="$html">$html</A>|g" \
-			<util/libhead >$tmpfile
 		if [ "x$desc" != "x-" -a "x$name" != "x-" ] ; then
-			sed \
-			-e "s|@DESC@|<CODE>$name\&nbsp;\&nbsp;</CODE> $desc|" \
-			-e "s|@TITLE@|$name\&nbsp;\&nbsp; $desc|" \
-				<$tmpfile >$oname
+			echo ".h1 $name" | sed -e 's/_/\\_/g' |
+				sed -e 's/\*/\\*/' >$oname
+			echo ".h2 $desc" >>$oname
 		elif [ "x$desc" != "x-" ] ; then
-			sed -e "s|@DESC@|$desc|" \
-			    -e "s|@TITLE@|$desc|" \
-				<$tmpfile >$oname
+			echo ".h1 $desc" >$oname
 		else
-			sed -e "s|@DESC@|<CODE>$name</CODE>|" \
-			    -e "s|@TITLE@|$name|" \
-				<$tmpfile >$oname
+			echo ".h1 $name" | sed -e 's/_/\\_/g' |
+				sed -e 's/\*/\\*/' >$oname
 		fi
-		echo -n "<P>" >>$oname
 		if [ "x$base" != "x" ]; then
-			echo "Location: <A href=\"$base.html\">$base</A>, " \
-				>>$oname
+			echo >>$oname
+			echo -n "Location: [$base], " >>$oname
 		fi
 		sed -e "1,/^$/d" <$file | wc -l >>$oname
-		echo " Lines</P>" >>$oname
+		echo " Lines" >>$oname
+		echo >>$oname
+		echo ".html" >>$oname
 		prog/scm2html1.scm -9x $file >>$oname
-		cat util/libtail >>$oname
+		echo ".." >>$oname
+		echo ".sp" >>$oname
 		echo " done"
 	done
 }
@@ -85,24 +81,17 @@ format_C_files() {
 	for file in $files; do
 		html=`basename $file`.html
 		fname=$(basename $file)
-		oname=$dumpdir/`basename $fname`.html
+		oname=$dumpdir/`basename $fname`
 		echo -n $oname' ...'
-		sed -e "s|@BASE@|<A href="$html">$html</A>|g" \
-			<util/libhead >$tmpfile
-		if [ "x$base" = "x" ]; then
-			sed -e "s/@DESC@/`basename $file`/" \
-			    -e "s/@TITLE@/`basename $file`/" \
-				<$tmpfile >$oname
-		else
-			sed -e "s|@DESC@|<A href=\"$base.html\">$base</A>/`basename $file`|" \
-			    -e "s/@TITLE@/`basename $file`/" \
-				<$tmpfile >$oname
-		fi
-		echo -n "<P>" >>$oname
+		echo ".h1 `basename $file`" | sed -e 's/_/\\_/g' |
+			sed -e 's/\*/\\*/' >$oname
 		sed -e "1,/^$/d" <$file | wc -l >>$oname
-		echo " Lines</P>" >>$oname
+		echo " Lines" >>$oname
+		echo >>$oname
+		echo ".html" >>$oname
 		prog/c2html1.scm $file >>$oname
-		cat util/libtail >>$oname
+		echo ".." >>$oname
+		echo ".sp" >>$oname
 		echo " done"
 	done
 }
@@ -115,20 +104,12 @@ format_txt_files() {
 	files=$*
 	for file in $files; do
 		html=`basename $file`.html
-		oname=$dumpdir/`basename $file`.html
+		oname=$dumpdir/`basename $file`
 		echo -n $oname' ...'
-		sed -e "s|@BASE@|<A href="$html">$html</A>|g" \
-			<util/libhead >$tmpfile
-		if [ "x$base" = "x" ]; then
-			sed -e "s/@DESC@/`basename $file`/" \
-			    -e "s/@TITLE@/`basename $file`/" \
-				<$tmpfile >$oname
-		else
-			sed -e "s|@DESC@|<A href=\"$base.html\">$base</A>/`basename $file`|" \
-			    -e "s/@TITLE@/`basename $file`/" \
-				<$tmpfile >$oname
-		fi
-		echo '<PRE>' >>$oname
+		echo ".h1 `basename $file`" | sed -e 's/_/\\_/g' |
+			sed -e 's/\*/\\*/' >$oname
+		echo '.html' >>$oname
+		echo "<PRE>" >>$oname
 		if [ $hrefs = yes ]; then
 			prog/htmlify.scm -t $file | \
 			sed -e 's/\(http:\/\/.*\)/<A href="\1">\1<\/A>/' \
@@ -136,8 +117,9 @@ format_txt_files() {
 		else
 			prog/htmlify.scm -t $file >>$oname
 		fi
-		echo '</PRE>' >>$oname
-		cat util/libtail >>$oname
+		echo "</PRE>" >>$oname
+		echo '..' >>$oname
+		echo '.sp' >>$oname
 		echo " done"
 	done
 }
@@ -148,13 +130,11 @@ format_man_pages() {
 	files=$*
 	for file in $files; do
 		html=`basename $file`.html
-		ofile=$dumpdir/`basename $file`.html
+		ofile=$dumpdir/`basename $file`
 		echo -n $ofile' ...'
-		sed -e "s|@BASE@|<A href="$html">$html</A>|g" \
-			<util/libhead >$tmpfile
-		sed -e "s/@DESC@/`basename $file`/" \
-		    -e "s/@TITLE@/`basename $file`/" \
-		<$tmpfile >$ofile
+		echo ".h1 `basename $file`" | sed -e 's/_/\\_/g' |
+			sed -e 's/\*/\\*/' >$ofile
+		echo ".html" >>$ofile
 		echo '<PRE class=man>' >>$ofile
 		if [ $hrefs = yes ]; then
 			nroff -mdoc -c $file | ./rpp -p html | \
@@ -164,7 +144,8 @@ format_man_pages() {
 			nroff -mdoc -c $file | ./rpp -p html >>$ofile
 		fi
 		echo '</PRE>' >>$ofile
-		cat util/dirtail >>$ofile
+		echo ".." >>$ofile
+		echo ".sp" >>$ofile
 		echo " done"
 	done
 }
@@ -175,25 +156,18 @@ naah() {
 	files=$*
 	for file in $files; do
 		html=`basename $file`.html
-		oname=$dumpdir/`basename $file`.html
+		oname=$dumpdir/`basename $file`
 		echo -n $oname' ...'
+		echo ".h1 `basename $file`" | sed -e 's/_/\\_/g' |
+			sed -e 's/\*/\\*/' >$oname
 		sed -e "s|@BASE@|<A href="$html">$html</A>|g" \
 			<util/libhead >$tmpfile
-		if [ "x$base" = "x" ]; then
-			sed -e "s/@DESC@/`basename $file`/" \
-			    -e "s/@TITLE@/`basename $file`/" \
-				<$tmpfile >$oname
-		else
-			sed -e "s|@DESC@|<A href=\"$base.html\">$base</A>/`basename $file`|" \
-			    -e "s/@TITLE@/`basename $file`/" \
-				<$tmpfile >$oname
-		fi
-		echo '<H2>Naah</H2>' >>$oname
-		echo "<P>This $what is not included here. Please" >>$oname
-		echo ' download the <A href="'"s9fes-$V.tgz"'">archive</A>' \
-			>>$oname
-		echo ' to have a look at it.</P>' >>$oname
-		cat util/dirtail >>$oname
+		echo '.h2 Naah' >>$oname
+		echo >>$oname
+		echo "This $what is not included here. Please" >>$oname
+		echo ' download the {s9fes-'$V'.tgz} archive' \ >>$oname
+		echo ' to have a look at it.' >>$oname
+		echo '.sp' >>$oname
 		echo " done"
 	done
 }
@@ -203,42 +177,44 @@ dirlist() {
 	ofile=$2
 	title=$3
 	echo -n $ofile' ...'
-	if [ "x$dir" = "x." ]; then
-		sed -e "s/@BASE@//" <util/dirhead >$tmpfile
-	else
-		sed -e "s|@BASE@|<A href=\"`basename $ofile`\">$dir.html</A>|" \
-			<util/dirhead >$tmpfile
-	fi
-	sed -e "s/@DESC@/$title/" <$tmpfile >$ofile
+	echo ".h1 $title" >$ofile
 	if [ "$4" = "about" ]; then
 		sed -e 's/\$V/'"$V"'/g' <util/blurb >>$ofile
 	fi
-	echo '<PRE class=dirlist>' >>$ofile
+	echo ':{<PRE>}' >>$ofile
 	(cd $dir; ls -l | grep -v "$dumpdir") | grep -v " edoc$" | awk '
 		BEGIN { V=ENVIRON["V"] }
-		{ if ($9 == "CATEGORIES.html")
-			name=$9
+		{ html=0
+		  if ($9 == "CATEGORIES")
+			name="["$9"]"
 		  else if ($9 == "s9fes-"V".tgz")
-			name=$9
+			name="{"$9"}"
 		  else if ($9 == "s9core-"V".tgz")
-			name=$9
+			name="{"$9"}"
 		  else if ($9 == "s9core.pdf")
-			name=$9
+			name="{"$9"}"
 		  else if ($9 == "MASCOT.png")
-			name=$9
+			name="{"$9"}"
 		  else if ($9 == "freebsd-port")
-			name="http://www.freebsd.org/cgi/cvsweb.cgi/ports/lang/s9fes"
-		  else
-			name=$9".html"
+			name="{http://www.freebsd.org/cgi/cvsweb.cgi/ports/lang/s9fes}"
+		  else {
+			name=$9
+			html=1
+		  }
 		  if ($9 == "")
 			print $0
-		  else
-			printf "%s %2s %3s %4s %7s %3s %2s %6s" \
-				" <A href=\"%s\">%s</A>\n", \
+		  else if (html) {
+			gsub("_", "\\_", name)
+			gsub("\\*", "\\*", name)
+			printf "%s %2s %3s %4s %7s %3s %2s %6s [%s|%s]\n", \
 				$1, $2, $3, $4, $5, $6, $7, $8, name, $9
+		  }
+		  else
+			printf "%s %2s %3s %4s %7s %3s %2s %6s %s\n", \
+				$1, $2, $3, $4, $5, $6, $7, $8, name
 		}' >>$ofile
-	echo '</PRE>' >>$ofile
-	cat util/dirtail >>$ofile
+	echo ':{</PRE>}' >>$ofile
+	echo ".sp" >>$ofile
 	echo " done"
 }
 
@@ -246,7 +222,7 @@ if [ $update_only = no -o $update_only = dir ]; then
 	if [ $update_only = no ]; then
 		make cdist && mv -f s9core-$V.tgz /tmp/s9core$$.tgz
 		make dist
-		s9 -f util/make-cats.scm
+		# s9 -f util/make-cats.scm
 	fi
 
 	if [ -d $dumpdir ]; then
@@ -263,19 +239,19 @@ if [ $update_only = no -o $update_only = dir ]; then
 		mv -f /tmp/s9core$$.tgz s9core-$V.tgz
 	fi
 
-	dirlist . $dumpdir/index.html \
+	dirlist . $dumpdir/index \
 		"Scheme 9 from Empty Space" "about"
-	dirlist lib $dumpdir/lib.html "lib\/" ""
-	dirlist contrib $dumpdir/contrib.html "contrib\/" ""
-	dirlist ext $dumpdir/ext.html "ext\/" ""
-	dirlist ext/sys-unix $dumpdir/sys-unix.html "sys-unix\/" ""
-	dirlist ext/curses $dumpdir/curses.html "curses\/" ""
-	dirlist ext/csv $dumpdir/csv.html "csv\/" ""
-	dirlist prog $dumpdir/prog.html "prog\/" ""
-	dirlist util $dumpdir/util.html "util\/" ""
+	dirlist lib $dumpdir/lib "lib\/" ""
+	dirlist contrib $dumpdir/contrib "contrib\/" ""
+	dirlist ext $dumpdir/ext "ext\/" ""
+	dirlist ext/sys-unix $dumpdir/sys-unix "sys-unix\/" ""
+	dirlist ext/curses $dumpdir/curses "curses\/" ""
+	dirlist ext/csv $dumpdir/csv "csv\/" ""
+	dirlist prog $dumpdir/prog "prog\/" ""
+	dirlist util $dumpdir/util "util\/" ""
 
 	if [ $update_only = no ]; then
-		mv -f CATEGORIES.html $dumpdir
+		# mv -f CATEGORIES $dumpdir
 		mv -f s9core-$V.tgz $dumpdir
 		make
 	fi
@@ -303,16 +279,15 @@ if [ $update_only = no -o $update_only = cee ]; then
 fi
 
 make_edoc() {
-	echo -n "webdump/edoc.html ..."
-	edoc -l scheme -w  -P util/libhead -E util/libtail prog/edoc.scm.edoc \
-		| sed -e 's/@DESC@/Rendered EDOC Code/' \
-		-e 's/@BASE@/<A href=edoc.html>edoc.html<\/A>/' \
-		-e 's/@TITLE@/EDOC/' \
-		| sed -e '1,/^$/d' \
-		>webdump/_.html
-        head -$(expr `wc -l webdump/_.html | awk '{print \$1}'` - 3) \
-		webdump/_.html > webdump/edoc.html
-	rm -f webdump/_.html
+	echo -n "cmsdump/edoc ..."
+	echo ".h1 Rendered EDOC Code" >cmsdump/_
+	echo ".html" >>cmsdump/_
+	edoc -l scheme -w prog/edoc.scm.edoc \
+		| sed -e '1,/^$/d' >>cmsdump/_
+	echo ".." >>cmsdump/_
+        head -$(expr `wc -l cmsdump/_ | awk '{print \$1}'` - 3) \
+		cmsdump/_ > cmsdump/edoc
+	rm -f cmsdump/_
 	echo " done"
 }
 
@@ -346,6 +321,7 @@ if [ $update_only = no -o $update_only = nah ]; then
 	naah util file pagetail
 	naah util file stress-tests.tgz
 	naah util file categories.html
+	naah util file make-cms
 fi
 
 if [ $update_only = no -o $update_only = man ]; then

@@ -1,14 +1,14 @@
 # Scheme 9 from Empty Space
 # Makefile (obviously)
-# By Nils M Holm, 2007-2018
+# By Nils M Holm, 2007-2025
 # In the public domain
 
 # Change at least this line:
 PREFIX= /u
 
 # Base version and Release
-BASE=		20181115
-RELEASE=	20181205
+BASE=		20250805
+RELEASE=	20250811
 
 # Override default compiler and flags
 CC=	cc
@@ -246,8 +246,11 @@ docs:	lib ext/sys-unix ext/curses ext/csv contrib
 webdump:
 	sh util/make-html -r $(RELEASE)
 
+cmsdump:
+	sh util/make-cms -r $(RELEASE)
+
 advdump:	prog/advgen.scm prog/adventure.adv prog/adventure.intro
-	sed -e 's/@dir/quest/' -e 's/@file/index/g' <util/pagehead >pagehead
+	sed -e 's/@dir/s9game/' -e 's/@file/index/g' <util/pagehead >pagehead
 	prog/advgen.scm -rv \
 		-P terminal:session \
 		-p pagehead \
@@ -273,7 +276,7 @@ dist:	clean s9.1.txt
 	ls -l s9fes-$(RELEASE).tgz | awk '{print int($$5/1024+.5)}'
 
 cdist:
-	tar cf - s9core.[ch] s9import.h s9core.txt README.s9core \
+	tar cf - s9core.[ch] s9import.h s9ext.h s9core.txt README.s9core \
 		| gzip -9 > s9core-$(RELEASE).tgz 
 
 arc:	clean
