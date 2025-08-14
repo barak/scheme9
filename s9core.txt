@@ -2,14 +2,14 @@
 	================================================================
 	|                           S9CORE                             |
 	|         A Toolkit for Implementing Dynamic Languages         |
-	|                           Mk IVc                             |
+	|                           Mk V a                             |
 	================================================================
 
-	                     Nils M Holm, 2007-2018
+	                     Nils M Holm, 2007-2025
 	                      In the public domain
 
-	 If your country does not have a public domain, the CC0 applies:
-	 https://creativecommons.org/share-your-work/public-domain/cc0/
+	         If your country does not have a public domain,
+	         the 0BSD license applies. See the file LICENSE.
 
 	----------------------------------------------------------------
 	RATIONALE
@@ -117,6 +117,12 @@
 
 	At C level, there are only two data types in S9core. Dynamic
 	typing is implemented by adding type tags to objects on the heap.
+
+	----- byte -----------------------------------------------------
+
+	A "byte" is an unsignec char.
+
+	Example: byte b;
 
 	----- cell -----------------------------------------------------
 
@@ -250,6 +256,7 @@
 	recover from a failed image load (see load_image()).
 
 	----- void s9_abort(void); -------------------------------------
+	----- int s9_aborted(void); ------------------------------------
 	----- void s9_reset(void); -------------------------------------
 
 	The s9_abort() function will set an internal flag in the S9core
@@ -257,6 +264,11 @@
 	early and attempts to return to the caller as soon as possible.
 	It should be set when handling an error at the level of the
 	language being implemented on top of S9core.
+
+	The s9aborted() function return a non-zero value, if s9_abort()
+	has been called during the current computation. Alternatively,
+	the variable Abort_flag (int) can be declared extern for this
+	purpose.
 
 	s9_reset() resets the abort condition. It should be called when
 	recovering from an error condition and before using any other
@@ -484,7 +496,7 @@
 
 	     Type: END_OF_FILE
 	Predicate: eof_p(x)
-	           x == END_OF_FIL
+	           x == END_OF_FILE
 
 	END_OF_FILE is an object that is reserved for indicating the end
 	of file when reading from an input source. The eof_p() predicate
@@ -555,6 +567,23 @@
 	When used in a PRIM structure, this type tag matches any other
 	type (i.e. the described primitive procedure will accept any
 	type in its place).
+	................................................................
+
+	     Type: T_BYTECODE
+	Allocator: make_bytecode(int k)
+	Predicate: bytecode_p(x)
+	Accessor:  byte *bytecode(x)
+		   int bytecode_len(x)
+
+	The make_bytevec function creates a bytecode vector of the
+	length /k/. The length must be at least 5 bytes. Bytes 1..4
+	of the bytecode vector will be initialized with the value of
+	S9_NIL in little endian byte ordering. These slots are used by
+	the garbage collector to mark objects used by the bytecode in
+	the bytecode vector. This value must be set up by the user. If
+	unused, the value of S9_NIL must be kept in slots 1..4 (and
+	the instruction in slot 0 can jump over it, for example by
+	loading it as a value).
 	................................................................
 
 	     Type: T_BOOLEAN
@@ -817,7 +846,6 @@
 	a given string is returned by the string_len() function, the C
 	string length of /x/ is "strlen(string(x))" .
 
-	................................................................
 	The string() accessor returns a pointer to the char array
 	holding the string.
 

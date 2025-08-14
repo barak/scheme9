@@ -1,7 +1,9 @@
 /*
- * Scheme 9 from Empty Space, Refactored
- * By Nils M Holm, 2007-2018
+ * Scheme 9 from Empty Space
+ * By Nils M Holm, 2007-2019
  * In the public domain
+ * If your country does not have a public domain,
+ * the 0BSD license applies. See the file LICENSE.
  *
  * Interface for extension procedures.
  */

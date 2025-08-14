@@ -1,10 +1,9 @@
 /*
- * S9core Toolkit, Mk IVc
- * By Nils M Holm, 2007-2018
+ * S9core Toolkit, Mk V a
+ * By Nils M Holm, 2007-2025
  * In the public domain
- *
- * Under jurisdictions without a public domain, the CC0 applies:
- * https://creativecommons.org/publicdomain/zero/1.0/
+ * If your country does not have a public domain,
+ * the 0BSD license applies. See the file LICENSE.
  */
 
 #include "s9core.h"
@@ -63,7 +62,7 @@ int		Input_port,
 		Output_port,
 		Error_port;
 
-static volatile int	Abort_flag;
+volatile int	Abort_flag;
 
 static char	*Str_outport;
 static int	Str_outport_len;
@@ -393,6 +392,10 @@ void s9_reset(void) {
 	Abort_flag = 0;
 }
 
+int s9_aborted(void) {
+	return Abort_flag;
+}
+
 /*
  * Memory Management
  */
@@ -447,6 +450,7 @@ static void new_vec_segment(void) {
 static void mark(cell n) {
 	cell	p, parent, *v;
 	int	i;
+	byte	*bc;
 
 	parent = NIL;
 	while (1) {
@@ -490,7 +494,11 @@ static void mark(cell n) {
 		}
 		else if (Tag[n] & S9_VECTOR_TAG) {	/* S0 --> S1|S2 */
 			Tag[n] |= S9_MARK_TAG;
-			/* Tag[n] &= ~S9_STATE_TAG; */
+			if (T_BYTECODE == car(n)) {
+				bc = s9_bytecode(n);
+				mark(bc[1] | (bc[2] << 8) | (bc[3] << 16)
+					   | (bc[4] << 24));
+			}
 			vector_link(n) = n;
 			if (car(n) == T_VECTOR && vector_len(n) != 0) {
 				Tag[n] |= S9_STATE_TAG;
@@ -532,6 +540,8 @@ int s9_gc(void) {
 		s9_count(&Collections);
 	for (i=0; i<S9_MAX_PORTS; i++) {
 		if (Port_flags[i] & S9_LOCK_TAG)
+			Port_flags[i] |= S9_USED_TAG;
+		else if (i == Input_port || i == Output_port)
 			Port_flags[i] |= S9_USED_TAG;
 		else
 			Port_flags[i] &= ~S9_USED_TAG;
@@ -879,6 +889,19 @@ cell s9_make_string(char *s, int k) {
 	if (0 == k) return Nullstr;
 	n = s9_new_vec(T_STRING, k+1);
 	strncpy(string(n), s, k+1);
+	return n;
+}
+
+cell s9_make_bytecode(int k) {
+	cell	n;
+	byte	*b;
+
+	n = s9_new_vec(T_BYTECODE, k);
+	b = s9_bytecode(n);
+	b[1] = S9_NIL;
+	b[2] = S9_NIL >> 8;
+	b[3] = S9_NIL >> 16;
+	b[4] = S9_NIL >> 24;
 	return n;
 }
 

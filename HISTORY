@@ -1,5 +1,46 @@
 
+2025-08-11
+
+	Removed first argument from make_bytecode() function of S9core,
+	because it is not really necessary.
+
+	Execution speed does not really seem to be lower than that of
+	the Reimagined version. Measured again, and they are pretty
+	much the same.
+
+2025-08-05
+
+	Made bytecode use one byte for instructions instead of one
+	bignum integer and one vector slot. Image size is down ~55%,
+	[but execution speed is also down ~8%; nope, seems to be a
+	mistake when runnig the benchmark].
+
+	Bumped S9core version to Mk V.
+
+	Added S9_T_BYTECODE type tag to S9core. Added OBLIST support
+	to mark phase of GC, marks object whose address is stored in
+	bytes bytecode[1]..bytecode[4] (bytecode[0] is a QUOTE
+	instruction).
+
+	Changed license to 0BSD.
+
+-------------------------------------------------------------------------------
+	Forked this version; called "Scheme 9 from Empty Space" again.
+-------------------------------------------------------------------------------
+
+2025-01-18
+
+	INTERNAL: Added dump utility for T3X CMS. No new version.
+
+2019-04-02
+
+	Imported latest S9core. No user-visible changes.
+
 2018-12-05
+
+	Merged S9core fix by Micah Stetsion: s9core GC should never close
+	the current input or output port. Does not affect Scheme 9, but
+	is might affect other languages (like Klong). Thanks, Micah!
 
 	Fix: APPLYing a function to more than CHUNK_SIZE (1024) arguments
 	would result in a core dump. (Not that doing this is a good idea,

@@ -3,6 +3,7 @@
 
 (load-from-library "help.scm")
 (load-from-library "pretty-print.scm")
+(load-from-library "disassemble.scm")
 (load-from-library "draw-tree.scm")
 
 (load-from-library "hash-table.scm")

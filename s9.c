@@ -1,12 +1,12 @@
 /*
- * Scheme 9 from Empty Space, Reimagined
- * By Nils M Holm, 2007-2018
+ * Scheme 9 from Empty Space
+ * By Nils M Holm, 2007-2025
  * In the public domain
- * If your country does not have a public domain, the CC0 applies:
- * https://creativecommons.org/share-your-work/public-domain/cc0/
+ * If your country does not have a public domain,
+ * the 0BSD license applies. See the file LICENSE.
  */
 
-#define RELEASE_DATE	"2018-12-05"
+#define RELEASE_DATE	"2025-08-11"
 #define PATCHLEVEL	0
 
 #include "s9core.h"
@@ -83,6 +83,8 @@ int	Tp = 0;
 
 cell	Emitbuf;
 
+cell	Oblist = NIL;
+
 cell	Prog = NIL;
 int	Here = 0;
 
@@ -127,7 +129,7 @@ int	Report_to_stderr = 0;
 cell	*Image_vars[] = { &Glob, &Hash, &Macros, NULL };
 
 cell	*GC_roots[] = {
-		&Prog, &Env, &Cts, &Emitbuf, &Glob, &Hash,
+		&Prog, &Env, &Cts, &Emitbuf, &Oblist, &Glob, &Hash,
 		&Macros, &Rts, &Acc, &Ep, &E0, &Argv, &Tmp,
 	NULL };
 
@@ -207,7 +209,7 @@ cell	P_abs, P_append, P_assq, P_assv, P_bit_op, P_boolean_p,
 enum	{ OP_APPLIS, OP_APPLY, OP_ARG, OP_COPY_ARG, OP_CLOSURE,
 	  OP_COPY_REF, OP_DEF_MACRO, OP_ENTER, OP_ENTER_COLL,
 	  OP_HALT, OP_JMP, OP_JMP_FALSE, OP_JMP_TRUE,
-	  OP_MAKE_ENV, OP_PROP_ENV, OP_POP, OP_PUSH,
+	  OP_MAKE_ENV, OP_PROP_ENV, OP_POP, OP_PUSH_BOX, OP_PUSH_LIT,
 	  OP_PUSH_VAL, OP_QUOTE, OP_REF, OP_RETURN, OP_SET_ARG,
 	  OP_SET_REF, OP_TAIL_APPLIS, OP_TAIL_APPLY,
 
@@ -353,12 +355,14 @@ void expect(char *who, char *what, cell got) {
  * Type implementations
  */
 
-cell closure(cell i, cell e) {
+cell closure(cell i, cell vs, cell e) {
 	cell	c;
 
-	c = cons(Prog, NIL);
+	c = cons(Prog, vs);
 	c = cons(e, c);
-	c = cons(i, c);
+	save(c);
+	c = cons(mkfix(i), c);
+	unsave(1);
 	return new_atom(T_FUNCTION, c);
 }
 
@@ -725,6 +729,22 @@ cell subvector(cell x, int k0, int k1) {
 	n = make_vector(k1-k0);
 	vx = vector(x);
 	vn = vector(n);
+	j = 0;
+	for (i=k0; i<k1; i++) {
+		vn[j] = vx[i];
+		j++;
+	}
+	return n;
+}
+
+cell bytecode_segment(cell x, int k0, int k1) {
+	cell	n;
+	byte	*vx, *vn;
+	int	i, j;
+
+	n = make_bytecode(k1-k0);
+	vx = bytecode(x);
+	vn = bytecode(n);
 	j = 0;
 	for (i=k0; i<k1; i++) {
 		vn[j] = vx[i];
@@ -2458,34 +2478,48 @@ cell clsconv(cell x) {
 /* Bytecode generation */
 
 void emit(cell x) {
-	cell	n, *vp, *vn;
+	cell	n;
+	byte	*vp, *vn;
 	int	i, k;
 
-	if (Here >= vector_len(Emitbuf)) {
-		save(x);
-		k = vector_len(Emitbuf);
-		n = make_vector(CHUNK_SIZE + k);
-		vp = vector(Emitbuf);
-		vn = vector(n);
+	if (Here >= bytecode_len(Emitbuf)) {
+		k = bytecode_len(Emitbuf);
+		n = make_bytecode(CHUNK_SIZE + k);
+		vp = bytecode(Emitbuf);
+		vn = bytecode(n);
 		for (i = 0; i < k; i++) vn[i] = vp[i];
 		Emitbuf = n;
-		unsave(1);
 	}
-	vector(Emitbuf)[Here] = x;
+	bytecode(Emitbuf)[Here] = x;
 	Here++;
 }
 
-void emitop(cell op) {
-	emit(mkfix(op));
+#define emitop(x) emit(x)
+
+void emitarg(cell x) {
+	emit(x & 255);
+	emit(x >> 8);
+	emit(x >> 16);
+	emit(x >> 24);
+}
+
+void emitconst(cell x) {
+	emitop(OP_QUOTE);
+	emitarg(x);
 }
 
 void emitq(cell x) {
-	emitop(OP_QUOTE);
-	emit(x);
+	emitconst(x);
+	Oblist = cons(x, Oblist);
 }
 
 void patch(int a, cell x) {
-	vector(Emitbuf)[a] = x;
+	cell	oh;
+
+	oh = Here;
+	Here = a;
+	emitarg(x);
+	Here = oh;
 }
 
 cell cpop(void) {
@@ -2747,7 +2781,7 @@ void compexpr(cell x, int t);
 void compbegin(cell x, int t) {
 	x = cdr(x);
 	if (NIL == x) {
-		emitq(UNSPECIFIC);
+		emitconst(UNSPECIFIC);
 		return;
 	}
 	while (cdr(x) != NIL) {
@@ -2761,11 +2795,11 @@ void compsetb(cell x) {
 	compexpr(caddr(x), 0);
 	if (caadr(x) == I_ref) {
 		emitop(OP_SET_REF);
-		emit(cadadr(x));
+		emitarg(fixval(cadadr(x)));
 	}
 	else if (caadr(x) == I_arg) {
 		emitop(OP_SET_ARG);
-		emit(cadadr(x));
+		emitarg(fixval(cadadr(x)));
 	}
 	else {
 		error("oops: unknown location in set!", x);
@@ -2776,17 +2810,17 @@ void compif(cell x, int t, int star) {
 	compexpr(cadr(x), 0);
 	emitop(star? OP_JMP_TRUE: OP_JMP_FALSE);
 	cpushval(Here);
-	emit(NIL);
+	emitarg(0);
 	compexpr(caddr(x), t);
 	if (cdddr(x) != NIL) {
 		emitop(OP_JMP);
 		cpushval(Here);
-		emit(NIL);
+		emitarg(0);
 		swap();
-		patch(cpopval(), mkfix(Here));
+		patch(cpopval(), Here);
 		compexpr(cadddr(x), t);
 	}
-	patch(cpopval(), mkfix(Here));
+	patch(cpopval(), Here);
 }
 
 void setupenv(cell m) {
@@ -2797,46 +2831,49 @@ void setupenv(cell m) {
 			emitop(OP_COPY_ARG);
 		else
 			error("oops: unknown location in closure", m);
-		emit(cadar(m));
-		emit(caddar(m));
+		emitarg(fixval(cadar(m)));
+		emitarg(fixval(caddar(m)));
 		m = cdr(m);
 	}
 }
 
 void compcls(cell x) {
 	int	a, na;
-	cell	b, m;
+	cell	b, m, vs;
 
 	emitop(OP_JMP);
 	cpushval(Here);
-	emit(NIL);
+	emitarg(0);
 	a = Here;
 	na = length(flatargs(cadr(x)));
 	if (dotted_p(cadr(x))) {
 		emitop(OP_ENTER_COLL);
-		emit(mkfix(na-1));
+		emitarg(na-1);
 	}
 	else {
 		emitop(OP_ENTER);
-		emit(mkfix(na));
+		emitarg(na);
 	}
 	b = cons(S_begin, cdddr(x));
 	save(b);
 	compexpr(b, 1);
 	unsave(1);
 	emitop(OP_RETURN);
-	patch(cpopval(), mkfix(Here));
+	patch(cpopval(), Here);
 	m = caddr(x);
 	if (m != NIL) {
 		emitop(OP_MAKE_ENV);
-		emit(mkfix(length(m)));
+		emitarg(length(m));
 		setupenv(m);
 	}
 	else {
 		emitop(OP_PROP_ENV);
 	}
 	emitop(OP_CLOSURE);
-	emit(mkfix(a));
+	emitarg(a);
+	vs = cons(cadr(x), NIL);
+	emitarg(vs);
+	Oblist = cons(vs, Oblist);
 }
 
 void compapply(cell x, int t) {
@@ -2846,11 +2883,11 @@ void compapply(cell x, int t) {
 	save(xs);
 	compexpr(car(xs), 0);
 	for (xs = cdr(xs); xs != NIL; xs = cdr(xs)) {
-		emitop(OP_PUSH);
+		emitop(OP_PUSH_BOX);
 		compexpr(car(xs), 0);
 		emitop(OP_CONS);
 	}
-	emitop(OP_PUSH);
+	emitop(OP_PUSH_BOX);
 	unsave(1);
 	compexpr(cadr(x), 0);
 	emitop(t? OP_TAIL_APPLIS: OP_APPLIS);
@@ -2863,12 +2900,12 @@ void compapp(cell x, int t) {
 	save(xs);
 	while (xs != NIL) {
 		compexpr(car(xs), 0);
-		emitop(OP_PUSH);
+		emitop(OP_PUSH_BOX);
 		xs = cdr(xs);
 	}
 	unsave(1);
 	emitop(OP_PUSH_VAL);
-	emit(mkfix(length(cdr(x))));
+	emitarg(length(cdr(x)));
 	compexpr(car(x), 0);
 	emitop(t? OP_TAIL_APPLY: OP_APPLY);
 }
@@ -2889,7 +2926,7 @@ void compsubr1(cell x, int op) {
 void compsubr2(cell x, int op) {
 	ckargs(x, symbol_name(car(x)), 2, 2);
 	compexpr(caddr(x), 0);
-	emitop(OP_PUSH);
+	emitop(OP_PUSH_BOX);
 	compexpr(cadr(x), 0);
 	emitop(op);
 }
@@ -2897,9 +2934,9 @@ void compsubr2(cell x, int op) {
 void compsubr3(cell x, int op) {
 	ckargs(x, symbol_name(car(x)), 3, 3);
 	compexpr(cadddr(x), 0);
-	emitop(OP_PUSH);
+	emitop(OP_PUSH_BOX);
 	compexpr(caddr(x), 0);
-	emitop(OP_PUSH);
+	emitop(OP_PUSH_BOX);
 	compexpr(cadr(x), 0);
 	emitop(op);
 }
@@ -2920,11 +2957,10 @@ void composubr1(cell x, int op) {
 			/**/
 		}
 		if (OP_MAKE_STRING == op) {
-			emitop(OP_QUOTE);
-			emit(make_char(' '));
+			emitconst(Blank);
 		}
 		if (OP_MAKE_VECTOR == op) {
-			emitq(FALSE);
+			emitconst(FALSE);
 		}
 		if (	OP_DISPLAY == op ||
 			OP_WRITE == op ||
@@ -2937,7 +2973,7 @@ void composubr1(cell x, int op) {
 		if (OP_ERROR == op) op = OP_ERROR2;
 		compexpr(caddr(x), 0);
 	}
-	emitop(OP_PUSH);
+	emitop(OP_PUSH_BOX);
 	compexpr(cadr(x), 0);
 	emitop(op);
 }
@@ -2949,20 +2985,20 @@ void composubr4(cell x, int op) {
 	x = cdr(x);
 	k = length(x);
 	if (k < 4)
-		emitq(FALSE);
+		emitconst(FALSE);
 	else
 		compexpr(cadddr(x), 0);
-	emitop(OP_PUSH);
+	emitop(OP_PUSH_BOX);
 	if (k < 3)
-		emitq(UNDEFINED);
+		emitconst(UNDEFINED);
 	else
 		compexpr(caddr(x), 0);
-	emitop(OP_PUSH);
+	emitop(OP_PUSH_BOX);
 	if (k < 2)
-		emitq(UNDEFINED);
+		emitconst(UNDEFINED);
 	else
 		compexpr(cadr(x), 0);
-	emitop(OP_PUSH);
+	emitop(OP_PUSH_BOX);
 	compexpr(car(x), 0);
 	emitop(op);
 }
@@ -2974,21 +3010,19 @@ void complsubr0(cell x, int op) {
 		ckargs(x, "bit-op", 3, -1);
 	if (NIL == cdr(x)) {
 		if (OP_PLUS == op) {
-			emitq(Zero);
+			emitconst(Zero);
 		}
 		else if (OP_TIMES == op) {
-			emitq(One);
+			emitconst(One);
 		}
 		else if (OP_STRING_APPEND == op) {
-			emitop(OP_QUOTE);
-			emit(make_string("", 0));
+			emitconst(Nullstr);
 		}
 		else if (OP_VECTOR_APPEND == op) {
-			emitop(OP_QUOTE);
-			emit(make_vector(0));
+			emitconst(Nullvec);
 		}
 		else { /* OP_APPEND */
-			emitq(NIL);
+			emitconst(NIL);
 		}
 	}
 	else if (NIL == cddr(x)) {
@@ -3001,9 +3035,9 @@ void complsubr0(cell x, int op) {
 		x = cdr(x);
 		x = reverse(x);
 		save(x);
-		emitq(NIL);
+		emitconst(NIL);
 		while (x != NIL) {
-			emitop(OP_PUSH);
+			emitop(OP_PUSH_BOX);
 			compexpr(car(x), 0);
 			emitop(OP_CONS);
 			x = cdr(x);
@@ -3022,10 +3056,10 @@ void complsubr0(cell x, int op) {
 		compexpr(car(x), 0);
 		x = cdr(x);
 		while (x != NIL) {
-			emitop(OP_PUSH);
+			emitop(OP_PUSH_BOX);
 			compexpr(car(x), 0);
 			if (OP_BIT_OP == op) {
-				emitop(OP_PUSH);
+				emitop(OP_PUSH_BOX);
 				compexpr(bitop, 0);
 			}
 			emitop(op);
@@ -3043,8 +3077,8 @@ void complsubr1(cell x, int op) {
 			emitop(OP_NEGATE);
 		}
 		else if (OP_DIVIDE == op) {
-			emitq(One);
-			emitop(OP_PUSH);
+			emitconst(One);
+			emitop(OP_PUSH_BOX);
 			compexpr(cadr(x), 0);
 			emitop(op);
 		}
@@ -3054,13 +3088,13 @@ void complsubr1(cell x, int op) {
 	}
 	else {
 		if (OP_MIN == op || OP_MAX == op) {
-			emitop(OP_PUSH_VAL);
-			emit(FALSE);
+			emitop(OP_PUSH_LIT);
+			emitarg(FALSE);
 		}
 		x = cdr(x);
 		compexpr(car(x), 0);
 		for (x = cdr(x); x != NIL; x = cdr(x)) {
-			emitop(OP_PUSH);
+			emitop(OP_PUSH_BOX);
 			compexpr(car(x), 0);
 			emitop(op);
 		}
@@ -3072,12 +3106,12 @@ void complsubr1(cell x, int op) {
 
 void complsubr2(cell x, int op) {
 	ckargs(x, symbol_name(car(x)), 2, -1);
-	emitop(OP_PUSH_VAL);
-	emit(TRUE);
+	emitop(OP_PUSH_LIT);
+	emitarg(TRUE);
 	x = cdr(x);
 	compexpr(car(x), 0);
 	for (x = cdr(x); x != NIL; x = cdr(x)) {
-		emitop(OP_PUSH);
+		emitop(OP_PUSH_BOX);
 		compexpr(car(x), 0);
 		emitop(op);
 	}
@@ -3095,12 +3129,12 @@ void compexpr(cell x, int t) {
 	}
 	else if (car(x) == I_arg) {
 		emitop(OP_ARG);
-		emit(cadr(x));
+		emitarg(fixval(cadr(x)));
 	}
 	else if (car(x) == I_ref) {
 		emitop(OP_REF);
-		emit(cadr(x));
-		emit(caddr(x));
+		emitarg(fixval(cadr(x)));
+		emitarg(caddr(x));
 	}
 	else if (car(x) == S_if) {
 		compif(x, t, 0);
@@ -3123,7 +3157,7 @@ void compexpr(cell x, int t) {
 	else if (car(x) == S_define_syntax) {
 		compexpr(caddr(x), 0);
 		emitop(OP_DEF_MACRO);
-		emit(cadr(x));
+		emitarg(cadr(x));
 	}
 	else if ((op = subr0p(car(x))) >= 0) {
 		compsubr0(x, op);
@@ -3161,12 +3195,15 @@ void compexpr(cell x, int t) {
 }
 
 cell compile(cell x) {
-	Emitbuf = make_vector(CHUNK_SIZE);
+	Emitbuf = make_bytecode(CHUNK_SIZE);
 	Here = 0;
 	Cts = NIL;
+	Oblist = NIL;
+	emitq(Oblist);
 	compexpr(x, 0);
 	emitop(OP_HALT);
-	return subvector(Emitbuf, 0, Here);
+	patch(1, Oblist);
+	return bytecode_segment(Emitbuf, 0, Here);
 }
 
 /*
@@ -3310,9 +3347,16 @@ cell expand(cell x, int all) {
  * Abstract machine
  */
 
-#define ins()		fixval(vector(Prog)[Ip])
-#define op1()		(vector(Prog)[Ip+1])
-#define op2()		(vector(Prog)[Ip+2])
+#define ZERO_OPS	1
+#define ONE_OP		5
+#define TWO_OPS		9
+
+#define fetcharg(a, i) (((a)[i])           | ((a)[(i)+1] << 8) | \
+			((a)[(i)+2] << 16) | ((a)[(i)+3] << 24))
+
+#define ins()		(bytecode(Prog)[Ip])
+#define op1()		(fetcharg(bytecode(Prog), Ip+1))
+#define op2()		(fetcharg(bytecode(Prog), Ip+5))
 
 #define skip(n)		(Ip += (n))
 
@@ -3323,14 +3367,14 @@ cell expand(cell x, int all) {
 #define stackref(x)	(vector(Rts)[x])
 #define stackset(x,v)	(vector(Rts)[x] = (v))
 
-#define argbox(n)	(stackref(Fp-fixval(n)))
+#define argbox(n)	(stackref(Fp-(n)))
 #define argref(n)	boxref(argbox(n))
 
 #define arg(n)		boxref(stackref(Sp-(n)))
 
 #define clear(n)	(Sp -= (n))
 
-#define envbox(x)	(vector(Ep)[fixval(x)])
+#define envbox(x)	(vector(Ep)[x])
 
 void stkalloc(int k) {
 	cell	n, *vs, *vn;
@@ -4316,17 +4360,15 @@ cell getenvvar(char *s) {
 }
 
 cell cvt_bytecode(cell x) {
-	cell	b, *v;
+	byte	*bv;
 	int	i, k;
 
-	k = vector_len(x);
-	b = subvector(x, 0, k);
-	v = vector(b);
-	for (i=0; i<k; i++) {
-		if (fix_p(v[i]))
-			car(v[i]) = T_INTEGER;
-	}
-	return b;
+	k = bytecode_len(x);
+	bv = bytecode(x);
+	save(NIL);
+	for (i=0; i<k; i++)
+		Car[Stack] = cons(make_integer(bv[i]), Car[Stack]);
+	return nreverse(unsave(1));
 }
 
 /* Main interpreter loop */
@@ -4334,12 +4376,15 @@ cell cvt_bytecode(cell x) {
 void reset_tty(void);
 
 void run(cell x) {
+	Acc = NIL;
 	Prog = x;
+	Ip = 0;
 	if (setjmp(Error_tag) != 0) {
 		Ip = throw(Error_handler, getbind(S_error_value));
 		if (Ip < 0) longjmp(Restart, 1);
 	}
-	for (Running = 1; Running;) switch (ins()) {
+	for (Running = 1; Running;) {
+	switch (ins()) {
 	case OP_APPLIS:
 		Ip = applis(0);
 		break;
@@ -4354,11 +4399,11 @@ void run(cell x) {
 		break;
 	case OP_QUOTE:
 		Acc = op1();
-		skip(2);
+		skip(ONE_OP);
 		break;
 	case OP_ARG:
 		Acc = argref(op1());
-		skip(2);
+		skip(ONE_OP);
 		break;
 	case OP_REF:
 		Acc = boxref(envbox(op1()));
@@ -4366,68 +4411,72 @@ void run(cell x) {
 			error("undefined symbol", op2());
 		if (Tp >= MAX_REF_TRACE) Tp = 0;
 		Trace[Tp++] = op2();
-		skip(3);
+		skip(TWO_OPS);
 		break;
 	case OP_POP:
 		Acc = stackref(Sp);
 		Sp--;
-		skip(1);
+		skip(ZERO_OPS);
 		break;
-	case OP_PUSH:
+	case OP_PUSH_BOX:
 		push(cons(Acc, NIL));
-		skip(1);
+		skip(ZERO_OPS);
+		break;
+	case OP_PUSH_LIT:
+		push(op1());
+		skip(ONE_OP);
 		break;
 	case OP_PUSH_VAL:
-		push(op1());
-		skip(2);
+		push(mkfix(op1()));
+		skip(ONE_OP);
 		break;
 	case OP_JMP:
-		Ip = fixval(op1());
+		Ip = op1();
 		break;
 	case OP_JMP_FALSE:
 		if (FALSE == Acc)
-			Ip = fixval(op1());
+			Ip = op1();
 		else
-			skip(2);
+			skip(ONE_OP);
 		break;
 	case OP_JMP_TRUE:
 		if (FALSE == Acc)
-			skip(2);
+			skip(ONE_OP);
 		else
-			Ip = fixval(op1());
+			Ip = op1();
 		break;
 	case OP_HALT:
 		return;
 	case OP_MAKE_ENV:
-		Acc = make_vector(fixval(op1()));
-		skip(2);
+		Acc = make_vector(op1());
+		skip(ONE_OP);
 		break;
 	case OP_PROP_ENV:
 		Acc = Ep;
-		skip(1);
+		skip(ZERO_OPS);
 		break;
 	case OP_COPY_ARG:
-		vector(Acc)[fixval(op2())] = argbox(op1());
-		skip(3);
+		vector(Acc)[op2()] = argbox(op1());
+		skip(TWO_OPS);
 		break;
 	case OP_COPY_REF:
-		vector(Acc)[fixval(op2())] = envbox(op1());
-		skip(3);
+		vector(Acc)[op2()] = envbox(op1());
+		skip(TWO_OPS);
 		break;
 	case OP_CLOSURE:
-		Acc = closure(op1(), Acc);
-		skip(2);
+		Acc = closure(op1(), op2(), Acc);
+		skip(TWO_OPS);
 		break;
 	case OP_ENTER:
-		if (fixval(stackref(Sp-2)) != fixval(op1()))
+		if (fixval(stackref(Sp-2)) != op1())
 			error("wrong number of arguments", UNDEFINED);
 		push(mkfix(Fp));
 		Fp = Sp-4;
-		skip(2);
+		skip(ONE_OP);
 		break;
 	case OP_ENTER_COLL:
-		entcol(fixval(op1()));
-		skip(2);
+		entcol(op1());
+		skip(ONE_OP);
 		break;
 	case OP_RETURN:
 		Ip = ret();
@@ -4435,702 +4484,702 @@ void run(cell x) {
 	case OP_SET_ARG:
 		boxset(argbox(op1()), Acc);
 		Acc = UNSPECIFIC;
-		skip(2);
+		skip(ONE_OP);
 		break;
 	case OP_SET_REF:
 		boxset(envbox(op1()), Acc);
 		Acc = UNSPECIFIC;
-		skip(2);
+		skip(ONE_OP);
 		break;
 	case OP_DEF_MACRO:
 		newmacro(op1(), Acc);
 		Acc = UNSPECIFIC;
-		skip(2);
+		skip(ONE_OP);
 		break;
 	case OP_COMMAND_LINE:
 		Acc = Argv;
-		skip(1);
+		skip(ZERO_OPS);
 		break;
 	case OP_CURRENT_ERROR_PORT:
 		Acc = make_port(error_port(), T_OUTPUT_PORT);
-		skip(1);
+		skip(ZERO_OPS);
 		break;
 	case OP_CURRENT_INPUT_PORT:
 		Acc = make_port(input_port(), T_INPUT_PORT);
-		skip(1);
+		skip(ZERO_OPS);
 		break;
 	case OP_CURRENT_OUTPUT_PORT:
 		Acc = make_port(output_port(), T_OUTPUT_PORT);
-		skip(1);
+		skip(ZERO_OPS);
 		break;
 	case OP_GENSYM:
 		Acc = gensym();
-		skip(1);
+		skip(ZERO_OPS);
 		break;
 	case OP_QUIT:
 		reset_tty();
 		bye(0);
-		skip(1);
+		skip(ZERO_OPS);
 		break;
 	case OP_SYMBOLS:
 		Acc = carof(Glob);
-		skip(1);
+		skip(ZERO_OPS);
 		break;
 	case OP_ABS:
 		if (!number_p(Acc)) expect("abs", "number", Acc);
 		Acc = real_abs(Acc);
-		skip(1);
+		skip(ZERO_OPS);
 		break;
 	case OP_BOOLEAN_P:
 		Acc = (TRUE == Acc || FALSE == Acc)? TRUE: FALSE;
-		skip(1);
+		skip(ZERO_OPS);
 		break;
 	case OP_CHAR_ALPHABETIC_P:
 		if (!char_p(Acc)) expect("char-alphabetic?", "char", Acc);
 		Acc = isalpha(char_value(Acc))? TRUE: FALSE;
-		skip(1);
+		skip(ZERO_OPS);
 		break;
 	case OP_CAR:
 		if (!pair_p(Acc)) expect("car", "pair", Acc);
 		Acc = car(Acc);
-		skip(1);
+		skip(ZERO_OPS);
 		break;
 	case OP_CATCH:
 		push(box(catch()));
 		push(mkfix(1));
-		skip(1);
+		skip(ZERO_OPS);
 		break;
 	case OP_CATCH_TAG_P:
 		Acc = catch_tag_p(Acc)? TRUE: FALSE;
-		skip(1);
+		skip(ZERO_OPS);
 		break;
 	case OP_CDR:
 		if (!pair_p(Acc)) expect("cdr", "pair", Acc);
 		Acc = cdr(Acc);
-		skip(1);
+		skip(ZERO_OPS);
 		break;
 	case OP_CAAR:
 		if (!pair_p(Acc) || !pair_p(car(Acc)))
 			expect("caar", "nested pair", Acc);
 		Acc = caar(Acc);
-		skip(1);
+		skip(ZERO_OPS);
 		break;
 	case OP_CADR:
 		if (!pair_p(Acc) || !pair_p(cdr(Acc)))
 			expect("cadr", "nested pair", Acc);
 		Acc = cadr(Acc);
-		skip(1);
+		skip(ZERO_OPS);
 		break;
 	case OP_CDAR:
 		if (!pair_p(Acc) || !pair_p(car(Acc)))
 			expect("cdar", "nested pair", Acc);
 		Acc = cdar(Acc);
-		skip(1);
+		skip(ZERO_OPS);
 		break;
 	case OP_CDDR:
 		if (!pair_p(Acc) || !pair_p(cdr(Acc)))
 			expect("cddr", "nested pair", Acc);
 		Acc = cddr(Acc);
-		skip(1);
+		skip(ZERO_OPS);
 		break;
 	case OP_CAAAR:
 		Acc = cxr("aaa", Acc);
-		skip(1);
+		skip(ZERO_OPS);
 		break;
 	case OP_CAADR:
 		Acc = cxr("daa", Acc);
-		skip(1);
+		skip(ZERO_OPS);
 		break;
 	case OP_CADAR:
 		Acc = cxr("ada", Acc);
-		skip(1);
+		skip(ZERO_OPS);
 		break;
 	case OP_CADDR:
 		Acc = cxr("dda", Acc);
-		skip(1);
+		skip(ZERO_OPS);
 		break;
 	case OP_CDAAR:
 		Acc = cxr("aad", Acc);
-		skip(1);
+		skip(ZERO_OPS);
 		break;
 	case OP_CDADR:
 		Acc = cxr("dad", Acc);
-		skip(1);
+		skip(ZERO_OPS);
 		break;
 	case OP_CDDAR:
 		Acc = cxr("add", Acc);
-		skip(1);
+		skip(ZERO_OPS);
 		break;
 	case OP_CDDDR:
 		Acc = cxr("ddd", Acc);
-		skip(1);
+		skip(ZERO_OPS);
 		break;
 	case OP_CAAAAR:
 		Acc = cxr("aaaa", Acc);
-		skip(1);
+		skip(ZERO_OPS);
 		break;
 	case OP_CAAADR:
 		Acc = cxr("daaa", Acc);
-		skip(1);
+		skip(ZERO_OPS);
 		break;
 	case OP_CAADAR:
 		Acc = cxr("adaa", Acc);
-		skip(1);
+		skip(ZERO_OPS);
 		break;
 	case OP_CAADDR:
 		Acc = cxr("ddaa", Acc);
-		skip(1);
+		skip(ZERO_OPS);
 		break;
 	case OP_CADAAR:
 		Acc = cxr("aada", Acc);
-		skip(1);
+		skip(ZERO_OPS);
 		break;
 	case OP_CADADR:
 		Acc = cxr("dada", Acc);
-		skip(1);
+		skip(ZERO_OPS);
 		break;
 	case OP_CADDAR:
 		Acc = cxr("adda", Acc);
-		skip(1);
+		skip(ZERO_OPS);
 		break;
 	case OP_CADDDR:
 		Acc = cxr("ddda", Acc);
-		skip(1);
+		skip(ZERO_OPS);
 		break;
 	case OP_CDAAAR:
 		Acc = cxr("aaad", Acc);
-		skip(1);
+		skip(ZERO_OPS);
 		break;
 	case OP_CDAADR:
 		Acc = cxr("daad", Acc);
-		skip(1);
+		skip(ZERO_OPS);
 		break;
 	case OP_CDADAR:
 		Acc = cxr("adad", Acc);
-		skip(1);
+		skip(ZERO_OPS);
 		break;
 	case OP_CDADDR:
 		Acc = cxr("ddad", Acc);
-		skip(1);
+		skip(ZERO_OPS);
 		break;
 	case OP_CDDAAR:
 		Acc = cxr("aadd", Acc);
-		skip(1);
+		skip(ZERO_OPS);
 		break;
 	case OP_CDDADR:
 		Acc = cxr("dadd", Acc);
-		skip(1);
+		skip(ZERO_OPS);
 		break;
 	case OP_CDDDAR:
 		Acc = cxr("addd", Acc);
-		skip(1);
+		skip(ZERO_OPS);
 		break;
 	case OP_CDDDDR:
 		Acc = cxr("dddd", Acc);
-		skip(1);
+		skip(ZERO_OPS);
 		break;
 	case OP_CALL_CC:
 		push(box(capture_cont()));
 		push(mkfix(1));
-		skip(1);
+		skip(ZERO_OPS);
 		break;
 	case OP_ERROR:
 		if (!string_p(Acc)) expect("error", "string", Acc);
 		error(string(Acc), UNDEFINED);
-		skip(1);
+		skip(ZERO_OPS);
 		break;
 	case OP_ERROR2:
 		if (!string_p(Acc)) expect("error", "string", Acc);
 		error(string(Acc), arg(0));
 		clear(1);
-		skip(1);
+		skip(ZERO_OPS);
 		break;
 	case OP_CEILING:
 		if (!number_p(Acc)) expect("ceiling", "number", Acc);
 		Acc = real_ceil(Acc);
-		skip(1);
+		skip(ZERO_OPS);
 		break;
 	case OP_INTEGER_TO_CHAR:
 		Acc = integer_value("integer->char", Acc);
 		if (Acc < 0 || Acc > 126)
 			error("integer->char: value out of range", Acc);
 		Acc = make_char(Acc);
-		skip(1);
+		skip(ZERO_OPS);
 		break;
 	case OP_CHAR_P:
 		Acc = char_p(Acc)? TRUE: FALSE;
-		skip(1);
+		skip(ZERO_OPS);
 		break;
 	case OP_CHAR_TO_INTEGER:
 		if (!char_p(Acc)) expect("char->integer", "char", Acc);
 		Acc = make_integer(char_value(Acc));
-		skip(1);
+		skip(ZERO_OPS);
 		break;
 	case OP_CLOSE_INPUT_PORT:
 		if (!input_port_p(Acc))
 			expect("close-input-port", "input port", Acc);
 		close_port(port_no(Acc));
 		Acc = UNSPECIFIC;
-		skip(1);
+		skip(ZERO_OPS);
 		break;
 	case OP_CLOSE_OUTPUT_PORT:
 		if (!output_port_p(Acc))
 			expect("close-output-port", "output port", Acc);
 		close_port(port_no(Acc));
 		Acc = UNSPECIFIC;
-		skip(1);
+		skip(ZERO_OPS);
 		break;
 	case OP_DELETE_FILE:
 		if (!string_p(Acc)) expect("delete-file", "string", Acc);
 		if (remove(string(Acc)) < 0)
 			error("delete-file: cannot delete", Acc);
 		Acc = UNSPECIFIC;
-		skip(1);
+		skip(ZERO_OPS);
 		break;
 	case OP_CHAR_DOWNCASE:
 		if (!char_p(Acc)) expect("char-downcase", "char", Acc);
 		Acc = make_char(tolower(char_value(Acc)));
-		skip(1);
+		skip(ZERO_OPS);
 		break;
 	case OP_DUMP_IMAGE:
 		if (!string_p(Acc)) expect("dump-image", "string", Acc);
 		dump_image_file(Acc);
 		Acc = UNSPECIFIC;
-		skip(1);
+		skip(ZERO_OPS);
 		break;
 	case OP_ENVIRONMENT_VARIABLE:
 		if (!string_p(Acc))
 			expect("environment-variable", "string", Acc);
 		Acc = getenvvar(string(Acc));
-		skip(1);
+		skip(ZERO_OPS);
 		break;
 	case OP_EOF_OBJECT_P:
 		Acc = (END_OF_FILE == Acc? TRUE: FALSE);
-		skip(1);
+		skip(ZERO_OPS);
 		break;
 	case OP_EVAL:
 		Acc = eval(Acc, 1);
-		skip(1);
+		skip(ZERO_OPS);
 		break;
 	case OP_EVEN_P:
 		Acc = integer_argument("even?", Acc);
 		Acc = bignum_even_p(Acc)? TRUE: FALSE;
-		skip(1);
+		skip(ZERO_OPS);
 		break;
 	case OP_EXACT_TO_INEXACT:
 		if (!number_p(Acc)) expect("exact->inexact", "number", Acc);
 		Acc = exact_to_inexact(Acc);
-		skip(1);
+		skip(ZERO_OPS);
 		break;
 	case OP_EXACT_P:
 		if (!number_p(Acc)) expect("exact?", "number", Acc);
 		Acc = integer_p(Acc)? TRUE: FALSE;
-		skip(1);
+		skip(ZERO_OPS);
 		break;
 	case OP_EXPONENT:
 		if (!number_p(Acc)) expect("exponent", "number", Acc);
 		Acc = make_integer(real_exponent(Acc));
-		skip(1);
+		skip(ZERO_OPS);
 		break;
 	case OP_FLOOR:
 		if (!number_p(Acc)) expect("floor", "number", Acc);
 		Acc = real_floor(Acc);
-		skip(1);
+		skip(ZERO_OPS);
 		break;
 	case OP_FILE_EXISTS_P:
 		if (!string_p(Acc)) expect("file-exists?", "string", Acc);
 		Acc = exists_p(string(Acc));
-		skip(1);
+		skip(ZERO_OPS);
 		break;
 	case OP_FIX_EXACTNESS:
 		if (TRUE == vector(Rts)[Sp--])
 			Acc = exact_to_inexact(Acc);
-		skip(1);
+		skip(ZERO_OPS);
 		break;
 	case OP_INEXACT_TO_EXACT:
 		if (!number_p(Acc)) expect("inexact->exact", "number", Acc);
 		Acc = inexact_to_exact(Acc);
-		skip(1);
+		skip(ZERO_OPS);
 		break;
 	case OP_INEXACT_P:
 		if (!number_p(Acc)) expect("inexact?", "number", Acc);
 		Acc = real_p(Acc)? TRUE: FALSE;
-		skip(1);
+		skip(ZERO_OPS);
 		break;
 	case OP_INTEGER_P:
 		Acc = real_integer_p(Acc)? TRUE: FALSE;
-		skip(1);
+		skip(ZERO_OPS);
 		break;
 	case OP_MACRO_EXPAND:
 	case OP_MACRO_EXPAND_1:
 		Acc = expand(Acc, OP_MACRO_EXPAND == ins());
-		skip(1);
+		skip(ZERO_OPS);
 		break;
 	case OP_MANTISSA:
 		if (!number_p(Acc)) expect("exponent", "number", Acc);
 		Acc = real_mantissa(Acc);
-		skip(1);
+		skip(ZERO_OPS);
 		break;
 	case OP_LOAD:
 		load(Acc);
 		Acc = UNSPECIFIC;
-		skip(1);
+		skip(ZERO_OPS);
 		break;
 	case OP_PROCEDURE_P:
 		Acc = function_p(Acc) ||
 		      continuation_p(Acc) ||
 		      primitive_p(Acc)? TRUE: FALSE;
-		skip(1);
+		skip(ZERO_OPS);
 		break;
 	case OP_INPUT_PORT_P:
 		Acc = input_port_p(Acc)? TRUE: FALSE;
-		skip(1);
+		skip(ZERO_OPS);
 		break;
 	case OP_LIST_TO_STRING:
 		if (!list_p(Acc)) expect("list->string", "list", Acc);
 		Acc = list_to_string(Acc);
-		skip(1);
+		skip(ZERO_OPS);
 		break;
 	case OP_LIST_TO_VECTOR:
 		if (!list_p(Acc)) expect("list->vector", "list", Acc);
 		Acc = list_to_vector(Acc, "list->vector: improper list", 0);
-		skip(1);
+		skip(ZERO_OPS);
 		break;
 	case OP_CHAR_LOWER_CASE_P:
 		if (!char_p(Acc)) expect("char-lower-case?", "char", Acc);
 		Acc = islower(char_value(Acc))? TRUE: FALSE;
-		skip(1);
+		skip(ZERO_OPS);
 		break;
 	case OP_NEGATE:
 		if (!number_p(Acc)) expect("-", "number", Acc);
 		Acc = real_negate(Acc);
-		skip(1);
+		skip(ZERO_OPS);
 		break;
 	case OP_LENGTH:
 		if (!list_p(Acc)) expect("length", "list", Acc);
 		Acc = list_length(Acc);
-		skip(1);
+		skip(ZERO_OPS);
 		break;
 	case OP_NOT:
 		Acc = (FALSE == Acc? TRUE: FALSE);
-		skip(1);
+		skip(ZERO_OPS);
 		break;
 	case OP_NULL_P:
 		Acc = (NIL == Acc? TRUE: FALSE);
-		skip(1);
+		skip(ZERO_OPS);
 		break;
 	case OP_CHAR_NUMERIC_P:
 		if (!char_p(Acc)) expect("char-numeric?", "char", Acc);
 		Acc = isdigit(char_value(Acc))? TRUE: FALSE;
-		skip(1);
+		skip(ZERO_OPS);
 		break;
 	case OP_NEGATIVE_P:
 		if (!number_p(Acc)) expect("negative?", "number", Acc);
 		Acc = real_negative_p(Acc)? TRUE: FALSE;
-		skip(1);
+		skip(ZERO_OPS);
 		break;
 	case OP_ODD_P:
 		Acc = integer_argument("odd?", Acc);
 		Acc = bignum_even_p(Acc)? FALSE: TRUE;
-		skip(1);
+		skip(ZERO_OPS);
 		break;
 	case OP_OPEN_APPEND_FILE:
 		if (!string_p(Acc)) expect("open-append-file", "string", Acc);
 		Acc = openfile(Acc, 2);
-		skip(1);
+		skip(ZERO_OPS);
 		break;
 	case OP_OPEN_INPUT_FILE:
 		if (!string_p(Acc)) expect("open-input-file", "string", Acc);
 		Acc = openfile(Acc, 0);
-		skip(1);
+		skip(ZERO_OPS);
 		break;
 	case OP_OPEN_OUTPUT_FILE:
 		if (!string_p(Acc)) expect("open-output-file", "string", Acc);
 		Acc = openfile(Acc, 1);
-		skip(1);
+		skip(ZERO_OPS);
 		break;
 	case OP_OUTPUT_PORT_P:
 		Acc = output_port_p(Acc)? TRUE: FALSE;
-		skip(1);
+		skip(ZERO_OPS);
 		break;
 	case OP_PAIR_P:
 		Acc = pair_p(Acc)? TRUE: FALSE;
-		skip(1);
+		skip(ZERO_OPS);
 		break;
 	case OP_POSITIVE_P:
 		if (!number_p(Acc)) expect("positive?", "number", Acc);
 		Acc = real_positive_p(Acc)? TRUE: FALSE;
-		skip(1);
+		skip(ZERO_OPS);
 		break;
 	case OP_PEEK_CHAR:
 		if (!input_port_p(Acc)) expect("peek-char", "input port", Acc);
 		Acc = readchar(port_no(Acc), 1);
-		skip(1);
+		skip(ZERO_OPS);
 		break;
 	case OP_READ:
 		if (!input_port_p(Acc)) expect("read", "input port", Acc);
 		Acc = read_obj(port_no(Acc));
-		skip(1);
+		skip(ZERO_OPS);
 		break;
 	case OP_READ_CHAR:
 		if (!input_port_p(Acc)) expect("read-char", "input port", Acc);
 		Acc = readchar(port_no(Acc), 0);
-		skip(1);
+		skip(ZERO_OPS);
 		break;
 	case OP_REAL_P:
 		Acc = number_p(Acc)? TRUE: FALSE;
-		skip(1);
+		skip(ZERO_OPS);
 		break;
 	case OP_REVERSE:
 		if (!list_p(Acc)) expect("reverse", "list", Acc);
 		Acc = reverse(Acc);
-		skip(1);
+		skip(ZERO_OPS);
 		break;
 	case OP_REVERSE_B:
 		if (!list_p(Acc)) expect("reverse!", "list", Acc);
 		if (constant_p(Acc)) error("reverse!: immutable", Acc);
 		Acc = nreverse(Acc);
-		skip(1);
+		skip(ZERO_OPS);
 		break;
 	case OP_S9_BYTECODE:
 		if (!function_p(Acc)) expect("s9:bytecode", "procedure", Acc);
 		Acc = cvt_bytecode(closure_prog(Acc));
-		skip(1);
+		skip(ZERO_OPS);
 		break;
 	case OP_STATS:
 		Acc = stats(Acc);
-		skip(1);
+		skip(ZERO_OPS);
 		break;
 	case OP_SYSTEM_COMMAND:
 		if (!string_p(Acc)) expect("system-command", "string", Acc);
 		Acc = make_integer(system(string(Acc)) >> 8);
-		skip(1);
+		skip(ZERO_OPS);
 		break;
 	case OP_TRUNCATE:
 		if (!number_p(Acc)) expect("truncate", "number", Acc);
 		Acc = real_trunc(Acc);
-		skip(1);
+		skip(ZERO_OPS);
 		break;
 	case OP_ZERO_P:
 		if (!number_p(Acc)) expect("zero?", "number", Acc);
 		Acc = real_zero_p(Acc)? TRUE: FALSE;
-		skip(1);
+		skip(ZERO_OPS);
 		break;
 	case OP_APPEND:
 		if (!list_p(Acc)) expect("append", "list", Acc);
 		Acc = append(Acc, arg(0));
 		clear(1);
-		skip(1);
+		skip(ZERO_OPS);
 		break;
 	case OP_STRING_APPEND:
 		Acc = sconc(Acc);
-		skip(1);
+		skip(ZERO_OPS);
 		break;
 	case OP_VECTOR_APPEND:
 		Acc = vconc(Acc);
-		skip(1);
+		skip(ZERO_OPS);
 		break;
 	case OP_SET_INPUT_PORT_B:
 		if (!input_port_p(Acc))
 			expect("set-input-port!", "input port", Acc);
 		set_input_port(port_no(Acc));
 		Acc = UNSPECIFIC;
-		skip(1);
+		skip(ZERO_OPS);
 		break;
 	case OP_SET_OUTPUT_PORT_B:
 		if (!output_port_p(Acc))
 			expect("set-output-port!", "output port", Acc);
 		set_output_port(port_no(Acc));
 		Acc = UNSPECIFIC;
-		skip(1);
+		skip(ZERO_OPS);
 		break;
 	case OP_STRING_COPY:
 		if (!string_p(Acc)) expect("string-copy", "string", Acc);
 		Acc = copy_string(Acc);
-		skip(1);
+		skip(ZERO_OPS);
 		break;
 	case OP_STRING_LENGTH:
 		if (!string_p(Acc)) expect("string-length", "string", Acc);
 		Acc = make_integer(string_len(Acc)-1);
-		skip(1);
+		skip(ZERO_OPS);
 		break;
 	case OP_SYMBOL_P:
 		Acc = symbol_p(Acc)? TRUE: FALSE;
-		skip(1);
+		skip(ZERO_OPS);
 		break;
 	case OP_STRING_TO_SYMBOL:
 		if (!string_p(Acc)) expect("string->symbol", "string", Acc);
 		Acc = string_to_symbol(Acc);
-		skip(1);
+		skip(ZERO_OPS);
 		break;
 	case OP_SYMBOL_TO_STRING:
 		if (!symbol_p(Acc)) expect("symbol->string", "symbol", Acc);
 		Acc = symbol_to_string(Acc);
-		skip(1);
+		skip(ZERO_OPS);
 		break;
 	case OP_STRING_P:
 		Acc = string_p(Acc)? TRUE: FALSE;
-		skip(1);
+		skip(ZERO_OPS);
 		break;
 	case OP_STRING_TO_LIST:
 		if (!string_p(Acc)) expect("string->list", "string", Acc);
 		Acc = string_to_list(Acc);
-		skip(1);
+		skip(ZERO_OPS);
 		break;
 	case OP_CHAR_UPCASE:
 		if (!char_p(Acc)) expect("char-upcase", "char", Acc);
 		Acc = make_char(toupper(char_value(Acc)));
-		skip(1);
+		skip(ZERO_OPS);
 		break;
 	case OP_CHAR_UPPER_CASE_P:
 		if (!char_p(Acc)) expect("char-upper-case?", "char", Acc);
 		Acc = isupper(char_value(Acc))? TRUE: FALSE;
-		skip(1);
+		skip(ZERO_OPS);
 		break;
 	case OP_VECTOR_TO_LIST:
 		if (!vector_p(Acc)) expect("vector->list", "vector", Acc);
 		Acc = vector_to_list(Acc);
-		skip(1);
+		skip(ZERO_OPS);
 		break;
 	case OP_VECTOR_P:
 		Acc = vector_p(Acc)? TRUE: FALSE;
-		skip(1);
+		skip(ZERO_OPS);
 		break;
 	case OP_VECTOR_LENGTH:
 		if (!vector_p(Acc)) expect("vector-length", "vector", Acc);
 		Acc = make_integer(vector_len(Acc));
-		skip(1);
+		skip(ZERO_OPS);
 		break;
 	case OP_CHAR_WHITESPACE_P:
 		if (!char_p(Acc)) expect("char-whitespace?", "char", Acc);
 		Acc = whitespc(char_value(Acc))? TRUE: FALSE;
-		skip(1);
+		skip(ZERO_OPS);
 		break;
 	case OP_CHAR_LESS_P:
 		cless(Acc, arg(0));
 		clear(1);
-		skip(1);
+		skip(ZERO_OPS);
 		break;
 	case OP_CHAR_LTEQ_P:
 		clteq(Acc, arg(0));
 		clear(1);
-		skip(1);
+		skip(ZERO_OPS);
 		break;
 	case OP_CHAR_EQUAL_P:
 		cequal(Acc, arg(0));
 		clear(1);
-		skip(1);
+		skip(ZERO_OPS);
 		break;
 	case OP_CHAR_GRTR_P:
 		cgrtr(Acc, arg(0));
 		clear(1);
-		skip(1);
+		skip(ZERO_OPS);
 		break;
 	case OP_CHAR_GTEQ_P:
 		cgteq(Acc, arg(0));
 		clear(1);
-		skip(1);
+		skip(ZERO_OPS);
 		break;
 	case OP_CHAR_CI_LESS_P:
 		ciless(Acc, arg(0));
 		clear(1);
-		skip(1);
+		skip(ZERO_OPS);
 		break;
 	case OP_CHAR_CI_LTEQ_P:
 		cilteq(Acc, arg(0));
 		clear(1);
-		skip(1);
+		skip(ZERO_OPS);
 		break;
 	case OP_CHAR_CI_EQUAL_P:
 		ciequal(Acc, arg(0));
 		clear(1);
-		skip(1);
+		skip(ZERO_OPS);
 		break;
 	case OP_CHAR_CI_GRTR_P:
 		cigrtr(Acc, arg(0));
 		clear(1);
-		skip(1);
+		skip(ZERO_OPS);
 		break;
 	case OP_CHAR_CI_GTEQ_P:
 		cigteq(Acc, arg(0));
 		clear(1);
-		skip(1);
+		skip(ZERO_OPS);
 		break;
 	case OP_ASSQ:
 		if (!list_p(arg(0))) expect("assq", "alist", arg(0));
 		Acc = assqv("assq", 0, Acc, arg(0));
 		clear(1);
-		skip(1);
+		skip(ZERO_OPS);
 		break;
 	case OP_ASSV:
 		if (!list_p(arg(0))) expect("assv", "alist", arg(0));
 		Acc = assqv("assv", 1, Acc, arg(0));
 		clear(1);
-		skip(1);
+		skip(ZERO_OPS);
 		break;
 	case OP_CONS:
 		Acc = cons(Acc, arg(0));
 		clear(1);
-		skip(1);
+		skip(ZERO_OPS);
 		break;
 	case OP_EQV_P:
 		Acc = eqv_p(Acc, arg(0))? TRUE: FALSE;
 		clear(1);
-		skip(1);
+		skip(ZERO_OPS);
 		break;
 	case OP_EQ_P:
 		Acc = (Acc == arg(0))? TRUE: FALSE;
 		clear(1);
-		skip(1);
+		skip(ZERO_OPS);
 		break;
 	case OP_EQUAL:
 		equal(Acc, arg(0));
 		clear(1);
-		skip(1);
+		skip(ZERO_OPS);
 		break;
 	case OP_GRTR:
 		grtr(Acc, arg(0));
 		clear(1);
-		skip(1);
+		skip(ZERO_OPS);
 		break;
 	case OP_GTEQ:
 		gteq(Acc, arg(0));
 		clear(1);
-		skip(1);
+		skip(ZERO_OPS);
 		break;
 	case OP_LESS:
 		less(Acc, arg(0));
 		clear(1);
-		skip(1);
+		skip(ZERO_OPS);
 		break;
 	case OP_LTEQ:
 		lteq(Acc, arg(0));
 		clear(1);
-		skip(1);
+		skip(ZERO_OPS);
 		break;
 	case OP_LIST_REF:
 		if (!list_p(Acc)) expect("list-ref", "list", Acc);
 		Acc = nth("list-ref", 1, Acc, arg(0));
 		clear(1);
-		skip(1);
+		skip(ZERO_OPS);
 		break;
 	case OP_LIST_TAIL:
 		if (!list_p(Acc)) expect("list-tail", "list", Acc);
 		Acc = nth("list-tail", 0, Acc, arg(0));
 		clear(1);
-		skip(1);
+		skip(ZERO_OPS);
 		break;
 	case OP_MEMQ:
 		if (!list_p(arg(0))) expect("memq", "list", arg(0));
 		Acc = memqv("memq", 0, Acc, arg(0));
 		clear(1);
-		skip(1);
+		skip(ZERO_OPS);
 		break;
 	case OP_MEMV:
 		if (!list_p(arg(0))) expect("memv", "list", arg(0));
 		Acc = memqv("memv", 1, Acc, arg(0));
 		clear(1);
-		skip(1);
+		skip(ZERO_OPS);
 		break;
 	case OP_THROW:
 		Ip = throw(Acc, arg(0));
@@ -5139,38 +5188,38 @@ void run(cell x) {
 		if (real_p(Acc) || real_p(arg(0))) stackset(Sp-1, TRUE);
 		Acc = real_less_p(arg(0), Acc)? Acc: arg(0);
 		clear(1);
-		skip(1);
+		skip(ZERO_OPS);
 		break;
 	case OP_MIN:
 		if (real_p(Acc) || real_p(arg(0))) stackset(Sp-1, TRUE);
 		Acc = real_less_p(Acc, arg(0))? Acc: arg(0);
 		clear(1);
-		skip(1);
+		skip(ZERO_OPS);
 		break;
 	case OP_MINUS:
 		Acc = xsub(Acc, arg(0));
 		clear(1);
-		skip(1);
+		skip(ZERO_OPS);
 		break;
 	case OP_MAKE_STRING:
 		Acc = makestr(Acc, arg(0));
 		clear(1);
-		skip(1);
+		skip(ZERO_OPS);
 		break;
 	case OP_MAKE_VECTOR:
 		Acc = makevec(Acc, arg(0));
 		clear(1);
-		skip(1);
+		skip(ZERO_OPS);
 		break;
 	case OP_PLUS:
 		Acc = add(Acc, arg(0));
 		clear(1);
-		skip(1);
+		skip(ZERO_OPS);
 		break;
 	case OP_BIT_OP:
 		Acc = bit_op(Acc, arg(0), arg(1));
 		clear(2);
-		skip(1);
+		skip(ZERO_OPS);
 		break;
 	case OP_WRITE:
 		if (!output_port_p(arg(0)))
@@ -5178,7 +5227,7 @@ void run(cell x) {
 		write_obj(Acc, port_no(arg(0)), 0);
 		Acc = UNSPECIFIC;
 		clear(1);
-		skip(1);
+		skip(ZERO_OPS);
 		break;
 	case OP_DISPLAY:
 		if (!output_port_p(arg(0)))
@@ -5186,22 +5235,22 @@ void run(cell x) {
 		write_obj(Acc, port_no(arg(0)), 1);
 		Acc = UNSPECIFIC;
 		clear(1);
-		skip(1);
+		skip(ZERO_OPS);
 		break;
 	case OP_DIVIDE:
 		Acc = xdiv(Acc, arg(0));
 		clear(1);
-		skip(1);
+		skip(ZERO_OPS);
 		break;
 	case OP_QUOTIENT:
 		Acc = intdiv(Acc, arg(0));
 		clear(1);
-		skip(1);
+		skip(ZERO_OPS);
 		break;
 	case OP_REMAINDER:
 		Acc = intrem(Acc, arg(0));
 		clear(1);
-		skip(1);
+		skip(ZERO_OPS);
 		break;
 	case OP_SET_CAR_B:
 		if (!pair_p(Acc)) expect("set-car!", "pair", Acc);
@@ -5209,7 +5258,7 @@ void run(cell x) {
 		car(Acc) = arg(0);
 		Acc = UNSPECIFIC;
 		clear(1);
-		skip(1);
+		skip(ZERO_OPS);
 		break;
 	case OP_SET_CDR_B:
 		if (!pair_p(Acc)) expect("set-cdr!", "pair", Acc);
@@ -5217,101 +5266,101 @@ void run(cell x) {
 		cdr(Acc) = arg(0);
 		Acc = UNSPECIFIC;
 		clear(1);
-		skip(1);
+		skip(ZERO_OPS);
 		break;
 	case OP_STRING_LESS_P:
 		sless(Acc, arg(0));
 		clear(1);
-		skip(1);
+		skip(ZERO_OPS);
 		break;
 	case OP_STRING_LTEQ_P:
 		slteq(Acc, arg(0));
 		clear(1);
-		skip(1);
+		skip(ZERO_OPS);
 		break;
 	case OP_STRING_EQUAL_P:
 		sequal(Acc, arg(0));
 		clear(1);
-		skip(1);
+		skip(ZERO_OPS);
 		break;
 	case OP_STRING_GRTR_P:
 		sgrtr(Acc, arg(0));
 		clear(1);
-		skip(1);
+		skip(ZERO_OPS);
 		break;
 	case OP_STRING_GTEQ_P:
 		sgteq(Acc, arg(0));
 		clear(1);
-		skip(1);
+		skip(ZERO_OPS);
 		break;
 	case OP_STRING_CI_LESS_P:
 		siless(Acc, arg(0));
 		clear(1);
-		skip(1);
+		skip(ZERO_OPS);
 		break;
 	case OP_STRING_CI_LTEQ_P:
 		silteq(Acc, arg(0));
 		clear(1);
-		skip(1);
+		skip(ZERO_OPS);
 		break;
 	case OP_STRING_CI_EQUAL_P:
 		siequal(Acc, arg(0));
 		clear(1);
-		skip(1);
+		skip(ZERO_OPS);
 		break;
 	case OP_STRING_CI_GRTR_P:
 		sigrtr(Acc, arg(0));
 		clear(1);
-		skip(1);
+		skip(ZERO_OPS);
 		break;
 	case OP_STRING_CI_GTEQ_P:
 		sigteq(Acc, arg(0));
 		clear(1);
-		skip(1);
+		skip(ZERO_OPS);
 		break;
 	case OP_STRING_FILL_B:
 		sfill(Acc, arg(0));
 		Acc = UNSPECIFIC;
 		clear(1);
-		skip(1);
+		skip(ZERO_OPS);
 		break;
 	case OP_STRING_REF:
 		Acc = sref(Acc, arg(0));
 		clear(1);
-		skip(1);
+		skip(ZERO_OPS);
 		break;
 	case OP_STRING_SET_B:
 		sset(Acc, arg(0), arg(1));
 		Acc = UNSPECIFIC;
 		clear(2);
-		skip(1);
+		skip(ZERO_OPS);
 		break;
 	case OP_SUBSTRING:
 		Acc = substring(Acc, arg(0), arg(1));
 		clear(2);
-		skip(1);
+		skip(ZERO_OPS);
 		break;
 	case OP_TIMES:
 		Acc = mul(Acc, arg(0));
 		clear(1);
-		skip(1);
+		skip(ZERO_OPS);
 		break;
 	case OP_VECTOR_FILL_B:
 		vfill(Acc, arg(0));
 		Acc = UNSPECIFIC;
 		clear(1);
-		skip(1);
+		skip(ZERO_OPS);
 		break;
 	case OP_VECTOR_REF:
 		Acc = vref(Acc, arg(0));
 		clear(1);
-		skip(1);
+		skip(ZERO_OPS);
 		break;
 	case OP_VECTOR_SET_B:
 		vset(Acc, arg(0), arg(1));
 		Acc = UNSPECIFIC;
 		clear(2);
-		skip(1);
+		skip(ZERO_OPS);
 		break;
 	case OP_WRITE_CHAR:
 		if (!char_p(Acc)) expect("write-char", "char", Acc);
@@ -5320,18 +5369,18 @@ void run(cell x) {
 		writechar(char_value(Acc), port_no(arg(0)));
 		Acc = UNSPECIFIC;
 		clear(1);
-		skip(1);
+		skip(ZERO_OPS);
 		break;
 	case OP_VECTOR_COPY:
 		if (!vector_p(Acc)) expect("vector-copy", "vector", Acc);
 		Acc = vcopy(Acc, arg(0), arg(1), arg(2));
 		clear(3);
-		skip(1);
+		skip(ZERO_OPS);
 		break;
 	default:
 		error("illegal instruction", make_integer(ins()));
 		return;
-	}
+	}}
 	error("interrupted", UNDEFINED);
 }
 
@@ -5391,13 +5440,10 @@ cell eval(cell x, int r) {
 	if (r) begin_rec();
 	save(x);
 	Tmp = NIL;
-	x = expand(x, 1);
-	car(Stack) = x;
+	x = expand(x, 1); car(Stack) = x;
 	syncheck(x, 1);
-	x = clsconv(x);
-	car(Stack) = x;
-	x = compile(x);
-	car(Stack) = x;
+	x = clsconv(x);   car(Stack) = x;
+	x = compile(x);   car(Stack) = x;
 	x = interpret(x);
 	unsave(1);
 	if (r) end_rec();
@@ -5702,7 +5748,7 @@ int main(int argc, char **argv) {
 	}
 	if (loop) {
 		if (!O_quiet) {
-			prints("Scheme 9 from Empty Space (Reimagined)");
+			prints("Scheme 9 from Empty Space");
 			nl();
 		}
 		repl();

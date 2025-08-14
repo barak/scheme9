@@ -1,9 +1,9 @@
 ;;
-;; Scheme 9 from Empty Space, Reimagined
+;; Scheme 9 from Empty Space
 ;; By Nils M Holm 2007-2018
 ;; In the public domain
-;; If your country does not have a public domain, the CC0 applies:
-;; https://creativecommons.org/share-your-work/public-domain/cc0/
+;; If your country does not have a public domain,
+;; the 0BSD license applies. See the file LICENSE.
 ;;
 
 ;; Make inlined procedures APPLY-able

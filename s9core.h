@@ -1,13 +1,12 @@
 /*
- * S9core Toolkit, Mk IVc
- * By Nils M Holm, 2007-2018
+ * S9core Toolkit, Mk V a
+ * By Nils M Holm, 2007-2025
  * In the public domain
- *
- * Under jurisdictions without a public domain, the CC0 applies:
- * https://creativecommons.org/publicdomain/zero/1.0/
+ * If your country does not have a public domain,
+ * the 0BSD license applies. See the file LICENSE.
  */
 
-#define S9_VERSION "20181111"
+#define S9_VERSION "20250805"
 
 /*
  * Ugly prelude to deal with some system-dependent stuff.
@@ -127,6 +126,8 @@
 
 #define S9_MANTISSA_SIZE	(S9_MANTISSA_SEGMENTS * S9_DIGITS_PER_CELL)
 
+#define byte	unsigned char
+
 /*
  * Node tags
  */
@@ -174,6 +175,7 @@
 #define S9_T_VECTOR		(-24)
 #define S9_T_CONTINUATION	(-25)
 #define S9_T_FIXNUM		(-26)
+#define S9_T_BYTECODE		(-27)
 #define S9_T_NONE		(-99)
 
 #define S9_USER_SPECIALS	(-100)
@@ -247,6 +249,8 @@ struct S9_primitive {
 
 #define s9_string(n)		((char *) &Vectors[S9_cdr[n]])
 #define s9_string_len(n)	(Vectors[S9_cdr[n] - 1])
+#define s9_bytecode(n)		((byte *) &Vectors[S9_cdr[n]])
+#define s9_bytecode_len(n)	(string_len(n))
 #define s9_symbol_name(n)	(string(n))
 #define s9_symbol_len(n)	(string_len(n))
 #define s9_vector(n)		(&Vectors[S9_cdr[n]])
@@ -321,6 +325,10 @@ struct S9_primitive {
 
 #define s9_string_p(n) \
 	(!s9_special_p(n) && (tag(n) & S9_VECTOR_TAG) && car(n) == S9_T_STRING)
+
+#define s9_bytecode_p(n) \
+	(!s9_special_p(n) && (tag(n) & S9_VECTOR_TAG) && \
+	 car(n) == S9_T_BYTECODE)
 
 #define s9_constant_p(n) \
 	(!s9_special_p(n) && (tag(n) & S9_CONST_TAG))
@@ -402,10 +410,14 @@ extern int	*S9_gc_stkptr;
 
 extern S9_PRIM	*S9_primitives;
 
-extern s9_cell	S9_zero,
-		S9_one,
-		S9_two,
-		S9_ten;
+extern s9_cell	Zero,
+		One,
+		Two,
+		Ten;
+
+extern s9_cell	Nullstr,
+		Nullvec,
+		Blank;
 
 extern s9_cell	S9_epsilon;
 
@@ -424,6 +436,7 @@ int	system(char *s);
 #endif
 
 void	s9_abort(void);
+int	s9_aborted(void);
 void	s9_add_image_vars(s9_cell **v);
 s9_cell	s9_apply_prim(s9_cell f);
 s9_cell	s9_argv_to_list(char **argv);
@@ -476,6 +489,7 @@ void	s9_io_reset(void);
 int	s9_length(s9_cell n);
 char	*s9_load_image(char *path, char *magic);
 int	s9_lock_port(int port);
+s9_cell	s9_make_bytecode(int k);
 s9_cell	s9_make_char(int c);
 s9_cell	s9_make_integer(s9_cell i);
 s9_cell	s9_make_norm_real(int flags, s9_cell exp, s9_cell mant);
