@@ -1,7 +1,8 @@
-scheme9 (2018.12.05-3) UNRELEASED; urgency=medium
+scheme9 (2025.08.11-1) unstable; urgency=medium
 
-  * Update standards version to 4.5.1, no changes needed.
-  * Update watch file format version to 4.
+  * New upstream version
+  * Update standards version to 4.7.2, no changes needed
+  * Update watch file format version to 4
 
  -- Barak A. Pearlmutter <bap@debian.org>  Fri, 23 Jul 2021 21:05:17 -0000
 

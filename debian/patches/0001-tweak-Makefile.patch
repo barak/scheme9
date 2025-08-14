@@ -23,11 +23,11 @@ Install s9core.a library in multiarch directory as libs9core.a
  1 file changed, 30 insertions(+), 14 deletions(-)
 
 diff --git a/Makefile b/Makefile
-index aa90bda..240d5f7 100644
+index 3bec9f8..17d0756 100644
 --- a/Makefile
 +++ b/Makefile
 @@ -3,8 +3,8 @@
- # By Nils M Holm, 2007-2018
+ # By Nils M Holm, 2007-2025
  # In the public domain
  
 -# Change at least this line:
@@ -36,7 +36,7 @@ index aa90bda..240d5f7 100644
 +PREFIX=$(prefix)
  
  # Base version and Release
- BASE=		20181115
+ BASE=		20250805
 @@ -45,31 +45,40 @@ EXTRA_LIBS+=
  #				# (requires the Curses extension)
  
