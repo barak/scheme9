@@ -1,4 +1,13 @@
 
+2025-08-12
+
+	Disassembler prints quoted objects and REF names now.
+
+	Added S9:OBJECT function, which turns an integer into
+	the object at the given address. USE AT OWN RISK!
+
+	CLOSURE instruction no longer stores variable names.
+
 2025-08-11
 
 	Removed first argument from make_bytecode() function of S9core,

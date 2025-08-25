@@ -352,6 +352,10 @@
 	The default handler (which just terminates program execution)
 	can be reinstalled by passing NULL to mem_error_handler().
 
+	----- cell pool_size(void); ------------------------------------
+
+	Return the current size of the node pool in nodes.
+
 	----- void set_node_limit(int k); ------------------------------
 
 	These functions modify the node pool and vector pool memory

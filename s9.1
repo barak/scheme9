@@ -141,7 +141,7 @@ Be quiet: skip banners and prompts, exit on errors.
 .in +4
 Like
 .BR -e ,
-but no value will print. Used to run expressions for effect.
+but no value will print. Used to run programs for effect.
 .in -4
 .sp
 .B "-u
@@ -169,9 +169,7 @@ they are passed to the
 .IR program ,
 where they can be extracted using the
 .B command-line
-procedure. This option must be the last one. The
-.B -f
-flag is deprecated.
+procedure. This option must be the last one.
 .in -4
 .SH "ONLINE HELP
 When the interpreter is running and the default heap image is loaded,
@@ -315,7 +313,7 @@ is the rightmost element.
 .sp
 .B "(gensym)  ==>  symbol
 .in +4
-Return a fresh symbol.
+Return an unused symbol.
 .in -4
 .sp
 .ne 2
@@ -337,7 +335,7 @@ Search for the file
 in each  directory listed in
 .B *library-path*
 in sequence.
-When the file can be located, return its full path, else
+If the file can be located, return its full path, else
 return \fB#f\fP.
 .in -4
 .sp
@@ -378,9 +376,24 @@ Require the named extensions to be compiled-in. Signal an error
 if not all of the required extensions are present.
 .I Ext
 may be of the form \fI(or ext1 ext2 ...)\fP. In this case,
-it is sufficient if at least one of the \fIext\fPs gven in
+it is sufficient if at least one of the \fIext\fPs given in
 .I or
 is present.
+.in -4
+.sp
+.ne 2
+.B "(s9:bytecode proc)  ==>  list
+.in +4
+Return the bytecode of the given procedure as a list of integers.
+.in -4
+.sp
+.ne 2
+.B "(s9:object integer)  ==>  object
+.in +4
+Return the data object stored at the given address in the S9 heap.
+.B "Use with caution!"
+This function may return cyclic values or nonsensical values or
+may even crash the interpreter.
 .in -4
 .sp
 .ne 2
@@ -617,7 +630,7 @@ extension has been loaded.
 .SH "TECHNICAL DETAILS
 S9fES is a bytecode compiler and SECD abstract machine using
 shallow binding, primitive procedure inlining, and in-situ lambda
-lifting.  It employs an extremely reliable[1] constant-space mark
+lifting. It employs an extremely reliable[1] constant-space mark
 and sweep garbage collector with in-situ vector pool compaction.
 Memory pools grow on demand. The interpreter uses arbitrary-precision
 integer arithmetics and decimal-based real number arithmetics.
@@ -749,7 +762,8 @@ does not work, but
 does).
 .br
 .B Syntax-rules
-is not fully hygienic.
+has more bugs than a swarm of locusts. Use low-level macros
+instead!
 .SH "FILES
 .ne 2
 .B @S9DIR@
@@ -820,8 +834,6 @@ Usenet message
 .SH "REFERENCES
 .ne 3
 The Revised^4 Report on the Algorithmic Language Scheme.
-.in +4
-.B "http://www-swiss.ai.mit.edu/~jaffer/r4rs_toc.html
 .in -4
 .sp
 .ne 3

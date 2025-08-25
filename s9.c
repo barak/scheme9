@@ -6,7 +6,7 @@
  * the 0BSD license applies. See the file LICENSE.
  */
 
-#define RELEASE_DATE	"2025-08-11"
+#define RELEASE_DATE	"2025-08-12"
 #define PATCHLEVEL	0
 
 #include "s9core.h"
@@ -187,17 +187,17 @@ cell	P_abs, P_append, P_assq, P_assv, P_bit_op, P_boolean_p,
 	P_peek_char, P_plus, P_positive_p, P_procedure_p,
 	P_quit, P_quotient, P_read, P_read_char, P_real_p,
 	P_remainder, P_reverse, P_reverse_b, P_s9_bytecode,
-	P_set_car_b, P_set_cdr_b, P_set_input_port_b,
-	P_set_output_port_b, P_stats, P_string_append,
-	P_string_ci_equal, P_string_ci_grtr, P_string_ci_gteq,
-	P_string_ci_less, P_string_ci_lteq, P_string_copy,
-	P_string_equal, P_string_fill_b, P_string_grtr,
-	P_string_gteq, P_string_length, P_string_less,
-	P_string_lteq, P_string_p, P_string_ref, P_string_set_b,
-	P_string_to_list, P_string_to_symbol, P_substring,
-	P_symbol_p, P_symbol_p, P_symbol_to_string, P_symbols,
-	P_system_command, P_throw, P_times, P_truncate,
-	P_vector, P_vector_append, P_vector_copy,
+	P_s9_object, P_set_car_b, P_set_cdr_b,
+	P_set_input_port_b, P_set_output_port_b, P_stats,
+	P_string_append, P_string_ci_equal, P_string_ci_grtr,
+	P_string_ci_gteq, P_string_ci_less, P_string_ci_lteq,
+	P_string_copy, P_string_equal, P_string_fill_b,
+	P_string_grtr, P_string_gteq, P_string_length,
+	P_string_less, P_string_lteq, P_string_p, P_string_ref,
+	P_string_set_b, P_string_to_list, P_string_to_symbol,
+	P_substring, P_symbol_p, P_symbol_p, P_symbol_to_string,
+	P_symbols, P_system_command, P_throw, P_times,
+	P_truncate, P_vector, P_vector_append, P_vector_copy,
 	P_vector_fill_b, P_vector_length, P_vector_p,
 	P_vector_ref, P_vector_set_b, P_vector_to_list, P_write,
 	P_write_char, P_zero_p;
@@ -251,7 +251,7 @@ enum	{ OP_APPLIS, OP_APPLY, OP_ARG, OP_COPY_ARG, OP_CLOSURE,
 	  OP_PEEK_CHAR, OP_PLUS, OP_POSITIVE_P, OP_PROCEDURE_P,
 	  OP_QUIT, OP_QUOTIENT, OP_READ, OP_READ_CHAR,
 	  OP_REAL_P, OP_REMAINDER, OP_REVERSE, OP_REVERSE_B,
-	  OP_S9_BYTECODE, OP_SET_CAR_B, OP_SET_CDR_B,
+	  OP_S9_BYTECODE, OP_S9_OBJECT, OP_SET_CAR_B, OP_SET_CDR_B,
 	  OP_SET_INPUT_PORT_B, OP_SET_OUTPUT_PORT_B, OP_STATS,
 	  OP_STRING_APPEND, OP_STRING_COPY, OP_STRING_EQUAL_P,
 	  OP_STRING_FILL_B, OP_STRING_GRTR_P, OP_STRING_GTEQ_P,
@@ -355,10 +355,10 @@ void expect(char *who, char *what, cell got) {
  * Type implementations
  */
 
-cell closure(cell i, cell vs, cell e) {
+cell closure(cell i, cell e) {
 	cell	c;
 
-	c = cons(Prog, vs);
+	c = cons(Prog, NIL);
 	c = cons(e, c);
 	save(c);
 	c = cons(mkfix(i), c);
@@ -1144,6 +1144,7 @@ void init(void) {
 	P_reverse = symbol_ref("reverse");
 	P_reverse_b = symbol_ref("reverse!");
 	P_s9_bytecode = symbol_ref("s9:bytecode");
+	P_s9_object = symbol_ref("s9:object");
 	P_set_car_b = symbol_ref("set-car!");
 	P_set_cdr_b = symbol_ref("set-cdr!");
 	P_set_input_port_b = symbol_ref("set-input-port!");
@@ -2646,6 +2647,7 @@ int subr1p(cell x) {
 	if (x == P_reverse)		return OP_REVERSE;
 	if (x == P_reverse_b)		return OP_REVERSE_B;
 	if (x == P_s9_bytecode)		return OP_S9_BYTECODE;
+	if (x == P_s9_object)		return OP_S9_OBJECT;
 	if (x == P_set_input_port_b)	return OP_SET_INPUT_PORT_B;
 	if (x == P_set_output_port_b)	return OP_SET_OUTPUT_PORT_B;
 	if (x == P_stats)		return OP_STATS;
@@ -2839,7 +2841,7 @@ void setupenv(cell m) {
 
 void compcls(cell x) {
 	int	a, na;
-	cell	b, m, vs;
+	cell	b, m;
 
 	emitop(OP_JMP);
 	cpushval(Here);
@@ -2871,9 +2873,6 @@ void compcls(cell x) {
 	}
 	emitop(OP_CLOSURE);
 	emitarg(a);
-	vs = cons(cadr(x), NIL);
-	emitarg(vs);
-	Oblist = cons(vs, Oblist);
 }
 
 void compapply(cell x, int t) {
@@ -4464,8 +4463,8 @@ void run(cell x) {
 		skip(TWO_OPS);
 		break;
 	case OP_CLOSURE:
-		Acc = closure(op1(), op2(), Acc);
-		skip(TWO_OPS);
+		Acc = closure(op1(), Acc);
+		skip(ONE_OP);
 		break;
 	case OP_ENTER:
 		if (fixval(stackref(Sp-2)) != op1())
@@ -4944,6 +4943,12 @@ void run(cell x) {
 	case OP_S9_BYTECODE:
 		if (!function_p(Acc)) expect("s9:bytecode", "procedure", Acc);
 		Acc = cvt_bytecode(closure_prog(Acc));
+		skip(ZERO_OPS);
+		break;
+	case OP_S9_OBJECT:
+		Acc = integer_value("s9:object", Acc);
+		if (Acc >= pool_size())
+			error("s9:object: bad address", UNDEFINED);
 		skip(ZERO_OPS);
 		break;
 	case OP_STATS:
