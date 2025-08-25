@@ -224,6 +224,7 @@
  #define open_output_port	s9_open_output_port
  #define output_port		s9_output_port
  #define outport_open_p		s9_outport_open_p
+ #define pool_size		s9_pool_size
  #define port_eof		s9_port_eof
  #define print_bignum		s9_print_bignum
  #define print_expanded_real	s9_print_expanded_real

@@ -508,6 +508,7 @@ char	*s9_open_input_string(char *s);
 int	s9_open_output_port(char *path, int append);
 int	s9_output_port(void);
 int	s9_outport_open_p(void);
+s9_cell	s9_pool_size(void);
 int	s9_port_eof(int p);
 void	s9_prints(char *s);
 int	s9_printer_limit(void);

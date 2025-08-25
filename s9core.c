@@ -408,6 +408,10 @@ void s9_set_vector_limit(int n) {
 	Vector_limit = n * 1024L;
 }
 
+cell s9_pool_size(void) {
+	return Cons_pool_size;
+}
+
 void s9_gc_verbosity(int n) {
 	Verbose_GC = n;
 }

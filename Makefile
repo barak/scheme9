@@ -8,7 +8,7 @@ PREFIX= /u
 
 # Base version and Release
 BASE=		20250805
-RELEASE=	20250811
+RELEASE=	20250812
 
 # Override default compiler and flags
 CC=	cc
@@ -231,7 +231,7 @@ update-library:
 
 s9.1.txt:	s9.1
 	$(CC) -o rpp util/rpp.c
-	nroff -c -mdoc s9.1 | ./rpp -a >s9.1.txt
+	nroff -c -man s9.1 | ./rpp -a >s9.1.txt
 	rm -f rpp
 
 docs:	lib ext/sys-unix ext/curses ext/csv contrib

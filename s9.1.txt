@@ -72,8 +72,8 @@ S9(1)                  Scheme 9 from Empty Space                 S9(1)
               Be quiet: skip banners and prompts, exit on errors.
 
           -r expr
-              Like   -e,   but  no  value  will  print.  Used  to  run
-              expressions for effect.
+              Like  -e,  but no value will print. Used to run programs
+              for effect.
 
           -u
               Short for -k 0 -n 0 (use unlimited memory).
@@ -88,20 +88,20 @@ S9(1)                  Scheme 9 from Empty Space                 S9(1)
               Run  program  and  exit (implies -q). When there are any
               arguments, they are passed to the  program,  where  they
               can  be extracted using the command-line procedure. This
-              option must be the last one. The -f flag is  deprecated.
+              option must be the last one.
 
 ONLINE HELP
-          When  the  interpreter is running and the default heap image
-          is loaded, just type (help) or ,h to invoke the online  help
+          When the interpreter is running and the default  heap  image
+          is  loaded, just type (help) or ,h to invoke the online help
           system.  When the online help system is not loaded, you will
           have to run the following command first:
 
           (load-from-library "help.scm")
 
 META COMMANDS
-          In order to facilitate  the  invocation  of  frequently-used
-          top-level   procedures,  s9  provides  the  following  `meta
-          commands' (they work only when entered directly  at  the  s9
+          In  order  to  facilitate  the invocation of frequently-used
+          top-level  procedures,  s9  provides  the  following   `meta
+          commands'  (they  work  only when entered directly at the s9
           prompt):
 
               ,a text  =  (apropos "text")
@@ -120,7 +120,7 @@ ADDITIONS
 
               (cond [(foo) (bar)])
 
-          The  same  type  of  bracket  must be used on both ends of a
+          The same type of bracket must be used  on  both  ends  of  a
           list.
 
           These S9fES procedures are not in R4RS:
@@ -135,21 +135,21 @@ S9(1)                  Scheme 9 from Empty Space                 S9(1)
 
 
           (bit-op integer1 integer2 integer3 ...)  ==>  integer
-              Implement a variety of bitwise operations. See the  bit-
+              Implement  a variety of bitwise operations. See the bit-
               op help page for details.
 
           (command-line)  ==>  list
-              Return  a list of command line arguments passed to the a
-              program being interpreted or following  the  --  command
+              Return a list of command line arguments passed to the  a
+              program  being  interpreted  or following the -- command
               line option.
 
           (delete-file string)  ==>  unspecific
               Delete the file specified in the string argument. If the
-              file does not exist or  cannot  be  deleted,  report  an
+              file  does  not  exist  or  cannot be deleted, report an
               error.
 
           (environment-variable string)  ==>  string | #f
-              Retrieve  the  value  of the given environment variable.
+              Retrieve the value of the  given  environment  variable.
               Return #f, if the variable is undefined.
 
           (error string)         ==>  undefined
@@ -159,38 +159,38 @@ S9(1)                  Scheme 9 from Empty Space                 S9(1)
               is given, this part will be omitted in the message.
 
           (eval object)  ==>  object
-              Evaluate object in the current  environment  and  return
+              Evaluate  object  in  the current environment and return
               its normal form.
 
           (exponent number)  ==>  integer
-              Extract  the exponent part from a number. This will be 0
+              Extract the exponent part from a number. This will be  0
               for integers.
 
           (file-exists? string)  ==>  boolean
-              Return #t if the file specified in the  string  argument
+              Return  #t  if the file specified in the string argument
               exists and otherwise #f.
 
           (fold-left proc base list ...)  ==>  object
-              Combine  the  elements of the lists using proc.  Combine
-              elements  left-associatively.   Base  is  the   leftmost
+              Combine the elements of the lists using  proc.   Combine
+              elements   left-associatively.   Base  is  the  leftmost
               element.
 
           (fold-right proc base list ...)  ==>  object
-              Combine  the  elements of the lists using proc.  Combine
-              elements right-associatively.   Base  is  the  rightmost
+              Combine the elements of the lists using  proc.   Combine
+              elements  right-associatively.   Base  is  the rightmost
               element.
 
           (gensym)  ==>  symbol
-              Return a fresh symbol.
+              Return an unused symbol.
 
           (load-from-library string)  ==>  unspecific
-              Attempt  to  load  the  file  string from each directory
+              Attempt to load the  file  string  from  each  directory
               listed in the top-level variable *library-path*.
 
           (locate-file string)  ==>  string | #f
-              Search for the file string in each  directory listed  in
-              *library-path*  in  sequence.   When  the  file  can  be
-              located, return its full path, else return #f.
+              Search  for the file string in each  directory listed in
+              *library-path* in sequence.  If the file can be located,
+              return its full path, else return #f.
 
 
 
@@ -202,28 +202,38 @@ S9(1)                  Scheme 9 from Empty Space                 S9(1)
 
           (macro-expand object)    ==>  object
           (macro-expand-1 object)  ==>  object
-              If object  contains  a  macro  application,  return  its
+              If  object  contains  a  macro  application,  return its
               expanded form, else return the object unchanged.  Macro-
-              expand-1 expands macros  only  once  while  macro-expand
+              expand-1  expands  macros  only  once while macro-expand
               expands them recursively.
 
           (mantissa number)  ==>  integer
-              Extract  the  mantissa  part from a number. This will be
+              Extract the mantissa part from a number.  This  will  be
               the number itself for integers.
 
           (print object ...)  ==>  unspecific
-              Write multiple objects separated by spaces  and  with  a
+              Write  multiple  objects  separated by spaces and with a
               trailing newline.
 
           (require-extension ext ...)  ==>  unspecific
-              Require  the  named extensions to be compiled-in. Signal
-              an error if not  all  of  the  required  extensions  are
-              present.   Ext may be of the form (or ext1 ext2 ...). In
-              this case, it is sufficient if at least one of the  exts
-              gven in or is present.
+              Require the named extensions to be  compiled-in.  Signal
+              an  error  if  not  all  of  the required extensions are
+              present.  Ext may be of the form (or ext1 ext2 ...).  In
+              this  case, it is sufficient if at least one of the exts
+              given in or is present.
+
+          (s9:bytecode proc)  ==>  list
+              Return the bytecode of the given procedure as a list  of
+              integers.
+
+          (s9:object integer)  ==>  object
+              Return  the  data  object stored at the given address in
+              the S9 heap.   Use  with  caution!   This  function  may
+              return  cyclic  values or nonsensical values or may even
+              crash the interpreter.
 
           (reverse! list)  ==>  list
-              Reverse  list destructively and return the reverse list.
+              Reverse list destructively and return the reverse list.
 
           (set-input-port! input-port)  ==>  unspecific
               Destructively set the current input port.
@@ -249,22 +259,20 @@ S9(1)                  Scheme 9 from Empty Space                 S9(1)
           (symbols)  ==>  list
               Return a list of all defined symbols.
 
-          (system-command string)  ==>  number
-              Run the given shell command and return its exit code.
-
-          (vector-append vector ...)  ==>  vector
-              Return  a  fresh  vector containing the concatenation of
-              the given vectors.
-
-
-
-
 
 S9 Interpreter                  Page 4                           S9(1)
 
 
 S9(1)                  Scheme 9 from Empty Space                 S9(1)
 
+
+
+          (system-command string)  ==>  number
+              Run the given shell command and return its exit code.
+
+          (vector-append vector ...)  ==>  vector
+              Return  a  fresh  vector containing the concatenation of
+              the given vectors.
 
           (vector-copy vector)                           ==>  vector
           (vector-copy vector integer)                   ==>  vector
@@ -316,14 +324,6 @@ SPECIAL VARIABLES
               A  list  containing   each   path   contained   in   the
               S9FES_LIBRARY_PATH environment variable (see below).
 
-          *loading* (boolean)
-              Set to #t when loading a file, else #f.
-
-          *release-date* (string)
-              A   string   containing  the  release  date  of  the  S9
-              interpreter in the form `YYYY-MM-DD'.
-
-
 
 
 S9 Interpreter                  Page 5                           S9(1)
@@ -332,6 +332,12 @@ S9 Interpreter                  Page 5                           S9(1)
 S9(1)                  Scheme 9 from Empty Space                 S9(1)
 
 
+          *loading* (boolean)
+              Set to #t when loading a file, else #f.
+
+          *release-date* (string)
+              A   string   containing  the  release  date  of  the  S9
+              interpreter in the form `YYYY-MM-DD'.
 
 MACROS
           A macro is a procedure that is applied  to  its  unevaluated
@@ -378,18 +384,12 @@ MACROS
 TECHNICAL DETAILS
           S9fES is a bytecode compiler and SECD abstract machine using
           shallow binding, primitive procedure inlining,  and  in-situ
-          lambda   lifting.    It  employs  an  extremely  reliable[1]
+          lambda   lifting.   It   employs  an  extremely  reliable[1]
           constant-space mark and sweep garbage collector with in-situ
           vector  pool  compaction.   Memory pools grow on demand. The
           interpreter uses arbitrary-precision integer arithmetics and
-          decimal-based real number arithmetics.
 
-INTERPRETER START-UP
-          When the s9 interpreter is started, the following steps will
-          be performed in this order:
 
-          Load heap image or library.
-              The interpreter searches the image directory for a  heap
 
 
 S9 Interpreter                  Page 6                           S9(1)
@@ -398,6 +398,14 @@ S9 Interpreter                  Page 6                           S9(1)
 S9(1)                  Scheme 9 from Empty Space                 S9(1)
 
 
+          decimal-based real number arithmetics.
+
+INTERPRETER START-UP
+          When the s9 interpreter is started, the following steps will
+          be performed in this order:
+
+          Load heap image or library.
+              The interpreter searches the image directory for a  heap
               image  file  and  loads it. The image directory is taken
               from the S9FES_IMAGE_DIR environment variable. When  the
               variable  is  undefined,  a  compiled-in default will be
@@ -448,14 +456,6 @@ ALLOCATION STRATEGY
 
           Specifying a limit of zero (or using the -u option) disables
           the  memory  limit  completely  and  the  interpreter   will
-          allocate  as  much memory as it can get.  This option should
-          be used with care.
-
-LIMITATIONS
-          These parts of R4RS are not implemented:
-
-          I/O: char-ready?  (this is in the sys-unix extension).
-          Transcripts: transcript-off, transcript-on.
 
 
 S9 Interpreter                  Page 7                           S9(1)
@@ -464,6 +464,14 @@ S9 Interpreter                  Page 7                           S9(1)
 S9(1)                  Scheme 9 from Empty Space                 S9(1)
 
 
+          allocate  as  much memory as it can get.  This option should
+          be used with care.
+
+LIMITATIONS
+          These parts of R4RS are not implemented:
+
+          I/O: char-ready?  (this is in the sys-unix extension).
+          Transcripts: transcript-off, transcript-on.
           Rational and complex numbers and related procedures.
           The atan procedure does not accept a second argument.
           Inexact digits of the form #.
@@ -471,7 +479,8 @@ S9(1)                  Scheme 9 from Empty Space                 S9(1)
 BUGS
           You may not quasiquote quasiquote unless in  unquote  (e.g.:
           ``x does not work, but `,`x does).
-          Syntax-rules is not fully hygienic.
+          Syntax-rules has more bugs than a swarm of locusts. Use low-
+          level macros instead!
 
 FILES
           @S9DIR@
@@ -487,10 +496,10 @@ ENVIRONMENT
               when the s9 interpreter starts.
 
           S9FES_LIBRARY_PATH
-              A colon-separated list  of  directories  which  will  be
-              searched  for library files by the load-from-library and
-              locate-file procedures. The value of this variable  will
-              be  split at the colons and copied to the *library-path*
+              A  colon-separated  list  of  directories  which will be
+              searched for library files by the load-from-library  and
+              locate-file  procedures. The value of this variable will
+              be split at the colons and copied to the  *library-path*
               variable when S9 starts.
               Default: .:~/.s9fes:@S9DIR@
 
@@ -500,7 +509,7 @@ SIGNALS
           SIGQUIT
               Terminate the interpreter process (emergency exit).
           "interrupt"
-              On Plan 9, receiving an interrupt note will abort  input
+              On  Plan 9, receiving an interrupt note will abort input
               or terminate program execution, as SIGINT would on Unix.
 
 FOOTNOTES
@@ -510,11 +519,20 @@ FOOTNOTES
 
 REFERENCES
           The Revised^4 Report on the Algorithmic Language Scheme.
-              http://www-swiss.ai.mit.edu/~jaffer/r4rs_toc.html
 
-          Scheme 9 from Empty Space -- A Guide to Implementing  Scheme
-          in C.
-              Available at Lulu.com, see http://www.t3x.org
+
+
+
+
+S9 Interpreter                  Page 8                           S9(1)
+
+
+S9(1)                  Scheme 9 from Empty Space                 S9(1)
+
+
+      Scheme 9 from Empty Space -- A Guide to Implementing  Scheme  in
+      C.
+          Available at Lulu.com, see http://www.t3x.org
 
 AUTHOR
           Nils M Holm
@@ -524,5 +542,53 @@ AUTHOR
 
 
 
-S9 Interpreter                  Page 8                           S9(1)
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+S9 Interpreter                  Page 9                           S9(1)
 
