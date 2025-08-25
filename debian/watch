@@ -1,5 +1,5 @@
 version=4
-http://t3x.org/s9fes s9fes-(\d\d\d\d)(\d\d)(\d\d)\.tgz
-http://t3x.org/s9fes s9fes-(\d\d\d\d)(\d\d)(\d\d)([0-9].*)\.tgz
-http://t3x.org/s9fes s9fes-(\d\d\d\d)(\d\d)(\d\d[a-zA-Z].*)\.tgz
-http://t3x.org/s9fes s9fes-(\d\d\d\d)\.tgz
+https://t3x.org/s9fes/ s9fes-(\d\d\d\d)(\d\d)(\d\d)@ARCHIVE_EXT@
+https://t3x.org/s9fes/ s9fes-(\d\d\d\d)(\d\d)(\d\d)([0-9].*)@ARCHIVE_EXT@
+https://t3x.org/s9fes/ s9fes-(\d\d\d\d)(\d\d)(\d\d[a-zA-Z].*)@ARCHIVE_EXT@
+https://t3x.org/s9fes/ s9fes-(\d\d\d\d)@ARCHIVE_EXT@
