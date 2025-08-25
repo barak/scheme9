@@ -1,3 +1,11 @@
+scheme9 (2025.08.12-1) unstable; urgency=medium
+
+  * New upstream version
+  * Tweak debian/watch
+  * Refresh patches
+
+ -- Barak A. Pearlmutter <bap@debian.org>  Mon, 25 Aug 2025 18:38:26 +0100
+
 scheme9 (2025.08.11-1) unstable; urgency=medium
 
   * New upstream version
