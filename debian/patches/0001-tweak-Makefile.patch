@@ -19,11 +19,11 @@ Use gzip -n option for reproducible builds.
 
 Install s9core.a library in multiarch directory as libs9core.a
 ---
- Makefile | 44 ++++++++++++++++++++++++++++++--------------
- 1 file changed, 30 insertions(+), 14 deletions(-)
+ Makefile | 46 +++++++++++++++++++++++++++++++---------------
+ 1 file changed, 31 insertions(+), 15 deletions(-)
 
 diff --git a/Makefile b/Makefile
-index c2eec66..97b49f9 100644
+index c2eec66..470dd7a 100644
 --- a/Makefile
 +++ b/Makefile
 @@ -3,8 +3,8 @@
@@ -37,6 +37,15 @@ index c2eec66..97b49f9 100644
  
  # Base version and Release
  BASE=		20250805
+@@ -12,7 +12,7 @@ RELEASE=	20250812
+ 
+ # Override default compiler and flags
+ CC=	cc
+-CFLAGS=	-g -Wall -std=c99 -pedantic -O2
++CFLAGS+=	-g -Wall -std=c99 -pedantic -O2
+ 
+ # Which OS are we using (unix or plan9)?
+ OSDEF=	-Dunix
 @@ -45,31 +45,40 @@ EXTRA_LIBS+=
  #				# (requires the Curses extension)
  

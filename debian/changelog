@@ -1,3 +1,9 @@
+scheme9 (2025.08.12-2) unstable; urgency=medium
+
+  * Tweak Makefile to augment rather than override $(CFLAGS)
+
+ -- Barak A. Pearlmutter <bap@debian.org>  Tue, 26 Aug 2025 02:08:27 +0100
+
 scheme9 (2025.08.12-1) unstable; urgency=medium
 
   * New upstream version
