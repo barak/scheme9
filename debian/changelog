@@ -1,3 +1,9 @@
+scheme9 (2025.08.12-3) UNRELEASED; urgency=medium
+
+  * Update debian/copyright
+
+ -- Barak A. Pearlmutter <bap@debian.org>  Tue, 26 Aug 2025 02:50:28 +0100
+
 scheme9 (2025.08.12-2) unstable; urgency=medium
 
   * Tweak Makefile to augment rather than override $(CFLAGS)
